@@ -1,0 +1,418 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/blob/main/governance/test-strategy.schema.json",
+  "title": "PenniLogic test strategy data",
+  "description": "Machine-readable test strategy published by PenniLogic/docs#22. Harnesses read the per-package floors, the flake and retry numbers, the pipeline and performance budgets and the category ownership from a file conforming to this schema; they never restate them. Numeric ranges (0 to 100 for percentages) and cross-references are enforced by scripts/check_test_strategy.py, which validates this subset of draft-07 strictly: any keyword outside the subset is an error.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "strategy_version", "source_issue", "document", "schema", "inventory", "reference_format",
+    "principles", "categories", "deliverables", "change_classes", "floor_policy", "packages", "flake_policy",
+    "pipeline_budgets", "performance_budgets", "recovery_objectives", "accessibility", "device_matrix",
+    "test_data_policy", "definition_of_ready", "definition_of_done", "evidence", "review_cadence", "not_asserted"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "strategy_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "source_issue": { "$ref": "#/definitions/owner" },
+    "document": { "const": "governance/test-strategy.md" },
+    "schema": { "const": "governance/test-strategy.schema.json" },
+    "inventory": { "const": "planning/issue-inventory.json" },
+    "reference_format": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The exact regular expression an owner reference must match: PenniLogic/<repository>#<number>."
+    },
+    "principles": { "$ref": "#/definitions/statements" },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/category" }
+    },
+    "deliverables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/deliverable" }
+    },
+    "change_classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/change_class" }
+    },
+    "floor_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["money_path_minimum", "other_minimum", "money_path_ratchet", "unlisted_package_rule", "renaming_rule"],
+      "properties": {
+        "money_path_minimum": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["line", "branch", "mutation"],
+          "properties": {
+            "line": { "$ref": "#/definitions/percent" },
+            "branch": { "$ref": "#/definitions/percent" },
+            "mutation": { "$ref": "#/definitions/percent" }
+          }
+        },
+        "other_minimum": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["line", "branch"],
+          "properties": {
+            "line": { "$ref": "#/definitions/percent" },
+            "branch": { "$ref": "#/definitions/percent" }
+          }
+        },
+        "money_path_ratchet": { "const": true },
+        "unlisted_package_rule": { "$ref": "#/definitions/text" },
+        "renaming_rule": { "$ref": "#/definitions/text" }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/package" }
+    },
+    "flake_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quarantine_rate_ceiling_percent", "retry_limit", "money_path_retry_limit", "quarantine_after_flakes",
+        "flake_window_days", "quarantine_max_age_days", "retry_semantics", "on_quarantine_ceiling_exceeded",
+        "on_retry_limit_exceeded", "on_quarantine_expired"
+      ],
+      "properties": {
+        "quarantine_rate_ceiling_percent": { "$ref": "#/definitions/percent" },
+        "retry_limit": { "type": "integer" },
+        "money_path_retry_limit": { "type": "integer" },
+        "quarantine_after_flakes": { "type": "integer" },
+        "flake_window_days": { "type": "integer" },
+        "quarantine_max_age_days": { "type": "integer" },
+        "retry_semantics": { "$ref": "#/definitions/text" },
+        "on_quarantine_ceiling_exceeded": { "$ref": "#/definitions/text" },
+        "on_retry_limit_exceeded": { "$ref": "#/definitions/text" },
+        "on_quarantine_expired": { "$ref": "#/definitions/text" }
+      }
+    },
+    "pipeline_budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["money_path_harness_minutes", "pull_request_gate_minutes", "release_candidate_gate_minutes", "on_exceeded"],
+      "properties": {
+        "money_path_harness_minutes": { "type": "integer" },
+        "pull_request_gate_minutes": { "type": "integer" },
+        "release_candidate_gate_minutes": { "type": "integer" },
+        "on_exceeded": { "$ref": "#/definitions/text" }
+      }
+    },
+    "performance_budgets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/performance_budget" }
+    },
+    "recovery_objectives": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rpo_minutes", "rto_minutes", "status"],
+      "properties": {
+        "rpo_minutes": { "type": "integer" },
+        "rto_minutes": { "type": "integer" },
+        "status": { "$ref": "#/definitions/text" }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "standard", "version", "level", "conformance_target", "surfaces", "ruleset_named_and_pinned",
+        "undecidable_rules_route_to_manual_walkthrough", "manual_walkthrough",
+        "wcag_2_2_criteria_requiring_named_checks", "not_claimed"
+      ],
+      "properties": {
+        "standard": { "const": "WCAG" },
+        "version": { "const": "2.2" },
+        "level": { "const": "AA" },
+        "conformance_target": { "const": "WCAG 2.2 AA" },
+        "surfaces": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["web", "admin", "android"],
+          "properties": {
+            "web": { "$ref": "#/definitions/text" },
+            "admin": { "$ref": "#/definitions/text" },
+            "android": { "$ref": "#/definitions/text" }
+          }
+        },
+        "ruleset_named_and_pinned": { "const": true },
+        "undecidable_rules_route_to_manual_walkthrough": { "const": true },
+        "manual_walkthrough": { "$ref": "#/definitions/statements" },
+        "wcag_2_2_criteria_requiring_named_checks": { "$ref": "#/definitions/statements" },
+        "not_claimed": { "$ref": "#/definitions/text" }
+      }
+    },
+    "device_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/device_lane" }
+    },
+    "test_data_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "synthetic_only", "production_data_in_lower_environments", "raw_message_content_in_fixtures",
+        "real_credentials_in_fixtures", "rules", "fixture_families"
+      ],
+      "properties": {
+        "synthetic_only": { "const": true },
+        "production_data_in_lower_environments": { "const": false },
+        "raw_message_content_in_fixtures": { "const": false },
+        "real_credentials_in_fixtures": { "const": false },
+        "rules": { "$ref": "#/definitions/statements" },
+        "fixture_families": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/fixture_family" }
+        }
+      }
+    },
+    "definition_of_ready": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/checklist_item" }
+    },
+    "definition_of_done": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/checklist_item" }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_name_pattern", "artifact_name_regex", "artifact_name_example", "required_fields",
+        "ci_artifact_retention_days", "release_evidence_retention_days", "release_evidence_location",
+        "freshness_window_days", "rule"
+      ],
+      "properties": {
+        "artifact_name_pattern": { "$ref": "#/definitions/text" },
+        "artifact_name_regex": { "$ref": "#/definitions/text" },
+        "artifact_name_example": { "$ref": "#/definitions/text" },
+        "required_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/identifier" }
+        },
+        "ci_artifact_retention_days": { "type": "integer" },
+        "release_evidence_retention_days": { "type": "integer" },
+        "release_evidence_location": { "$ref": "#/definitions/text" },
+        "freshness_window_days": { "type": "integer" },
+        "rule": { "$ref": "#/definitions/text" }
+      }
+    },
+    "review_cadence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["triggers", "inventory_refresh_command", "snapshot_age_warning_days", "change_control"],
+      "properties": {
+        "triggers": { "$ref": "#/definitions/statements" },
+        "inventory_refresh_command": { "const": "python scripts/check_test_strategy.py --refresh-inventory" },
+        "snapshot_age_warning_days": { "type": "integer" },
+        "change_control": { "$ref": "#/definitions/text" }
+      }
+    },
+    "not_asserted": { "$ref": "#/definitions/statements" }
+  },
+  "definitions": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Machine-readable identifier: lower-case letters, digits and underscores."
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "statements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/text" }
+    },
+    "percent": {
+      "type": "number",
+      "description": "A percentage; the check enforces 0 to 100."
+    },
+    "repository": {
+      "type": "string",
+      "enum": [
+        "PenniLogic/.github", "PenniLogic/docs", "PenniLogic/contracts", "PenniLogic/api", "PenniLogic/ai-service",
+        "PenniLogic/android", "PenniLogic/web", "PenniLogic/admin", "PenniLogic/infra"
+      ]
+    },
+    "reference": {
+      "type": "string",
+      "pattern": "^PenniLogic/(\\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*$",
+      "description": "A public issue reference; bare repo#N identifiers are PenniLogic-old identities and never own anything."
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "identity"],
+      "properties": {
+        "reference": { "$ref": "#/definitions/reference" },
+        "identity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The plan identity (for example T-QA-01) or the PenniLogic-old source reference the issue must carry, so a wrong number cannot point at an unrelated issue."
+        }
+      }
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/owner" }
+    },
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "layer", "approach", "owners", "evidence"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "name": { "$ref": "#/definitions/text" },
+        "layer": { "$ref": "#/definitions/text" },
+        "approach": { "$ref": "#/definitions/text" },
+        "owners": { "$ref": "#/definitions/owners" },
+        "evidence": {
+          "$ref": "#/definitions/text",
+          "description": "How the pass or fail signal is observed in CI or release evidence."
+        }
+      }
+    },
+    "deliverable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "owners"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "name": { "$ref": "#/definitions/text" },
+        "description": { "$ref": "#/definitions/text" },
+        "owners": { "$ref": "#/definitions/owners" }
+      }
+    },
+    "change_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "mandatory_categories", "manual_evidence"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "description": { "$ref": "#/definitions/text" },
+        "mandatory_categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/identifier" }
+        },
+        "manual_evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/text" }
+        }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "repository", "domain", "description", "money_path", "line_coverage_floor_percent", "branch_coverage_floor_percent"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+          "description": "<repository short name>.<package>, for example api.ledger."
+        },
+        "repository": { "$ref": "#/definitions/repository" },
+        "domain": { "$ref": "#/definitions/identifier" },
+        "description": { "$ref": "#/definitions/text" },
+        "money_path": { "type": "boolean" },
+        "line_coverage_floor_percent": { "$ref": "#/definitions/percent" },
+        "branch_coverage_floor_percent": { "$ref": "#/definitions/percent" },
+        "mutation_score_floor_percent": {
+          "$ref": "#/definitions/percent",
+          "description": "Required when money_path is true; a package without one may not carry money-path code."
+        }
+      }
+    },
+    "performance_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "surface", "metric", "budget", "unit", "comparison", "condition", "gate"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "surface": { "$ref": "#/definitions/text" },
+        "metric": { "$ref": "#/definitions/text" },
+        "budget": { "type": "number" },
+        "unit": { "$ref": "#/definitions/text" },
+        "comparison": { "type": "string", "enum": ["at_most", "at_least"] },
+        "condition": { "$ref": "#/definitions/text" },
+        "gate": { "$ref": "#/definitions/identifier" }
+      }
+    },
+    "device_lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "purpose", "required_for", "availability", "owners"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "kind": { "type": "string", "enum": ["emulator", "managed_device", "physical"] },
+        "android_api_level": {
+          "type": ["integer", "string"],
+          "description": "A pinned API level or the literal current."
+        },
+        "tier": { "type": "string", "enum": ["low-end", "mid-range", "high-end"] },
+        "sim": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "country"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "country": { "type": "string", "pattern": "^[A-Z]{2}$" }
+          }
+        },
+        "purpose": { "$ref": "#/definitions/text" },
+        "required_for": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["pull_request", "release_candidate"] }
+        },
+        "availability": { "type": "string", "enum": ["available_in_ci", "required_not_yet_available"] },
+        "procurement": { "$ref": "#/definitions/owner" },
+        "owners": { "$ref": "#/definitions/owners" }
+      }
+    },
+    "fixture_family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "consumers", "owners"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "description": { "$ref": "#/definitions/text" },
+        "consumers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/repository" }
+        },
+        "owners": { "$ref": "#/definitions/owners" }
+      }
+    },
+    "checklist_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": { "$ref": "#/definitions/identifier" },
+        "text": { "$ref": "#/definitions/text" },
+        "owners": { "$ref": "#/definitions/owners" }
+      }
+    }
+  }
+}
