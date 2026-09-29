@@ -28,8 +28,9 @@ identifiers, never a display string.
 | Identifier | Lowercase `snake_case` value that clients and tests assert, for example `permission_denied`. Stable across versions; renaming is a major change. |
 | Name | The hyphenated human name used in tickets, for example permission-denied. |
 | Scope | Where the state may be rendered: a whole **surface**, a **region** of it, or the outcome of one **action**. At most one surface-scope state is shown at a time; region and action states coexist with the surface's content. |
-| Data display | Whether the data the state concerns may still be shown: `none` (nothing to show), `hidden` (exists but must not be shown), `shown` (unchanged) or `shown_marked` (shown with the state's text marker on every figure). |
+| Data display | Whether the data the state concerns may still be shown: `none` (nothing to show), `hidden` (exists but must not be shown), `shown` (unchanged) or `shown_marked` (shown, with one text marker per region that is programmatically associated with the figures it qualifies and announced once; at most a short per-figure flag). |
 | Auto-resolves | Whether the state clears without the user acting once its condition ends. |
+| Composes to degraded | Whether a *supplementary* region in this state makes its host surface `degraded` (section 4). True only for `error` and `offline`; a denial or an exhausted quota renders alone. |
 | Recovery action | The single action offered. Its identifier is stable; its label is canonical copy. |
 | Canonical copy | The headline and body every client renders verbatim, varying only in the enumerated placeholders of section 7. |
 | Signal | The client signal `client_state.<identifier>` recorded when the state is entered (section 10). |
@@ -73,9 +74,10 @@ identifiers, never a display string.
 - **Must not show.** Placeholder numbers or currency amounts in a skeleton; an indicator with no
   end; blocking of regions that do not depend on the pending request; copy before the slow
   threshold.
-- **Recovery action `cancel`.** Label "Cancel"; stops waiting and returns to the last usable
-  surface, or to `empty` when there is nothing to return to; discards nothing the user entered;
-  offered only after the slow threshold.
+- **Recovery action `cancel`.** Label "Cancel"; stops waiting and leaves the affected surface or
+  region in the state it had before the request started, or returns to the surface the user came
+  from when there is none. It never produces `empty`, because no read completed. Discards nothing
+  the user entered; offered only after the slow threshold.
 - **Copy.** Headline "Still loading". Body "This is taking longer than expected."
 - **Signal** `client_state.loading`.
 
@@ -88,22 +90,31 @@ identifiers, never a display string.
   exists for the affected region (if it does, the region is `stale`). A field-level validation
   rejection uses this state at action scope with the field named.
 - **Scope:** surface, region, action. **Data display:** `none`. **Auto-resolves:** no.
+  **Composes to degraded:** yes, when the failed region is supplementary.
 - **Must show.** The canonical headline naming what was attempted in plain words; the single
-  recovery action; the user's unsaved input preserved exactly after a failed write; for a validation
-  rejection, the affected field and what is needed, never what the user did wrong; the correlation
+  recovery action; the user's unsaved input preserved exactly after a failed write; the correlation
   identifier the service returned (owned by `T-CON-12`) carried with any support report opened from
-  the surface, not part of the state copy; focus moved to the headline or an assertive announcement
-  of it.
+  the surface, not part of the state copy. For every failure other than a validation rejection,
+  focus moves to the headline or an assertive announcement of it. For a validation rejection: the
+  affected field is named in the accessible error message and what is needed is stated, never what
+  the user did wrong; the guidance is exposed as that field's own error text, programmatically
+  associated with the field (WCAG 2.2 1.3.1, 3.3.1, 3.3.3); and focus moves to the rejected field
+  rather than to the headline (2.4.3).
 - **Must not show.** A cause the client did not receive from the service in a user-facing form;
   internal identifiers, stack detail, status codes, exception names, provider names or raw service
   messages; any claim about whether a write took effect unless the service confirmed it; wording
   that blames the user or labels their input as faulty; another person's existence, name or account
-  state.
-- **Recovery action `retry`.** Label "Try again"; repeats the failed request with the same input.
-  A write repeats under the same idempotency key so it cannot duplicate a ledger entry; whether a
-  failure is retryable comes from the retry classification `T-CON-12` publishes.
+  state; for a validation rejection, resubmission of the rejected input unchanged, or guidance shown
+  only in a notice that is not associated with the field.
+- **Recovery action `retry`.** Label "Try again"; repeats the failed request. For a failure other
+  than a validation rejection the input is unchanged and a write repeats under the same idempotency
+  key so it cannot duplicate a ledger entry; whether a failure is retryable comes from the retry
+  classification `T-CON-12` publishes. For a validation rejection the action is the form's submit
+  control: focus is already on the rejected field with its guidance, and the action submits the
+  *edited* input, never the rejected input unchanged, so the single action actually recovers.
 - **Copy.** Headline "Couldn't `{attempt}`". Body "Try again in a moment." Validation variant, when
-  the service identified a rejected field: same headline, body `{field_guidance}`.
+  the service identified a rejected field: same headline, body `{field_guidance}`, rendered at action
+  scope with focus on the rejected field and the body exposed as that field's error text.
 - **Signal** `client_state.error`.
 
 ### 3.4 `offline`
@@ -116,7 +127,8 @@ identifiers, never a display string.
   that fail while the platform reports connectivity are `error`, not `offline`. Android surfaces
   backed by the local database are never `offline` for reads.
 - **Scope:** surface, region, action. **Data display:** `none`. **Auto-resolves:** yes; reads are
-  repeated automatically when connectivity returns.
+  repeated automatically when connectivity returns. **Composes to degraded:** yes, when the offline
+  region is supplementary.
 - **Must show.** The canonical headline stating the known condition; the single recovery action;
   continued access to everything that works without the service (local records, manual entry,
   saved answers, navigation); for a write that was queued locally, the pending marker of the happy
@@ -139,16 +151,20 @@ identifiers, never a display string.
   the freshness window the surface declares in its registration, for example a currency rate under
   E30.
 - **Scope:** surface, region. **Data display:** `shown_marked`. **Auto-resolves:** yes, on the next
-  successful refresh.
+  successful refresh. **Composes to degraded:** no; the figures are still on screen.
 - **Must show.** The data exactly as last received, money in the integer minor units and currency
-  the service sent and never recomputed on the client; the canonical marker with the time of the
-  last successful refresh adjacent to the figures it qualifies, as text and not colour alone; the
-  single recovery action; the offline marker (the `offline` headline) beside the stale marker when
-  the platform reports no connectivity, without leaving this state; for shared data, display only
-  while the offline lease bound published by `T-CON-04` has not elapsed, after which the region
-  becomes `permission_denied` and the cached shared data leaves the view; a visual treatment
-  distinct from confirmed values (`T-DSY-01` owns the treatment; the marker text is the minimum).
-- **Must not show.** A stale figure without its marker; a money-committing action (settle, pay,
+  the service sent and never recomputed on the client; **one** canonical marker per stale region
+  carrying the time of the last successful refresh, placed at the head of the region and
+  programmatically associated with every figure it qualifies, as text and not colour alone, with at
+  most a short per-figure flag on long lists and never a repeated marker; the single recovery
+  action; the offline marker (the `offline` headline) beside the region's stale marker when the
+  platform reports no connectivity, without leaving this state; for shared data, display only while
+  the offline lease bound published by `T-CON-04` has not elapsed, after which the cached shared
+  data leaves the view and the region follows the `permission_denied` rendering for a previously
+  granted shared region (section 3.6); a visual treatment distinct from confirmed values (`T-DSY-01`
+  owns the treatment; the marker text is the minimum).
+- **Must not show.** A stale region without its marker; a marker repeated after every figure, which
+  makes a long stale list unusable with a screen reader; a money-committing action (settle, pay,
   transfer, confirm) pre-filled from stale figures without a successful refresh first, and if that
   refresh fails the action is `offline` or `error` at action scope; any figure derived on the client
   from stale data (projections, deltas, amounts since the last update); detail the active grant did
@@ -172,32 +188,49 @@ identifiers, never a display string.
   bound without confirmation; or an administrative capability is outside the operator's role. The
   concrete refusal shapes are bound to this identifier by `T-CON-12`.
 - **Scope:** surface, region, action. **Data display:** `hidden`. **Auto-resolves:** no.
+  **Composes to degraded:** no; this state already names what still works and offers one action,
+  so a denied supplementary region renders alone and the surface adds no notice.
 - **Cause classes.** `device` (platform permission or restricted setting; client-determined),
   `plan` (entitlement deny; contract-level, server-authoritative under ADR-007), `sharing` (no
   active grant under the default-deny model of ADR-005, or the offline lease bound elapsed;
   contract-level for the refusal, client-determined for the bound) and `role` (administrative
-  capability outside the operator's role; contract-level). The cause selects the copy variant and
-  the recovery label; it is recorded on the signal.
+  capability outside the operator's role, or the operator attempting to act as the second approver
+  of their own action; contract-level — an action awaiting another approver is a decision state of
+  the happy path, not a denial). The cause selects the copy variant and the recovery label; it is
+  recorded on the signal.
 - **Must show.** The affected capability in product terms and the kind of access it needs; that
   everything else keeps working, and it does: navigation, unaffected regions, manual alternatives
   and previously permitted features stay fully operable because the app is usable with every
   optional permission denied; the single recovery action leading to the one place where this access
   is controlled, which for the sharing cause never contacts the other person; removal from view of
   any cached data behind the denial within the bounds `T-CON-04` publishes; identical copy for the
-  sharing cause whether the grant is absent, revoked, expired or unverifiable.
-- **Must not show.** Anything that reveals whether data exists behind the denial (counts, totals,
-  hidden-item hints, names, or that a grant once existed); a blocked surface, hidden unaffected
-  features, or repeated prompts (a rationale at most once per session unless the user asks); a
-  bypass, an attempt of the denied operation, or an action that notifies or asks the other person
-  for access; blame or an invented reason; the condition treated as `error` or `empty`.
+  sharing cause whether the grant is absent, revoked, expired or unverifiable, so the copy itself
+  discloses nothing about the other person's decisions or data.
+- **Previously granted shared region, now refused or past its lease bound.** The region leaves the
+  view together with its cached data, and the viewer's own sharing overview no longer lists it. The
+  sharing copy is rendered only when the viewer navigates to the item explicitly (a link, bookmark
+  or notification), never as a persistent card standing where the figure was. The change from a
+  visible figure to nothing is the inherent signal of unilateral revocation that ADR-005 accepts as
+  the price of the data subject's control; the taxonomy adds no durable artefact to it, and the
+  acceptance criterion that a denial must not reveal whether data exists behind it is met down to
+  this inherent-signal floor and no further.
+- **Must not show.** Anything in the copy or the layout that reveals whether data exists behind the
+  denial (counts, totals, hidden-item hints, names, or a persistent denial card standing where a
+  shared figure used to be); a blocked surface, hidden unaffected features, or repeated prompts (a
+  rationale at most once per session unless the user asks, and a region-scope denial present on
+  later launches is not re-announced and does not take focus again); a bypass, an attempt of the
+  denied operation, or an action that notifies or asks the other person for access; blame or an
+  invented reason; the condition treated as `error` or `empty`, or a surface-level `degraded`
+  notice on top of it.
 - **Recovery action `review_access`.** One action whose destination follows the cause: the
   platform's permission request, or the app's system settings page when the platform will not
   prompt again (`device`, label "Allow `{permission}`"); the plan overview (`plan`, "See plans");
   the user's own sharing overview (`sharing`, "See what's shared with you"); the administrative
   access request flow (`role`, "Request access"). The default label "Review access" and the default
   copy apply only while a service refusal is not yet bound to a cause, that is before `T-CON-12`
-  lands; the cause variants replace them. It never attempts the denied operation and never contacts
-  another person.
+  lands; the default opens the account's access overview, which lists plan, sharing and device
+  access without naming any denied item, and the cause variants replace it once bound. It never
+  attempts the denied operation and never contacts another person.
 - **Copy.** Default headline "You don't have access to this right now", body "Everything else keeps
   working." Variants: `device` "`{capability}` needs `{permission}`" / "You can keep using
   everything else without it."; `plan` "Not included in your plan" / "Everything in your current
@@ -219,7 +252,9 @@ identifiers, never a display string.
   capabilities such as AI questions. Usage through a user's own provider key is metered but not
   charged against plan quota and does not produce this state.
 - **Scope:** region, action. **Data display:** `shown`. **Auto-resolves:** yes, when the service
-  stops refusing.
+  stops refusing. **Composes to degraded:** no; this state already names what still works and
+  offers one action, and a surface-level re-check would generate the refused requests this state
+  forbids, so an exhausted supplementary capability renders alone.
 - **Must show.** What is still available, stated positively (previously produced results and every
   capability outside the metered one); the limit reached in the plain terms the service stated (a
   count and its window, never a monetary amount); when the allowance resets, only when the service
@@ -228,27 +263,36 @@ identifiers, never a display string.
 - **Must not show.** Anything the quota does not cover hidden or disabled, including the history of
   what was produced; a reason the service did not give, a counter it did not send, or a reset time
   the client computed; any monetary amount, price or balance in the state copy; a bypass or repeated
-  refused attempts; wording that frames the exhaustion as misuse.
+  refused attempts; wording that frames the exhaustion as misuse; a surface-level `degraded` notice
+  on top of this state.
 - **Recovery action `view_usage`.** Label "See usage and plans"; opens the account's usage view
   with the limit, what was used, the reset time when known and the plans available. Informational:
-  it never claims a purchase will restore the capability unless the service states so.
+  it never claims a purchase will restore the capability unless the service states so. For a
+  short-window rate limit the same view shows the limit and its window; the plans it lists are
+  context, not the remedy, and the `rate_limited` variant says the limit is temporary.
 - **Copy.** Headline "You've reached this period's limit of `{limit}`". Body
   "`{still_available}` still work." With a service-stated reset: "`{still_available}` still work.
-  Resets `{resets_at}`."
+  Resets `{resets_at}`." `rate_limited` variant, when the service stated a short-window limit within
+  quota rather than the period's allowance: "You've reached the limit of `{limit}` for now" /
+  "`{still_available}` still work. Resets `{resets_at}`." `{still_available}` is a plural noun
+  phrase by registration rule, so the sentence always reads correctly.
 - **Declared guarantee, asserted by the validator:** `states_what_remains_available` is true.
 - **Signal** `client_state.quota_exceeded`.
 
 ### 3.8 `degraded`
 
-- **Definition.** A capability the surface offers is unavailable because a dependency is down or
-  paused, but the surface still does what it exists for with what it shows.
-- **Triggering condition.** A region or capability enters `error`, `offline`, `permission_denied`
-  or `quota_exceeded`, or a platform capability such as automatic capture is paused (the
-  capture-health conditions `T-AND-07` publishes), while the surface's purpose remains achievable.
-  Decision test: can the user still do what this surface exists for? Yes gives `degraded` with the
-  capability named; no gives `error`.
+- **Definition.** A capability the surface offers is unavailable because a dependency has failed or
+  is paused, but the surface still does what it exists for with what it shows.
+- **Triggering condition.** A supplementary region or capability is in `error` or `offline`, or a
+  platform capability such as automatic capture is paused for a platform reason (the capture-health
+  conditions `T-AND-07` publishes), while the surface's purpose remains achievable. Decision test:
+  can the user still do what this surface exists for? Yes gives `degraded` with the capability
+  named; no gives `error`. A supplementary region in `permission_denied` or `quota_exceeded` never
+  produces `degraded`: those states already name what still works and offer one action, their
+  conditions do not self-resolve, and a re-check would repeat refused requests, so the surface
+  renders only the region state.
 - **Scope:** surface only. **Data display:** `shown`. **Auto-resolves:** yes, when the dependency
-  returns.
+  returns. **Composes to degraded:** not applicable; this is the surface notice itself.
 - **Must show.** The surface's content and primary purpose, fully operable; the canonical headline
   naming the unavailable capability in product terms; the single recovery action plus automatic
   recovery; the affected region's own state rendered where the capability would appear, so the
@@ -257,7 +301,8 @@ identifiers, never a display string.
 - **Must not show.** Provider, vendor or service names, internal identifiers or status detail;
   full-surface blocking, modal dialogs or content replaced by the notice; a cause the client was not
   given; the capability silently omitted with no notice; substitute figures computed on the client
-  for the unavailable dependency, such as a locally estimated currency rate.
+  for the unavailable dependency, such as a locally estimated currency rate; this state rendered for
+  a denied permission, an entitlement deny, a missing grant or an exhausted quota.
 - **Recovery action `retry`.** Label "Try again"; re-checks the affected capability now; the client
   also re-checks automatically at the cadence the surface declares.
 - **Copy.** Headline "`{capability}` isn't available right now". Body "Everything else is working.
@@ -274,16 +319,21 @@ rendered:
 3. `stale` — held data is shown with its marker rather than hidden behind `offline` or `error`.
 4. `offline` — a known offline condition is never presented as an unknown error.
 5. `error`
-6. `degraded` — the surface-scope notice that accompanies a region state without replacing it.
+6. `degraded` — the surface-scope notice that accompanies a supplementary region in `error` or
+   `offline`, or a platform pause, without replacing it.
 7. `loading` — only before the first data.
 8. `empty` — only after a successful read.
 
 Composition follows from scope. A surface is made of regions; each region has its own state; the
 surface shows at most one surface-scope state. When a region that is supplementary to the surface's
-purpose is in `error`, `offline`, `permission_denied` or `quota_exceeded`, the surface is `degraded`
-and names that capability. When the region that *is* the surface's purpose fails, the surface is
-`error`. `T-CON-12` binds each published error code to exactly one identifier at the scope of the
-request that received it; the surface-level presentation follows this section, not the code.
+purpose is in `error` or `offline`, or a platform capability is paused, the surface is `degraded`
+and names that capability. When a supplementary region is in `permission_denied` or
+`quota_exceeded`, the surface renders only that region's state and adds no notice: the region
+already says what still works and offers its one action, and the `composes_to_degraded` flag on
+each state in the data file records this so a gate can decide applicability without reading prose.
+When the region that *is* the surface's purpose fails, the surface is `error`. `T-CON-12` binds
+each published error code to exactly one identifier at the scope of the request that received it;
+the surface-level presentation follows this section, not the code.
 
 ## 5. Offline versus stale
 
@@ -292,7 +342,7 @@ are on screen.
 
 | | `offline` | `stale` |
 | --- | --- | --- |
-| What is on screen | No figures; the headline "You're offline" stands where they would be | The last received figures, each with the text marker "Last updated `{last_updated}`" |
+| What is on screen | No figures; the headline "You're offline" stands where they would be | The last received figures, with one region marker "Last updated `{last_updated}`" associated with all of them |
 | Data display | `none` | `shown_marked` |
 | Cause shown | Yes, connectivity is a platform-reported fact | Only the marker; when connectivity is the known cause, the offline marker is added beside it without changing state |
 | Recovery action | `retry` "Try again", plus automatic retry of reads on reconnect | `refresh` "Refresh", replacing figures only on success |
@@ -347,7 +397,7 @@ another person's name, provider or vendor name, or raw message content.
 | `{last_updated}` | client cache metadata, locale-formatted | 2 hours ago |
 | `{limit}` | service response only | 5 AI questions |
 | `{resets_at}` | service response only; its sentence is omitted when absent | 1 October |
-| `{still_available}` | surface registration | Saved answers and everything outside AI |
+| `{still_available}` | surface registration; a plural noun phrase so the canonical sentence reads correctly | Saved answers and everything outside AI |
 | `{primary_action}` | surface registration | Add a transaction |
 | `{what_appears_here}` | surface registration | Transactions you record, capture or import will appear here. |
 | `{field_guidance}` | component copy (design system), under these rules | Enter an amount above zero. |
@@ -362,13 +412,19 @@ cause-asserting word because, and the exclamation mark.
 
 - Entering a state is announced once to assistive technology: politely for `loading`, `offline`,
   `stale` and `degraded`; by moving focus to the headline, or an assertive announcement, for
-  `error`, `permission_denied` and `quota_exceeded`.
+  `error`, `permission_denied` and `quota_exceeded`. A validation rejection moves focus to the
+  rejected field instead of the headline, with the guidance exposed as that field's error text.
+- A region-scope `permission_denied` or `quota_exceeded` state that is still present on a later
+  launch or return to the surface is not re-announced and does not take focus again; it is exposed
+  in reading order like any other region.
 - Every state and marker is conveyed by text, never by colour or icon alone; the visual treatment
   `T-DSY-01` publishes is additional.
 - The recovery action is a focusable control reachable by keyboard and switch access, with the
   headline as its accessible context.
 - Non-blocking notices (`degraded`, `stale`, the offline marker) never move focus away from the
   user's task.
+- A stale region has one marker, programmatically associated with the figures it qualifies and
+  announced once; a marker is never repeated after every figure.
 - Controls disabled by a state (`quota_exceeded`) stay visible and expose the disabled state and its
   reason.
 - Canonical copy remains readable at two hundred percent text scale; headlines wrap rather than
@@ -384,8 +440,8 @@ real service result. It defines **no error codes, status codes or wire fields**:
 ([PenniLogic/contracts#16](https://github.com/PenniLogic/contracts/issues/16)) publishes the error
 catalogue and binds each code to exactly one identifier here, and a code without a binding fails
 its contract validation. The schema cannot express a code, and the validator rejects code-like
-tokens in this table. Bare `repo#N` numbers elsewhere in this repository are PenniLogic-old
-identities; stable ticket identifiers are used here instead.
+tokens in the data conditions these rows mirror. Bare `repo#N` numbers elsewhere in this
+repository are PenniLogic-old identities; stable ticket identifiers are used here instead.
 
 | Condition | Binds to | Cause | Contract-level | Owner of the binding |
 | --- | --- | --- | --- | --- |
@@ -393,10 +449,10 @@ identities; stable ticket identifiers are used here instead.
 | `grant_not_active` — no active grant covers the member, category and detail level; absent, revoked and expired are one condition with identical copy | `permission_denied` | `sharing` | yes | `T-CON-04` shapes and bounds; `T-CON-12` refusal shape |
 | `offline_lease_elapsed` — cached shared data passed the offline lease bound without confirmation | `permission_denied` | `sharing` | no (client applies the published bound) | `T-CON-04` |
 | `device_permission_not_granted` | `permission_denied` | `device` | no | client platform layer; `T-AND-07` restricted-settings matrix |
-| `role_capability_denied` — administrative capability outside the operator's role or needing a second approver | `permission_denied` | `role` | yes | `T-CON-12` within the administrative contract |
+| `role_capability_denied` — administrative capability outside the operator's role, or the operator attempting to act as second approver of their own action (an action awaiting another approver is a happy-path decision state, not this condition) | `permission_denied` | `role` | yes | `T-CON-12` within the administrative contract |
 | `quota_exhausted` — request or token allowance for the window used | `quota_exceeded` | — | yes | `T-CON-12`; model in ADR-023 (`T-ADR-ENT-09`) |
-| `rate_limited` — short-window limit reached within quota; the shape must state the limit and window | `quota_exceeded` | — | yes | `T-CON-12` |
-| `dependency_unavailable` — AI provider, rate source or similar dependency unavailable; bound at the request's scope, host surface composes to `degraded` | `error` | — | yes | `T-CON-12`, distinguishing it from a refusal and from quota exhaustion |
+| `rate_limited` — short-window limit reached within quota; the shape must state the limit, its window and when it lifts so the `rate_limited` copy variant stays truthful | `quota_exceeded` | — | yes | `T-CON-12` |
+| `dependency_unavailable` — AI provider, rate source or similar dependency unavailable; bound at the request's scope, and the host surface composes to `degraded` when its purpose remains achievable and the failed region is supplementary | `error` | — | yes | `T-CON-12`, distinguishing it from a refusal and from quota exhaustion |
 | `request_failed` — failure, unusable response or timeout while connected | `error` | — | yes | `T-CON-12`, with retry classification |
 | `validation_rejected` — field-level rejection naming the field without a monetary value | `error` (validation variant, action scope) | — | yes | `T-CON-12` |
 | `capture_paused_by_platform` — force-stop, standby bucket or private-space pause | `degraded` | — | no | `T-AND-07` |
@@ -433,25 +489,29 @@ notification listener, and opens the home to record a cash payment and check thi
 
 - **Shown.** The transaction timeline with every manually recorded and previously captured entry,
   fully scrollable and editable; the primary action to record a transaction by hand, operable
-  exactly as when capture is on; budgets, debt summaries and every other region unchanged; in the
-  capture region only, the headline "Automatic capture needs SMS access", the body "You can keep
-  using everything else without it." and the single action "Allow SMS access".
+  exactly as when capture is on; budgets, debt summaries and every other region unchanged, with no
+  surface-level notice — the denial is the capture region's own state and the surface is not
+  `degraded`; in the capture region only, the headline "Automatic capture needs SMS access", the
+  body "You can keep using everything else without it." and the single action "Allow SMS access".
 - **Not shown.** Any count or hint of payment messages on the device (the client cannot read them
   and must not imply it knows they exist); a full-screen permission wall, a blocked primary action
-  or a system prompt repeated on every launch; error styling or a retry; wording that the person
-  denied or forgot something; cached content from before a revoked permission presented as captured
-  today.
+  or a system prompt repeated on every launch; a surface-level `degraded` notice or a "We'll keep
+  checking" promise, because a denied permission does not self-resolve; error styling or a retry;
+  wording that the person denied or forgot something; cached content from before a revoked
+  permission presented as captured today.
 - **Transitions.** Granted: the capture region returns to content, or to `empty` until the first
   captured message. Declined again: nothing changes and the rationale is not repeated this session.
-  Platform will not prompt again: the action opens the app's system settings page. Capture paused by
-  the platform after a force-stop while the permission is granted: the surface is `degraded`, not
-  `permission_denied` (`T-AND-07`).
+  Later launches while still denied: the region is present in reading order but is not re-announced
+  and does not take focus. Platform will not prompt again: the action opens the app's system
+  settings page. Capture paused by the platform after a force-stop while the permission is granted:
+  the surface is `degraded`, not `permission_denied` (`T-AND-07`).
 - **Privacy and money.** The client never reads or counts messages to decorate the state, and the
   state discloses nothing about data it cannot access. The signal carries the cause and the
   permission name only. Manually recorded amounts are entered and stored in integer minor units with
   currency exactly as when capture is on; the denial changes no arithmetic.
 - **Signal.** `client_state.permission_denied` with `client=android`,
-  `surface_id=transactions_home`, `scope=region`, `cause=device`.
+  `surface_id=example_transactions_home`, `scope=region`, `cause=device`. Example `surface_id`
+  values carry the `example_` prefix because no client registers surfaces yet.
 
 ### 11.2 Quota-exceeded AI surface
 
@@ -460,23 +520,30 @@ A person on the free plan asks a sixth AI question this month. The service refus
 allowance of five questions for the month and the date it resets.
 
 - **Shown.** Every previous question and answer, readable and searchable; the debt payoff figures,
-  projections and every non-AI capability unchanged; the composer disabled but visible with the
-  headline "You've reached this period's limit of 5 AI questions", the body "Saved answers and
-  everything outside AI still work. Resets 1 October." and the single action "See usage and plans".
-  The reset sentence appears only because the service stated the reset time.
-- **Not shown.** Hidden or greyed history, or a disabled surface beyond the composer; a price,
-  monetary amount or balance in the state copy (plan prices live on the plans view); a reset date the
-  client computed, a counter the service did not send, or a reason such as demand; a provider or
-  model name, or a way to send the question anyway; wording that the person asked too much.
+  projections and every non-AI capability unchanged, with no surface-level notice — the exhaustion
+  is the composer's own action state and the payoff surface is not `degraded`; the composer
+  disabled but visible with the headline "You've reached this period's limit of 5 AI questions",
+  the body "Saved answers and everything outside AI still work. Resets 1 October." and the single
+  action "See usage and plans". The reset sentence appears only because the service stated the
+  reset time.
+- **Not shown.** Hidden or greyed history, or a disabled surface beyond the composer; a
+  surface-level `degraded` notice or an automatic re-check, which would only generate refused
+  requests; a price, monetary amount or balance in the state copy (plan prices live on the plans
+  view); a reset date the client computed, a counter the service did not send, or a reason such as
+  demand; a provider or model name, or a way to send the question anyway; wording that the person
+  asked too much.
 - **Transitions.** Allowance reset by the service: the composer is enabled again on the next
   successful request or refresh. Plan change confirmed by the service: the state clears when the
   service stops refusing; the client never assumes a purchase succeeded. Provider failure instead of
-  quota: the AI region is `error` and the payoff surface is `degraded`, distinguishable by the
-  service's shape, not by prose. Own provider key in use: metered but not charged against plan
-  quota, so this state does not appear.
+  quota: the AI region is `error` and, because the payoff surface still does what it exists for, the
+  surface is `degraded` with "AI explanations isn't available right now"; the two conditions are
+  distinguishable by the service's shape, not by prose. Short-window rate limit instead of the
+  period's allowance: the `rate_limited` variant "You've reached the limit of 3 AI questions for
+  now" with the lift time the service stated. Own provider key in use: metered but not charged
+  against plan quota, so this state does not appear.
 - **Privacy and money.** The question text is never included in the state or the signal; usage
   counts stay with the service. No amount appears in the state; the limit is a count of questions.
-- **Signal.** `client_state.quota_exceeded` with `client=web`, `surface_id=ai_explanations`,
+- **Signal.** `client_state.quota_exceeded` with `client=web`, `surface_id=example_ai_explanations`,
   `scope=action`.
 
 ### 11.3 Stale shared balance
@@ -487,33 +554,46 @@ the figure from a refresh two hours earlier and the platform reports no connecti
 
 - **Shown.** The total exactly as last received, formatted from its integer minor units and
   currency by the client's locale formatter (a synthetic 1234000 INR minor units renders as twelve
-  thousand three hundred and forty rupees); the text marker "Last updated 2 hours ago" beside the
-  figure and the body "Showing what was last saved."; the offline marker "You're offline" beside the
-  stale marker; the single action "Refresh".
-- **Not shown.** The figure without its marker or styled as a confirmed current value; a
+  thousand three hundred and forty rupees); one text marker "Last updated 2 hours ago" at the head
+  of the region, programmatically associated with the figure, and the body "Showing what was last
+  saved."; the offline marker "You're offline" beside the region's stale marker; the single action
+  "Refresh".
+- **Not shown.** The figure without its region marker or styled as a confirmed current value; a
   client-computed delta, projection or amount since the last update; any transaction detail, because
   the grant covers the aggregate only and staleness never widens it; a settle or transfer action
   pre-filled from the stale figure without a successful refresh first; wording that the partner has
   not updated or that blames anyone; the figure after the offline lease bound from `T-CON-04` has
-  elapsed without a successful refresh.
+  elapsed without a successful refresh; after a refusal or an elapsed lease, a persistent denial
+  card standing where the figure was.
 - **Transitions.** Connectivity returns and the refresh succeeds: the marker disappears and the
   current figure replaces the old one. Refresh fails while connected: figure and marker stay, the
   offline marker is removed, no cause is invented. Offline lease bound elapses without confirmation:
-  the region becomes `permission_denied` with the `sharing` cause, the copy "You don't have access to
-  this right now", the action "See what's shared with you", and the cached figure leaves the view.
-  Grant revoked by the partner and the client reconnects: the service refuses, the region shows the
-  identical sharing copy, and nothing indicates that a grant existed or was withdrawn.
+  the client denies on its own, the cached figure and the region leave the view, and the viewer's
+  own sharing overview no longer lists the item; no copy is rendered unless the viewer navigates to
+  the item explicitly, in which case the sharing-cause copy "You don't have access to this right
+  now" with the action "See what's shared with you" appears. Grant revoked by the partner and the
+  client reconnects: the service refuses and the rendering is identical to the elapsed lease — the
+  region leaves the view and the sharing-cause copy appears only on explicit navigation. The copy is
+  the same as for a grant that never existed; the taxonomy does not claim that the change itself is
+  invisible.
 - **Privacy and money.** The sharing-cause copy is identical for a revoked grant, an expired grant,
-  a never-granted view and an elapsed lease, so the viewer learns nothing about the partner's
-  decision from the copy. A figure that was visible and then leaves the view is a signal inherent
-  to revocation itself, which ADR-005 makes unilateral; the taxonomy adds nothing to that signal and
-  the copy never confirms or explains it. The recovery action after denial opens the viewer's own
+  a never-granted view and an elapsed lease, so the copy itself discloses nothing about the
+  partner's decision. **Honest residual:** a figure that was visible and is then absent is the
+  inherent signal of unilateral revocation, which ADR-005 accepts as the price of the data
+  subject's control. The specified rendering keeps that signal at its floor: no persistent card
+  marks the place where the figure was, the copy never confirms or explains the change, and no
+  control invites repeated checking. In a coercive household the partner who revoked is the data
+  subject, and a durable artefact of their decision on the viewer's screen would work against them;
+  this is why the region leaves the view rather than standing as a denial notice. The acceptance
+  criterion that a denial must not reveal whether data exists behind it is met down to this
+  inherent-signal floor and no further. The recovery action after denial opens the viewer's own
   sharing overview and never notifies or asks the partner. The cached figure is the service's
   deterministic result in integer minor units with currency; the client formats it and never
   recalculates, projects or nets it. A money-committing action against a stale figure requires a
   successful refresh first.
-- **Signal.** `client_state.stale` with `client=android`, `surface_id=household_shared_aggregate`,
-  `scope=region`; no amount, member identity or grant identifier.
+- **Signal.** `client_state.stale` with `client=android`,
+  `surface_id=example_household_shared_aggregate`, `scope=region`; no amount, member identity or
+  grant identifier.
 
 ## 12. Future client-gate adoption
 
@@ -548,9 +628,10 @@ state, adding platform adaptations without changing the vocabulary.
 Identifiers are added here first, never in a client. To add a state or a `permission_denied`
 cause class: open a PenniLogic/docs issue naming the identifier, its condition and the surfaces
 that need it; add it to the data file and this document with its definition, triggering
-condition, required and forbidden content, exactly one recovery action, canonical copy and signal
-(a new state also joins the precedence list); bump `taxonomy_version` (minor for additions, major
-for a removed or renamed identifier); run `python scripts/check_client_states.py` and
+condition, required and forbidden content, exactly one recovery action, canonical copy, signal and
+`composes_to_degraded` flag (a new state also joins the precedence list, and may add its own
+worked example alongside the three required ones); bump `taxonomy_version` (minor for additions,
+major for a removed or renamed identifier); run `python scripts/check_client_states.py` and
 `python -m unittest discover -s scripts/tests`; obtain the independent reviews this repository
 requires. Clients bump their pin only after the change is merged.
 
@@ -568,23 +649,29 @@ implement, then enforces: the eight required identifiers; the hyphenated name an
 `client_state.` signal per identifier; exactly one recovery action whose label offers one action;
 only declared placeholders and no forbidden term in canonical copy; the required copy rules; a
 precedence list naming every state once; the `offline`/`stale` and `error`/`degraded` distinctions
-with data display that genuinely differs and matches the states; conceptual contract conditions
-including `entitlement_denied` and `grant_not_active`, bound to known states and causes and free of
-code-like tokens; the declared guarantees of `permission_denied` (data hidden, rest of surface
-usable, no hidden-data disclosure) and `quota_exceeded` (what remains available is stated); exactly
-the three worked examples with matching states, causes, signals and declared signal attributes;
-the two coverage assertions and a valid illustrative registration; and that this document carries
-every canonical headline, body and action label verbatim and mentions every identifier, recovery
-action, distinction, example, condition, rule and the version, so the document and the data cannot
-drift apart.
+with data display that genuinely differs and matches the states; `composes_to_degraded` true for
+`error` and `offline` only, so a denial or an exhausted quota never adds a surface notice;
+conceptual contract conditions including `entitlement_denied` and `grant_not_active`, bound to
+known states and causes and free of code-like tokens; the declared guarantees of
+`permission_denied` (data hidden, rest of surface usable, no hidden-data disclosure) and
+`quota_exceeded` (what remains available is stated); the three required worked examples present,
+each rendering an instantiation of its state's canonical copy and recovery label (placeholders
+filled, nothing paraphrased) with matching state, cause, signal, declared signal attributes and an
+`example_`-prefixed surface identifier; the two coverage assertions and a valid illustrative
+registration; and that each state's own section 3.n carries every canonical headline, body and
+action label of that state verbatim — scoped to the section, so a paraphrase cannot hide behind a
+mention elsewhere — and that the document mentions every identifier, recovery action, distinction,
+example, condition, rule and the version.
 
 `python -m unittest discover -s scripts/tests` runs `scripts/tests/test_client_states.py`, which
 maps each acceptance criterion to a named test and proves the checks bite with planted defects: a
 removed identifier, a second recovery action, a blaming phrase, an undeclared placeholder, an
-invented code, identical data display for a distinguished pair, a missing worked example, a
-document that omits an identifier or alters canonical copy, and a schema keyword the validator does
-not implement. These prove the published data and this document; they are not a client build, and
-no client coverage is claimed.
+invented code, identical data display for a distinguished pair, a denial or quota state flagged as
+composing to `degraded`, a missing worked example, a worked example whose rendered copy paraphrases
+the canonical copy, a document that omits an identifier or alters canonical copy in a state's own
+section while another mention stays intact, and a schema keyword the validator does not implement.
+These prove the published data and this document; they are not a client build, and no client
+coverage is claimed.
 
 ## 15. Rollout, rollback and observability notes
 

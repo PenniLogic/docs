@@ -15,7 +15,7 @@
     "none": "There is no data for the state to show; nothing is rendered in place of it except the state itself.",
     "hidden": "Data may exist locally or remotely but must not be shown while the state applies.",
     "shown": "The data the state concerns stays visible and usable, unchanged.",
-    "shown_marked": "The data stays visible but every figure carries the state's text marker."
+    "shown_marked": "The data stays visible and one text marker per region, programmatically associated with the figures it qualifies, states the condition; at most a short per-figure flag is added, and the marker is announced once per region."
   },
   "placeholders": [
     {
@@ -55,7 +55,7 @@
     },
     {
       "id": "still_available",
-      "description": "What remains usable, stated positively, for example 'Saved answers and everything outside AI'.",
+      "description": "What remains usable, stated positively as a plural noun phrase so the canonical sentence reads correctly, for example 'Saved answers and everything outside AI' or 'Manual entry and your saved reports'. A registration that supplies a singular phrase fails the client gate's copy check.",
       "source": "surface_registration"
     },
     {
@@ -123,10 +123,12 @@
     "database", "timeout", "because", "unexpected", "!"
   ],
   "accessibility_rules": [
-    "Entering a state is announced once to assistive technology: politely for loading, offline, stale and degraded; by moving focus to the headline, or an assertive announcement, for error, permission-denied and quota-exceeded.",
+    "Entering a state is announced once to assistive technology: politely for loading, offline, stale and degraded; by moving focus to the headline, or an assertive announcement, for error, permission-denied and quota-exceeded. A validation rejection moves focus to the rejected field instead of the headline.",
+    "A region-scope permission-denied or quota-exceeded state that is still present on a later launch or return to the surface is not re-announced and does not take focus again; it is exposed in reading order like any other region.",
     "Every state and marker is conveyed by text, never by colour or icon alone; the visual treatment (owned by T-DSY-01) is additional.",
     "The recovery action is a focusable control reachable by keyboard and switch access, with the headline as its accessible context.",
     "Non-blocking notices (degraded, stale, the offline marker) never move focus away from the user's task.",
+    "A stale region has one marker, programmatically associated with the figures it qualifies and announced once; a marker is never repeated after every figure.",
     "Controls disabled by a state (quota-exceeded) stay visible and expose both the disabled state and its reason to assistive technology.",
     "Canonical copy remains readable at two hundred percent text scale; headlines wrap rather than clip and placeholders never force a single line.",
     "Loading indicators respect the reduced-motion preference; no state depends on animation to be understood.",
@@ -141,6 +143,7 @@
       "scopes": ["surface", "region"],
       "data_display": "none",
       "auto_resolves": false,
+      "composes_to_degraded": false,
       "required_content": [
         "The canonical headline.",
         "One or two sentences from the surface registration saying what will appear here and how it gets here (recorded, captured, imported or shared).",
@@ -172,6 +175,7 @@
       "scopes": ["surface", "region", "action"],
       "data_display": "none",
       "auto_resolves": true,
+      "composes_to_degraded": false,
       "required_content": [
         "A skeleton or progress indicator shaped like the content it replaces, so the layout does not jump when data arrives.",
         "After the slow threshold, the canonical headline and body, so a long wait is acknowledged rather than silent.",
@@ -187,7 +191,7 @@
       "recovery_action": {
         "id": "cancel",
         "label": "Cancel",
-        "behaviour": "Stops waiting for the pending request and returns to the last usable surface, or to empty when there is nothing to return to. Nothing the user entered is discarded. Offered only after the slow threshold."
+        "behaviour": "Stops waiting for the pending request and leaves the affected surface or region in the state it had before the request started, or returns to the surface the user came from when there is none. It never produces empty, because no read completed. Nothing the user entered is discarded. Offered only after the slow threshold."
       },
       "copy": {
         "headline": "Still loading",
@@ -203,32 +207,34 @@
       "scopes": ["surface", "region", "action"],
       "data_display": "none",
       "auto_resolves": false,
+      "composes_to_degraded": true,
       "required_content": [
         "The canonical headline naming what was attempted in plain words.",
         "The single recovery action.",
         "The user's unsaved input, preserved exactly, when the failure followed a write.",
-        "For a validation rejection: the affected field named and what is needed stated, never what the user did wrong.",
+        "For a validation rejection: the affected field named in the accessible error message and what is needed stated, never what the user did wrong; the guidance is exposed as that field's own error text, programmatically associated with the field, and focus moves to the rejected field rather than to the headline.",
         "The correlation identifier returned by the service, when one exists, carried with any support report opened from this surface (T-CON-12 owns the identifier); it is not part of the state copy.",
-        "Focus moved to the headline, or an assertive announcement of it, so keyboard and screen-reader users learn of the failure without searching."
+        "For every other failure: focus moved to the headline, or an assertive announcement of it, so keyboard and screen-reader users learn of the failure without searching."
       ],
       "forbidden_content": [
         "A cause the client did not receive from the service in a user-facing form.",
         "Internal identifiers, stack detail, status codes, exception names, provider names or raw service messages.",
         "Any statement about whether a write did or did not take effect unless the service confirmed it; a repeated write is safe only under the idempotency rules T-CON-12 publishes.",
         "Wording that blames the user or labels their input as faulty.",
-        "Another person's existence, name or account state."
+        "Another person's existence, name or account state.",
+        "For a validation rejection: resubmitting the rejected input unchanged, or guidance shown only in a notice that is not associated with the field."
       ],
       "recovery_action": {
         "id": "retry",
         "label": "Try again",
-        "behaviour": "Repeats the failed request with the same input. A write repeats under the same idempotency key so it cannot duplicate a ledger entry; whether a failure is retryable comes from the retry classification T-CON-12 publishes."
+        "behaviour": "Repeats the failed request. For a failure other than a validation rejection the input is unchanged and a write repeats under the same idempotency key so it cannot duplicate a ledger entry; whether a failure is retryable comes from the retry classification T-CON-12 publishes. For a validation rejection the action is the form's submit control: focus is already on the rejected field with its guidance, and the action submits the edited input, never the rejected input unchanged."
       },
       "copy": {
         "headline": "Couldn't {attempt}",
         "body": "Try again in a moment.",
         "variants": {
           "validation": {
-            "when": "The service identified a rejected field.",
+            "when": "The service identified a rejected field. Rendered at action scope; focus moves to the rejected field and the body is exposed as that field's error text.",
             "headline": "Couldn't {attempt}",
             "body": "{field_guidance}"
           }
@@ -244,6 +250,7 @@
       "scopes": ["surface", "region", "action"],
       "data_display": "none",
       "auto_resolves": true,
+      "composes_to_degraded": true,
       "required_content": [
         "The canonical headline stating the known condition.",
         "The single recovery action, plus an automatic retry of reads when connectivity returns, so the state clears without the user doing anything.",
@@ -276,20 +283,22 @@
       "scopes": ["surface", "region"],
       "data_display": "shown_marked",
       "auto_resolves": true,
+      "composes_to_degraded": false,
       "required_content": [
         "The data exactly as last received: money is shown in the integer minor units and currency the service sent, never recomputed or re-derived on the client.",
-        "The canonical marker with the time of the last successful refresh, adjacent to the figures it qualifies, as text and not colour alone.",
+        "One canonical marker per stale region carrying the time of the last successful refresh, placed at the head of the region and programmatically associated with every figure it qualifies, as text and not colour alone; a long list gets at most a short per-figure flag and never a repeated marker.",
         "The single recovery action.",
-        "The offline marker (the offline headline) beside the stale marker when the platform reports no connectivity, so the user knows why a refresh will not succeed yet, without leaving this state.",
-        "For shared data: display only while the offline lease bound published by T-CON-04 has not elapsed; when it elapses without a successful refresh, the region becomes permission_denied and the cached shared data leaves the view.",
+        "The offline marker (the offline headline) beside the region's stale marker when the platform reports no connectivity, so the user knows why a refresh will not succeed yet, without leaving this state.",
+        "For shared data: display only while the offline lease bound published by T-CON-04 has not elapsed; when it elapses without a successful refresh, the cached shared data leaves the view and the region follows the permission_denied rendering for a previously granted shared region.",
         "A visual treatment distinct from confirmed values (T-DSY-01 owns the treatment); the marker text is the minimum."
       ],
       "forbidden_content": [
-        "Presenting the figures as current: no stale figure without its marker.",
+        "Presenting the figures as current: no stale region without its marker.",
         "A money-committing action (settle, pay, transfer, confirm) pre-filled from stale figures without a successful refresh first; if that refresh fails, the action is offline or error at action scope.",
         "Any figure derived on the client from the stale data, such as projected balances, deltas or amounts since the last update.",
         "Widening what is shown: a stale aggregate never reveals detail the active grant did not cover.",
-        "Blame toward another person for the data not updating, or an invented cause for the failed refresh."
+        "Blame toward another person for the data not updating, or an invented cause for the failed refresh.",
+        "A marker repeated after every figure, which makes a long stale list unusable with a screen reader."
       ],
       "recovery_action": {
         "id": "refresh",
@@ -310,19 +319,22 @@
       "scopes": ["surface", "region", "action"],
       "data_display": "hidden",
       "auto_resolves": false,
+      "composes_to_degraded": false,
       "required_content": [
         "The affected capability named in product terms and the kind of access it needs, per cause.",
         "Everything else keeps working, and the copy says so: navigation, unaffected regions, manual alternatives and previously permitted features stay fully operable, because the app is usable with every optional permission denied.",
         "The single recovery action, leading to the one place where this access is controlled; for the sharing cause the action never contacts the other person.",
         "Removal from view of any cached data behind the denial, within the bounds T-CON-04 publishes for shared data.",
-        "Identical copy for the sharing cause whether the grant is absent, revoked, expired or unverifiable, so the state discloses nothing about the other person's decisions or data."
+        "Identical copy for the sharing cause whether the grant is absent, revoked, expired or unverifiable, so the copy itself discloses nothing about the other person's decisions or data.",
+        "For a shared region that was previously granted and is now refused or past its lease bound: the region leaves the view together with its cached data and the viewer's own sharing overview no longer lists it; the sharing copy is rendered only when the viewer navigates to the item explicitly (a link, bookmark or notification), never as a persistent card standing where the figure was. The change from a visible figure to nothing is the inherent signal of unilateral revocation that ADR-005 accepts; the taxonomy adds no durable artefact to it.",
+        "Its own region state only: a denied or refused supplementary region never makes the host surface degraded, because this state already names what still works and offers one action."
       ],
       "forbidden_content": [
-        "Anything that reveals whether data exists behind the denial: counts, totals, hidden-item hints, names, or an indication that a grant once existed.",
-        "Blocking the whole surface, hiding unaffected features, or repeated prompts; a rationale is shown at most once per session unless the user asks.",
+        "Anything in the copy or the layout that reveals whether data exists behind the denial: counts, totals, hidden-item hints, names, or a persistent denial card standing where a shared figure used to be.",
+        "Blocking the whole surface, hiding unaffected features, or repeated prompts; a rationale is shown at most once per session unless the user asks, and a region-scope denial that is present on later launches is not re-announced and does not take focus again.",
         "A bypass or an attempt of the denied operation, or an action that notifies or asks the other person for access.",
         "Blame for the denial or an invented reason for it.",
-        "Treating the condition as error or empty."
+        "Treating the condition as error or empty, or adding a surface-level degraded notice on top of it."
       ],
       "recovery_action": {
         "id": "review_access",
@@ -333,7 +345,7 @@
           "sharing": "See what's shared with you",
           "role": "Request access"
         },
-        "behaviour": "Opens the single place where this access is controlled: the platform's permission request, or the app's system settings page when the platform will not prompt again, for a device permission; the plan overview for a plan entitlement; the user's own sharing overview for a sharing grant; the administrative access request flow for a role capability. It never attempts the denied operation and never contacts another person."
+        "behaviour": "Opens the single place where this access is controlled: the platform's permission request, or the app's system settings page when the platform will not prompt again, for a device permission; the plan overview for a plan entitlement; the user's own sharing overview for a sharing grant; the administrative access request flow for a role capability. Until T-CON-12 binds a service refusal to a cause, the default label opens the account's access overview, which lists plan, sharing and device access without naming any denied item. It never attempts the denied operation and never contacts another person."
       },
       "copy": {
         "headline": "You don't have access to this right now",
@@ -382,7 +394,7 @@
         },
         {
           "id": "role",
-          "description": "The administrative service refused because the capability is outside the operator's role or needs a second approver the operator is not. T-CON-12 binds the refusal shape within the administrative contract.",
+          "description": "The administrative service refused because the capability is outside the operator's role, or because the operator attempted to act as the second approver of their own action. A dual-control action that is awaiting another approver is a decision state of the happy path, not a denial. T-CON-12 binds the refusal shape within the administrative contract.",
           "contract_level": true,
           "client_determined": false
         }
@@ -401,24 +413,27 @@
       "scopes": ["region", "action"],
       "data_display": "shown",
       "auto_resolves": true,
+      "composes_to_degraded": false,
       "required_content": [
         "What is still available, stated positively: previously produced results (for example saved answers) and every capability outside the metered one.",
         "The limit that was reached, in the plain terms the service stated (a count and its window), never as a monetary amount.",
         "When the allowance resets, only when the service stated it.",
         "The single recovery action.",
-        "Metered controls disabled but visible, exposing their disabled state and the headline as its reason to assistive technology."
+        "Metered controls disabled but visible, exposing their disabled state and the headline as its reason to assistive technology.",
+        "Its own region or action state only: an exhausted supplementary capability never makes the host surface degraded, because this state already names what still works and offers one action, and a surface-level re-check would generate the refused requests this state forbids."
       ],
       "forbidden_content": [
         "Hiding or disabling anything the quota does not cover, including the history of what was produced.",
         "A reason the service did not give, a counter the service did not send, or a reset time the client computed itself.",
         "Any monetary amount, price or balance in the state copy.",
         "A bypass, or repeated attempts that only generate refused requests.",
-        "Wording that frames the exhaustion as misuse."
+        "Wording that frames the exhaustion as misuse.",
+        "A surface-level degraded notice on top of this state."
       ],
       "recovery_action": {
         "id": "view_usage",
         "label": "See usage and plans",
-        "behaviour": "Opens the account's usage view showing the limit, what was used, the reset time when known, and the plans available. It is informational: it never claims that a purchase will restore the capability unless the service states so."
+        "behaviour": "Opens the account's usage view showing the limit, what was used, the reset time when known, and the plans available. It is informational: it never claims that a purchase will restore the capability unless the service states so. For a short-window rate limit the same view shows the limit and its window; the plans it lists are context, not the remedy, and the copy of the rate_limited variant says the limit is temporary."
       },
       "copy": {
         "headline": "You've reached this period's limit of {limit}",
@@ -427,6 +442,11 @@
           "with_reset": {
             "when": "The service stated when the allowance resets.",
             "headline": "You've reached this period's limit of {limit}",
+            "body": "{still_available} still work. Resets {resets_at}."
+          },
+          "rate_limited": {
+            "when": "The service stated a short-window rate limit within quota rather than the period's allowance.",
+            "headline": "You've reached the limit of {limit} for now",
             "body": "{still_available} still work. Resets {resets_at}."
           }
         }
@@ -439,11 +459,12 @@
     {
       "id": "degraded",
       "name": "degraded",
-      "definition": "A capability the surface offers is unavailable because a dependency is down or paused, but the surface still does what it exists for with what it shows.",
-      "triggering_condition": "A region or capability enters error, offline, permission_denied or quota_exceeded, or a platform capability such as automatic capture is paused (the capture-health conditions T-AND-07 publishes), while the surface's purpose remains achievable. The decision test is whether the user can still do what this surface exists for: yes gives degraded with the capability named; no gives error.",
+      "definition": "A capability the surface offers is unavailable because a dependency has failed or is paused, but the surface still does what it exists for with what it shows.",
+      "triggering_condition": "A supplementary region or capability is in error or offline, or a platform capability such as automatic capture is paused for a platform reason (the capture-health conditions T-AND-07 publishes), while the surface's purpose remains achievable. The decision test is whether the user can still do what this surface exists for: yes gives degraded with the capability named; no gives error. A supplementary region in permission_denied or quota_exceeded never produces degraded: those states already name what still works and offer one action, and the surface renders only the region state.",
       "scopes": ["surface"],
       "data_display": "shown",
       "auto_resolves": true,
+      "composes_to_degraded": false,
       "required_content": [
         "The surface's content and its primary purpose, fully operable.",
         "The canonical headline naming the unavailable capability in product terms.",
@@ -456,7 +477,8 @@
         "Full-surface blocking, modal dialogs, or replacing content with the notice.",
         "A cause the client was not given in a user-facing form; not being available right now is the whole claim.",
         "Silently omitting the capability with no notice, which would present a partial surface as complete.",
-        "Substitute figures computed on the client for the unavailable dependency, such as a locally estimated currency rate."
+        "Substitute figures computed on the client for the unavailable dependency, such as a locally estimated currency rate.",
+        "Rendering this state for a denied permission, an entitlement deny, a missing grant or an exhausted quota, whose conditions do not self-resolve and whose re-check would repeat refused requests."
       ],
       "recovery_action": {
         "id": "retry",
@@ -480,13 +502,13 @@
     "loading",
     "empty"
   ],
-  "precedence_rule": "When more than one condition holds for the same region, the earliest identifier in the precedence list is rendered: data behind a denial is never shown even when cached, a metered action stays blocked whatever the data shows, held data is shown as stale rather than hidden behind offline or error, a known offline condition is never presented as an unknown error, and degraded is the surface-scope notice that accompanies a region state without replacing it. Loading applies only before the first data and empty only after a successful read.",
+  "precedence_rule": "When more than one condition holds for the same region, the earliest identifier in the precedence list is rendered: data behind a denial is never shown even when cached, a metered action stays blocked whatever the data shows, held data is shown as stale rather than hidden behind offline or error, and a known offline condition is never presented as an unknown error. Degraded is the surface-scope notice that accompanies a supplementary region in error or offline, or a platform pause, without replacing it; a supplementary region in permission_denied or quota_exceeded is rendered alone and adds no surface notice. Loading applies only before the first data and empty only after a successful read.",
   "distinctions": [
     {
       "id": "offline_vs_stale",
       "title": "Offline versus stale",
       "states": ["offline", "stale"],
-      "observable_difference": "In stale the figures are on screen, each with the text marker 'Last updated {last_updated}' and a Refresh action. In offline there are no figures: the headline 'You're offline' stands where they would be and the action is Try again. The same loss of connectivity produces stale where the surface already holds data and offline where it does not. When connectivity is the known cause of staleness, stale adds the offline marker beside the last-updated marker without changing state.",
+      "observable_difference": "In stale the figures are on screen, the region carries one text marker 'Last updated {last_updated}' associated with all of them, and the action is Refresh. In offline there are no figures: the headline 'You're offline' stands where they would be and the action is Try again. The same loss of connectivity produces stale where the surface already holds data and offline where it does not. When connectivity is the known cause of staleness, stale adds the offline marker beside the region's last-updated marker without changing state.",
       "data_shown": {
         "offline": "none",
         "stale": "shown_marked"
@@ -540,7 +562,7 @@
     },
     {
       "id": "role_capability_denied",
-      "description": "The administrative service refused because the capability is outside the operator's role or needs a second approver the operator is not.",
+      "description": "The administrative service refused because the capability is outside the operator's role, or because the operator attempted to act as the second approver of their own action. An action awaiting another approver is a decision state of the happy path, not this condition.",
       "binds_to": "permission_denied",
       "cause": "role",
       "contract_level": true,
@@ -555,14 +577,14 @@
     },
     {
       "id": "rate_limited",
-      "description": "The service refused because a short-window rate limit was reached within quota. The refusal must state the limit and its window so this state's copy stays truthful.",
+      "description": "The service refused because a short-window rate limit was reached within quota. The refusal must state the limit, its window and when it lifts so the rate_limited copy variant stays truthful.",
       "binds_to": "quota_exceeded",
       "contract_level": true,
       "binding_owner": "T-CON-12 binds the rate-limit shape."
     },
     {
       "id": "dependency_unavailable",
-      "description": "The service or the AI boundary reports that a dependency such as an AI provider or a rate source is unavailable. The identifier is bound at the scope of the request that received it; the host surface composes to degraded when its purpose remains achievable.",
+      "description": "The service or the AI boundary reports that a dependency such as an AI provider or a rate source is unavailable. The identifier is bound at the scope of the request that received it; the host surface composes to degraded when its purpose remains achievable and the failed region is supplementary.",
       "binds_to": "error",
       "contract_level": true,
       "binding_owner": "T-CON-12 binds the shape and distinguishes it from a refusal and from quota exhaustion."
@@ -643,12 +665,13 @@
       "shown": [
         "The transaction timeline with every manually recorded and previously captured entry, fully scrollable and editable.",
         "The primary action to record a transaction by hand, operable exactly as when capture is on.",
-        "Budgets, debt summaries and every other region, unchanged.",
+        "Budgets, debt summaries and every other region, unchanged, with no surface-level notice: the denial is rendered as the capture region's own state and the surface is not degraded.",
         "In the capture region only: the headline 'Automatic capture needs SMS access', the body 'You can keep using everything else without it.' and the single action 'Allow SMS access'."
       ],
       "must_not_show": [
         "Any count or hint of payment messages on the device; the client cannot read them and must not imply it knows they exist.",
         "A full-screen permission wall, a blocked primary action, or a system prompt repeated on every launch.",
+        "A surface-level degraded notice or a 'We'll keep checking' promise; a denied permission does not self-resolve.",
         "Error styling or a retry action; nothing failed.",
         "Wording that the person denied or forgot something.",
         "Cached transaction content from before a revoked permission presented as captured today."
@@ -661,6 +684,7 @@
       "transitions": [
         "Permission granted: the capture region returns to its content state, or to empty until the first message is captured.",
         "Permission declined again: nothing changes and the rationale is not repeated in this session.",
+        "Later launches while still denied: the region is present in reading order but is not re-announced and does not take focus.",
         "Platform will not prompt again: the action opens the app's system settings page instead of prompting.",
         "Capture paused by the platform after a force-stop while the permission is granted: the surface is degraded, not permission_denied (T-AND-07)."
       ],
@@ -675,7 +699,7 @@
         "signal": "client_state.permission_denied",
         "attributes": {
           "client": "android",
-          "surface_id": "transactions_home",
+          "surface_id": "example_transactions_home",
           "scope": "region",
           "cause": "device"
         }
@@ -690,12 +714,13 @@
       "scenario": "A person on the free plan asks a sixth AI question this month. The service refuses, stating the allowance of five questions for the month and the date it resets.",
       "shown": [
         "Every previous question and answer, readable and searchable.",
-        "The debt payoff figures, projections and every non-AI capability, unchanged.",
+        "The debt payoff figures, projections and every non-AI capability, unchanged, with no surface-level notice: the exhaustion is rendered as the composer's own action state and the payoff surface is not degraded.",
         "The composer disabled but visible, with the headline 'You've reached this period's limit of 5 AI questions', the body 'Saved answers and everything outside AI still work. Resets 1 October.' and the single action 'See usage and plans'.",
         "The reset sentence only because the service stated the reset time; without it the body ends after the first sentence."
       ],
       "must_not_show": [
         "Hidden or greyed history, or a disabled surface beyond the composer.",
+        "A surface-level degraded notice or an automatic re-check, which would only generate refused requests.",
         "A price, a monetary amount or a balance in the state copy; plan prices live on the plans view.",
         "A reset date the client computed, a counter the service did not send, or a reason such as demand.",
         "A provider or model name, or a way to send the question anyway.",
@@ -709,7 +734,8 @@
       "transitions": [
         "Allowance reset by the service: the composer is enabled again on the next successful request or refresh.",
         "Plan change confirmed by the service: the state clears when the service stops refusing; the client never assumes a purchase succeeded.",
-        "Provider failure instead of quota: the AI region is error and the payoff surface is degraded; the two are distinguishable by the service's shape, not by prose.",
+        "Provider failure instead of quota: the AI region is error and, because the payoff surface still does what it exists for, the surface is degraded with 'AI explanations isn't available right now'; the two conditions are distinguishable by the service's shape, not by prose.",
+        "Short-window rate limit instead of the period's allowance: the rate_limited variant 'You've reached the limit of 3 AI questions for now' with the lift time the service stated.",
         "Own provider key in use: metered but not charged against plan quota, so this state does not appear."
       ],
       "privacy_notes": [
@@ -723,7 +749,7 @@
         "signal": "client_state.quota_exceeded",
         "attributes": {
           "client": "web",
-          "surface_id": "ai_explanations",
+          "surface_id": "example_ai_explanations",
           "scope": "action"
         }
       }
@@ -737,17 +763,18 @@
       "scenario": "A household member opens the shared groceries total on a train with no signal. The client holds the figure from a refresh two hours earlier and the platform reports no connectivity.",
       "shown": [
         "The total exactly as last received from the service, formatted from its integer minor units and currency by the client's locale formatter, for example a synthetic 1234000 INR minor units rendered as twelve thousand three hundred and forty rupees.",
-        "The text marker 'Last updated 2 hours ago' beside the figure and the body 'Showing what was last saved.'",
-        "The offline marker 'You're offline' beside the stale marker, because the platform reported no connectivity.",
+        "One text marker 'Last updated 2 hours ago' at the head of the region, programmatically associated with the figure, and the body 'Showing what was last saved.'",
+        "The offline marker 'You're offline' beside the region's stale marker, because the platform reported no connectivity.",
         "The single action 'Refresh'."
       ],
       "must_not_show": [
-        "The figure without its marker, or styled as a confirmed current value.",
+        "The figure without its region marker, or styled as a confirmed current value.",
         "A client-computed delta, projection or amount since the last update.",
         "Any transaction detail; the grant covers the aggregate only and staleness never widens it.",
         "A settle or transfer action pre-filled from the stale figure without a successful refresh first.",
         "Wording that the partner has not updated or that blames anyone for the failed refresh.",
-        "The figure after the offline lease bound from T-CON-04 has elapsed without a successful refresh."
+        "The figure after the offline lease bound from T-CON-04 has elapsed without a successful refresh.",
+        "After a refusal or an elapsed lease: a persistent denial card standing where the figure was."
       ],
       "copy_rendered": {
         "headline": "Last updated 2 hours ago",
@@ -757,12 +784,12 @@
       "transitions": [
         "Connectivity returns and the refresh succeeds: the marker disappears and the current figure replaces the old one.",
         "Refresh fails while connected: the figure and marker stay, the offline marker is removed, and no cause is invented.",
-        "Offline lease bound elapses without confirmation: the region becomes permission_denied with the sharing cause, the copy 'You don't have access to this right now', the action 'See what's shared with you', and the cached figure leaves the view.",
-        "Grant revoked by the partner and the client reconnects: the service refuses, the region shows the identical sharing copy, and nothing indicates that a grant existed or was withdrawn."
+        "Offline lease bound elapses without confirmation: the client denies on its own, the cached figure and the region leave the view, and the viewer's own sharing overview no longer lists the item. No copy is rendered unless the viewer navigates to the item explicitly, in which case the sharing-cause copy 'You don't have access to this right now' with the action 'See what's shared with you' appears.",
+        "Grant revoked by the partner and the client reconnects: the service refuses and the rendering is identical to the elapsed lease: the region leaves the view and the sharing-cause copy appears only on explicit navigation. The copy is the same as for a grant that never existed; the taxonomy does not claim that the change itself is invisible."
       ],
       "privacy_notes": [
-        "The sharing-cause copy is identical for a revoked grant, an expired grant, a never-granted view and an elapsed lease, so the viewer learns nothing about the partner's decision from the copy.",
-        "A figure that was visible and then leaves the view is a signal inherent to revocation itself, which ADR-005 makes unilateral; the taxonomy adds nothing to that signal and the copy never confirms or explains it.",
+        "The sharing-cause copy is identical for a revoked grant, an expired grant, a never-granted view and an elapsed lease, so the copy itself discloses nothing about the partner's decision.",
+        "Honest residual: a figure that was visible and is then absent is the inherent signal of unilateral revocation, which ADR-005 accepts as the price of the data subject's control. The specified rendering keeps that signal at its floor: no persistent card marks the place where the figure was, the copy never confirms or explains the change, and no control invites repeated checking. In a coercive household the partner who revoked is the data subject, and a durable artefact of their decision on the viewer's screen would work against them; this is why the region leaves the view rather than standing as a denial notice. The acceptance criterion that a denial must not reveal whether data exists behind it is met down to this inherent-signal floor and no further.",
         "The recovery action after denial opens the viewer's own sharing overview and never notifies or asks the partner.",
         "The recorded signal carries the state, surface and scope only; no amount, no member identity and no grant identifier."
       ],
@@ -774,7 +801,7 @@
         "signal": "client_state.stale",
         "attributes": {
           "client": "android",
-          "surface_id": "household_shared_aggregate",
+          "surface_id": "example_household_shared_aggregate",
           "scope": "region"
         }
       }

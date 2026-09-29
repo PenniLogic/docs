@@ -205,6 +205,78 @@ class ContractAndSafetyTests(unittest.TestCase):
         registration = DATA["adoption"]["illustrative_surface_registration"]
         self.assertTrue(registration["surface_id"].startswith("example_"))
         self.assertLessEqual(set(registration["applicable_states"]), set(STATES))
+        for example in DATA["worked_examples"]:
+            self.assertTrue(example["signal_recorded"]["attributes"]["surface_id"].startswith("example_"))
+
+
+class IndependentReviewFixTests(unittest.TestCase):
+    """Findings from the independent reviews of PR #138 (head 7e042cc) stay fixed."""
+
+    def test_d1_degraded_composes_only_over_dependency_failures(self):
+        composing = {state_id for state_id, item in STATES.items() if item["composes_to_degraded"]}
+        self.assertEqual(composing, {"error", "offline"})
+        condition = STATES["degraded"]["triggering_condition"]
+        producers = condition.split("A supplementary region in permission_denied")[0]
+        self.assertNotIn("permission_denied", producers)
+        self.assertNotIn("quota_exceeded", producers)
+        self.assertIn("never produces degraded", condition)
+        for state_id in ("permission_denied", "quota_exceeded"):
+            forbidden = " ".join(STATES[state_id]["forbidden_content"])
+            self.assertIn("degraded", forbidden, state_id)
+        for example in DATA["worked_examples"]:
+            if example["state"] in ("permission_denied", "quota_exceeded"):
+                self.assertTrue(any("not degraded" in line for line in example["shown"]), example["id"])
+
+    def test_d2_cancel_never_produces_empty(self):
+        behaviour = STATES["loading"]["recovery_action"]["behaviour"]
+        self.assertIn("never produces empty", behaviour)
+        self.assertNotIn("or to empty", behaviour)
+
+    def test_d3_a1_validation_variant_recovers_through_the_rejected_field(self):
+        error = STATES["error"]
+        behaviour = error["recovery_action"]["behaviour"]
+        self.assertIn("submits the edited input", behaviour)
+        self.assertIn("never the rejected input unchanged", behaviour)
+        required = " ".join(error["required_content"])
+        self.assertIn("focus moves to the rejected field", required)
+        self.assertIn("programmatically associated with the field", required)
+        self.assertIn("focus moves to the rejected field", error["copy"]["variants"]["validation"]["when"])
+        self.assertTrue(any("rejected field instead of the headline" in rule for rule in DATA["accessibility_rules"]))
+
+    def test_a2_stale_marker_is_one_per_region(self):
+        self.assertIn("one text marker per region", DATA["data_display_values"]["shown_marked"])
+        self.assertIn("announced once per region", DATA["data_display_values"]["shown_marked"])
+        required = " ".join(STATES["stale"]["required_content"])
+        self.assertIn("One canonical marker per stale region", required)
+        self.assertTrue(any("repeated after every figure" in line for line in STATES["stale"]["forbidden_content"]))
+        distinction = next(item for item in DATA["distinctions"] if item["id"] == "offline_vs_stale")
+        self.assertIn("one text marker", distinction["observable_difference"])
+        self.assertNotIn("each with the text marker", distinction["observable_difference"])
+
+    def test_a3_persistent_denial_is_not_reannounced(self):
+        self.assertTrue(any("not re-announced" in rule for rule in DATA["accessibility_rules"]))
+        self.assertTrue(any("not re-announced" in line for line in STATES["permission_denied"]["forbidden_content"]))
+
+    def test_p1_revoked_grant_rendering_states_the_inherent_signal_floor(self):
+        example = next(item for item in DATA["worked_examples"] if item["id"] == "shared_balance_stale")
+        blob = json.dumps(example)
+        self.assertNotIn("nothing indicates", blob)
+        self.assertIn("region leave the view", blob)
+        self.assertIn("only on explicit navigation", blob)
+        self.assertIn("inherent-signal floor", blob)
+        self.assertTrue(any("persistent denial card" in line for line in example["must_not_show"]))
+        required = " ".join(STATES["permission_denied"]["required_content"])
+        self.assertIn("never as a persistent card standing where the figure was", required)
+        self.assertIn("inherent signal of unilateral revocation", required)
+
+    def test_d5_still_available_placeholder_requires_a_plural_phrase(self):
+        placeholder = next(item for item in DATA["placeholders"] if item["id"] == "still_available")
+        self.assertIn("plural noun phrase", placeholder["description"])
+
+    def test_f4_default_review_access_destination_is_specified(self):
+        behaviour = STATES["permission_denied"]["recovery_action"]["behaviour"]
+        self.assertIn("default label opens the account's access overview", behaviour)
+        self.assertIn("without naming any denied item", behaviour)
 
 
 class PlantedDefectTests(unittest.TestCase):
@@ -352,10 +424,67 @@ class PlantedDefectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "fewer than 3 items"):
             validate(data)
 
+    def test_required_worked_example_replaced_by_another_is_rejected(self):
+        data = taxonomy()
+        extra = copy.deepcopy(data["worked_examples"][2])
+        extra["id"] = "currency_rate_stale"
+        extra["signal_recorded"]["attributes"]["surface_id"] = "example_currency_rates"
+        data["worked_examples"][2] = extra
+        with self.assertRaisesRegex(ValueError, "Missing required worked example: shared_balance_stale"):
+            validate(data)
+
+    def test_additional_worked_example_is_accepted(self):
+        data = taxonomy()
+        extra = copy.deepcopy(data["worked_examples"][2])
+        extra["id"] = "currency_rate_stale"
+        extra["title"] = "Stale currency rate"
+        extra["signal_recorded"]["attributes"]["surface_id"] = "example_currency_rates"
+        data["worked_examples"].append(extra)
+        document = DOCUMENT + "\n### 11.4 Stale currency rate\n"
+        self.assertEqual(validate(data, document)["worked_examples"], 4)
+
     def test_worked_example_with_wrong_state_is_rejected(self):
         data = taxonomy()
         data["worked_examples"][2]["state"] = "offline"
         with self.assertRaisesRegex(ValueError, "must use state stale"):
+            validate(data)
+
+    def test_worked_example_paraphrasing_canonical_copy_is_rejected(self):
+        data = taxonomy()
+        example = data["worked_examples"][0]
+        example["copy_rendered"]["headline"] = "SMS access is needed for capture"
+        with self.assertRaisesRegex(ValueError, "not an instantiation of the canonical copy"):
+            validate(data)
+
+    def test_worked_example_with_foreign_action_label_is_rejected(self):
+        data = taxonomy()
+        data["worked_examples"][1]["copy_rendered"]["action"] = "Upgrade now"
+        with self.assertRaisesRegex(ValueError, "not the recovery action of quota_exceeded"):
+            validate(data)
+
+    def test_worked_example_may_render_any_variant(self):
+        data = taxonomy()
+        rendered = data["worked_examples"][1]["copy_rendered"]
+        rendered["headline"] = "You've reached the limit of 3 AI questions for now"
+        rendered["body"] = "Saved answers and everything outside AI still work. Resets in a minute."
+        validate(data)
+
+    def test_worked_example_with_real_looking_surface_id_is_rejected(self):
+        data = taxonomy()
+        data["worked_examples"][0]["signal_recorded"]["attributes"]["surface_id"] = "transactions_home"
+        with self.assertRaisesRegex(ValueError, "surface_id must be prefixed example_"):
+            validate(data)
+
+    def test_worked_example_with_wrong_signal_is_rejected(self):
+        data = taxonomy()
+        data["worked_examples"][2]["signal_recorded"]["signal"] = "client_state.offline"
+        with self.assertRaisesRegex(ValueError, "signal must be client_state.stale"):
+            validate(data)
+
+    def test_worked_example_with_forbidden_term_is_rejected(self):
+        data = taxonomy()
+        data["worked_examples"][2]["copy_rendered"]["body"] = "Showing what was last saved. Sorry."
+        with self.assertRaisesRegex(ValueError, "forbidden term 'sorry'"):
             validate(data)
 
     def test_worked_example_signal_attribute_with_undeclared_key_is_rejected(self):
@@ -370,9 +499,84 @@ class PlantedDefectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not unique"):
             validate(data)
 
+    def test_precedence_with_a_non_state_is_rejected(self):
+        data = taxonomy()
+        data["precedence"][-1] = "pending_sync"
+        with self.assertRaisesRegex(ValueError, "Precedence must list every state exactly once"):
+            validate(data)
+
+    def test_denial_flagged_as_composing_to_degraded_is_rejected(self):
+        data = taxonomy()
+        state(data, "permission_denied")["composes_to_degraded"] = True
+        with self.assertRaisesRegex(ValueError, "region in permission_denied must not compose to degraded"):
+            validate(data)
+
+    def test_quota_flagged_as_composing_to_degraded_is_rejected(self):
+        data = taxonomy()
+        state(data, "quota_exceeded")["composes_to_degraded"] = True
+        with self.assertRaisesRegex(ValueError, "region in quota_exceeded must not compose to degraded"):
+            validate(data)
+
+    def test_dependency_failure_not_composing_to_degraded_is_rejected(self):
+        data = taxonomy()
+        state(data, "offline")["composes_to_degraded"] = False
+        with self.assertRaisesRegex(ValueError, "region in offline must compose to degraded"):
+            validate(data)
+
+    def test_state_without_composition_flag_is_rejected_by_schema(self):
+        data = taxonomy()
+        del state(data, "empty")["composes_to_degraded"]
+        with self.assertRaisesRegex(ValueError, "missing required property 'composes_to_degraded'"):
+            validate(data)
+
+    def test_hyphenated_name_mismatch_is_rejected(self):
+        data = taxonomy()
+        state(data, "permission_denied")["name"] = "access-denied"
+        with self.assertRaisesRegex(ValueError, "name must be the hyphenated identifier"):
+            validate(data)
+
+    def test_label_by_cause_naming_unknown_cause_is_rejected(self):
+        data = taxonomy()
+        state(data, "permission_denied")["recovery_action"]["label_by_cause"]["integrity"] = "Verify device"
+        with self.assertRaisesRegex(ValueError, "label_by_cause names unknown cause 'integrity'"):
+            validate(data)
+
+    def test_permission_denied_missing_required_cause_is_rejected(self):
+        data = taxonomy()
+        denied = state(data, "permission_denied")
+        denied["causes"] = [cause for cause in denied["causes"] if cause["id"] != "sharing"]
+        del denied["copy"]["variants"]["sharing"]
+        del denied["recovery_action"]["label_by_cause"]["sharing"]
+        with self.assertRaisesRegex(ValueError, "must define cause 'sharing'"):
+            validate(data)
+
+    def test_degraded_widened_to_region_scope_is_rejected(self):
+        data = taxonomy()
+        state(data, "degraded")["scopes"] = ["surface", "region"]
+        with self.assertRaisesRegex(ValueError, "degraded is a surface-scope notice"):
+            validate(data)
+
+    def test_condition_with_cause_not_on_target_is_rejected(self):
+        data = taxonomy()
+        condition = next(item for item in data["contract_conditions"] if item["id"] == "quota_exhausted")
+        condition["cause"] = "plan"
+        with self.assertRaisesRegex(ValueError, "cause 'plan' is not a cause of quota_exceeded"):
+            validate(data)
+
+    def test_illustrative_registration_with_unknown_state_is_rejected(self):
+        data = taxonomy()
+        data["adoption"]["illustrative_surface_registration"]["applicable_states"].append("pending_sync")
+        with self.assertRaisesRegex(ValueError, "names unknown state 'pending_sync'"):
+            validate(data)
+
     def test_document_omitting_an_identifier_is_rejected(self):
         document = DOCUMENT.replace("`quota_exceeded`", "`quota-exceeded`")
-        with self.assertRaisesRegex(ValueError, "Document does not mention state `quota_exceeded`"):
+        with self.assertRaisesRegex(ValueError, "no section headed ### 3.n `quota_exceeded`"):
+            validate(taxonomy(), document)
+
+    def test_document_omitting_a_mention_outside_the_state_sections_is_rejected(self):
+        document = DOCUMENT.replace("`entitlement_denied`", "`plan_refusal`")
+        with self.assertRaisesRegex(ValueError, "Document does not mention contract condition `entitlement_denied`"):
             validate(taxonomy(), document)
 
     def test_document_omitting_a_worked_example_is_rejected(self):
@@ -380,15 +584,33 @@ class PlantedDefectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "worked example 'Stale shared balance'"):
             validate(taxonomy(), document)
 
-    def test_document_paraphrasing_canonical_copy_is_rejected(self):
+    def test_document_paraphrasing_canonical_copy_everywhere_is_rejected(self):
         document = DOCUMENT.replace("You're offline", "No connection")
-        with self.assertRaisesRegex(ValueError, "canonical copy \"You're offline\" of state `offline`"):
+        with self.assertRaisesRegex(ValueError, "Section 3.n `offline` does not carry the canonical copy \"You're offline\""):
+            validate(taxonomy(), document)
+
+    def test_document_paraphrasing_copy_in_the_state_section_only_is_rejected(self):
+        # "You're offline" also appears in section 5 and the worked examples; altering the single
+        # occurrence in section 3.4 must still fail, so a paraphrase cannot hide behind another mention.
+        marker = '- **Copy.** Headline "You\'re offline". Body "Try again when you\'re back online."'
+        self.assertEqual(DOCUMENT.count(marker), 1)
+        self.assertGreater(DOCUMENT.count("You're offline"), 1)
+        document = DOCUMENT.replace(marker, marker.replace("You're offline", "No connection"))
+        with self.assertRaisesRegex(ValueError, "Section 3.n `offline` does not carry the canonical copy \"You're offline\""):
+            validate(taxonomy(), document)
+
+    def test_document_paraphrasing_action_label_in_the_state_section_only_is_rejected(self):
+        marker = '- **Recovery action `refresh`.** Label "Refresh";'
+        self.assertEqual(DOCUMENT.count(marker), 1)
+        self.assertGreater(DOCUMENT.count("Refresh"), 1)
+        document = DOCUMENT.replace(marker, marker.replace('"Refresh"', '"Reload"'))
+        with self.assertRaisesRegex(ValueError, "Section 3.n `stale` does not carry the canonical copy 'Refresh'"):
             validate(taxonomy(), document)
 
     def test_data_copy_absent_from_document_is_rejected(self):
         data = taxonomy()
         state(data, "offline")["copy"]["body"] = "Try again when the connection is back."
-        with self.assertRaisesRegex(ValueError, "Document does not carry the canonical copy"):
+        with self.assertRaisesRegex(ValueError, "Section 3.n `offline` does not carry the canonical copy"):
             validate(data)
 
     def test_unknown_top_level_property_is_rejected_by_schema(self):

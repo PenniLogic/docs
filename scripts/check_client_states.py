@@ -38,6 +38,8 @@ REQUIRED_EXAMPLES = {
     "shared_balance_stale": "stale",
 }
 REQUIRED_ASSERTIONS = ("client_state_coverage", "taxonomy_first")
+# The only region states whose presence in a supplementary region makes the host surface degraded.
+DEGRADED_PRODUCERS = ("error", "offline")
 
 PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
 # An HTTP-style status or a SCREAMING_SNAKE token would be an invented code; T-CON-12 owns codes.
@@ -216,8 +218,17 @@ def _check_states(data, states):
         raise ValueError("quota_exceeded must state what remains available")
     if quota["data_display"] != "shown":
         raise ValueError("quota_exceeded must keep what the capability produced visible")
-    if states["degraded"]["scopes"] != ["surface"]:
+    degraded = states["degraded"]
+    if degraded["scopes"] != ["surface"]:
         raise ValueError("degraded is a surface-scope notice")
+    # Degraded composes only over self-resolving dependency failures; a denial or an exhausted
+    # quota already names what still works and offers one action, so it never adds a notice.
+    for state_id, state in states.items():
+        composes = state["composes_to_degraded"]
+        if state_id in DEGRADED_PRODUCERS and composes is not True:
+            raise ValueError(f"A supplementary region in {state_id} must compose to degraded")
+        if state_id not in DEGRADED_PRODUCERS and composes is not False:
+            raise ValueError(f"A region in {state_id} must not compose to degraded")
 
 
 def _check_distinctions(data, states):
@@ -268,23 +279,59 @@ def _check_contract_conditions(data, states):
                 )
 
 
+def _template(text):
+    """Regex that matches any instantiation of a canonical string's placeholders."""
+    parts = PLACEHOLDER.split(text)
+    pattern = "".join(re.escape(part) if index % 2 == 0 else r"(.+?)" for index, part in enumerate(parts))
+    return re.compile(pattern + r"\Z", re.DOTALL)
+
+
+def _instantiates(rendered, canonical):
+    return _template(canonical).match(rendered) is not None
+
+
+def _check_rendered_copy(example, state):
+    """A worked example renders the state's canonical copy, never a paraphrase."""
+    rendered = example["copy_rendered"]
+    copy = state["copy"]
+    templates = [(copy["headline"], copy["body"])]
+    templates += [(variant["headline"], variant["body"]) for variant in copy.get("variants", {}).values()]
+    if not any(
+        _instantiates(rendered["headline"], headline) and _instantiates(rendered["body"], body)
+        for headline, body in templates
+    ):
+        raise ValueError(
+            f"Worked example {example['id']}: rendered copy is not an instantiation "
+            f"of the canonical copy of {state['id']}"
+        )
+    action = state["recovery_action"]
+    labels = [action["label"], *action.get("label_by_cause", {}).values()]
+    if not any(_instantiates(rendered["action"], label) for label in labels):
+        raise ValueError(
+            f"Worked example {example['id']}: rendered action is not the recovery action of {state['id']}"
+        )
+
+
 def _check_worked_examples(data, states):
     examples = _unique_ids(data["worked_examples"], "worked example")
-    if set(examples) != set(REQUIRED_EXAMPLES):
-        raise ValueError(f"Worked examples must be exactly: {', '.join(sorted(REQUIRED_EXAMPLES))}")
+    for missing in set(REQUIRED_EXAMPLES) - set(examples):
+        raise ValueError(f"Missing required worked example: {missing}")
     attributes = _unique_ids(data["signals"]["attributes"], "signal attribute")
     for example in examples.values():
-        expected = REQUIRED_EXAMPLES[example["id"]]
+        expected = REQUIRED_EXAMPLES.get(example["id"], example["state"])
         if example["state"] != expected:
             raise ValueError(f"Worked example {example['id']} must use state {expected}")
-        state = states[expected]
+        if example["state"] not in states:
+            raise ValueError(f"Worked example {example['id']}: unknown state {example['state']!r}")
+        state = states[example["state"]]
         causes = {cause["id"] for cause in state.get("causes", [])}
         if causes and example.get("cause") not in causes:
-            raise ValueError(f"Worked example {example['id']} must name a cause of {expected}")
+            raise ValueError(f"Worked example {example['id']} must name a cause of {state['id']}")
         for text in example["copy_rendered"].values():
             term = forbidden_term(text, data["forbidden_terms"])
             if term:
                 raise ValueError(f"Worked example {example['id']}: forbidden term {term!r}")
+        _check_rendered_copy(example, state)
         record = example["signal_recorded"]
         if record["signal"] != state["signal"]:
             raise ValueError(f"Worked example {example['id']}: signal must be {state['signal']}")
@@ -294,6 +341,12 @@ def _check_worked_examples(data, states):
             allowed = attributes[key].get("values")
             if allowed and value not in allowed:
                 raise ValueError(f"Worked example {example['id']}: attribute {key!r} value not allowed")
+        surface_id = record["attributes"].get("surface_id", "")
+        if not surface_id.startswith("example_"):
+            raise ValueError(
+                f"Worked example {example['id']}: surface_id must be prefixed example_; "
+                "no client registers surfaces yet"
+            )
 
 
 def _check_adoption(data, states):
@@ -310,13 +363,34 @@ def _check_adoption(data, states):
         raise ValueError("Illustrative registration names an unknown client")
 
 
+def _state_sections(document, states):
+    """Slice the document into each state's own `### 3.n \\`<id>\\`` section."""
+    headings = list(re.finditer(r"^### 3\.\d+ `([a-z][a-z0-9_]*)`\s*$", document, re.MULTILINE))
+    sections = {}
+    for index, heading in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(document)
+        following = re.search(r"^## ", document[heading.end():end], re.MULTILINE)
+        if following:
+            end = heading.end() + following.start()
+        sections[heading.group(1)] = document[heading.start():end]
+    for state_id in states:
+        if state_id not in sections:
+            raise ValueError(f"Document has no section headed ### 3.n `{state_id}`")
+    return sections
+
+
 def _check_document(data, document, states):
-    # The document hard-wraps prose and wraps placeholders in code spans; neither changes wording.
-    plain = re.sub(r"\s+", " ", document.replace("`", ""))
-    for state in states.values():
+    # Each state's own section must carry its canonical copy verbatim, so a paraphrase in the
+    # state's definition cannot hide behind another mention elsewhere in the document. The
+    # document hard-wraps prose and wraps placeholders in code spans; neither changes wording.
+    sections = _state_sections(document, states)
+    for state_id, state in states.items():
+        plain = re.sub(r"\s+", " ", sections[state_id].replace("`", ""))
         for text in canonical_strings(state):
             if text not in plain:
-                raise ValueError(f"Document does not carry the canonical copy {text!r} of state `{state['id']}`")
+                raise ValueError(
+                    f"Section 3.n `{state_id}` does not carry the canonical copy {text!r} verbatim"
+                )
     mentions = [(f"`{state_id}`", f"state `{state_id}`") for state_id in states]
     mentions += [
         (f"`{state['recovery_action']['id']}`", f"recovery action `{state['recovery_action']['id']}`")

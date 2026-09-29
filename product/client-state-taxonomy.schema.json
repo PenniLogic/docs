@@ -97,8 +97,8 @@
     },
     "worked_examples": {
       "type": "array",
+      "description": "At least the three required high-risk examples; a future state or cause may add its own.",
       "minItems": 3,
-      "maxItems": 3,
       "items": { "$ref": "#/definitions/worked_example" }
     },
     "signals": { "$ref": "#/definitions/signals" },
@@ -215,7 +215,8 @@
       "additionalProperties": false,
       "required": [
         "id", "name", "definition", "triggering_condition", "scopes", "data_display",
-        "auto_resolves", "required_content", "forbidden_content", "recovery_action", "copy", "signal"
+        "auto_resolves", "composes_to_degraded", "required_content", "forbidden_content",
+        "recovery_action", "copy", "signal"
       ],
       "properties": {
         "id": { "$ref": "#/definitions/identifier" },
@@ -230,6 +231,10 @@
         },
         "data_display": { "$ref": "#/definitions/data_display" },
         "auto_resolves": { "type": "boolean" },
+        "composes_to_degraded": {
+          "type": "boolean",
+          "description": "Whether a supplementary region in this state makes its host surface degraded. True only for self-resolving dependency failures (error, offline); a denial or an exhausted quota renders alone."
+        },
         "required_content": { "$ref": "#/definitions/text_list" },
         "forbidden_content": { "$ref": "#/definitions/text_list" },
         "recovery_action": { "$ref": "#/definitions/recovery_action" },
