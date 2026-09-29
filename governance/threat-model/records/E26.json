@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "epic": "E26",
+  "title": "Architecture decision gates",
+  "issue": "PenniLogic/docs#29",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": [
+    {
+      "date": "2026-09-30",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
+        "role": "pennilogic-developer"
+      },
+      "scope": "The architecture decision gates under PenniLogic/docs#29: money wire format, time and idempotency (docs#35), the category model (docs#36), ledger currency, foreign exchange and debt-balance derivation (docs#37), encryption scope, searchable fields and row-level security (docs#38), authentication, passkeys, provider, relying-party identifier and recovery (docs#39), the administrative boundary, database role and audit stream (docs#40), shared-data erasure and cross-user key access (docs#41), AI egress, runtime platform and Mode C custom endpoints (docs#42), the entitlement and quota model (docs#47), credit bureau integration (docs#52) and persisted embeddings (docs#56), plus the per-decision file layout with its generated index (docs#70, validated by docs#141). The threat surface is twofold: the decisions fix the controls every later epic inherits, so a decision that stays silent on a threat propagates that silence into implementation; and the decision process itself (acceptance by one account, supersession in place, a generated index) can be tampered with or repudiated. Each finding below states what a record must decide; none implements anything.",
+      "tickets_in_scope": [
+        "PenniLogic/docs#35",
+        "PenniLogic/docs#36",
+        "PenniLogic/docs#37",
+        "PenniLogic/docs#38",
+        "PenniLogic/docs#39",
+        "PenniLogic/docs#40",
+        "PenniLogic/docs#41",
+        "PenniLogic/docs#42",
+        "PenniLogic/docs#47",
+        "PenniLogic/docs#52",
+        "PenniLogic/docs#56",
+        "PenniLogic/docs#70",
+        "PenniLogic/docs#141"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md (sections 1 to 8, ownership table)",
+        "architecture/01-domain-model.md#3-ownership-sharing-and-authorization",
+        "architecture/03-stack-and-monetization.md (sections 8 and 9: entitlements, anti-abuse)",
+        "ai/01-ai-harness-research.md (sections 4, 5 and 7: BYOK, custom endpoints, quota, safety)",
+        "product/04-execution-readiness-review.md (second hardening pass)",
+        "PenniLogic/docs#29 (epic body: scope, exit criteria)"
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Authentication is decided by ADR-019 (docs#39). The baseline model names credential stuffing and refresh-token replay (T-01, T-02). The record must fix the relying-party identifier and how it resists phishing, the provider trust chain, device binding, refresh rotation with reuse detection, and the recovery path, because recovery is where an attacker who cannot pass the passkey goes next.",
+          "evidence": [],
+          "findings": [
+            "E26-F01"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Two records decide integrity. ADR-015 (docs#35) fixes the money wire format, time conventions and idempotency, which is what makes a replayed or altered request detectable. The decision process is the other surface: an accepted record is the authority every downstream ticket implements, so an edit to an accepted record that is not a dated supersession is tampering with the plan, and the layout validator (docs#141) is the place to refuse it.",
+          "evidence": [
+            "PenniLogic/docs#70 (closed): per-decision files and a generated index so records never edit the same lines"
+          ],
+          "findings": [
+            "E26-F02",
+            "E26-F16"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "ADR-020 (docs#40) decides the administrative audit stream. The baseline names hash-chained append-only audit rows (T-03, section 2). The record must decide the write-once destination, the chaining and time-synchronisation rule, the retention period the compliance floor will cite, and how an operator session is attributed, because api#27 and api#39 implement whatever it says.",
+          "evidence": [],
+          "findings": [
+            "E26-F03"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Four records decide disclosure controls. ADR-018 (docs#38) fixes encryption scope, the blind index, forced row-level security and the grant-mediated cross-user read predicate; the readiness review already demands that every bypass be forbidden by name. ADR-021 (docs#41) fixes shared-data erasure. docs#56 decides whether user-derived embeddings persist at all, and if they do, how inversion and membership inference are prevented and how erasure reaches them. docs#52 decides whether bureau data enters the system and what is retained.",
+          "evidence": [
+            "product/04-execution-readiness-review.md: T-ADR-CRYPTO-04 decides the grant-mediated read predicate under forced RLS and forbids every bypass by name"
+          ],
+          "findings": [
+            "E26-F04",
+            "E26-F05",
+            "E26-F06"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "ADR-023 (docs#47) fixes quota: reservation, reconciliation and reset are what stop a free tier or a leaked key from exhausting a shared budget. Spend caps and the kill switch for AI providers are decided in ADR-022 and reviewed under AI service compromise.",
+          "evidence": [],
+          "findings": [
+            "E26-F07"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "ADR-020 (docs#40) decides the administrative database role, process and host separation and the policy boundary; ADR-018 (docs#38) decides forced row-level security and the low-privilege application role (E26-F04). Superuser connections that silently bypass row-level security (T-04) and cloud-account compromise reaching keys (T-11) are the baseline threats these records answer.",
+          "evidence": [],
+          "findings": [
+            "E26-F11"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "finding",
+          "analysis": "ADR-023 (docs#47) is the only record that can make billing verification a decision rather than a habit: every purchase, renewal, refund and chargeback must be verified with the provider server-side before entitlement changes, webhooks must be idempotent, and cross-channel precedence, refund unwind and plan immutability must be fixed so api#48, api#51, api#52 and api#60 implement one rule.",
+          "evidence": [
+            "architecture/03-stack-and-monetization.md#9-anti-abuse: trial, promo, refund-cycling and key-sharing vectors"
+          ],
+          "findings": [
+            "E26-F13"
+          ]
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "finding",
+          "analysis": "The two research documents describe entitlements differently and ADR-023 (docs#47) supersedes one of them. The record must state that entitlement is resolved server-side on every protected action, that no client holds an authoritative entitlement, how bring-your-own-key changes plan treatment without opening a loophole, and how usage is accounted.",
+          "evidence": [
+            "PenniLogic/docs#29: the two conflicting entitlement sketches are marked superseded in place by the accepted record"
+          ],
+          "findings": [
+            "E26-F14"
+          ]
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "finding",
+          "analysis": "ADR-022 (docs#42) decides the runtime platform, egress and custom endpoints. Key custody for platform and user keys, the egress allowlist, the model allowlist, the spend cap and a kill switch that is proven to work are the controls that bound a compromised gateway or provider; ai-service#2, ai-service#8 and admin#5 implement what the record says.",
+          "evidence": [
+            "ai/01-ai-harness-research.md#42-custom-endpoint-mode-backend-routed-only"
+          ],
+          "findings": [
+            "E26-F08"
+          ]
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "finding",
+          "analysis": "Mode C custom endpoints are a user-supplied URL the server calls: the textbook server-side request forgery against cloud metadata and private ranges. ADR-022 (docs#42) must decide validation, resolution pinning and the denied destination classes so infra#30 and ai-service#3 implement a decision.",
+          "evidence": [
+            "ai/01-ai-harness-research.md#43-ssrf-via-user-supplied-base-url"
+          ],
+          "findings": [
+            "E26-F09"
+          ]
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "finding",
+          "analysis": "No record currently decides how untrusted text reaches a model. The harness research proposes tool-result-only placement, an immutable tool allowlist and confirmation for state changes; unless ADR-022 (docs#42) states these as runtime rules, ai-service#4 implements a preference that a later ticket can trade away.",
+          "evidence": [
+            "ai/01-ai-harness-research.md#71-prompt-injection-defense"
+          ],
+          "findings": [
+            "E26-F15"
+          ]
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "finding",
+          "analysis": "No record covers splits directly, and none needs to, provided ADR-015 (docs#35) fixes the deterministic remainder-allocation rule for dividing an integer minor-unit amount across shares. Without it api#33, the clients and the independent model in api#22 each pick a rounding rule and the disagreement is exploitable.",
+          "evidence": [],
+          "findings": [
+            "E26-F10"
+          ]
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "ADR-020 (docs#40) decides the operator identity domain. The baseline's insider-risk design (section 2) assumes a separate identity provider, four-eyes elevation, a recorded and re-keyed break-glass path and a joiner-mover-leaver lifecycle; the record must make those decisions so api#26, api#47, api#59, admin#11 and admin#12 implement one model.",
+          "evidence": [
+            "architecture/02-security-architecture.md#2-admin-console-insider-risk-design"
+          ],
+          "findings": [
+            "E26-F12"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E26-F01",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "ADR-019 must decide the relying-party binding, device binding, refresh rotation and the recovery path",
+          "attack_path": "An attacker who cannot defeat the passkey phishes the recovery flow, replays a stolen refresh token, or registers a credential against a look-alike relying party.",
+          "recommended_control": "The record fixes the relying-party identifier and its protection, the provider trust chain, device binding, refresh-token rotation with reuse detection and family revocation, and a recovery path with re-verification and a cooling-off period, and lists the tests that prove each.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#39",
+          "resolution": null
+        },
+        {
+          "id": "E26-F02",
+          "category": "tampering",
+          "severity": "high",
+          "title": "ADR-015 must fix idempotency scope, replay window and the integer minor-unit wire format",
+          "attack_path": "A replayed or altered money request is accepted because idempotency keys are optional, scoped inconsistently or expire too soon, or an amount is transmitted as a decimal and re-rounded by a consumer.",
+          "recommended_control": "The record states the idempotency key scope, storage and replay window for every write, the integer minor-unit plus currency wire shape, and the time conventions (instants in UTC, calendar rules by named zone), and names the contract tests that prove them.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#35",
+          "resolution": null
+        },
+        {
+          "id": "E26-F03",
+          "category": "repudiation",
+          "severity": "high",
+          "title": "ADR-020 must decide the write-once audit stream, chaining, time synchronisation and attribution",
+          "attack_path": "An operator action is disputed and the audit row was editable, unsynchronised with other logs, retained too briefly, or attributed to a shared identity.",
+          "recommended_control": "The record decides the append-only destination the console cannot delete from, the hash-chaining rule, the time source, the retention the compliance floor will cite, and how each operator session is attributed, and names the tampering test that proves the chain.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#40",
+          "resolution": null
+        },
+        {
+          "id": "E26-F04",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "ADR-018 must name the forced row-level-security predicate and forbid every bypass by name",
+          "attack_path": "The application connects with a role that bypasses row-level security, a trusted setter is callable from user context, or a cross-user read is served without a satisfied grant.",
+          "recommended_control": "The record fixes the encryption scope and blind-index fields, forced row-level security with the exact grant-mediated predicate, the session context and its trusted setter, the low-privilege application role, and an explicit list of forbidden bypasses, each with a denial test.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#38",
+          "resolution": null
+        },
+        {
+          "id": "E26-F05",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "docs#56 must decide whether user-derived embeddings persist and how inversion and erasure are handled",
+          "attack_path": "Embeddings derived from a user's transactions are stored in a shared index; inversion or membership inference recovers merchants and patterns, and crypto-shredding the user's key does not reach the index.",
+          "recommended_control": "The record either prohibits persisted user-derived embeddings or requires per-user encryption under the user's key, an erasure path that provably removes them, and a ban on cross-user indexes.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#56",
+          "resolution": null
+        },
+        {
+          "id": "E26-F06",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "docs#52 must decide credit-bureau data minimisation or record the integration as a non-goal",
+          "attack_path": "A bureau report is fetched and stored whole; the most sensitive financial record the product could hold sits in a table nobody planned to protect.",
+          "recommended_control": "The record declares the integration a non-goal, or fixes consent, the minimal fields retained, retention and erasure, and the encryption scope those fields inherit from ADR-018.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#52",
+          "resolution": null
+        },
+        {
+          "id": "E26-F07",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "ADR-023 must fix quota reservation, reconciliation and reset semantics",
+          "attack_path": "Concurrent requests overrun a quota because reservation and reconciliation are not atomic, or a reset boundary is gamed to farm free-tier usage.",
+          "recommended_control": "The record decides the request and token dimensions, atomic reservation and reconciliation, the reset boundary and the abuse limits that api#30 implements.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#47",
+          "resolution": null
+        },
+        {
+          "id": "E26-F08",
+          "category": "ai_service_compromise",
+          "severity": "high",
+          "title": "ADR-022 must decide key custody, egress and model allowlists, spend caps and a proven kill switch",
+          "attack_path": "A compromised gateway or provider exfiltrates platform or user keys, substitutes a model, returns malicious content into a money path, or runs up unbounded spend before anyone can stop it.",
+          "recommended_control": "The record fixes envelope-encrypted key custody and who can read keys, the egress and model allowlists, per-plan and global spend caps, circuit breakers, and a kill switch with a test that proves it stops traffic.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#42",
+          "resolution": null
+        },
+        {
+          "id": "E26-F09",
+          "category": "request_forgery",
+          "severity": "high",
+          "title": "ADR-022 must decide custom-endpoint validation and the denied destination classes",
+          "attack_path": "A user registers a custom endpoint that resolves to cloud metadata, a private range or a loopback address; the backend fetches it and returns credentials or internal data.",
+          "recommended_control": "The record requires backend-routed calls only, validation at registration and at call time, resolution pinning against DNS rebinding, and denial of private, loopback, link-local and metadata destinations, implemented by infra#30 and tested by ai-service#3.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#42",
+          "resolution": null
+        },
+        {
+          "id": "E26-F10",
+          "category": "split_manipulation",
+          "severity": "medium",
+          "title": "ADR-015 must fix the deterministic remainder-allocation rule for shares",
+          "attack_path": "The split ledger, the clients and the independent verification model each round remainders differently; a member exploits the disagreement to shift paise on every split, or disputes a settlement that two implementations compute differently.",
+          "recommended_control": "The record states one deterministic rule for allocating an integer minor-unit remainder across shares (order, tie-break and currency minor-unit handling) that api#33, contracts#8 and api#22 all implement and test.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#35",
+          "resolution": null
+        },
+        {
+          "id": "E26-F11",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "ADR-020 must decide the separate administrative process, host, database role and default-deny policy boundary",
+          "attack_path": "The console shares a process or database role with the customer application; a customer-side flaw or a support role reaches administrative capability.",
+          "recommended_control": "The record decides a separate deployment and host, a distinct non-superuser database role, a default-deny policy engine and the boundary tests that prove a customer identity cannot reach an operator action.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#40",
+          "resolution": null
+        },
+        {
+          "id": "E26-F12",
+          "category": "administrative_identity_compromise",
+          "severity": "high",
+          "title": "ADR-020 must decide the operator identity domain, four-eyes elevation, break-glass and lifecycle",
+          "attack_path": "An operator identity is phished or a leaver keeps access; a single operator approves their own elevation or uses an unrecorded break-glass path to read or export financial data.",
+          "recommended_control": "The record decides a separate identity provider for operators, time-boxed four-eyes elevation, unmask and bulk export, a recorded and re-keyed break-glass path, and joiner, mover, leaver and recertification rules that api#59 and admin#11 implement.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#40",
+          "resolution": null
+        },
+        {
+          "id": "E26-F13",
+          "category": "billing_forgery",
+          "severity": "high",
+          "title": "ADR-023 must require server-side provider verification before any entitlement change",
+          "attack_path": "A forged or replayed purchase token, receipt or webhook grants a paid plan; a refund or chargeback leaves the entitlement in place; simultaneous store and web subscriptions are resolved inconsistently.",
+          "recommended_control": "The record requires verification with the billing provider before entitlement changes, idempotent and authenticated webhooks, cross-channel precedence, refund and chargeback unwind, and immutable plan versions, naming the replay suite that proves them.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#47",
+          "resolution": null
+        },
+        {
+          "id": "E26-F14",
+          "category": "entitlement_tampering",
+          "severity": "high",
+          "title": "ADR-023 must state server-authoritative resolution and close the bring-your-own-key loophole",
+          "attack_path": "A client caches or flips an entitlement, or a user supplies their own provider key to obtain plan features without a plan.",
+          "recommended_control": "The record states that entitlement is resolved server-side on every protected action, that clients hold only a display hint, how bring-your-own-key changes plan treatment and usage accounting, and which sketch in the research documents is superseded.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#47",
+          "resolution": null
+        },
+        {
+          "id": "E26-F15",
+          "category": "prompt_injection",
+          "severity": "medium",
+          "title": "ADR-022 must state the runtime rules for untrusted text, the tool allowlist and confirmation of state changes",
+          "attack_path": "Merchant, SMS or imported text is placed in a prompt as free text; the model follows embedded instructions and calls a tool that changes state or reveals data.",
+          "recommended_control": "The record states that untrusted text reaches a model only as structured tool results, that the tool allowlist is immutable at runtime, that any state-changing tool requires explicit user confirmation, and that model output is never executed or rendered as markup.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#42",
+          "resolution": null
+        },
+        {
+          "id": "E26-F16",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "The layout validator must refuse an undated edit to an accepted decision record",
+          "attack_path": "An accepted record is edited in place to change the chosen option without a supersession; downstream tickets implement different versions of the same decision and the index does not reveal it.",
+          "recommended_control": "The validator requires status, acceptance date, deciding session and the proving tests on every accepted record, and fails a change to an accepted record that is not a dated supersession pointing at the new record.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#141",
+          "resolution": null
+        }
+      ]
+    }
+  ]
+}

@@ -210,6 +210,12 @@ after seeing the numbers.
 - [ ] Estimated
 - [ ] Component and phase assigned
 - [ ] Design/ADR settled where the ticket touches an architectural decision
+- [ ] The ticket's epic has a dated STRIDE threat-model refresh that is `current` for
+      `python scripts/check_threat_model.py --epic <epic>`: recorded in
+      `governance/threat-model/records/<epic>.json` before the epic's first ticket starts, within the
+      published 12-week cadence and against the current category list, with every finding closed or
+      handed to a named ticket (`T-QA-14`; see `governance/threat-model/README.md`). An epic whose
+      refresh is stale, missing or blocked by an unowned finding has no Ready tickets.
 
 ### Definition of Done (a ticket may be closed)
 - [ ] Acceptance criteria demonstrably met

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "epic": "E31",
+  "title": "Program governance and delivery protocol",
+  "issue": null,
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": [],
+  "note": "No public epic issue exists for E31: planning/source/epics.json carries it as In Progress (Sprint 01) but it was not published to PenniLogic/docs, and its tickets (.github#1, infra#37, docs#141) have no parent. Reported to the coordinator on 2026-09-30; the record is kept so the inventory check cannot lose the epic."
+}

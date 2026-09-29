@@ -1,0 +1,452 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/governance/threat-model/schema.json",
+  "title": "PenniLogic threat-model refresh data",
+  "description": "Definitions for governance/threat-model/categories.json (definition 'model') and governance/threat-model/records/<epic>.json (definition 'record'). Validated by scripts/check_threat_model.py with a strict draft-07 subset: any keyword that validator does not implement is an error, so nothing passes silently. Rules that need more than one property (evidence for a controlled category, an owner ticket for a handed-off finding, category completeness, staleness) are enforced by the script, not by this schema.",
+  "definitions": {
+    "epic_id": {
+      "type": "string",
+      "pattern": "^E[0-9]{2}$"
+    },
+    "iso_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "github_login": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$"
+    },
+    "public_issue": {
+      "description": "A public PenniLogic issue by identifier. Historical PenniLogic-old numbers are not valid owners.",
+      "type": "string",
+      "pattern": "^PenniLogic/(?:\\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*$"
+    },
+    "epic_issue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^PenniLogic/docs#[1-9][0-9]*$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session": {
+      "description": "The AI session or GitHub account that performed the refresh, as recorded in the pull request.",
+      "type": "string",
+      "pattern": "^(?:copilot-session:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|github:[A-Za-z0-9-]+)$"
+    },
+    "category_owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountable",
+        "review_role",
+        "supporting_review_roles"
+      ],
+      "properties": {
+        "accountable": {
+          "$ref": "#/definitions/github_login"
+        },
+        "review_role": {
+          "$ref": "#/definitions/identifier"
+        },
+        "supporting_review_roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/identifier"
+          }
+        }
+      }
+    },
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "family",
+        "stride_letter",
+        "added_in_model_version",
+        "owner",
+        "definition",
+        "baseline_threats"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/identifier"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "family": {
+          "enum": [
+            "stride",
+            "extension"
+          ]
+        },
+        "stride_letter": {
+          "enum": [
+            "S",
+            "T",
+            "R",
+            "I",
+            "D",
+            "E",
+            null
+          ]
+        },
+        "added_in_model_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "owner": {
+          "$ref": "#/definitions/category_owner"
+        },
+        "definition": {
+          "$ref": "#/definitions/text"
+        },
+        "baseline_threats": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^T-[0-9]{2}$"
+          }
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/identifier"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "model_version",
+        "title",
+        "baseline",
+        "owner_model",
+        "accountable_owners",
+        "review_roles",
+        "cadence_weeks",
+        "cadence_rationale",
+        "refresh_triggers",
+        "categories"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "model_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "baseline": {
+          "$ref": "#/definitions/text"
+        },
+        "owner_model": {
+          "$ref": "#/definitions/text"
+        },
+        "accountable_owners": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/github_login"
+          }
+        },
+        "review_roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/identifier"
+          }
+        },
+        "cadence_weeks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 52
+        },
+        "cadence_rationale": {
+          "$ref": "#/definitions/text"
+        },
+        "refresh_triggers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/trigger"
+          }
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/category"
+          }
+        }
+      }
+    },
+    "record_owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountable"
+      ],
+      "properties": {
+        "accountable": {
+          "$ref": "#/definitions/github_login"
+        }
+      }
+    },
+    "performed_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountable",
+        "session",
+        "role"
+      ],
+      "properties": {
+        "accountable": {
+          "$ref": "#/definitions/github_login"
+        },
+        "session": {
+          "$ref": "#/definitions/session"
+        },
+        "role": {
+          "type": "string",
+          "pattern": "^pennilogic-[a-z-]+$"
+        }
+      }
+    },
+    "category_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "disposition",
+        "analysis",
+        "evidence",
+        "findings"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/identifier"
+        },
+        "disposition": {
+          "enum": [
+            "controlled",
+            "accepted",
+            "finding",
+            "not_applicable"
+          ]
+        },
+        "analysis": {
+          "$ref": "#/definitions/text"
+        },
+        "evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^E[0-9]{2}-F[0-9]{2}$"
+          }
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "severity",
+        "title",
+        "attack_path",
+        "recommended_control",
+        "status",
+        "owner_ticket",
+        "resolution"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^E[0-9]{2}-F[0-9]{2}$"
+        },
+        "category": {
+          "$ref": "#/definitions/identifier"
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "attack_path": {
+          "$ref": "#/definitions/text"
+        },
+        "recommended_control": {
+          "$ref": "#/definitions/text"
+        },
+        "status": {
+          "description": "handed_off: owner_ticket names the public ticket that now owns the finding. closed: resolution states why no ticket is needed. open: no owner yet; this blocks Definition of Ready for the epic.",
+          "enum": [
+            "handed_off",
+            "closed",
+            "open"
+          ]
+        },
+        "owner_ticket": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^PenniLogic/(?:\\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*$"
+        },
+        "resolution": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "refresh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "date",
+        "trigger",
+        "model_version",
+        "performed_by",
+        "scope",
+        "tickets_in_scope",
+        "sources",
+        "categories",
+        "findings"
+      ],
+      "properties": {
+        "date": {
+          "$ref": "#/definitions/iso_date"
+        },
+        "trigger": {
+          "$ref": "#/definitions/identifier"
+        },
+        "model_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "performed_by": {
+          "$ref": "#/definitions/performed_by"
+        },
+        "scope": {
+          "$ref": "#/definitions/text"
+        },
+        "tickets_in_scope": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/public_issue"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/category_review"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/finding"
+          }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "epic",
+        "title",
+        "issue",
+        "owner",
+        "refreshes"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "epic": {
+          "$ref": "#/definitions/epic_id"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "issue": {
+          "$ref": "#/definitions/epic_issue"
+        },
+        "note": {
+          "$ref": "#/definitions/text"
+        },
+        "owner": {
+          "$ref": "#/definitions/record_owner"
+        },
+        "refreshes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/refresh"
+          }
+        }
+      }
+    }
+  }
+}

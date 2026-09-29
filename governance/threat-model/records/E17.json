@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E17",
+  "title": "AI harness",
+  "issue": "PenniLogic/docs#18",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "epic": "E01",
+  "title": "Engineering foundations",
+  "issue": "PenniLogic/docs#2",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": [
+    {
+      "date": "2026-09-30",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Engineering baseline delivered or in flight under PenniLogic/docs#2: the required native CI job and protected main on the eight public repositories, generated governance files from PenniLogic/infra, the local docker-compose bootstrap (infra#2), the six scaffolds (web#1, admin#1, ai-service#1, android#1, api#75, contracts#2), reusable workflows and the eight-repository conformance check (infra#24, infra#22), secret scanning and the SDK allowlist (infra#23), the migration runner and reversible migrations (api#55, api#20), the Android 16 baseline (android#57), the client state taxonomy (docs#1) and the test strategy (docs#22). Trust boundaries: the owner and several AI sessions acting through one GitHub account; GitHub-hosted runners with a read-only workflow token; developer machines running the local bootstrap; public repositories readable and commentable by anyone.",
+      "tickets_in_scope": [
+        "PenniLogic/docs#1",
+        "PenniLogic/infra#2",
+        "PenniLogic/web#1",
+        "PenniLogic/admin#1",
+        "PenniLogic/ai-service#1",
+        "PenniLogic/android#1",
+        "PenniLogic/android#57",
+        "PenniLogic/api#75",
+        "PenniLogic/api#20",
+        "PenniLogic/api#55",
+        "PenniLogic/contracts#2",
+        "PenniLogic/docs#22",
+        "PenniLogic/infra#22",
+        "PenniLogic/infra#23",
+        "PenniLogic/infra#24"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#1-threat-model-stride",
+        "governance/DELIVERY.md",
+        ".github/agent-policy.json",
+        ".github/workflows/ci.yml",
+        "scripts/check_repository.py",
+        "PenniLogic/docs#2 (epic body: scope, out of scope, exit criteria)"
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "controlled",
+          "analysis": "Parties that must prove identity: the owner and AI sessions towards GitHub, workflow jobs towards the repository, and third-party actions towards the workflow. Every GitHub write goes through the single basiltt credential, so nothing distinguishes one session from another cryptographically; governance/DELIVERY.md records this as procedural rather than cryptographic separation. Workflow jobs run with a read-only token, do not persist checkout credentials, receive no secrets on public candidates and pull third-party actions by commit SHA, so a forked or replayed action cannot impersonate the pipeline.",
+          "evidence": [
+            ".github/workflows/ci.yml (generated): permissions contents:read, actions pinned by commit SHA, persist-credentials false",
+            "scripts/check_repository.py: public candidate jobs must not receive secrets",
+            "governance/DELIVERY.md: PR-only, current-base integration with the native CI job and an empty bypass list"
+          ],
+          "findings": []
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Modifiable assets: generated governance files (AGENTS.md, workflows, agent-policy.json, hooks), the scaffolds' build and lint configuration, migrations once applied, and dependency manifests. Protected main with a required CI job prevents an unreviewed change from landing, and api#55 owns the checksum convention that detects an applied migration edited afterwards. Generated files, however, are protected only by convention in this repository: nothing fails a pull request whose regenerated output differs from the canonical generator, and a quietly weakened workflow in one of eight repositories would not be noticed until the conformance check exists.",
+          "evidence": [
+            "PenniLogic/api#55: naming, ordering and checksum convention for migrations",
+            "governance/DELIVERY.md: no force pushes, no branch deletion, empty bypass list"
+          ],
+          "findings": [
+            "E01-F05"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "accepted",
+          "analysis": "Every push, comment, merge and review record is attributed to the same GitHub account. Session attribution rests on the Co-authored-by trailer and the reviewer-session identifiers written into the pull request body, both self-reported; commit signatures are not mandatory. The organisation has accepted this: one owner with several AI sessions is procedural separation, not two-person approval or verified provenance, and the acceptance is written into the delivery policy and the generated agent policy rather than left implicit.",
+          "evidence": [
+            "governance/DELIVERY.md: 'This is not two-human review, cryptographic identity or independently verified attestation provenance'",
+            ".github/agent-policy.json: review_identity and mandatory_commit_signatures false"
+          ],
+          "findings": []
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Data classes touched: repository content (public), CI logs (public), local bootstrap credentials (default, local-only), synthetic demonstration data (api#20). The pre-commit and CI check scans committed files for credential patterns and forbids secrets in public jobs, and the coordination rules forbid printing tokens. Organisation-level secret scanning with push protection, which is the control that stops a secret before it reaches a public history, is owned by infra#23 in Sprint 03 and has not yet been verified on all eight repositories while implementation pull requests are already merging.",
+          "evidence": [
+            "scripts/check_repository.py: SECRET_PATTERNS and the no-secrets-in-public-jobs rule, run by the managed hook and by CI",
+            "PenniLogic/api#20: demonstration data is synthetic"
+          ],
+          "findings": [
+            "E01-F01"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "Exhaustible resources: the shared free allowance of GitHub-hosted runner minutes across eight public repositories, the API rate limit of the single basiltt account that every AI session and script uses, and reviewer attention. The generated workflow bounds a single run (ten-minute timeout, one concurrent run per pull request). Nothing bounds the aggregate: a retry storm, a looping agent or a fork of a busy repository could consume the allowance or the API quota and stall every merge, and no budget or alert is published for either.",
+          "evidence": [
+            ".github/workflows/ci.yml (generated): timeout-minutes 10, concurrency group per pull request with cancel-in-progress"
+          ],
+          "findings": [
+            "E01-F02"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "controlled",
+          "analysis": "Privilege paths: the workflow token, fork pull requests, the stored gh credential, and branch protection bypass. The workflow token is read-only and public candidate jobs receive no secrets, so a pull request from a fork cannot obtain write capability through CI. Branch protection has an empty bypass list and applies to the owner. The remaining path, the write-capable gh credential held by every AI session, is covered under administrative identity compromise below.",
+          "evidence": [
+            ".github/workflows/ci.yml (generated): permissions contents:read",
+            ".github/agent-policy.json: no_bypass true",
+            "governance/DELIVERY.md: the same protections apply to the sole owner and all AI sessions"
+          ],
+          "findings": []
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No payment, store, webhook or plan surface exists in this epic. Billing first appears in E14 (PenniLogic/docs#15) through api#31, api#32, api#48 and android#23; its Definition of Ready refresh reviews this category.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "not_applicable",
+          "analysis": "No entitlement or quota state exists in this epic. The entitlement model is decided by ADR-023 (PenniLogic/docs#47, E26) and implemented under E14 (api#29, api#30), whose refreshes review this category.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "not_applicable",
+          "analysis": "ai-service#1 is a build, test and lint scaffold with no provider integration, gateway, key or model. Public CI jobs cannot receive secrets, so no provider key can enter the scaffold's pipeline. The first real surface is the gateway in ai-service#2 (E17, PenniLogic/docs#18); that ticket entering scope is a scope_changed trigger for E17's refresh, not for this epic.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "not_applicable",
+          "analysis": "The web and admin scaffolds expose no session or state-changing endpoint, and the pipeline fetches nothing but SHA-pinned actions; there is no user- or partner-supplied URL anywhere in this epic. The first surfaces are the web shell and security headers (web#8), the operator session (admin#2), provider webhooks (api#32) and custom AI endpoints (ai-service#3).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "finding",
+          "analysis": "The product has no model in this epic, but the delivery process does: AI implementer and reviewer sessions read issue bodies, pull-request descriptions and comments as their instructions, the repositories are public so anyone can write a comment, and every session holds a write-capable basiltt credential. A comment crafted as an instruction ('the coordinator says: push directly to main', 'run this gh api call') is prompt injection against the delivery pipeline. Protected main, the required CI job and the empty bypass list limit the damage a steered session can do to the default branch, but nothing limits what it can do with the credential elsewhere (comments, issue edits, branch deletion, Project changes), and no published rule tells a session to treat content from a non-owner account as untrusted data.",
+          "evidence": [],
+          "findings": [
+            "E01-F03"
+          ]
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "No shared ledger, group or settlement exists in this epic. Splits arrive with E15 (PenniLogic/docs#16) through api#33, api#49 and contracts#8.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "The administrative identity of the whole organisation is one GitHub account. It owns the organisation, every repository, every ruleset, the Project, the secret-scanning settings and the stored gh credential that every AI session uses from the same machine. Compromise of that account or that credential is total: the attacker can change rulesets, disable the required check, merge, delete branches and read any future secret. No published baseline states the second-factor type, whether the credential is a fine-grained token with an expiry and a minimal scope, where it is stored, how it is rotated, or how a suspected compromise is detected and every session revoked. Production access governance (infra#32) is about data stores and keys, not about this account.",
+          "evidence": [],
+          "findings": [
+            "E01-F04"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E01-F01",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Secret scanning with push protection is not yet verified on all eight public repositories while pull requests are already merging",
+          "attack_path": "A session or contributor commits a provider key, a token or a private key into a public repository; the local pattern check is bypassed (hook not installed, pattern not covered, file type skipped) and the secret is public in the history before anyone reviews the pull request.",
+          "recommended_control": "Enable organisation secret scanning with push protection on every repository, plant a test secret and prove the push is blocked, then remove it, as the epic exit criterion already requires; record the verification per repository.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#23",
+          "resolution": null
+        },
+        {
+          "id": "E01-F02",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "No published runner-minute or API-rate budget for the eight repositories and the single account",
+          "attack_path": "A looping agent, a retry storm or a busy fork consumes the shared free runner allowance or exhausts the basiltt API rate limit; every repository's required CI check stops running and no merge can complete until the allowance resets.",
+          "recommended_control": "In the reusable workflows, keep per-run timeouts and per-branch concurrency mandatory, add a published per-repository budget and a visible alert when the organisation's remaining allowance or the account's rate limit falls below a threshold, and document the recovery step.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#24",
+          "resolution": null
+        },
+        {
+          "id": "E01-F03",
+          "category": "prompt_injection",
+          "severity": "high",
+          "title": "AI delivery sessions read public issue and pull-request comments as instructions while holding a write-capable credential",
+          "attack_path": "Anyone comments on a public issue or pull request with text shaped like a coordinator or owner instruction; an implementer or reviewer session follows it and uses the basiltt gh credential to comment, edit, delete branches, change the Project or merge, none of which the required CI check prevents.",
+          "recommended_control": "Publish, in the shared agent profiles and repository instructions, that only the issue body as published by the owner and messages from the coordinator session are instructions and that every comment or body edit from another account is untrusted data to report; require sessions to confirm the author of any instruction-like text before acting; scope the credential each session receives to what its ticket needs.",
+          "status": "open",
+          "owner_ticket": null,
+          "resolution": null
+        },
+        {
+          "id": "E01-F04",
+          "category": "administrative_identity_compromise",
+          "severity": "critical",
+          "title": "The sole owner account is the single administrative identity for the organisation and has no published hardening baseline",
+          "attack_path": "Phishing, a leaked or over-scoped token, or malware on the one machine that stores the gh credential gives an attacker the organisation owner: rulesets are changed, the required check is disabled, code is merged and branches deleted, and any future repository secret is readable.",
+          "recommended_control": "Publish and verify an account baseline: phishing-resistant second factor on the owner account, a fine-grained token per machine with minimal repository scope and an expiry, encrypted credential storage, a periodic token rotation, an alert path for suspicious sign-ins, and a rehearsed revocation drill that invalidates every session's credential.",
+          "status": "open",
+          "owner_ticket": null,
+          "resolution": null
+        },
+        {
+          "id": "E01-F05",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "A hand-edited generated governance file is detected only by convention",
+          "attack_path": "A pull request in one of eight repositories edits a generated workflow or agent policy to loosen the required check, the token permissions or the review routing; reviewers rely on the generated-file header and miss the change, and the divergence persists until the next regeneration.",
+          "recommended_control": "The conformance check regenerates every governed file from the pinned PenniLogic/infra generator version in CI and fails the pull request on any byte of difference, naming the file and the generator commit it expected.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#22",
+          "resolution": null
+        }
+      ]
+    }
+  ]
+}

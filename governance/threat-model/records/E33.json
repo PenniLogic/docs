@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "epic": "E33",
+  "title": "Experience strategy, research and design operations",
+  "issue": "PenniLogic/docs#58",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": [
+    {
+      "date": "2026-09-30",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Design-organisation foundations under PenniLogic/docs#58: design governance, decision rights, approval expiry and the decision log (docs#64); research ethics, recruitment, the research repository and the participant evidence system (docs#65); persona, jobs and mental-model validation (docs#66); journeys and service blueprints (docs#67); platform allocation and sitemaps (docs#74); the machine-readable screen, flow, component and traceability registry (docs#75); the visual and interaction direction (docs#76); UX outcome metrics and continuous research (docs#77). The threat surface is research-participant material (interviews about debt and income, recordings, transcripts, screenshots of real banking apps, consent forms, incentive payments) held in third-party design and research tools, the design decision trail, and the metric definitions later epics instrument.",
+      "tickets_in_scope": [
+        "PenniLogic/docs#64",
+        "PenniLogic/docs#65",
+        "PenniLogic/docs#66",
+        "PenniLogic/docs#67",
+        "PenniLogic/docs#74",
+        "PenniLogic/docs#75",
+        "PenniLogic/docs#76",
+        "PenniLogic/docs#77"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#8-privacy-engineering",
+        "product/08-experience-design-and-sdlc-plan.md",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-5 and O-6: consent ledger, rights-request contract, pre-onboarding consent)",
+        "governance/DELIVERY.md",
+        "PenniLogic/docs#58 (epic body: scope, out of scope, exit criteria)"
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Recruitment is the spoofing surface. Participants are approached about their debts; an attacker impersonating the study can phish them for bank details or one-time codes, and fraudulent or duplicate participants can game incentives and poison the evidence. Outreach must be verifiable and screening must exist.",
+          "evidence": [],
+          "findings": [
+            "E33-F03"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "The registry (docs#75) gives every persona, journey, flow, screen and component a stable identifier that tests and tickets reference. An identifier silently dropped, duplicated or repointed breaks traceability for everything downstream, and a generated index edited by hand hides it. Decision records in the log (docs#64) share the same exposure and are covered by that ticket's approval-expiry and decision-log scope.",
+          "evidence": [
+            "PenniLogic/docs#64: decision rights, approval expiry and decision log"
+          ],
+          "findings": [
+            "E33-F05"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Two things must be provable later: that a participant consented to a specific use of their material and could withdraw, and that a design decision was approved by whom and when. The decision log with approval expiry (docs#64) covers the second procedurally, in the same single-account, separate-session manner as code review. Consent evidence has no owner statement yet.",
+          "evidence": [
+            "PenniLogic/docs#64: approval expiry and decision log",
+            "governance/DELIVERY.md: approvals are recorded procedurally by separate sessions"
+          ],
+          "findings": [
+            "E33-F02"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Participant material is personal financial data of the same class the product protects, held before the product exists in tools with their own sharing defaults, and quoted into personas, journeys, tickets and prompts. This is the epic's highest risk. The metric definitions (docs#77) are the other channel: an outcome metric defined over amounts or merchants becomes a payload later epics faithfully instrument.",
+          "evidence": [],
+          "findings": [
+            "E33-F01",
+            "E33-F04"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "not_applicable",
+          "analysis": "No service, pipeline or budget in this epic can be exhausted by an attacker. Approval queues stalling delivery are a schedule risk that docs#64 addresses with approval expiry, not a security threat.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "controlled",
+          "analysis": "Decision rights are the privilege model of this epic: who may approve a direction, a sitemap or a persona. docs#64 fixes the RACI and review queues, and, as everywhere in this organisation, approvals are recorded by separate sessions under one account rather than by distinct humans, which governance/DELIVERY.md states openly. Tool-level administrative access is reviewed under administrative identity compromise.",
+          "evidence": [
+            "PenniLogic/docs#64: Chief Design Officer governance, RACI and review queues",
+            "governance/DELIVERY.md: one owner with several AI sessions is procedural separation"
+          ],
+          "findings": []
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No payment or entitlement behaviour is designed in this epic; billing screens are designed in E35 and E36 (docs#98, docs#111) and reviewed there. Participant incentive payments are handled under the research evidence system (E33-F01, E33-F02).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "not_applicable",
+          "analysis": "No entitlement state exists or is designed here; the component-level rule that entitlement states are server-driven is raised in E34's refresh against docs#82.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "not_applicable",
+          "analysis": "No product AI is in scope. AI tools used to synthesise or summarise research material are a disclosure channel for participant data and are covered by E33-F01's rule that no raw participant artifact enters a prompt.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "not_applicable",
+          "analysis": "Nothing in this epic runs a server or fetches a supplied URL.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "not_applicable",
+          "analysis": "No model reads untrusted content on the product's behalf in this epic. Participant text pasted into an AI synthesis tool cannot reach product data or tools; the exposure runs the other way and is E33-F01.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "No shared ledger or settlement is designed here; split experiences are designed in docs#95 and docs#109 (E35, E36).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "The administrators of the research repository, the design files and the recruitment tools hold every participant's material. Those tool accounts are outside GitHub's protections and have no stated baseline for second factor, named administrators or offboarding.",
+          "evidence": [],
+          "findings": [
+            "E33-F06"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E33-F01",
+          "category": "information_disclosure",
+          "severity": "critical",
+          "title": "Participant recordings, transcripts, screenshots and financial disclosures have no handling rules",
+          "attack_path": "A recording or transcript of a debt interview, or a screenshot of a participant's real banking app, is stored in a tool with public-link sharing, quoted verbatim into a persona or a public issue, pasted into an AI tool, or kept indefinitely after the study.",
+          "recommended_control": "Classify participant material as personal financial data; fix the storage location and region, a named access list, a retention and erasure schedule, pseudonymised quotes only in personas, journeys and tickets, and an explicit rule that no raw participant artifact enters a public repository, the Project, an issue or a model prompt.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#65",
+          "resolution": null
+        },
+        {
+          "id": "E33-F02",
+          "category": "repudiation",
+          "severity": "high",
+          "title": "Consent, withdrawal and incentive evidence per participant is not yet specified",
+          "attack_path": "A participant disputes how their material was used, or withdraws, and the study cannot show which consent text they saw, when, for what uses, or that withdrawal removed their material and that the incentive was paid once.",
+          "recommended_control": "Versioned consent text, a dated consent record per participant naming the uses, a withdrawal path that provably removes material and its derivatives, and an incentive payment record, all kept under the same access list as E33-F01.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#65",
+          "resolution": null
+        },
+        {
+          "id": "E33-F03",
+          "category": "spoofing",
+          "severity": "medium",
+          "title": "Recruitment outreach can be impersonated and participants can be faked",
+          "attack_path": "An attacker poses as the study and asks participants for bank credentials or one-time codes; separately, duplicate or fraudulent participants collect incentives and skew the evidence.",
+          "recommended_control": "Outreach only from a verifiable official channel with a published statement that the study never asks for credentials, codes or account numbers; a screener with identity and duplicate checks proportionate to the incentive; a fraud-flag path in the repository.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#65",
+          "resolution": null
+        },
+        {
+          "id": "E33-F04",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "UX outcome metrics must inherit the analytics payload allowlist and opt-out",
+          "attack_path": "A metric is defined over amounts, balances, merchant names or debt values; E07 and later epics instrument it as specified and financial values leave the device in analytics events.",
+          "recommended_control": "Define every outcome metric over allowlisted, non-financial events with coarsened derived values, require opt-out to be honoured in the definition, and set cohort minimums for any reported segment; reference the E07 allowlist rule rather than restating it.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#77",
+          "resolution": null
+        },
+        {
+          "id": "E33-F05",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "Registry identifiers can be dropped, duplicated or repointed without detection",
+          "attack_path": "A screen or flow identifier that tests and tickets reference is renamed or removed in an unreviewed edit, or the generated index is hand-edited; traceability silently breaks and coverage checks pass against the wrong entries.",
+          "recommended_control": "Registry entries are versioned and attributable, changes go through review, generated indices are never hand-edited, and a validator fails on a dangling, duplicated or repointed identifier, which E38's coverage check (docs#126) can then rely on.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#75",
+          "resolution": null
+        },
+        {
+          "id": "E33-F06",
+          "category": "administrative_identity_compromise",
+          "severity": "medium",
+          "title": "Research and design tool administrators have no access baseline",
+          "attack_path": "An administrator account on the research repository, the design files or the recruitment tool is phished or left active after a role change; every participant's material is readable.",
+          "recommended_control": "Named administrators with a second factor, least-privilege roles for contributors, an offboarding step tied to the decision log, and a periodic access review recorded in the evidence system.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#65",
+          "resolution": null
+        }
+      ]
+    }
+  ]
+}

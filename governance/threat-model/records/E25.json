@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "epic": "E25",
+  "title": "Quality, verification and release assurance",
+  "issue": "PenniLogic/docs#28",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": [
+    {
+      "date": "2026-09-30",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Verification harnesses, gates and evidence under PenniLogic/docs#28: the physical test device (android#14), the Android, web and admin quality gates (android#15, web#7, admin#3), privacy traffic inspection (android#16), the sanitized parser corpus and compatibility matrix (android#35), the money-path harness (api#22), the tenancy, object-authorization and authentication attack suite (api#23), contract testing (contracts#3), static and dynamic scanning with flaky-test quarantine (infra#28), load, stress, soak, chaos and the disaster-recovery game day (infra#29), supply-chain verification (infra#31), the penetration test and red-team scenarios (docs#43), this refresh loop (docs#48) and the private-beta and public-launch evidence gates (docs#49, docs#50). The threat surface is the test assets themselves (corpora, devices, exploit suites, scanner credentials, captured traffic), the gates (quarantine, waivers, evidence artifacts) and the environments the suites are pointed at.",
+      "tickets_in_scope": [
+        "PenniLogic/admin#3",
+        "PenniLogic/android#14",
+        "PenniLogic/android#15",
+        "PenniLogic/android#16",
+        "PenniLogic/android#35",
+        "PenniLogic/api#22",
+        "PenniLogic/api#23",
+        "PenniLogic/contracts#3",
+        "PenniLogic/docs#43",
+        "PenniLogic/docs#48",
+        "PenniLogic/docs#49",
+        "PenniLogic/docs#50",
+        "PenniLogic/infra#28",
+        "PenniLogic/infra#29",
+        "PenniLogic/infra#31",
+        "PenniLogic/web#7"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#1-threat-model-stride",
+        "product/04-execution-readiness-review.md (verification surface and gate table)",
+        "product/03-delivery-plan.md#6-non-functional-gates",
+        "governance/DELIVERY.md",
+        "PenniLogic/docs#28 (epic body: goal, scope, exit criteria)"
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Test doubles are identities: sandbox provider keys, mock authentication, test-mode webhook signing secrets and allowlisted test hosts. The classic failure is a bypass that ships: a build flag or configuration that accepts the test identity in a production build. Nothing in the current gates proves that a release candidate contains no such bypass.",
+          "evidence": [],
+          "findings": [
+            "E25-F12"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "The gates are the asset: a quarantine list, a threshold file, a waiver or an evidence artifact that can be edited defeats every test behind it. Supply-chain verification (infra#31) covers the build inputs. The flaky-test quarantine that infra#28 introduces is the one mechanism designed to make a failing test stop failing, and it needs limits that keep it from silencing a security, privacy or money test.",
+          "evidence": [
+            "PenniLogic/infra#31: IaC, container, mobile binary, SBOM and signed-provenance verification"
+          ],
+          "findings": [
+            "E25-F01"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Release decisions rest on evidence gates that read artifacts and may accept waivers. A hand-made artifact, a stale artifact from an older commit, or a waiver without a date, an expiry and an accountable identity would let a release proceed without anyone being answerable for it. The readiness review already requires dated, expiring, attributable waivers; artifact provenance is not yet stated.",
+          "evidence": [
+            "product/04-execution-readiness-review.md: T-REL-02 and T-REL-03 accept only a dated, expiring, attributable waiver"
+          ],
+          "findings": [
+            "E25-F05"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Three test assets carry real or realistic personal financial data if handled carelessly: the parser corpus derived from real bank SMS (android#35), the physical device holding accounts, builds and captured traffic (android#14), and the privacy traffic captures themselves (android#16). Each must be synthetic or sanitized, stored with an access list and never enter a public repository; the corpus is the highest risk because it is published deliberately.",
+          "evidence": [],
+          "findings": [
+            "E25-F02",
+            "E25-F06",
+            "E25-F11"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "Load, stress, soak and chaos suites are denial-of-service tools by construction. Pointed at a shared environment they degrade it; pointed at a metered provider (an AI gateway or a payment sandbox that bills, or worse a live provider) they spend money. The suites need target allowlists, stubs for every metered dependency and a spend kill switch.",
+          "evidence": [],
+          "findings": [
+            "E25-F03"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "The attack suite embeds working cross-tenant, object-authorization and authentication exploits and needs privileged fixtures to set up tenants. Run against the wrong target, or with production data in its fixtures, it is an attack. It must refuse any non-test target and use synthetic tenants only.",
+          "evidence": [],
+          "findings": [
+            "E25-F08"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "controlled",
+          "analysis": "The quality epic's contribution against billing forgery is the harness that proves idempotency and adversarial retry on every money path (api#22) and the adversarial replay suite that E14 owns for the subscription lifecycle (api#48). This refresh does not verify those tickets; it records that the control is owned and must exist before E14 passes its own Definition of Ready.",
+          "evidence": [
+            "PenniLogic/api#22: money-path harness with idempotency and adversarial retry",
+            "PenniLogic/api#48: subscription lifecycle, reconciliation and adversarial replay suite (E14)"
+          ],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "finding",
+          "analysis": "Entitlement bypass is an authorization failure and belongs in the attack suite next to tenancy and object authorization: a free-plan user calling a plan-gated endpoint, a replayed cached entitlement, a quota reservation that is never reconciled. The suite's current title names tenancy, object authorization and authentication only.",
+          "evidence": [],
+          "findings": [
+            "E25-F09"
+          ]
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "controlled",
+          "analysis": "The AI evaluation gate runs real provider calls in continuous integration; without pinned budgets and recorded fixtures it is a spend path and a key-exposure path. ai-service#7 owns the evaluation suite together with spend controls, and admin#5 owns enforced provider spend caps. Load and chaos suites must stub the gateway (see E25-F03).",
+          "evidence": [
+            "PenniLogic/ai-service#7: evaluation suite, numeric fidelity and spend controls as merge gates",
+            "PenniLogic/admin#5: enforced AI provider spend caps"
+          ],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "finding",
+          "analysis": "A dynamic scanner is a request generator with credentials. Mis-targeted it attacks production or a third party; over-privileged scanner accounts become a foothold. The adversarial request-forgery suite for custom endpoints (ai-service#3) is E17's control and is referenced, not re-reviewed, here.",
+          "evidence": [
+            "PenniLogic/ai-service#3: custom endpoint validation and adversarial request-forgery suite (E17)"
+          ],
+          "findings": [
+            "E25-F04"
+          ]
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "finding",
+          "analysis": "Injection through merchant names, SMS and notification text and imported statements is the product's most obvious untrusted-input surface. The red-team scenarios owned by docs#43 are where that attack is exercised end to end; the evaluation suite's adversarial cases (ai-service#7) exercise it per model call. The red-team ticket must name the scenario explicitly so it cannot be scoped out.",
+          "evidence": [
+            "ai/01-ai-harness-research.md#71-prompt-injection-defense",
+            "PenniLogic/ai-service#7: at least fifty adversarial evaluation cases"
+          ],
+          "findings": [
+            "E25-F10"
+          ]
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "controlled",
+          "analysis": "Split arithmetic (share types, deterministic remainder, settlement) is money arithmetic and falls under the independent-model comparison and property harness that api#22 builds; api#33 supplies the split ledger the harness will check. No additional quality control is needed beyond keeping split scenarios inside api#22's scope when api#33 lands.",
+          "evidence": [
+            "PenniLogic/api#22: property, mutation and independent-model gates for money paths",
+            "PenniLogic/api#33: split ledger with deterministic remainder (E15)"
+          ],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "The penetration test grants an external party privileged, time-boxed access and produces a report that is itself a map of the system's weaknesses. Vendor accounts, their scope, the environment they attack and the handling of the report all need stating. Operator red-teaming of the admin console (admin#9, docs#131) is E13's and E38's control and is referenced here.",
+          "evidence": [
+            "PenniLogic/admin#9: operator red-team suite as a console release gate",
+            "PenniLogic/docs#131: admin operator four-eyes and clock-pressure validation"
+          ],
+          "findings": [
+            "E25-F07"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E25-F01",
+          "category": "tampering",
+          "severity": "high",
+          "title": "Flaky-test quarantine can silence a failing security, privacy or money test",
+          "attack_path": "A test that fails because of a real defect is added to the quarantine list under the flaky label; the gate passes, the defect ships, and the entry is never revisited.",
+          "recommended_control": "Quarantine entries carry an owner, a date and an expiry, count against a published ceiling, are refused for tests tagged security, privacy or money, and the gate fails when an entry expires without a linked fix.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#28",
+          "resolution": null
+        },
+        {
+          "id": "E25-F02",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "A sanitization failure in the parser corpus publishes real bank-message content",
+          "attack_path": "The corpus is built from real SMS and notification text; a message with an unusual layout keeps an account fragment, a name or a balance through the redaction step and is committed to a public repository.",
+          "recommended_control": "Generate corpus entries from templates and synthetic values rather than copying real messages; where a real message is the seed, run a redaction gate with planted identifiers that must be removed, keep the seeds outside the repository, and require a second session's review before publication.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#35",
+          "resolution": null
+        },
+        {
+          "id": "E25-F03",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "Load, stress, soak and chaos suites can degrade shared environments or spend money if mis-targeted",
+          "attack_path": "A suite runs with a target or a dependency configuration pointing at a shared environment, a metered AI gateway or a payment provider; the run degrades the environment for other work or produces provider charges.",
+          "recommended_control": "Suites accept only allowlisted isolated targets, stub every metered dependency by default, carry a spend kill switch with a published budget, and record the target and budget in the run evidence.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#29",
+          "resolution": null
+        },
+        {
+          "id": "E25-F04",
+          "category": "request_forgery",
+          "severity": "medium",
+          "title": "Dynamic scanning credentials and targets are not bounded",
+          "attack_path": "A scanner configured with broad credentials or an unrestricted target list reaches a production or third-party endpoint, or its stored credentials are exfiltrated from the pipeline and reused.",
+          "recommended_control": "Scanner service accounts are least-privilege, short-lived and rotated; scan targets are an allowlist of isolated environments; a run against any other host fails before the first request.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#28",
+          "resolution": null
+        },
+        {
+          "id": "E25-F05",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Evidence gates do not yet require artifact provenance",
+          "attack_path": "A release gate reads an evidence artifact that was produced for an older commit, edited by hand or fabricated; the gate passes and nobody is answerable for the release decision.",
+          "recommended_control": "Every artifact the gate reads carries the commit SHA, the producing workflow run and check name, and is rejected when stale or unsigned by the pipeline; waivers are dated, expiring and attributable to an account or session, as already required.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#49",
+          "resolution": null
+        },
+        {
+          "id": "E25-F06",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "The physical test device holds credentials, builds and captured traffic",
+          "attack_path": "The device is lost, stolen or resold with test accounts, debug builds, capture logs or a real SIM still on it.",
+          "recommended_control": "Synthetic accounts and data only, full-disk encryption and a screen lock, remote wipe enrolled, an inventory entry with custodian, and a wipe step before any transfer; production data never installed.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#14",
+          "resolution": null
+        },
+        {
+          "id": "E25-F07",
+          "category": "administrative_identity_compromise",
+          "severity": "medium",
+          "title": "Penetration-test vendor access and report handling are unspecified",
+          "attack_path": "Tester accounts outlive the engagement or reach production data; the findings report, a map of the system's weaknesses, is shared over an unmanaged channel or retained indefinitely.",
+          "recommended_control": "A scope contract naming the isolated environment and what may be attacked, time-boxed tester accounts revoked at the end, synthetic data only, encrypted delivery and a retention limit for the report, and retest evidence recorded per finding.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#43",
+          "resolution": null
+        },
+        {
+          "id": "E25-F08",
+          "category": "elevation_of_privilege",
+          "severity": "medium",
+          "title": "The attack suite must refuse non-test targets and production data",
+          "attack_path": "The tenancy and authorization exploit suite is run against a shared or production environment, or its fixtures are seeded from real tenants, turning the test into an attack or a data exposure.",
+          "recommended_control": "The suite verifies an explicit test-environment marker before running, uses synthetic tenants it creates and destroys, and fails closed on any other target.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#23",
+          "resolution": null
+        },
+        {
+          "id": "E25-F09",
+          "category": "entitlement_tampering",
+          "severity": "medium",
+          "title": "Entitlement bypass scenarios are missing from the attack suite",
+          "attack_path": "A free-plan user calls a plan-gated endpoint directly, replays a cached entitlement, or drives quota reservation without reconciliation; no suite exercises these paths, so a server that trusts client state ships.",
+          "recommended_control": "Add entitlement and quota scenarios to the attack suite: plan-gated endpoints called without entitlement, replayed or expired entitlement tokens, reservation without reconciliation, and cross-channel precedence conflicts, each asserting a server-side denial.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#23",
+          "resolution": null
+        },
+        {
+          "id": "E25-F10",
+          "category": "prompt_injection",
+          "severity": "medium",
+          "title": "Red-team scenarios must name prompt injection through transaction text",
+          "attack_path": "A merchant name, SMS body, notification or imported statement line contains instructions; the assistant follows them, calls a tool the user did not request or leaks data, and no end-to-end scenario would have caught it.",
+          "recommended_control": "Name prompt injection through each untrusted text channel, plus insecure handling of model output, as red-team scenarios with pass and fail criteria, and require a retest after any defence change.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#43",
+          "resolution": null
+        },
+        {
+          "id": "E25-F11",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Privacy traffic captures are themselves a data store",
+          "attack_path": "Release-candidate traffic is captured from a device carrying a real account; the capture files, kept as evidence, contain the financial data the inspection was meant to prove absent.",
+          "recommended_control": "Capture only from synthetic accounts, store captures with the release evidence under an access list and retention limit, and fail the inspection if the capture contains any value from the synthetic seed that is marked as must-not-transmit.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#16",
+          "resolution": null
+        },
+        {
+          "id": "E25-F12",
+          "category": "spoofing",
+          "severity": "medium",
+          "title": "No gate proves a release candidate contains no test bypass",
+          "attack_path": "A test-mode authentication shortcut, sandbox provider key, mock webhook secret or allowlisted test host remains enabled in a release build; an attacker who learns the test identity is accepted in production.",
+          "recommended_control": "The release checklist requires each platform gate to emit a no-test-bypass artifact: release builds compiled without test flags, configuration free of sandbox credentials and test hosts, and a probe proving the test identity is rejected by the candidate.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        }
+      ]
+    }
+  ]
+}

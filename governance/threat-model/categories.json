@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "model_version": 1,
+  "title": "PenniLogic threat-model categories, owners, cadence and refresh triggers",
+  "baseline": "architecture/02-security-architecture.md#1-threat-model-stride",
+  "owner_model": "PenniLogic has one GitHub owner and several independent AI review sessions. The named owner of a category is that accountable GitHub owner plus the independent review role, mapped through .github/agent-policy.json review_roles to an agent profile in PenniLogic/.github/agents, that must review every finding raised in the category. No other human role exists and none is invented here.",
+  "accountable_owners": [
+    "basiltt"
+  ],
+  "review_roles": [
+    "core",
+    "qa",
+    "security",
+    "privacy",
+    "money",
+    "contract",
+    "compliance",
+    "accessibility",
+    "design",
+    "reliability",
+    "release"
+  ],
+  "cadence_weeks": 12,
+  "cadence_rationale": "Sprints are two weeks and the plan schedules most epics across two to five sprints, so an epic still open twelve weeks after its last refresh has outlived its planned window and is re-examined at least once; scope, decision and security changes inside that window are covered by the early-refresh triggers rather than by a shorter clock.",
+  "refresh_triggers": [
+    {
+      "id": "definition_of_ready",
+      "description": "First refresh of an epic, recorded before its first ticket starts. This is the Definition of Ready item in product/03-delivery-plan.md section 5."
+    },
+    {
+      "id": "cadence",
+      "description": "An epic that is still open cadence_weeks after its latest refresh is stale and is refreshed again; a stale record counts as missing."
+    },
+    {
+      "id": "model_changed",
+      "description": "categories.json gained a category (model_version increased). Every open epic whose latest refresh predates the new version is stale until it reviews the new category."
+    },
+    {
+      "id": "scope_changed",
+      "description": "A ticket added to or re-scoped inside the epic introduces a new trust boundary, data class, external party, AI capability, sharing path or money flow."
+    },
+    {
+      "id": "decision_changed",
+      "description": "An architecture decision record the epic depends on is accepted, amended or superseded."
+    },
+    {
+      "id": "security_event",
+      "description": "A security incident, a penetration-test or red-team finding (PenniLogic/docs#43), or a disclosed vulnerability in a dependency touches a component the epic owns."
+    }
+  ],
+  "categories": [
+    {
+      "id": "spoofing",
+      "name": "Spoofing",
+      "family": "stride",
+      "stride_letter": "S",
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": []
+      },
+      "definition": "An actor pretends to be a user, device, service, build job, webhook sender or the organisation itself: stolen or replayed credentials, forged sender identities, unverified trust roots.",
+      "baseline_threats": [
+        "T-01",
+        "T-02"
+      ]
+    },
+    {
+      "id": "tampering",
+      "name": "Tampering",
+      "family": "stride",
+      "stride_letter": "T",
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": [
+          "money"
+        ]
+      },
+      "definition": "Unauthorised modification of data, code, configuration, generated governance files, build artifacts, test gates or evidence, in transit, at rest or inside the delivery pipeline.",
+      "baseline_threats": [
+        "T-10",
+        "T-12",
+        "T-14"
+      ]
+    },
+    {
+      "id": "repudiation",
+      "name": "Repudiation",
+      "family": "stride",
+      "stride_letter": "R",
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": [
+          "compliance"
+        ]
+      },
+      "definition": "An actor denies an action (a view, an approval, a consent, an export, a deployment, a waiver) and the system cannot prove otherwise because the trail is missing, editable, unsynchronised or not attributable to a session or account.",
+      "baseline_threats": [
+        "T-03"
+      ]
+    },
+    {
+      "id": "information_disclosure",
+      "name": "Information disclosure",
+      "family": "stride",
+      "stride_letter": "I",
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "privacy",
+        "supporting_review_roles": [
+          "security"
+        ]
+      },
+      "definition": "Data reaches someone not entitled to it: raw SMS or notification text, financial values, identity data, keys, research-participant material, secrets in logs, fixtures, prompts, analytics, screenshots or a public repository.",
+      "baseline_threats": [
+        "T-04",
+        "T-05",
+        "T-06",
+        "T-07",
+        "T-08",
+        "T-09",
+        "T-15"
+      ]
+    },
+    {
+      "id": "denial_of_service",
+      "name": "Denial of service",
+      "family": "stride",
+      "stride_letter": "D",
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "reliability",
+        "supporting_review_roles": [
+          "security"
+        ]
+      },
+      "definition": "A service, pipeline, budget or person is made unavailable or too costly: request floods, quota or spend exhaustion, CI-minute or API-rate exhaustion, on-call fatigue, environments degraded by test traffic.",
+      "baseline_threats": [
+        "T-13"
+      ]
+    },
+    {
+      "id": "elevation_of_privilege",
+      "name": "Elevation of privilege",
+      "family": "stride",
+      "stride_letter": "E",
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": []
+      },
+      "definition": "An actor gains capability beyond its entitlement: row-level-security bypass, cross-tenant reads, workflow-token misuse, support roles reaching administrative actions, clients making authorisation decisions the server should make.",
+      "baseline_threats": [
+        "T-11"
+      ]
+    },
+    {
+      "id": "billing_forgery",
+      "name": "Billing forgery",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "money",
+        "supporting_review_roles": [
+          "security"
+        ]
+      },
+      "definition": "Forged or replayed purchase tokens, receipts, provider webhooks, promotional or trial eligibility, refund cycling or plan and price manipulation that grants paid capability or moves money without a verified payment. Absent from the baseline model.",
+      "baseline_threats": []
+    },
+    {
+      "id": "entitlement_tampering",
+      "name": "Entitlement tampering",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": [
+          "money"
+        ]
+      },
+      "definition": "Altering the entitlement or quota state a user holds: client-side flag flips, replayed cached entitlements, quota reset or reservation abuse, cross-channel precedence confusion, bring-your-own-key loopholes, plan edits without a recorded version. Absent from the baseline model.",
+      "baseline_threats": []
+    },
+    {
+      "id": "ai_service_compromise",
+      "name": "AI service compromise",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": [
+          "reliability"
+        ]
+      },
+      "definition": "Compromise of the AI gateway, provider or user-supplied keys, routing configuration, model allowlist, tool dispatcher or the provider itself: key exfiltration, model substitution, malicious provider responses reaching money or data paths, unbounded spend, a kill switch that does not work. Absent from the baseline model.",
+      "baseline_threats": []
+    },
+    {
+      "id": "request_forgery",
+      "name": "Request forgery",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": []
+      },
+      "definition": "Requests crafted to look legitimate: cross-site request forgery against web or operator sessions, server-side request forgery through user- or partner-supplied URLs (custom AI endpoints, callbacks, import sources), replayed signed requests and forged provider callbacks. Absent from the baseline model.",
+      "baseline_threats": []
+    },
+    {
+      "id": "prompt_injection",
+      "name": "Prompt injection",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": [
+          "privacy"
+        ]
+      },
+      "definition": "Untrusted content (merchant names, SMS or notification text, imported statements, user notes, tool results, public issue or pull-request comments read by an AI session) steers a model or an AI agent into unauthorised tool calls, data exfiltration, unsafe advice or policy bypass; includes direct jailbreaks and insecure handling of model output. Absent from the baseline model.",
+      "baseline_threats": []
+    },
+    {
+      "id": "split_manipulation",
+      "name": "Split manipulation",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "money",
+        "supporting_review_roles": [
+          "security"
+        ]
+      },
+      "definition": "Manipulating shared or split ledgers: altering share types or remainders after the fact, forging or disputing settlements, adding or removing members to shift balances, exploiting rounding, or erasing a counterparty's evidence of a debt. Absent from the baseline model.",
+      "baseline_threats": []
+    },
+    {
+      "id": "administrative_identity_compromise",
+      "name": "Administrative identity compromise",
+      "family": "extension",
+      "stride_letter": null,
+      "added_in_model_version": 1,
+      "owner": {
+        "accountable": "basiltt",
+        "review_role": "security",
+        "supporting_review_roles": [
+          "compliance"
+        ]
+      },
+      "definition": "Compromise of an operator, organisation-owner or break-glass identity, its single sign-on or identity provider, its session or its approval workflow: phished or stolen credentials, self-approved elevation, stale leaver access, replayed operator tokens, an owner account whose compromise controls every repository and ruleset. Absent from the baseline model, which covered only what a legitimate administrator might do.",
+      "baseline_threats": []
+    }
+  ]
+}

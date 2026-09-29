@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E32",
+  "title": "Server sync and offline data plane",
+  "issue": "PenniLogic/docs#34",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}
