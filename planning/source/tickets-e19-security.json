@@ -1,0 +1,514 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e19-security",
+  "epic_refs": [
+    "docs#19"
+  ],
+  "items": [
+    {
+      "stable_id": "T-SEC-01",
+      "title": "Implement the data protection floor: envelope encryption, blind index and row-level security",
+      "repo": "api",
+      "epic": "docs#19",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 05",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Descriptive personal data is encrypted with per-user data keys wrapped by a managed key, constrained numeric columns stay queryable under enforced row-level security, and the searches that must still work are served by a normalised merchant dictionary and a per-tenant blind index.",
+      "context": "The security architecture and the ledger contradict each other today: one requires amounts to be ciphertext, the other requires the database to sum and constrain them. Merchant text needs encryption yet must still be normalised, searched and deduplicated. Nothing can touch real user data until both are resolved in code, not just in a decision record.",
+      "scope": [
+        "Per-user data encryption keys wrapped by a managed key, unwrapped per request with a bounded cache",
+        "Application-layer encryption applied to the descriptive columns named by the decision record",
+        "Numeric constrained columns kept as integer columns with their constraints intact",
+        "Normalised merchant dictionary and per-tenant blind index for the permitted query shapes",
+        "Forced row-level security with a low-privilege role, write checks and invoker-rights functions",
+        "Session context set and cleared around pooled connection use",
+        "Grant-mediated cross-user read policy implemented exactly as T-ADR-CRYPTO-04 specifies, with the trusted session-context setter and no bypass role"
+      ],
+      "acceptance_criteria": [
+        "Ledger constraints still execute in the database after encryption is enabled, proven by an attempted unbalanced insert",
+        "An encrypted column is unreadable from a direct database session without the key path",
+        "Equality search on the blind index returns correct results and the index key is stored separately from the data key",
+        "Row-level security denies a query issued with another tenant's context, including through a pooled connection",
+        "No server component holds the wrapping key material and every unwrap is recorded",
+        "Disabling row-level security in a test fixture makes the isolation suite fail, proving the suite is meaningful",
+        "A cross-user read is denied when no grant predicate is satisfied, proven by a test that reads another tenant's rows while holding no grant and asserts denial rather than an empty result",
+        "A cross-user read succeeds only through the named grant-mediating policy; a test asserts no connection path uses BYPASSRLS, a SECURITY DEFINER read that skips the predicate, or a superuser role",
+        "A client-supplied session context cannot satisfy the grant predicate: only the trusted setter can populate it, proven by a test that sets the context directly as the application role and asserts denial",
+        "Revoking a grant denies the same read within the published invalidation bound, proven by a test that revokes and re-reads"
+      ],
+      "contracts_schema": [
+        "Publishes the encrypted, constrained and blind-indexed column inventory as a machine-readable artifact",
+        "Publishes the grant-mediating policy identifier that T-CON-04 references, so the contract and the database agree on one name"
+      ],
+      "security_privacy": [
+        "Frequency leakage of the blind index is documented with its accepted mitigation",
+        "Key unwrap events are audited and alarmed on an unusual rate",
+        "No plaintext descriptive value is ever written to a log or an error message",
+        "Cross-tenant reads are default deny; the grant predicate is the only admitting path and it is enforced in the database rather than in application code"
+      ],
+      "observability": [
+        "Publishes unwrap rate, cache hit rate and policy denial counts without record content"
+      ],
+      "tests": [
+        "Constraint retention test after encryption",
+        "Direct database read test on an encrypted column",
+        "Blind index correctness and key separation tests",
+        "Pooled connection isolation test",
+        "Fixture test that weakens a policy and expects failure",
+        "Cross-tenant denial test with no grant",
+        "Grant-mediated read test through the named policy, asserting no bypass path is used",
+        "Forged session-context test asserting the application role cannot satisfy the predicate"
+      ],
+      "rollout_rollback": [
+        "Migrated column group by column group with dual-read during the window defined by the migration protocol",
+        "Rollback reverts to dual-read; ciphertext is never discarded during the window"
+      ],
+      "non_goals": [
+        "Erasure mechanics, which is a separate ticket",
+        "Client-side encryption, which belongs to the Android hardening ticket"
+      ],
+      "dependencies": [
+        "T-ADR-CRYPTO-04",
+        "api#2",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the crypto module, the migrations and the policy definitions. Schema pull requests are serialised with other api migration work under the migration protocol.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-SEC-02",
+      "title": "Implement the crypto-shredding erasure path and its verification harness",
+      "repo": "api",
+      "epic": "docs#19",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 10",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "Erasing a user destroys their key material so their data is genuinely unrecoverable, propagates to derived data and caches, and provably does not corrupt balances held by other people.",
+      "context": "Erasure is promised in several documents but implemented nowhere, and the naive version breaks split balances and shared goals belonging to other users. The obligation is not satisfied by deleting rows the application can still reconstruct, and it must be verified rather than asserted.",
+      "scope": [
+        "Erasure operation that destroys the per-user key material and records the destruction",
+        "Propagation to derived tables, caches, search indexes, vector or embedding stores, assistant conversation records and queued jobs",
+        "Counterparty handling exactly as the erasure decision record specifies",
+        "Verification harness that attempts to read erased data through every path",
+        "Signed erasure receipt and pseudonymous erasure barrier written to an independently protected control store excluded from application backup restore sets",
+        "Interaction with backups implemented through T-SEC-07, including barrier replay before a restored environment can serve traffic"
+      ],
+      "acceptance_criteria": [
+        "After erasure, reading the user's descriptive data returns unrecoverable ciphertext through every code path tried by the harness",
+        "Split balances and shared goals held by other members remain correct and reconcilable after a member is erased",
+        "Derived tables, caches, search indexes, vector or embedding stores and assistant conversation records contain no residue, proven by a scan",
+        "An in-flight job referencing the erased user fails closed rather than resurrecting data",
+        "The erasure is recorded in the audit stream with no personal data in the record",
+        "Completion writes an erasure barrier containing only the pseudonymous subject locator, completion time, policy version and receipt identifier; a failed barrier write prevents the request from reporting complete",
+        "Re-running erasure for an already erased user is a no-op and does not error"
+      ],
+      "contracts_schema": [
+        "Implements the erasure operation published in the rights contract, including its status reporting"
+      ],
+      "security_privacy": [
+        "Key destruction is irreversible and is itself audited",
+        "The harness runs against synthetic users only and never against production"
+      ],
+      "observability": [
+        "Publishes erasure counts, propagation durations and residue scan results"
+      ],
+      "tests": [
+        "Post-erasure read attempts through every path",
+        "Counterparty balance integrity test",
+        "Residue scan across derived stores",
+        "Post-erasure embedding similarity query and assistant-history residue test",
+        "Idempotent re-erasure test",
+        "In-flight job fail-closed test",
+        "Barrier-write failure and signed-receipt verification tests"
+      ],
+      "rollout_rollback": [
+        "Enabled after the verification harness is green in staging; requests queue if the path is disabled rather than being rejected silently",
+        "Rollback disables intake only; nothing that has been erased is ever restored"
+      ],
+      "non_goals": [
+        "The user-facing deletion experience, which belongs to E23",
+        "Backup retention policy, which the platform ticket owns"
+      ],
+      "dependencies": [
+        "T-SEC-01",
+        "T-ADR-ERASE-07",
+        "T-CMP-04",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the erasure service and harness. Client surfaces consume the published rights contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-SEC-03",
+      "title": "Build the foundational audit event service",
+      "repo": "api",
+      "epic": "docs#19",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 05",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "One append-only audit event service records security-relevant and consent-relevant actions with a stable schema, so authentication, sharing, administration and compliance all write to the same trustworthy stream instead of inventing their own.",
+      "context": "Authentication and sharing both require an audit log and compliance requires a replayable consent history. Building it three times produces incompatible half-solutions, so this ticket must land before api#4 and api#5 or either endpoint is allowed to emit an event.",
+      "scope": [
+        "Append-only event store with a stable, versioned event schema",
+        "Actor, subject, action, resource, outcome and reason fields with no free-text payloads",
+        "Correlation identifier on every event, as named by T-ADR-ADMIN-06, tying one action across the foundational, administrative and subject-visible streams",
+        "Write path that cannot be used to update or delete an existing event",
+        "Query interface scoped so a user can see events about themselves",
+        "Retention aligned with the published schedule and the regional retention requirement"
+      ],
+      "acceptance_criteria": [
+        "An attempt to update or delete an event fails at the database level, not only in application code",
+        "Every authentication, consent, sharing and administrative action writes exactly one event",
+        "Events contain no monetary values, counterparty text or credentials, enforced by a schema test",
+        "A user can retrieve the events about themselves and cannot retrieve events about anyone else",
+        "The event schema is versioned and an older consumer can still read newer events",
+        "Missing events are detectable because writes are transactional with the action they describe",
+        "The audit event schema and client module are published before any authentication endpoint is implemented, so api#4 has a stream to write to",
+        "Every event carries the correlation identifier named by T-ADR-ADMIN-06, and a database write without one is rejected",
+        "The write topology matches T-ADR-ADMIN-06: a projection test covers single-write topology, or a failure-path test covers the chosen refuse, compensate or reconcile behaviour for dual writes and identifies the authoritative stream",
+        "A forward-only schema evolution test adds an event column without granting UPDATE or DELETE on historical rows"
+      ],
+      "contracts_schema": [
+        "Audit event schema published so other services emit a consistent shape rather than their own"
+      ],
+      "security_privacy": [
+        "Write-only grants for application roles; no application role can delete",
+        "The stream is the input to the tamper-evident administrative chain and to the transparency log"
+      ],
+      "observability": [
+        "Publishes event rate by category and a gap detector alert"
+      ],
+      "tests": [
+        "Immutability test attempting update and delete",
+        "Schema test forbidding sensitive fields",
+        "Transactional write test proving an action without its event rolls back",
+        "Self-access scoping test",
+        "Cross-stream correlation and chosen write-topology failure test",
+        "Append-only schema evolution test"
+      ],
+      "rollout_rollback": [
+        "Rolled out per producing subsystem; a subsystem without events fails its own Definition of Done",
+        "Rollback is not applicable; events are never removed"
+      ],
+      "non_goals": [
+        "The tamper-evident hash chain for administrative actions, which is an admin ticket",
+        "Product analytics, which is a different stream entirely",
+        "Deciding the three-stream topology, which T-ADR-ADMIN-06 owns; this ticket implements the accepted topology"
+      ],
+      "dependencies": [
+        "api#2",
+        "T-ADR-MONEY-01",
+        "T-ADR-ADMIN-06",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the audit module and schema. Every other subsystem emits through the published module.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-SEC-04",
+      "title": "Implement rate limiting, lockout, takeover detection and step-up authentication",
+      "repo": "api",
+      "epic": "docs#19",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 08",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Authentication and sensitive operations are protected by per-account and per-address rate limits, lockout with backoff, credential-stuffing detection and a step-up requirement that a stolen session alone cannot satisfy.",
+      "context": "The identity tickets implement registration, login and rotation but nothing defends them. Export, deletion, sharing invitations and account changes are exactly the operations an attacker with a stolen session wants, and none of them currently require a fresh proof of presence.",
+      "scope": [
+        "Per-account and per-address rate limits on authentication and sensitive operations",
+        "Lockout with exponential backoff and a safe unlock path",
+        "Breached-credential checking at registration and password change",
+        "Takeover signals such as improbable travel, new device and unusual volume",
+        "Step-up authentication required for export, deletion, sharing invitations and credential changes",
+        "Replay resistance on the step-up token"
+      ],
+      "acceptance_criteria": [
+        "Repeated failed attempts lock the account with backoff and the response does not reveal whether the account exists",
+        "A credential-stuffing simulation is throttled and detected rather than succeeding at scale",
+        "A known-breached password is refused at registration with an actionable message",
+        "Export, deletion and sharing invitation all fail without a fresh step-up proof, proven by negative tests",
+        "A replayed step-up token is rejected",
+        "Every lockout, detection and step-up outcome writes an audit event"
+      ],
+      "contracts_schema": [
+        "Publishes the step-up requirement per operation in the contract so clients can prompt correctly"
+      ],
+      "security_privacy": [
+        "Limits are enforced server-side; a client cannot opt out",
+        "Detection signals are derived without storing precise location history"
+      ],
+      "observability": [
+        "Publishes limit rejections, lockouts and detection counts with no identifiers in the metric labels"
+      ],
+      "tests": [
+        "Lockout and backoff tests",
+        "Credential stuffing simulation",
+        "Step-up bypass attempts on every protected operation",
+        "Token replay test"
+      ],
+      "rollout_rollback": [
+        "Thresholds shipped in report-only mode for one week, then enforcing, with the values configurable without a deploy",
+        "Rollback raises thresholds rather than disabling the controls"
+      ],
+      "non_goals": [
+        "Client prompt design, which belongs to the Android and web tickets",
+        "Administrative authentication, which is an admin ticket"
+      ],
+      "dependencies": [
+        "api#4",
+        "api#5",
+        "T-ADR-AUTH-05",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the limiter, detector and step-up modules. Clients consume the published requirement list.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-SEC-05",
+      "title": "Harden the Android application: keystore storage, integrity verification and pinned transport",
+      "repo": "android",
+      "epic": "docs#19",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 12",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "The Android application stores data in an encrypted local database keyed from hardware-backed storage, blocks screenshots and backups of financial data, validates its integrity verdict on the server, and pins transport with a rotation strategy that cannot brick installed applications.",
+      "context": "The device holds the most sensitive copy of the data and is the one component an attacker can hold in their hand. Certificate pinning in particular is currently specified with a fixed expiry and no rotation mechanism, which is a scheduled outage waiting to happen.",
+      "scope": [
+        "Encrypted local database with the key held in hardware-backed storage where available",
+        "Biometric unwrap for the local key with a defined fallback",
+        "Backup exclusion, secure window flag, recents exclusion and tapjacking protection",
+        "Code shrinking and obfuscation configured without breaking crash symbolication",
+        "Integrity verdict obtained on the device and validated on the server, never trusted from the client",
+        "Standard Play Integrity requests bound to protected request hashes, with Classic requests allowed only for an ADR-listed highest-value action and quota",
+        "Operation-specific adverse-verdict policy with recoverable read-only or tracking-paused states, plus sideload, restricted-settings and developer-verification handling from T-AND-07",
+        "Transport pinning with a backup pin, an over-the-air rotation path and a staged rollout kill switch"
+      ],
+      "acceptance_criteria": [
+        "The local database is unreadable without the hardware-backed key path, verified on a rooted test device",
+        "Application data is excluded from device backup, verified by attempting a backup and restore",
+        "Screenshots of financial screens are blocked and the recents thumbnail is blank, verified by capture",
+        "A forged or replayed integrity verdict is rejected by the server",
+        "Wrong request binding, stale token, wrong app/license and each adverse verdict follow the published operation policy; local capture is not silently discarded",
+        "Pin rotation can be delivered without a store release and a failed rotation is recoverable through the kill switch",
+        "Every control is verified on the physical device, not only on an emulator"
+      ],
+      "contracts_schema": [
+        "Integrity verdict validation uses a published server endpoint; the client never decides the verdict"
+      ],
+      "security_privacy": [
+        "The hardware-backed wrapping key never leaves the keystore; the unwrapped database key exists only for the bounded process lifetime and is cleared on lock",
+        "Hardened builds must still produce readable crash reports without leaking symbols publicly"
+      ],
+      "observability": [
+        "Publishes integrity failure counts and pin rotation status without device identifiers"
+      ],
+      "tests": [
+        "Rooted device local database test",
+        "Backup and restore attempt test",
+        "Screenshot and recents capture test",
+        "Forged verdict rejection test",
+        "Standard-request binding, stale token, wrong-license, adverse-verdict and Classic-quota tests",
+        "Play install, sideload, restore and restricted-settings matrix tests",
+        "Pin rotation and kill switch rehearsal"
+      ],
+      "rollout_rollback": [
+        "Pinning enabled behind a staged rollout with the kill switch tested before the first percentage increase",
+        "Rollback disables pinning through the kill switch without a store release"
+      ],
+      "non_goals": [
+        "Backend cryptography, which is the data protection floor ticket",
+        "User-facing privacy controls, which belong to E23"
+      ],
+      "dependencies": [
+        "android#1",
+        "T-AND-07",
+        "T-ADR-AUTH-05",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the hardening configuration and secure storage. The server verdict endpoint is consumed through the published contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-SEC-06",
+      "title": "Automate DEK, KEK and blind-index key rotation with resumable re-encryption",
+      "repo": "api",
+      "epic": "docs#19",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 11",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Data encryption keys, the key encryption key and the blind-index key all rotate on a schedule and on demand, re-encryption resumes correctly after an interruption, old and new keys overlap during a bounded transition before the old key is retired, backups remain decryptable and a stalled or failed rotation raises an alert.",
+      "context": "T-SEC-01 established envelope encryption, the blind index and row-level security, but nothing in that ticket ever rotates a key. A key that never rotates is a permanent single point of compromise, and a rotation that cannot resume after a crash risks leaving the data store in a mixed-ciphertext state with no defined recovery path.",
+      "scope": [
+        "Scheduled rotation job for the per-user data encryption keys, the wrapping key and the blind-index key",
+        "Resumable re-encryption that tracks progress per batch and continues correctly after a restart",
+        "Emergency rotation path triggered on suspected compromise, materially faster than the scheduled cadence",
+        "Overlap window in which both the old and the new key remain readable, followed by explicit retirement of the old key",
+        "Backup artifact coverage so a restore taken during a rotation still decrypts every row correctly",
+        "Alerting on rotation failure or on progress that stalls past the published threshold",
+        "Erased-user interaction: rotation must not resurrect crypto-shredded data, and must not stall on rows whose key was destroyed by erasure",
+        "Blind-index rows belonging to an erased user: destruction or rewrite policy, so a shredded user is not still discoverable through an equality lookup",
+        "Shared-grant rewrap behaviour: which shared rows are rewrapped to which surviving key when one participant is erased, and which become permanently unreadable by design"
+      ],
+      "acceptance_criteria": [
+        "Interrupting a rotation mid-run and resuming it completes the rotation without corrupting or re-encrypting any row twice",
+        "Emergency rotation completes materially faster than the scheduled path and is exercised in a drill",
+        "The old key is unreadable once retirement completes, while data stays readable throughout the overlap window",
+        "Restoring a backup taken during an in-progress rotation still decrypts every row correctly",
+        "A stalled rotation raises an alert within the published time and a failed rotation never leaves mixed-generation ciphertext unresolved",
+        "Rotation over a data set containing crypto-shredded rows completes without error, skips the shredded rows and never regenerates a usable key for them, proven by a test",
+        "Blind-index entries for an erased user are destroyed or rewritten so an equality lookup on a previously indexed value no longer matches that user, proven by a test that searches after erasure",
+        "A shared row whose owner is erased is rewrapped to the surviving participants' keys where a grant still exists, and is left permanently unreadable where no grant survives; both outcomes are asserted by tests rather than left to inspection",
+        "Rewrap decisions are audited with the grant that justified them, and a rewrap with no surviving grant is refused"
+      ],
+      "contracts_schema": [
+        "Publishes the current key generation and rotation status as a machine-readable artifact, extending the inventory T-SEC-01 defined"
+      ],
+      "security_privacy": [
+        "Rotation events are audited with the old and new key identifiers, never key material",
+        "The blind index is rebuilt during rotation without ever exposing plaintext outside the encryption boundary",
+        "An anomalous rotation frequency, such as a rotation outside the scheduled cadence with no recorded trigger, raises an alert",
+        "Rotation never becomes an erasure bypass: no rotation path can restore readability to data whose key was destroyed"
+      ],
+      "observability": [
+        "Publishes rotation progress, duration, failure counts and alert activations without record content"
+      ],
+      "tests": [
+        "Resumable rotation interruption and resume test",
+        "Emergency rotation drill test",
+        "Backup-during-rotation restore and decrypt test",
+        "Overlap and retirement boundary test",
+        "Stalled-rotation alert test",
+        "Rotation-over-shredded-rows test asserting completion, skip and no key regeneration",
+        "Post-erasure blind-index lookup test asserting no match",
+        "Shared-grant rewrap test covering both the surviving-grant and no-surviving-grant outcomes"
+      ],
+      "rollout_rollback": [
+        "Rotation ships disabled and is enabled per key type only after a rehearsal in a non-production environment",
+        "Rollback pauses rotation and leaves the overlap window open rather than forcing retirement of an unverified key"
+      ],
+      "non_goals": [
+        "Initial envelope encryption, blind index and row-level security, which T-SEC-01 already owns",
+        "Crypto-shredding erasure, which T-SEC-02 owns"
+      ],
+      "dependencies": [
+        "T-SEC-01",
+        "T-PLT-03",
+        "T-GOV-03",
+        "T-SEC-02",
+        "T-ADR-ERASE-07"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the rotation scheduler, the resumable re-encryption job and the key overlap and retirement logic. Alerting is delivered through the platform observability stack owned by T-PLT-03.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    }
+  ]
+}

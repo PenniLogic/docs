@@ -1,0 +1,717 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e01-foundations",
+  "epic_refs": [
+    "docs#1"
+  ],
+  "items": [
+    {
+      "stable_id": "T-SCA-API-01",
+      "title": "Scaffold the api service so real build, test and lint run in CI",
+      "repo": "api",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "The api repository contains a buildable Ktor service with a real test task and a real lint task, so the CI policy that already requires build, test and lint stops being a green light over an empty repository.",
+      "context": "Every component repository currently holds only a README while CI claims to enforce language-specific build, test and lint. The claim is unfalsifiable and hides the fact that no repository can actually run a pipeline. This ticket makes the api pipeline honest and gives every later api ticket a place to land. This scaffold is dependency-free by design: the CI conformance gate depends on it, not the other way round, so it can start in Sprint 01 alongside every other scaffold.",
+      "scope": [
+        "Gradle build with the agreed Kotlin and Ktor versions and a reproducible lock",
+        "Application entry point, configuration loading and a health endpoint",
+        "Test source set with one meaningful passing test and a coverage report task",
+        "Formatter and static analysis configuration wired into the build",
+        "Dockerfile and local run instructions consistent with the compose environment"
+      ],
+      "acceptance_criteria": [
+        "A clean clone builds, tests and lints with the documented commands and no manual setup",
+        "The health endpoint returns a machine-readable readiness and liveness result",
+        "A deliberately introduced formatting or lint violation fails the build",
+        "A deliberately failing test fails the pipeline rather than being skipped",
+        "The service image starts against the compose environment and reports ready"
+      ],
+      "contracts_schema": [
+        "Health response schema published in the repository and referenced by the deploy readiness probe",
+        "Configuration keys documented with type, default and whether they are required"
+      ],
+      "security_privacy": [
+        "No credentials committed; configuration is read from the environment only",
+        "The health endpoint exposes no version-disclosing or tenant-identifying data"
+      ],
+      "observability": [
+        "Startup and readiness logged as structured events with no request payloads",
+        "Build duration and test count published as pipeline metrics"
+      ],
+      "tests": [
+        "Unit test on configuration loading including a missing-required-key failure",
+        "Pipeline self-test that asserts the lint and test gates actually fail on planted defects"
+      ],
+      "rollout_rollback": [
+        "Merged directly to main behind branch protection; no runtime feature flag needed",
+        "Rollback is a revert of the scaffold commit, which cannot affect user data"
+      ],
+      "non_goals": [
+        "Domain logic, persistence schema and authentication, which belong to their own tickets",
+        "Deployment infrastructure, which belongs to E24"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo api. Owns the root build files, CI workflow and the health module only. Coordinates with infra on the shared workflow template but does not edit the infra repository.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SCA-CON-01",
+      "title": "Scaffold the contracts repository with spec lint, code generation and publishing",
+      "repo": "contracts",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "The contracts repository can lint the OpenAPI document, generate Kotlin, TypeScript and Python clients and publish them, so every consumer repository - including the Python ai-service - gets its client from one reproducible pipeline.",
+      "context": "Client generation is assumed by the api, android and web plans but no repository owns it. Without a pipeline the generated clients drift silently and the contract stops being authoritative. This scaffold is dependency-free by design: the CI conformance gate depends on it, not the other way round, so it can start in Sprint 01 alongside every other scaffold.",
+      "scope": [
+        "Specification linting with an agreed rule set and a failing exit code",
+        "Kotlin, TypeScript and Python client generation with pinned generator versions",
+        "Versioned publication of generated artifacts consumable by the other repositories",
+        "Backwards-compatibility diff against the previously published specification"
+      ],
+      "acceptance_criteria": [
+        "A malformed specification fails the pipeline with an actionable message",
+        "Generated clients compile or import cleanly in a smoke consumer project for all three target languages, including a Python smoke consumer that type-checks",
+        "A breaking specification change is detected and fails the pull request unless explicitly acknowledged",
+        "Regenerating from an unchanged specification produces byte-identical output",
+        "The Python client exposes the money type as a Decimal-backed wrapper with its currency and never as a float, proven by a smoke test that rejects float construction"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 document is the single source of truth; generator configuration is committed",
+        "Published artifact coordinates and versioning scheme documented",
+        "Generator configuration pins one generator version per target language, and the Python target is a first-class output rather than a convenience script"
+      ],
+      "security_privacy": [
+        "No secrets in generator configuration; publishing uses short-lived federated credentials",
+        "Generated clients contain no example data derived from real records"
+      ],
+      "observability": [
+        "Pipeline publishes the specification version and generator version with each artifact"
+      ],
+      "tests": [
+        "Generator determinism test",
+        "Breaking-change detection test with a planted removal",
+        "Python client import and type-check test in the smoke consumer"
+      ],
+      "rollout_rollback": [
+        "Additive specification changes publish automatically; breaking changes require the expand and contract protocol",
+        "Rollback is republishing the previous artifact version, which consumers pin explicitly"
+      ],
+      "non_goals": [
+        "Adding new endpoints, which belongs to the contract expansion tickets"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo contracts. Owns the specification, generator configuration and publish workflow. Consumers pin a published version and never generate from a branch.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SCA-WEB-01",
+      "title": "Scaffold the web application with typed configuration and a real CI gate",
+      "repo": "web",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "chore",
+        "P1-high"
+      ],
+      "outcome": "The web repository builds, type-checks, lints and runs unit tests in CI, so the web epic has a real starting point instead of a README.",
+      "context": "The web epic is planned for a later phase but its repository must be able to run the CI policy now, otherwise the pipeline result for the whole organisation is meaningless. This scaffold is dependency-free by design: the CI conformance gate depends on it, not the other way round, so it can start in Sprint 01 alongside every other scaffold.",
+      "scope": [
+        "Application skeleton with routing groups for the customer application only",
+        "Typed environment configuration with build-time validation",
+        "Lint, format, type-check and unit-test tasks wired into CI",
+        "Bundle analysis task and a check that no server-only secret reaches the client bundle"
+      ],
+      "acceptance_criteria": [
+        "A clean clone installs, builds, type-checks and tests with the documented commands",
+        "A deliberately added secret-like value in client code fails the bundle check",
+        "A type error fails the pipeline",
+        "No administrative route group exists in this repository"
+      ],
+      "contracts_schema": [
+        "Environment variable schema published and validated at build time"
+      ],
+      "security_privacy": [
+        "Client bundle contains no secrets, proven by an automated scan",
+        "No analytics or error reporting is wired up in this ticket"
+      ],
+      "observability": [
+        "Build size and type-check duration reported per pipeline run"
+      ],
+      "tests": [
+        "Unit test for configuration validation",
+        "CI check with a planted secret string"
+      ],
+      "rollout_rollback": [
+        "Merged to main; no runtime impact because nothing is deployed yet"
+      ],
+      "non_goals": [
+        "Feature screens, authentication and design system work, which belong to E12"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo web. Owns the application skeleton and CI workflow. Does not touch admin, which is deliberately a separate repository.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SCA-ADM-01",
+      "title": "Scaffold the admin console repository in isolation from the customer web app",
+      "repo": "admin",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "admin",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": [
+        "task",
+        "chore",
+        "P1-high"
+      ],
+      "outcome": "The admin repository builds, lints and tests in CI and is structurally unable to import customer web code, so the separation the security architecture depends on is enforced from the first commit.",
+      "context": "The admin console is a separate deployable with a separate authentication domain. If it starts as a copy of the web app it will inherit the customer session model, which is exactly the failure the architecture is designed to prevent. This scaffold is dependency-free by design: the CI conformance gate depends on it, not the other way round, so it can start in Sprint 01 alongside every other scaffold.",
+      "scope": [
+        "Application skeleton with its own dependency graph",
+        "Lint, type-check and unit-test tasks wired into CI",
+        "Automated check that forbids imports from the web repository or a shared client bundle",
+        "Placeholder authentication boundary that denies all access by default"
+      ],
+      "acceptance_criteria": [
+        "A clean clone builds, lints and tests with the documented commands",
+        "An attempted import of customer web code fails the pipeline",
+        "The default route returns a denial because no administrative identity provider is configured yet",
+        "No customer session cookie name or domain appears anywhere in this repository"
+      ],
+      "contracts_schema": [
+        "Records that the admin console consumes the admin API only, never the customer API"
+      ],
+      "security_privacy": [
+        "Default deny before any authentication is implemented",
+        "No customer data fixtures, even synthetic ones, are included"
+      ],
+      "observability": [
+        "Build and test metrics only; no runtime telemetry in this ticket"
+      ],
+      "tests": [
+        "Import-boundary check test",
+        "Default-deny route test"
+      ],
+      "rollout_rollback": [
+        "Merged to main; nothing deployed. Rollback is a revert with no user impact."
+      ],
+      "non_goals": [
+        "Administrative features, authentication and policy, which belong to E13"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo admin. Owns its build and CI only. The admin API contract is owned separately by contracts and api.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SCA-AIS-01",
+      "title": "Scaffold the ai-service repository with build, test and lint",
+      "repo": "ai-service",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "ai-service",
+      "priority": "P2 Medium",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": [
+        "task",
+        "chore",
+        "P2-medium"
+      ],
+      "outcome": "The ai-service repository runs a real pipeline so the AI epics have somewhere to land and the organisation-wide CI policy is truthful for all eight repositories.",
+      "context": "The AI harness is scheduled late but its repository is already counted in the CI policy. An empty repository reporting green is a false signal on every dashboard. This scaffold is dependency-free by design: the CI conformance gate depends on it, not the other way round, so it can start in Sprint 01 alongside every other scaffold.",
+      "scope": [
+        "Service skeleton with configuration loading and a health endpoint",
+        "Unit test task and static analysis wired into CI",
+        "Dependency pinning and a lock file"
+      ],
+      "acceptance_criteria": [
+        "A clean clone builds, tests and lints with the documented commands",
+        "A planted lint violation fails the pipeline",
+        "The health endpoint reports readiness without disclosing provider configuration"
+      ],
+      "contracts_schema": [
+        "Health response schema shared with the platform readiness probe"
+      ],
+      "security_privacy": [
+        "No provider keys in the repository; configuration comes from the environment",
+        "No outbound network calls are made by the scaffold"
+      ],
+      "observability": [
+        "Structured startup logging with no configuration values echoed"
+      ],
+      "tests": [
+        "Configuration loading unit test",
+        "Planted lint violation pipeline test"
+      ],
+      "rollout_rollback": [
+        "Merged to main; nothing deployed"
+      ],
+      "non_goals": [
+        "Gateway deployment, provider routing and key handling, which belong to E17"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo ai-service. Owns its build and CI only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SCA-AND-01",
+      "title": "Scaffold the android application so real build, unit test and lint run in CI",
+      "repo": "android",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "The android repository contains a buildable application module with a real unit test task, a real lint task and a signed debug build, so the CI policy that already requires build, test and lint stops being a green light over an empty repository.",
+      "context": "The android repository holds only a README while CI claims to enforce build, test and lint. This scaffold is dependency-free because the CI conformance gate depends on it, not the other way round, and every later Android ticket needs somewhere to land. Feature architecture, encrypted storage choices and the navigation graph stay with android#1.",
+      "scope": [
+        "Gradle build with the agreed Kotlin, Android Gradle plugin and compile target versions and a reproducible version catalogue",
+        "Single application module with an entry activity, configuration loading and a build variant matrix for debug and release",
+        "Unit test source set with one meaningful passing test and a coverage report task",
+        "Formatter and static analysis configuration wired into the build and failing on violation",
+        "Debug signing configuration and a reproducible assemble task documented for a clean clone"
+      ],
+      "acceptance_criteria": [
+        "A clean clone assembles, unit tests and lints with the documented commands and no manual setup",
+        "A deliberately introduced formatting or lint violation fails the build",
+        "A deliberately failing unit test fails the pipeline rather than being skipped",
+        "The debug variant installs on an emulator and starts without a crash",
+        "No release signing material, keystore or token is committed; release signing reads from the environment"
+      ],
+      "contracts_schema": [
+        "Build configuration keys documented with type, default and whether they are required",
+        "Named continuous integration check identifiers published so branch protection can reference them"
+      ],
+      "security_privacy": [
+        "No credentials, keystores or API keys committed; configuration is read from the environment only",
+        "Cleartext traffic disabled in the manifest from the first commit"
+      ],
+      "observability": [
+        "Build duration, unit test count and lint violation count published as pipeline metrics",
+        "Startup logged as a structured event with no payload content"
+      ],
+      "tests": [
+        "Unit test on configuration loading including a missing-required-key failure",
+        "Pipeline self-test that asserts the lint and unit test gates actually fail on planted defects"
+      ],
+      "rollout_rollback": [
+        "Merged directly to main behind branch protection; no runtime feature flag needed",
+        "Rollback is a revert of the scaffold commit, which cannot affect user data"
+      ],
+      "non_goals": [
+        "Feature architecture, dependency injection choice, encrypted local database and navigation, which belong to android#1",
+        "Instrumented device journeys and the device lab, which belong to the quality epic",
+        "Deployment and store distribution, which belong to E24"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo android. Owns the root build files, the application module skeleton and the CI workflow adoption commit only. Coordinates with infra on the shared workflow template but does not edit the infra repository.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SCA-INF-01",
+      "title": "Publish reusable CI workflows and prove the eight-repository CI policy is real",
+      "repo": "infra",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "One reusable workflow set is published from infra, adopted by all eight repositories, and a conformance job proves that each scaffold runs real build, test and lint. This ticket adds those stack-specific contexts to the baseline `policy` ruleset without replacing or weakening it.",
+      "context": "T-GOV-03 and infra#4 install agent governance and the required policy check before implementation. Language-specific build, test and lint cannot be honest while service repositories contain only READMEs, so this ticket waits for all six scaffolds and then extends the existing rulesets with check names that real workflows produce.",
+      "scope": [
+        "Reusable workflows for Kotlin, TypeScript and documentation repositories",
+        "Adoption of the reusable workflows by all eight repositories",
+        "Conformance job that inspects each repository for a real build, test and lint step and fails when one is missing or trivially passing",
+        "Documentation-only pipeline for the docs repository covering link and markdown checks",
+        "Required-check names standardised so branch protection can reference them",
+        "Stack-check wiring: this ticket solely owns adding standardised build, test and lint contexts to the existing baseline rulesets",
+        "Verification that the check contracts recorded by the first-wave scaffold and governance tickets exist and are required once wiring is applied"
+      ],
+      "acceptance_criteria": [
+        "Each of the eight repositories runs the shared workflow and reports named required checks",
+        "A repository whose test step is removed or stubbed fails the conformance job",
+        "Rulesets retain the baseline policy context and additionally reference the standardised stack check names on every scaffolded repository",
+        "The docs repository fails on a broken internal link",
+        "Workflow versions are pinned by commit rather than by moving tag",
+        "The conformance job runs against six real scaffolded repositories plus docs and infra, so no result depends on an empty repository",
+        "The job fails when a repository declares a required check name that no workflow actually produces",
+        "Every check name recorded by a first-wave scaffold or governance ticket exists as a real workflow output and is required by branch protection after this ticket applies the wiring",
+        "No other ticket adds stack build, test or lint contexts; baseline governance remains owned by T-GOV-03 and infra#4"
+      ],
+      "contracts_schema": [
+        "Conformance report published as a build artifact listing each repository, its detected steps and the result"
+      ],
+      "security_privacy": [
+        "Workflows use short-lived federated credentials; no long-lived cloud keys",
+        "Third-party actions pinned to a commit and reviewed before adoption"
+      ],
+      "observability": [
+        "Per-repository pipeline duration, failure rate and conformance status published"
+      ],
+      "tests": [
+        "Conformance job self-test using a fixture repository with a stubbed test step",
+        "Pinned-action check that fails on an unpinned reference"
+      ],
+      "rollout_rollback": [
+        "Rolled out repository by repository; a repository can temporarily opt out only with a recorded expiry",
+        "Rollback is repointing a repository at its previous workflow version"
+      ],
+      "non_goals": [
+        "Deployment pipelines, which belong to E24",
+        "Security scanning depth, which belongs to E25",
+        "The reviewer, attestation and baseline policy ruleset, which T-GOV-03 and infra#4 already own"
+      ],
+      "dependencies": [
+        "T-SCA-API-01",
+        "T-SCA-CON-01",
+        "T-SCA-WEB-01",
+        "T-SCA-ADM-01",
+        "T-SCA-AIS-01",
+        "T-SCA-AND-01",
+        "infra#4",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns reusable stack workflow definitions, conformance and additions of build/test/lint required contexts. It does not edit reviewer routing or remove the baseline policy context.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ENV-01",
+      "title": "Publish reversible schema migrations and a synthetic demonstration dataset",
+      "repo": "api",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 13",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "chore",
+        "P1-high"
+      ],
+      "outcome": "A developer can bring up the local environment, apply every migration through the runner T-MIG-01 owns, and load a synthetic demonstration dataset that exercises accounts, transactions and debts, so demonstrations and manual testing stop depending on hand-made data.",
+      "context": "The local bootstrap cannot seed demonstration data before a schema exists. Migrations and seed data intentionally follow the ledger, transaction and debt schemas rather than pretending an empty database can exercise the product.",
+      "scope": [
+        "Synthetic demonstration data applied through the migration runner T-MIG-01 owns, never through a second ad hoc apply path",
+        "Synthetic demonstration dataset covering accounts, categories, transactions, a debt and a repayment schedule",
+        "Seed command that is idempotent and refuses to run against a non-development database",
+        "Documented reset path that recreates the database and reseeds from scratch"
+      ],
+      "acceptance_criteria": [
+        "The seed command is idempotent: running it twice leaves the same row counts and the same derived balances",
+        "The seed command refuses to run when the target database is not marked as a development environment",
+        "Seeded ledger entries sum to zero per transaction per currency, verified by the same constraint the production schema enforces; an account balance is a non-zero derived total and is never asserted to be zero",
+        "The dataset contains no real personal data, no real account number and no real merchant identifier, proven by an automated scan",
+        "A clean clone reaches a seeded, queryable database with the documented commands and no manual editing",
+        "The seed runs against a database brought up by the T-MIG-01 runner, and a second migration runner in this ticket is a review failure"
+      ],
+      "contracts_schema": [
+        "Seed dataset described by a manifest listing every entity, its volume and its intent",
+        "Consumes the migration naming, ordering and reversibility convention T-MIG-01 publishes; it does not restate it"
+      ],
+      "security_privacy": [
+        "Seed data is synthetic; no production extract is ever used as a fixture",
+        "The seed path is unavailable in staging and production builds, enforced by configuration and by a test"
+      ],
+      "observability": [
+        "Migration application recorded with version, direction, duration and outcome",
+        "Seed runs recorded with dataset version so a demonstration can be traced to its data"
+      ],
+      "tests": [
+        "Idempotency test running the seed twice and asserting identical derived balances",
+        "Guard test proving the seed refuses a non-development target",
+        "Seed-on-migrated-database test proving the seed applies on a database at the current migration head"
+      ],
+      "rollout_rollback": [
+        "Development-only change; no production rollout",
+        "Rollback is reverting the migration and seed commits, then recreating the local database"
+      ],
+      "non_goals": [
+        "Production data backfill, which belongs to E24",
+        "Performance fixtures for load testing, which the load and soak ticket owns",
+        "The migration runner, migration registry and reversal evidence, which T-MIG-01 solely owns"
+      ],
+      "dependencies": [
+        "infra#2",
+        "api#2",
+        "api#7",
+        "api#11",
+        "T-MIG-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the synthetic demonstration dataset and the seed command only. T-MIG-01 owns the migration runner, the registry integration and reversal evidence, and the infra repository only exposes the development database it already provisions.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-MIG-01",
+      "title": "Build the schema migration runner, registry integration and reversal evidence",
+      "repo": "api",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "Every schema change in the api repository is applied by one runner that records it in the migration registry, refuses a second in-flight migration, and produces reversal evidence, so the first real migration - the ledger schema - lands under the protocol rather than ahead of it.",
+      "context": "The ledger schema in api#2 is the first migration this system applies, and it is the one migration nobody can afford to get wrong. Today the runner is bundled into T-ENV-01 in Sprint 07, four sprints after the schema it is supposed to apply, and T-GOV-04's migration registry and lock have nothing on the api side to integrate with. This ticket pulls the runner in front of api#2 and gives it a single owner, so the seeding ticket owns seed data only.",
+      "scope": [
+        "Migration runner wired into the api build and into continuous integration, with forward and reverse for every change",
+        "Expand-migrate-contract sequencing support so a migration can deploy ahead of the code that uses it",
+        "Integration with the T-GOV-04 migration registry and lock: claim, release, and refusal when another migration is in flight",
+        "Reversal evidence produced per migration: either a rehearsed down migration or a named compensating migration with the reason the reverse is impossible",
+        "Naming, ordering and checksum convention so a migration edited after it has been applied is detected",
+        "Dry-run mode that prints the plan and writes nothing",
+        "Documented recovery path for a migration that fails part-way"
+      ],
+      "acceptance_criteria": [
+        "Every migration applies forward and reverses cleanly on an empty database and on a populated database, run in continuous integration",
+        "A migration whose checksum changed after it was applied fails the run and names the file",
+        "Starting a second migration while one holds the registry lock fails, and the message names the lock holder",
+        "A migration merged with neither a rehearsed reverse nor a named compensating migration fails the pull request",
+        "Dry-run mode writes nothing, proven by a test that asserts an unchanged schema version",
+        "A migration that fails part-way leaves the database at a known version and the documented recovery path is exercised in a test",
+        "api#2 applies its ledger schema through this runner; a second apply path in the api repository is a review failure"
+      ],
+      "contracts_schema": [
+        "Migration naming, ordering, checksum and reversibility convention published in the api repository and referenced by every schema ticket",
+        "Registry claim and release payload shared with T-GOV-04, so the lock the pull request check reads is the lock the runner takes"
+      ],
+      "security_privacy": [
+        "The runner uses a migration role distinct from the runtime application role, and the runtime role is never granted schema-change rights",
+        "Migration output redacts row values; a failure message names the constraint and the table, never the data"
+      ],
+      "observability": [
+        "Current schema version, last applied migration and lock holder are all readable without a database session",
+        "A migration that runs longer than the published threshold raises an alert rather than being discovered by a timeout elsewhere"
+      ],
+      "tests": [
+        "Round-trip test applying and reverting every migration",
+        "Checksum-drift detection test",
+        "Concurrent-lock refusal test naming the holder",
+        "Part-way failure and documented recovery test",
+        "Dry-run no-write test"
+      ],
+      "rollout_rollback": [
+        "The runner lands before the first schema ticket, so no migration is ever applied outside it",
+        "Rollback is reverting the runner and, because no migration has been applied through it yet at that point, no data change to unwind"
+      ],
+      "non_goals": [
+        "Seed and demonstration data, which T-ENV-01 owns",
+        "The pull request check that enforces one in-flight migration, which T-GOV-04 owns; this ticket provides the runner side of that lock",
+        "Schema content, which each schema ticket owns"
+      ],
+      "dependencies": [
+        "T-SCA-API-01",
+        "T-GOV-02"
+      ],
+      "parallel_boundary": "Primary repo api. Solely owns the migration runner, the registry client and the reversal-evidence rule. T-GOV-04 owns the pull request check that reads the registry; T-ENV-01 owns seed data and applies it through this runner.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UX-01",
+      "title": "Publish the shared client state and copy taxonomy for every non-happy path",
+      "repo": "docs",
+      "epic": "docs#1",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 3,
+      "capacity_pool": "Product Design and UX",
+      "labels": [
+        "task",
+        "P1-high"
+      ],
+      "outcome": "Android, web and admin share one named vocabulary for empty, loading, error, offline, stale, permission-denied, quota-exceeded and degraded states, with the copy rules and the recovery action for each, so the client quality gates can assert coverage rather than taste.",
+      "context": "Every client ticket lists its own non-happy-path states in its own words, so the same condition is called offline in one ticket, stale in another and error in a third. That makes the client quality gates unenforceable: a gate cannot assert a screen handles offline if offline has no definition. It also produces user-visible inconsistency in exactly the situations where trust is thinnest - a permission denial, a failed sync, an exhausted quota.",
+      "scope": [
+        "Named state taxonomy: empty, loading, error, offline, stale, permission-denied, quota-exceeded, degraded, each with a definition and the condition that produces it",
+        "Per state: what the surface must show, what it must not show, whether the underlying data may still be displayed, and the single recovery action offered",
+        "Copy rules per state, including the rule that a state never blames the user and never invents a cause",
+        "Stale versus offline distinction: how a surface signals data it has but cannot refresh",
+        "Degraded distinction: a dependency is unavailable but the surface is still useful, versus an error where it is not",
+        "Machine-readable state identifiers that client tests and the quality gates assert against",
+        "Worked examples for the three highest-risk surfaces: a permission-denied capture surface, a quota-exceeded AI surface and a stale shared balance"
+      ],
+      "acceptance_criteria": [
+        "Every state in the taxonomy has a definition, a triggering condition, required and forbidden content, and exactly one recovery action",
+        "The taxonomy distinguishes offline from stale and error from degraded, and states the observable difference a user sees between each pair",
+        "The state identifiers are published as machine-readable data, so a client test asserts an identifier rather than a string",
+        "The copy rules forbid blaming the user, forbid inventing a cause the client cannot know, and require the same wording for the same state across clients",
+        "A permission-denied state is specified to keep the rest of the surface usable, consistent with the rule that the app is fully usable with every permission denied",
+        "A quota-exceeded state is specified to state what is still available rather than only what is blocked",
+        "Three worked examples are published, one per named high-risk surface"
+      ],
+      "contracts_schema": [
+        "State identifier vocabulary published as machine-readable data in the docs repository, referenced by the client quality gates",
+        "Names which identifiers correspond to contract-level conditions, such as an entitlement deny or a revoked grant, so a client state maps to a real API result"
+      ],
+      "security_privacy": [
+        "Error and degraded copy must not leak internal identifiers, stack detail or another user's existence",
+        "A permission-denied state must not reveal whether data exists behind the denial"
+      ],
+      "observability": [
+        "Each state identifier names the client signal that records it, so the frequency of each non-happy path is measurable rather than anecdotal"
+      ],
+      "tests": [
+        "Names the coverage assertion the client quality gates run: every listed surface handles every applicable state identifier",
+        "Review test that a new state cannot be added to a client without adding it to the taxonomy first"
+      ],
+      "rollout_rollback": [
+        "Published once as documentation and data; clients adopt it as their surfaces are built",
+        "Rollback is reverting the document, which leaves the clients with their existing per-ticket wording"
+      ],
+      "non_goals": [
+        "Visual design, component library or theming",
+        "Localisation of the copy, which E30 owns",
+        "Implementing any state in any client"
+      ],
+      "dependencies": [
+        "T-GOV-02"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the taxonomy document and the state identifier data file only. Client tickets reference it; no client repository is modified here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Referenced by the Android, web and admin quality gates as the source of the state list they assert",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

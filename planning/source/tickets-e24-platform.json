@@ -1,0 +1,488 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e24-platform",
+  "epic_refs": [
+    "E24"
+  ],
+  "items": [
+    {
+      "stable_id": "T-PLT-01",
+      "title": "Provision infrastructure as code with environments, deploy pipelines and rehearsed rollback",
+      "repo": "infra",
+      "epic": "E24",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "Every environment is created from committed code and every deployable component ships through a pipeline with a canary step, a kill switch and a rollback that has actually been rehearsed.",
+      "context": "No epic owns deployment. The foundations epic explicitly defers it and the security epic never picks it up, so the chosen runtime, database topology and disaster-recovery region exist only in a research document. Nothing can be released responsibly until this exists.",
+      "scope": [
+        "Infrastructure definitions for development, staging and production with no manual console changes",
+        "Network, database, container runtime and secret store provisioning",
+        "Per-component deploy pipeline with approval, canary and automated abort",
+        "Feature flag and kill switch mechanism usable without a deploy",
+        "Reversible database migration policy with a compensating action for forward-only changes",
+        "Rehearsed rollback evidence captured per component",
+        "Runtime platform choice constrained by T-ADR-AIEGRESS-08, so the egress primitives the AI workload needs exist on the platform this ticket builds",
+        "One committed residency policy for every stateful resource, enforced at plan time and by scheduled drift detection",
+        "Database extension allowlist that rejects vector extensions until T-ADR-EMBED-12 is accepted"
+      ],
+      "acceptance_criteria": [
+        "An environment can be destroyed and recreated from code and reaches a healthy state without manual steps",
+        "A deploy that fails its canary health check aborts automatically and leaves the previous version serving",
+        "A rollback has been executed for each deployable component and the evidence is attached to the ticket",
+        "A forward-only migration is rejected by review unless it carries a written compensating action",
+        "No component can be deployed from a developer machine; deploys originate only from the pipeline",
+        "Drift between the deployed state and the committed definitions is detected and reported",
+        "The chosen runtime provides the egress-restriction primitives T-ADR-AIEGRESS-08 requires, and the ticket records which primitive satisfies each requirement",
+        "A requirement with no available primitive on the chosen runtime is recorded as a gap with an owner rather than left implicit",
+        "Primary and replica databases, object and backup storage, key management and secret stores declare a region, and a plan outside the committed residency set fails before apply",
+        "The residency policy runs with drift detection so an out-of-region recreation is detected without a deploy",
+        "Adding pgvector or another vector extension fails while T-ADR-EMBED-12 remains open"
+      ],
+      "contracts_schema": [
+        "Environment and component inventory published as machine-readable output consumed by the release checklist",
+        "Health and readiness endpoint contract shared with every service scaffold"
+      ],
+      "security_privacy": [
+        "Pipelines authenticate with short-lived federated credentials; no long-lived cloud keys exist",
+        "Production access requires the same independent approval as protected branches",
+        "Secrets are resolved at runtime from the secret store and never written to pipeline logs",
+        "Residency is enforced by infrastructure policy; documentation without the passing policy result is not treated as implemented"
+      ],
+      "observability": [
+        "Deploy start, finish, canary verdict and rollback published as events with duration and version",
+        "Drift detection and residency-policy results published on a schedule"
+      ],
+      "tests": [
+        "Environment recreation test in a scratch account",
+        "Canary abort test using a deliberately unhealthy build",
+        "Rollback rehearsal per component with timing recorded",
+        "Pipeline credential test proving no static cloud key is present",
+        "Out-of-region stateful-resource plan rejection test",
+        "Unapproved database extension rejection test"
+      ],
+      "rollout_rollback": [
+        "Rolled out environment by environment, development first",
+        "Rollback is redeploying the previous version through the same pipeline; the procedure is the rehearsal"
+      ],
+      "non_goals": [
+        "Application observability content, which is the observability ticket",
+        "Backups and disaster recovery, which is its own ticket",
+        "Application-layer security controls, which belong to E19"
+      ],
+      "dependencies": [
+        "T-SCA-INF-01",
+        "T-GOV-02",
+        "T-ADR-AIEGRESS-08"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns infrastructure definitions, pipeline workflows and the flag mechanism. Service repositories own only their deploy manifest inputs, which are referenced rather than duplicated.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-PLT-02",
+      "title": "Implement backups, point-in-time recovery and a performed disaster-recovery restore drill",
+      "repo": "infra",
+      "epic": "E24",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 05",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "Backups exist, are encrypted, are tested by an actual restore into a clean environment, and the resulting recovery point and recovery time objectives are measured rather than asserted.",
+      "context": "Backups, restore, recovery objectives and a secondary region currently have no owner. A backup that has never been restored is not a backup, and for financial data the first restore attempt must not be during an incident.",
+      "scope": [
+        "Automated backups with point-in-time recovery for every stateful store",
+        "Encrypted backup storage with access separated from the production application role",
+        "Secondary region strategy with a stated recovery point and recovery time objective",
+        "A restore drill performed into a clean environment and timed",
+        "Documented interaction between backups and the crypto-shredding erasure path"
+      ],
+      "acceptance_criteria": [
+        "A restore into a clean environment has been performed and the elapsed time is recorded against the objective",
+        "Restored data passes the ledger zero-sum check and a sample reconciliation",
+        "Backup storage cannot be read or deleted using the production application credentials",
+        "The recovery objectives are published and referenced by the release checklist",
+        "The record states how erased users are treated in a restore from before their erasure"
+      ],
+      "contracts_schema": [
+        "Restore runbook published with the exact commands and the verification queries"
+      ],
+      "security_privacy": [
+        "Backups encrypted with keys the application role cannot use",
+        "Restore into a lower environment is forbidden unless the data is scrubbed, and the check is automated"
+      ],
+      "observability": [
+        "Backup success, age and size monitored with an alert on a missed window",
+        "Restore drill result recorded as a dated artifact"
+      ],
+      "tests": [
+        "Restore drill with timing",
+        "Ledger invariant verification on restored data",
+        "Negative test proving the application role cannot delete a backup"
+      ],
+      "rollout_rollback": [
+        "Enabled per store, starting with the primary database",
+        "Rollback is disabling the secondary region replication; backups themselves are never rolled back"
+      ],
+      "non_goals": [
+        "Application-level export for users, which belongs to E23",
+        "Chaos and failover exercises, which belong to E25"
+      ],
+      "dependencies": [
+        "T-PLT-01"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns backup configuration and the restore runbook. The api repository is only consulted for the verification queries.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-PLT-03",
+      "title": "Deliver observability, service level objectives, alerting, on-call and regional log retention",
+      "repo": "infra",
+      "epic": "E24",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 06",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "Traces, metrics and logs reach one place, golden-signal dashboards and service level objectives exist, an alert actually pages a named human, and security-relevant logs are retained in-region, tamper-evident, for the required period.",
+      "context": "There is no owner for observability, service level objectives, alerting or on-call, and the regulatory obligation to retain logs in-region with synchronised clocks has no implementation. Without this, an incident is discovered by users rather than by the team.",
+      "scope": [
+        "Distributed tracing, metrics and structured logging wired into every deployed service",
+        "Golden-signal dashboards per service and a small set of user-facing service level objectives",
+        "Alert routing to an on-call rotation with an escalation path",
+        "Clock synchronisation configured and monitored for drift on all systems",
+        "In-region, append-only log retention for the required period with deletion prevented before expiry"
+      ],
+      "acceptance_criteria": [
+        "A request can be traced end to end across services using one identifier",
+        "At least one alert has been fired deliberately and reached the on-call owner, with the evidence recorded",
+        "Service level objectives are published with their error budgets and are visible on a dashboard",
+        "Clock drift beyond the allowed threshold raises an alert",
+        "An attempt to delete a retained security log before its expiry fails",
+        "Log storage region is asserted by an automated policy check"
+      ],
+      "contracts_schema": [
+        "Trace, metric and log field conventions published so services emit a consistent shape",
+        "Alert routing configuration held as code"
+      ],
+      "security_privacy": [
+        "Log pipeline must not receive financial values or personal data; this is enforced by the scrubbing ticket",
+        "Access to the log store is separated from application credentials and is itself audited"
+      ],
+      "observability": [
+        "Dashboards for latency, traffic, errors and saturation per service",
+        "Alert firing and acknowledgement times recorded for review"
+      ],
+      "tests": [
+        "Deliberate alert firing test with the page evidence attached",
+        "Clock drift simulation test",
+        "Retention deletion attempt test",
+        "Region assertion policy test"
+      ],
+      "rollout_rollback": [
+        "Rolled out service by service as each is deployed",
+        "Rollback is disabling a noisy alert rule, never disabling collection"
+      ],
+      "non_goals": [
+        "Business analytics and product funnels, which belong to E07",
+        "Scrubbing implementation inside the application, which is its own ticket"
+      ],
+      "dependencies": [
+        "T-PLT-01"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns collectors, dashboards, alert rules and retention policy. Application repositories emit to the agreed conventions and own only their instrumentation calls.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-PLT-04",
+      "title": "Implement log scrubbing and a no-financial-data-in-logs gate in the backend",
+      "repo": "api",
+      "epic": "E24",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 06",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Backend logging is structured, scrubbed at the source, and a build gate fails when a money or personal-data field can reach a log sink.",
+      "context": "Observability without scrubbing turns the log store into a second, less protected copy of the financial database. The obligation is stated in several documents but no ticket implements it, and a reviewer cannot reliably catch it by reading diffs.",
+      "scope": [
+        "Structured logging only, with free-text interpolation of domain objects forbidden",
+        "Field-level scrubbing and allowlisting applied before a record leaves the process",
+        "Static analysis rule that fails the build when a money or personal-data type is logged",
+        "Runtime scan on a sample of emitted records in continuous integration",
+        "Consistent correlation identifiers that are not derived from user identity"
+      ],
+      "acceptance_criteria": [
+        "Logging a transaction, an amount or a merchant string fails the build",
+        "A planted money value in an emitted record is caught by the runtime scan and fails the pipeline",
+        "Correlation identifiers allow tracing without revealing who the user is",
+        "Error paths and exception messages are covered, not only the happy path",
+        "The scrubber is fail-closed: if scrubbing throws, the record is dropped rather than emitted raw"
+      ],
+      "contracts_schema": [
+        "Log record schema published with the allowed field set"
+      ],
+      "security_privacy": [
+        "Prevents financial values and personal data from reaching a log sink",
+        "Scrubbing failures are themselves recorded as counters without the offending content"
+      ],
+      "observability": [
+        "Counter of dropped records and of scrub failures, with an alert on a non-zero rate"
+      ],
+      "tests": [
+        "Unit tests per scrubbing rule including nested and collection cases",
+        "Static analysis rule test with a planted violation",
+        "Runtime scan test with a planted money value"
+      ],
+      "rollout_rollback": [
+        "Enabled in report-only mode for one release, then enforcing",
+        "Rollback is reverting to report-only, which never re-enables raw logging"
+      ],
+      "non_goals": [
+        "Log transport and retention, which the platform observability ticket owns",
+        "Client-side logging, which the Android and web tickets own"
+      ],
+      "dependencies": [
+        "T-PLT-03",
+        "T-SCA-API-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the logging module, the scrubbing rules and the analysis rule. Other services adopt the published module rather than reimplementing it.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-NOT-01",
+      "title": "Build the notification and transactional email outbox with scheduling and retries",
+      "repo": "api",
+      "epic": "E24",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "security",
+        "P1-high"
+      ],
+      "outcome": "One server-side outbox owns every push and transactional email: messages are enqueued transactionally, scheduled, retried with a dead-letter path, deduplicated by an idempotency key, checked against quiet hours and per-class preferences, and rendered from a payload allowlist that cannot leak financial detail.",
+      "context": "Six different features assume they can message a user and none of them owns the machinery. Built per feature, this becomes six retry policies, six ways to ignore a user's preferences and six chances to put an amount in a lock-screen notification. It is also a correctness problem: a message enqueued outside the transaction that produced it either fires for an event that rolled back or never fires at all.",
+      "scope": [
+        "Transactional outbox so a message is enqueued in the same transaction as the event that causes it",
+        "Dispatcher with scheduling, backoff, retry limits and a dead-letter queue that is inspectable and replayable",
+        "Idempotency key per logical message so a retry or a duplicated event delivers once",
+        "Preference and quiet-hours evaluation at send time, not at enqueue time, with suppression recorded as an outcome",
+        "Unsubscribe handling for every class that carries one, honoured without an authenticated session",
+        "Payload allowlist: a template may only reference fields on the allowlist, enforced by a check rather than by review",
+        "Provider abstraction for push and for transactional email, with a documented second provider path",
+        "Delivery status ingestion from providers, mapped onto the contract status vocabulary"
+      ],
+      "acceptance_criteria": [
+        "A message enqueued in a transaction that rolls back is never sent, proven by a test",
+        "The same logical message enqueued twice with the same idempotency key is delivered once, proven by a test",
+        "A failed send is retried with the published backoff and lands in the dead-letter queue after the published limit, and a dead-lettered message can be inspected and replayed",
+        "A message for a class the user has disabled is suppressed with an enumerated reason and is never delivered, proven by a test per class",
+        "A message that becomes deliverable during quiet hours is deferred rather than dropped, and delivered after the window using the user's time zone",
+        "An unsubscribe reference withdraws consent for exactly one class without an authenticated session and cannot be used to read or change anything else",
+        "A template referencing a field outside the payload allowlist fails a check at build time, and the allowlist excludes monetary amounts, merchant names and any other user's identity",
+        "Switching the push or email provider requires no change to any calling feature, demonstrated by a second provider implementation exercised in tests",
+        "Provider delivery callbacks map onto the contract status vocabulary, and an unmapped status fails loudly rather than being recorded as delivered"
+      ],
+      "contracts_schema": [
+        "Implements the messaging shapes published by T-CON-11; preference, device and delivery status are consumed, not redefined",
+        "Publishes the template payload allowlist as machine-readable data so the build-time check and the review read one list"
+      ],
+      "security_privacy": [
+        "No notification or email body carries a monetary amount, a merchant name, an account identifier or another user's identity; the message is a pointer and the content is fetched after authentication",
+        "Provider credentials are held in the secret store and never in configuration committed to the repository",
+        "Recipient addresses and device tokens are treated as personal data: minimised in logs, and deleted on account erasure through the T-SEC-02 path",
+        "A suppressed message is never delivered later by a retry that skips the preference check, because preferences are evaluated at send time"
+      ],
+      "observability": [
+        "Queue depth, send rate, retry rate, dead-letter count and suppression reasons are all recorded, so a silently failing provider is visible",
+        "An unmapped provider status and a growing dead-letter queue both raise alerts"
+      ],
+      "tests": [
+        "Rolled-back transaction produces no send",
+        "Idempotency deduplication test",
+        "Backoff, retry limit and dead-letter replay tests",
+        "Per-class suppression tests",
+        "Quiet-hours deferral test across a time zone boundary",
+        "Sessionless unsubscribe scope test",
+        "Payload allowlist build-time failure test with a planted amount field",
+        "Second-provider swap test"
+      ],
+      "rollout_rollback": [
+        "Rolled out class by class starting with transactional security messages, which have the clearest justification and the smallest payload",
+        "Rollback disables the dispatcher; enqueued messages remain in the outbox and are not lost, and no feature is blocked because every caller enqueues rather than sends"
+      ],
+      "non_goals": [
+        "Android permission, channels and token lifecycle, which T-NOT-02 owns",
+        "Message content and cadence decisions for retention, which T-RET-01 owns",
+        "Marketing campaigns, segmentation and any bulk send that is not triggered by a user event"
+      ],
+      "dependencies": [
+        "T-CON-11",
+        "T-PLT-03",
+        "T-SEC-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Solely owns the outbox, dispatcher, preference evaluation, unsubscribe handling and provider abstraction. Every feature enqueues through it and none of them talks to a provider directly.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-REL-01",
+      "title": "Establish Play App Signing, the AAB pipeline, tracks and staged rollout control",
+      "repo": "android",
+      "epic": "E24",
+      "kind": "Task",
+      "phase": "P4 Network",
+      "sprint": "Sprint 12",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R14 Key-person",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "Android releases are reproducible and reversible: signing keys are in Play App Signing with documented custody, the pipeline produces a signed app bundle, internal, closed and production tracks are wired, rollouts are staged with a halt criterion, and Vitals crash and ANR budgets plus a minimum supported version policy decide whether a rollout continues.",
+      "context": "Everything in the plan that assumes a release - the permission declaration, the beta gate, the quality budgets - assumes a release pipeline that nobody owns. Android release is also the one place where a mistake is not reversible in the usual way: a lost or leaked upload key is unrecoverable without Play support, and a bad build cannot be recalled from devices that already installed it. Staged rollout with a halt criterion is the only real rollback an Android release has.",
+      "scope": [
+        "Play App Signing enrolment, upload key custody, rotation procedure and recorded recovery path",
+        "Reproducible signed app bundle produced by the pipeline, never from a developer machine",
+        "Internal, closed and production tracks with a documented promotion path and who may promote",
+        "Staged rollout percentages, the halt criterion, and the mechanics of halting and resuming",
+        "Android Vitals crash-rate and ANR-rate budgets read as a release gate rather than a dashboard",
+        "Minimum supported version policy and the in-app update prompt, including the forced-update case",
+        "Release metadata: version code allocation, changelog, and mapping-file upload for deobfuscation"
+      ],
+      "acceptance_criteria": [
+        "The upload key is held in Play App Signing, its custody and recovery path are documented, and no signing key material exists on a developer machine",
+        "A release build produced twice from the same commit is byte-identical apart from signature material, proven by a pipeline check",
+        "A build cannot be promoted to production without having passed through internal and closed tracks, enforced by the pipeline rather than by convention",
+        "A staged rollout can be halted and resumed, and the halt criterion is a numeric threshold on Vitals crash and ANR rates rather than a judgement call",
+        "Exceeding the crash or ANR budget on a staged rollout halts it automatically and notifies a human",
+        "The minimum supported version policy is enforced in the app: a client below it is told to update, and the forced-update path is exercised in a test",
+        "Mapping files are uploaded for every release so a production crash is deobfuscated without a manual step",
+        "A rollback plan is recorded per release: halt, fix forward, and the conditions under which a previous version is re-promoted"
+      ],
+      "contracts_schema": [
+        "Version code allocation rule and minimum-supported-version value published as machine-readable data the app and the pipeline both read"
+      ],
+      "security_privacy": [
+        "No signing key, service account key or Play credential is stored in the repository; the pipeline uses short-lived federated credentials",
+        "The Play publishing service account holds only the permissions needed to upload and manage tracks",
+        "Crash reports are configured so no financial value and no message content reaches the crash reporter"
+      ],
+      "observability": [
+        "Crash-free session rate, ANR rate and rollout percentage are visible per track and per release",
+        "An automatic halt raises an alert that names the budget breached and the release it stopped"
+      ],
+      "tests": [
+        "Reproducible-build check on the pipeline",
+        "Track promotion gate test with a build that skipped a track",
+        "Automatic-halt test driven from a synthetic Vitals breach",
+        "Forced-update path test on a client below the minimum supported version",
+        "Mapping-file upload verification test"
+      ],
+      "rollout_rollback": [
+        "The pipeline is proven on the internal track before any external tester exists",
+        "Rollback of a release is halting the staged rollout and re-promoting the previous version; the plan is recorded before the rollout starts, not after a problem appears"
+      ],
+      "non_goals": [
+        "The Play permissions declaration itself, which android#9 owns",
+        "Server deployment and rollback, which T-PLT-01 owns",
+        "Store listing copy, screenshots and pricing configuration"
+      ],
+      "dependencies": [
+        "T-SCA-AND-01",
+        "T-SCA-INF-01",
+        "T-PLT-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the release pipeline, signing custody, tracks and the rollout gate. The infra repository provides credentials and runners; the permissions declaration and store listing belong to android#9.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

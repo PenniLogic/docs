@@ -1,0 +1,86 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e05-debt-engine",
+  "epic_refs": [
+    "docs#5"
+  ],
+  "items": [
+    {
+      "stable_id": "T-DEBT-01",
+      "title": "Model deterministic refinance and consolidation scenarios in the debt engine",
+      "repo": "api",
+      "epic": "docs#5",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can model a refinance or a consolidation of my existing debts against a hypothetical rate and term and see the deterministic effect on my payoff schedule, without the application ever naming or recommending a lender or a product to me.",
+      "context": "The debt engine already computes amortisation, payoff projection and strategy comparison; this ticket adds what-if scenario modelling on top of that machinery. The regulatory line is absolute: this is a calculator that compares a hypothetical schedule against the real one, never a recommendation engine, so no scenario response may name or rank a lender or a financial product.",
+      "scope": [
+        "Refinance scenario computing a hypothetical schedule from a user-entered rate and term against the current payoff projection",
+        "Consolidation scenario combining a chosen set of existing debts into one hypothetical schedule",
+        "Explicit statement of every assumption the scenario used, carried in the response rather than left implicit",
+        "Side-by-side comparison against the existing payoff projection from the published debt contract",
+        "Hard prohibition, enforced in code, on any lender name, product name or ranked recommendation appearing in a response",
+        "Disclaimer version identifier carried on every scenario response"
+      ],
+      "acceptance_criteria": [
+        "A refinance or consolidation scenario is deterministic and reproducible for the same inputs",
+        "No response names a lender, a specific financial product or ranks options against each other, proven by a copy scan over every generated field",
+        "A scenario is presented as a hypothetical comparison and never applied to the user's real schedule without an explicit separate action",
+        "The comparison against the existing payoff projection agrees with the independent model across the case matrix",
+        "Every scenario response carries the disclaimer version identifier the client must render",
+        "An infeasible consolidation, such as one that increases the effective rate with no other benefit, returns an explicit result rather than a misleadingly favourable one"
+      ],
+      "contracts_schema": [
+        "Extends the published debt contract with refinance and consolidation scenario request and response shapes"
+      ],
+      "security_privacy": [
+        "Scenario inputs and outputs are scoped to the requesting user only",
+        "No scenario output is sent to any third party or model; the computation is entirely deterministic and server-local"
+      ],
+      "observability": [
+        "Publishes scenario computation counts and latency without amounts"
+      ],
+      "tests": [
+        "Determinism and reproducibility test",
+        "Copy scan for lender or product names across every generated field",
+        "Independent model agreement test against the existing payoff projection",
+        "Infeasible consolidation explicit-result test"
+      ],
+      "rollout_rollback": [
+        "Behind a flag; scenarios ship after the copy scan and independent model comparison are green",
+        "Rollback hides scenario modelling while the real payoff schedule and projections remain unaffected"
+      ],
+      "non_goals": [
+        "Any lender or product recommendation, permanently",
+        "Any integration with a lender to originate or apply a refinance, permanently",
+        "Client presentation, which the android and web debt surfaces own"
+      ],
+      "dependencies": [
+        "api#15",
+        "T-CON-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the scenario computation module. Clients render the comparison and assumptions rather than recomputing them.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    }
+  ]
+}

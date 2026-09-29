@@ -1,0 +1,408 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e06-debt-experience",
+  "epic_refs": [
+    "docs#6"
+  ],
+  "items": [
+    {
+      "stable_id": "T-AND-01",
+      "title": "Build Android authentication, session handling and onboarding",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 10",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "As a new user, I can register, verify, sign in, stay signed in safely and sign out from every device, on Android, using the same session rules the server enforces.",
+      "context": "The Android plan has no phase zero: it jumps to debt screens with no authentication, session or onboarding. Everything else on the device depends on an authenticated session, so this is the true first Android ticket.",
+      "scope": [
+        "Registration, verification and sign-in flows matching the server contract",
+        "Secure token storage using the platform keystore, never plain preferences",
+        "Refresh rotation with reuse detection handled on the client, including forced sign-out",
+        "Sign-out on this device and sign-out everywhere",
+        "Session expiry, re-authentication prompts and error states",
+        "Onboarding shell that sequences consent before any data collection",
+        "Discoverable privacy-safe help and support entry from onboarding, authentication and settings"
+      ],
+      "acceptance_criteria": [
+        "Tokens are stored in the platform keystore and are absent from preferences, logs and device backups",
+        "A rotated refresh token cannot be reused; reuse forces sign-out and the user is told why in plain language",
+        "Sign-out everywhere invalidates other devices within the published time",
+        "Network failure, expired session and revoked session each produce a distinct, recoverable state rather than a crash",
+        "Onboarding cannot reach any data collection screen before consent is recorded",
+        "All authentication screens are screen-reader traversable and usable at the largest text scale",
+        "A user can reach help without signing in, and any diagnostic bundle excludes money, raw messages, provider keys and credentials"
+      ],
+      "contracts_schema": [
+        "Uses the generated client for the published authentication contract; token shapes are not hand-parsed"
+      ],
+      "security_privacy": [
+        "Screens carry secure-window protection so credentials do not appear in recents or screenshots",
+        "Failed attempts are rate limited client-side and the server limit is respected without leaking which factor failed"
+      ],
+      "observability": [
+        "Authentication outcome events carry result and reason codes only, never identifiers or credentials"
+      ],
+      "tests": [
+        "Instrumented sign-in, rotation, reuse and sign-out tests",
+        "Keystore storage verification and a backup exclusion check",
+        "Accessibility traversal test",
+        "Offline and expired-session state tests",
+        "Signed-out help navigation and planted-sensitive-value diagnostic scrub tests"
+      ],
+      "rollout_rollback": [
+        "Ships with onboarding behind a build flag until the consent screens land, then enabled together",
+        "Rollback disables new registration but never leaves an authenticated user without a sign-out path"
+      ],
+      "non_goals": [
+        "Passkey implementation, which follows the authentication decision record",
+        "Server authentication logic, which already has tickets"
+      ],
+      "dependencies": [
+        "api#4",
+        "api#5",
+        "T-ADR-AUTH-05",
+        "android#1"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the authentication feature module and secure storage. Server behaviour is consumed through the published contract only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AND-02",
+      "title": "Build Android manual transaction entry, accounts and category management",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 09",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, I can add and edit accounts, record a transaction by hand including cash, split it across categories, and manage my own categories, without waiting for automatic capture to work.",
+      "context": "Automatic capture arrives several sprints later and will never cover cash. Without manual entry the application is unusable on day one, and the debt screens have nothing to sit on. This is also the fallback whenever message permission is refused or revoked.",
+      "scope": [
+        "Account creation, editing and archiving for the supported account types",
+        "Manual transaction entry with amount, date, account, counterparty and note",
+        "Category assignment including split allocation across several categories",
+        "User category creation, rename and merge consistent with the category decision record",
+        "Editing and reversal of a previously recorded transaction as an explicit adjustment",
+        "Offline entry that queues and reconciles through the sync path"
+      ],
+      "acceptance_criteria": [
+        "An amount is entered and displayed in minor units with no floating point anywhere in the client",
+        "A split allocation must sum exactly to the transaction amount before it can be saved, with the remainder rule shown",
+        "Editing a recorded transaction produces an explicit adjustment rather than silently rewriting history",
+        "Merging a category redirects rather than destroying history and cannot create a cycle",
+        "Entry works offline and the queued record appears with a clear pending state",
+        "All entry screens are screen-reader traversable and usable at the largest text scale",
+        "A rejected server validation is shown as an actionable message, not a generic failure"
+      ],
+      "contracts_schema": [
+        "Uses the generated client for the accounts, transactions and categories contracts and the published money representation"
+      ],
+      "security_privacy": [
+        "Amounts and counterparty text are excluded from analytics payloads and from crash reports",
+        "Local storage is encrypted and excluded from device backup"
+      ],
+      "observability": [
+        "Entry funnel events carry step and outcome only, never amounts or counterparty text"
+      ],
+      "tests": [
+        "Instrumented entry, edit and split tests including the remainder case",
+        "Offline entry and reconciliation test",
+        "Accessibility traversal test",
+        "No-float static check on the client money path"
+      ],
+      "rollout_rollback": [
+        "Ships with the first Android release; no flag needed because it is the fallback path",
+        "Rollback is not applicable; removing manual entry would leave no capture path"
+      ],
+      "non_goals": [
+        "Automatic capture, which has its own tickets",
+        "Budgeting surfaces, which belong to the income epic"
+      ],
+      "dependencies": [
+        "api#6",
+        "api#7",
+        "api#9",
+        "android#1",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the entry, accounts and categories feature modules. Server contracts are consumed, never extended locally.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AND-03",
+      "title": "Build Android statement and file import with a dry-run preview",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 16",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can import a statement file on my phone, map its columns, see exactly what will be created before anything is written, and re-import the same file without creating duplicates.",
+      "context": "Import exists on the server but has no mobile surface, so a user whose bank does not send parseable messages has no way to get history in. Preview before commit is what makes the feature trustworthy for someone importing months of financial history.",
+      "scope": [
+        "File selection and upload from device storage",
+        "Column mapping interface with format detection and manual override",
+        "Dry-run preview showing creates, updates, duplicates and rejects before commit",
+        "Commit step with progress, cancellation and a result summary",
+        "Re-import of the same file recognised as idempotent"
+      ],
+      "acceptance_criteria": [
+        "No record is created until the user commits from the preview",
+        "Re-importing the same file creates no duplicates, proven by an instrumented test",
+        "A malformed row is reported with its line and reason rather than failing the entire import",
+        "A cancelled import leaves no partially committed records",
+        "Large files import without blocking the interface and survive process death mid-import",
+        "The preview and result screens are screen-reader traversable"
+      ],
+      "contracts_schema": [
+        "Uses the published import contract with dry-run and commit as distinct operations carrying an idempotency key"
+      ],
+      "security_privacy": [
+        "The selected file is not copied into a location included in device backup",
+        "Import content never appears in analytics or crash reports"
+      ],
+      "observability": [
+        "Import events record row counts and outcomes only, never content"
+      ],
+      "tests": [
+        "Instrumented import, preview and cancel tests",
+        "Idempotent re-import test",
+        "Malformed row handling test",
+        "Process death during import test"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag for the first release so it can be disabled if a parser problem appears",
+        "Rollback disables the entry point; already imported records are unaffected"
+      ],
+      "non_goals": [
+        "Server-side parsing rules, which the existing import ticket owns",
+        "Email and receipt sources, which belong to E28"
+      ],
+      "dependencies": [
+        "api#10",
+        "T-AND-02"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the import feature module. Parsing rules stay on the server.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AND-04",
+      "title": "Build the transaction timeline with search, detail, edit and reversal",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Sprint 12",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "A user can scroll their whole transaction history at a steady frame rate, find a transaction by text, amount or date, open it, correct it by reversal, and understand at a glance whether what they are seeing is pending, offline or stale.",
+      "context": "Every ingestion, ledger and debt ticket produces transactions, and no ticket owns the surface that shows them. The countdown, the debt screens and the simulator all exist, but the list a user actually lives in - the timeline - has no owner, no virtualization requirement and no defined behaviour for the states that matter most: a pending capture, an unsynced edit, a reversal. A list that is not virtualized also becomes the first place the app janks, because a real user's history is thousands of rows.",
+      "scope": [
+        "Virtualized timeline that pages from local storage and holds a steady frame rate over a large history",
+        "Search across merchant, note and amount, and filters for date range, account, category and direction",
+        "Transaction detail with its ledger entries, its source and its confidence where it was inferred",
+        "Edit as a correction, and reversal as the append-only correction path rather than a destructive edit",
+        "Pending, offline, stale, empty, loading, error and permission-denied states from the T-UX-01 taxonomy",
+        "Grouping and running balance presentation that agrees with the server-derived balance",
+        "Deep link into a transaction from a notification or a clarification item"
+      ],
+      "acceptance_criteria": [
+        "The timeline holds the published frame budget while scrolling a fixture history of at least ten thousand transactions on the minimum supported device",
+        "Search returns correct results for merchant text, note text and an exact amount, and states clearly when a filter is active",
+        "Editing a posted transaction produces a reversing entry and a new entry rather than mutating the original, proven by a test that reads the ledger after an edit",
+        "A pending capture is visually distinct from a posted transaction and never contributes to a balance presented as final",
+        "An unsynced local change is shown as such and survives a process death and restart",
+        "A stale timeline is labelled stale rather than shown as current, and offline is distinguished from stale exactly as T-UX-01 defines",
+        "The running balance shown matches the server-derived balance for the same window, asserted by a test rather than by inspection",
+        "Every applicable T-UX-01 state identifier is handled, asserted by the client state coverage check",
+        "The screen passes the accessibility and performance budgets applied to the other core journeys"
+      ],
+      "contracts_schema": [
+        "Consumes the published transaction, category and money contracts through the generated client; money is rendered from the canonical representation and never re-parsed from a formatted string"
+      ],
+      "security_privacy": [
+        "Raw captured message content is never displayed or stored by this surface; it shows the derived transaction only",
+        "Search runs against local storage and sends no query text to the server"
+      ],
+      "observability": [
+        "Scroll jank, search latency and empty-result rate are recorded so a regression is visible without a bug report"
+      ],
+      "tests": [
+        "Large-history scroll performance test on the minimum supported device",
+        "Search correctness tests across merchant, note and amount",
+        "Edit-produces-reversal ledger test",
+        "Pending, offline and stale presentation tests",
+        "Running-balance agreement test against the server-derived balance",
+        "State coverage test against the T-UX-01 identifiers"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag with the existing list retained until the new timeline passes its performance budget on a physical device",
+        "Rollback re-enables the previous surface; no local schema change is introduced by this ticket"
+      ],
+      "non_goals": [
+        "Category management and budgeting surfaces, which T-AND-05 owns",
+        "Clarification of low-confidence captures, which android#11 owns",
+        "Server-side search or export, which the api and compliance tickets own"
+      ],
+      "dependencies": [
+        "T-AND-02",
+        "api#7",
+        "api#9",
+        "T-UX-01",
+        "android#5"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the timeline, its search and filters, the detail screen and the correction journey. The reversal semantics are the server's and are consumed, not re-implemented.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-NOT-02",
+      "title": "Implement Android notification permission, channels and token lifecycle",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R1 SMS permission",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "The app requests notification permission at a moment the user understands, registers and refreshes its delivery token reliably, routes every message to a labelled channel the user can control individually, and degrades to local scheduling when permission is denied or revoked.",
+      "context": "Every notification consumer - budget alerts, goal milestones, family and split activity, retention digests, administrative security notices - assumes a delivery path that does not exist. On API 33 and above notification permission is a runtime prompt that a user can deny permanently, and a denied prompt asked at the wrong moment is denied for the life of the install. Channels matter for the same reason: a user who cannot mute the retention digest separately from a security notice will mute everything.",
+      "scope": [
+        "POST_NOTIFICATIONS runtime request on API 33 and above, asked in context rather than at first launch",
+        "Notification channels and groups, one per message class, each individually mutable by the user",
+        "Delivery token registration, refresh, rotation on reinstall and deregistration on sign-out",
+        "Denial and revocation handling, including the case where permission is revoked while a token is still registered server-side",
+        "Local scheduling fallback for messages that remain useful without a server push",
+        "Deep links from every notification into the surface it refers to, including a cold-start path",
+        "Quiet-hours and preference state read from the server so the client and server agree on what may be delivered",
+        "In-app cross-channel preference summary with a deep link to the web preference centre and Android channel settings"
+      ],
+      "acceptance_criteria": [
+        "On API 33 and above the permission is requested in context, and a denial leaves every other part of the app fully usable",
+        "Each message class has its own channel, and muting one channel does not mute another, proven by an instrumented test",
+        "A token refresh or a reinstall re-registers the device and retires the previous token server-side, proven by a test that asserts the old token is no longer targeted",
+        "Signing out deregisters the device so a subsequent push is not delivered to it",
+        "Revoking notification permission in system settings results in the server no longer treating the device as deliverable within the published bound, rather than pushing into a void",
+        "Every notification deep link opens the correct surface from a cold start, not only when the app is already running",
+        "When permission is denied, messages that remain useful are surfaced through the local scheduling fallback or in-app, and the app never re-prompts more often than the published cadence",
+        "Quiet hours and per-class preferences set on the server are honoured by the client, and the client never delivers a class the user has disabled",
+        "The in-app summary shows server-confirmed cross-channel state and cannot overwrite a sessionless unsubscribe with stale local state"
+      ],
+      "contracts_schema": [
+        "Consumes the device registration, preference and delivery status shapes published by T-CON-11 through the generated client"
+      ],
+      "security_privacy": [
+        "Notification payloads carry no financial amount, no merchant name and no other user's identity; the payload is a pointer and the content is fetched after unlock",
+        "Sensitive notification content is hidden on the lock screen by channel configuration",
+        "Tokens are treated as credentials: never logged, and deregistered on sign-out"
+      ],
+      "observability": [
+        "Permission grant, denial and revocation rates are recorded per prompt context so a badly timed prompt is visible",
+        "Token registration failures and deep-link cold-start failures are recorded separately"
+      ],
+      "tests": [
+        "API 33 permission request and denial instrumented tests",
+        "Per-channel mute isolation test",
+        "Token refresh, reinstall and sign-out deregistration tests",
+        "Revocation-to-server-stop bound test",
+        "Cold-start deep-link test per notification class",
+        "Quiet-hours and disabled-class suppression test",
+        "Cross-channel preference summary and sessionless-unsubscribe convergence test"
+      ],
+      "rollout_rollback": [
+        "Enabled per message class, starting with the class with the clearest user value, so a bad prompt context is contained",
+        "Rollback disables client registration and the server stops targeting the device; no user data is affected"
+      ],
+      "non_goals": [
+        "Server-side outbox, scheduling, retries and provider abstraction, which T-NOT-01 owns",
+        "The content and cadence of retention messaging, which T-RET-01 owns",
+        "Email delivery, which is entirely server-side"
+      ],
+      "dependencies": [
+        "T-NOT-01",
+        "T-CON-11",
+        "T-AND-01",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the permission request, channels, token lifecycle, deep links and the local fallback. The outbox, scheduling and provider selection are T-NOT-01's and are never duplicated here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

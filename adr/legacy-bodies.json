@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "number": "ADR-001",
+      "title": "Money is stored as integer minor units",
+      "sha256": "56e532e3dff6325294b7fc841c98d3fb276a33fa384d1a9fa1f518dad18d7a49",
+      "bytes": 848
+    },
+    {
+      "number": "ADR-002",
+      "title": "Double-entry, append-only ledger",
+      "sha256": "8416be798a864ea61c734d5e55f5584d36148bfc202cfacdaff9886266575ac8",
+      "bytes": 680
+    },
+    {
+      "number": "ADR-003",
+      "title": "Deterministic parser primary, on-device LLM as fallback",
+      "sha256": "c967c7e2fccd3e5c07ee35ce67450549853477607d7c1e3d540811427965b43d",
+      "bytes": 1483
+    },
+    {
+      "number": "ADR-004",
+      "title": "Raw message content never leaves the device",
+      "sha256": "1551dd58ebd26e32ea5c8de79364adb6d0cf314d80d916cfc9d28f6100493202",
+      "bytes": 1256
+    },
+    {
+      "number": "ADR-005",
+      "title": "Relationship-based access control (ReBAC) for sharing",
+      "sha256": "6200958bd892d1eef045b3531d117527e4a8e1ee21fed81983e47692164d7f97",
+      "bytes": 886
+    },
+    {
+      "number": "ADR-006",
+      "title": "Crypto-shredding for the right to erasure",
+      "sha256": "7d0b4476f06aa751a3e56d29a2d2c5d134b6cc67deda323fd63b762d20dade66",
+      "bytes": 783
+    },
+    {
+      "number": "ADR-007",
+      "title": "Entitlements owned in-house, enforced server-side",
+      "sha256": "e074f31851afe03037fc725234b11c06b19d46bd71306962d9497cc59938e64c",
+      "bytes": 822
+    },
+    {
+      "number": "ADR-008",
+      "title": "Native Android (not cross-platform)",
+      "sha256": "3cdcde820ecde25b05eee14d4b14203906c2790d761e4178e610baed3e533e14",
+      "bytes": 689
+    },
+    {
+      "number": "ADR-009",
+      "title": "Polyglot backend: Kotlin/Ktor core + Python/FastAPI AI service",
+      "sha256": "e7ba11f0039a9dc1bee53812b735819f47d170052bdecee518e629ae71cae75e",
+      "bytes": 738
+    },
+    {
+      "number": "ADR-010",
+      "title": "Offline: start simple, adopt a sync engine later",
+      "sha256": "d7d74b0fb600bafd624e0f9685770f37a67fc432d977094846fcde491a926b28",
+      "bytes": 816
+    },
+    {
+      "number": "ADR-011",
+      "title": "Drop call log access",
+      "sha256": "8ca19f029dac87e65611e46fb3cefd5ce9e354b72623249f7a63bb63fa236da1",
+      "bytes": 637
+    },
+    {
+      "number": "ADR-012",
+      "title": "Positioning: debt-first",
+      "sha256": "55247b6a7bb191d9399bb146fff57b34b7c4c7a26bdd1cb5291e124b6faeb84e",
+      "bytes": 697
+    },
+    {
+      "number": "ADR-013",
+      "title": "Account Aggregator: Route D (defer AA, on-device parsing for MVP)",
+      "sha256": "aa080ab85b00ad63ddb289057eb64403f5cf3d1307845ef62d2f740d5e7224ca",
+      "bytes": 2154
+    },
+    {
+      "number": "ADR-014",
+      "title": "Multi-repository structure under the PenniLogic GitHub org",
+      "sha256": "81427d55c69f433750c6f5cd17839f3d30ea3f2569bf8fcf433c0736b411eedd",
+      "bytes": 1809
+    }
+  ]
+}

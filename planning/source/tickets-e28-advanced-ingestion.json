@@ -1,0 +1,236 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e28-advanced-ingestion",
+  "epic_refs": [
+    "E28"
+  ],
+  "items": [
+    {
+      "stable_id": "T-ING-01",
+      "title": "Parse email statement messages entirely on device and emit structured events only",
+      "repo": "android",
+      "epic": "E28",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can connect my mailbox and have statement and alert messages parsed on my own device, so a structured transaction event reaches the server while the message body never leaves the handset.",
+      "context": "Raw email content never leaving the device is a hard rule, so email parsing cannot be a server capability. The connector, the parsers and the redaction all run on device, and the API only ever receives the same structured ingestion event that the message and notification sources already produce.",
+      "scope": [
+        "On-device mailbox connector with least-privilege, revocable access and a narrow message filter",
+        "Deterministic on-device parsers for the supported issuer formats, with confidence and clarification routing",
+        "Structured ingestion event emission that carries amount, instant, issuer pattern identifier and confidence only",
+        "Extension of source precedence and deduplication so email events rank alongside message and notification events",
+        "Revocation that stops all fetching, clears cached message state on device and is verifiable"
+      ],
+      "acceptance_criteria": [
+        "No email body, subject, sender address or attachment is transmitted to the server or to any third party, proven by automated traffic capture on a release candidate",
+        "Parsing, redaction and confidence scoring all execute on device with the network disabled, proven by an instrumented test",
+        "Mailbox access uses the narrowest available scope and revoking it stops fetching immediately, proven by capture",
+        "A transaction arriving by both email and message deduplicates deterministically and the surviving record is explainable",
+        "A parser failure routes to on-device clarification rather than creating a wrong record or shipping the raw message for triage",
+        "Adding this source requires no change to the existing message and notification server paths"
+      ],
+      "contracts_schema": [
+        "Emits the published structured ingestion event; the email source is an additive registration and adds no free-text field"
+      ],
+      "security_privacy": [
+        "Raw email content is never persisted off device and never appears in logs, crash reports or support attachments",
+        "Connector credentials are held in the platform keystore and are revocable by the user at any time",
+        "Consent for mailbox access is a distinct purpose in the consent ledger and is revocable independently"
+      ],
+      "observability": [
+        "Publishes per-source ingestion counts, confidence distribution and deduplication outcomes"
+      ],
+      "tests": [
+        "Cross-source deduplication tests",
+        "Cash reconciliation tests",
+        "Revocation capture test",
+        "Parser failure routing test",
+        "Retention test proving no raw body persists"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per source; email is enabled per cohort after the consent purpose is live",
+        "Rollback disables fetching and leaves already ingested records intact"
+      ],
+      "non_goals": [
+        "Server-side email fetching or parsing, permanently",
+        "Screen scraping or credential sharing with any bank, permanently",
+        "Aggregator connectivity, which is its own epic",
+        "Cash and ATM reconciliation, which T-ING-03 owns"
+      ],
+      "dependencies": [
+        "api#17",
+        "api#18",
+        "T-CON-02",
+        "T-SCA-AND-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the connector, the on-device parsers and the redaction boundary. The api repository only registers the source and applies existing precedence rules.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ING-02",
+      "title": "Build on-device receipt capture and text recognition with user confirmation",
+      "repo": "android",
+      "epic": "E28",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R1 SMS permission",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can photograph a paper receipt and have the amount, merchant and date extracted on my device, review what was read, and confirm before anything is recorded.",
+      "context": "Receipts are the last common gap, particularly for cash. Doing the recognition on the device keeps the privacy promise intact, and requiring confirmation keeps a misread total from silently becoming a wrong balance.",
+      "scope": [
+        "Camera capture with guidance for framing and lighting",
+        "On-device text recognition extracting amount, merchant, date and line items where present",
+        "Review screen showing what was extracted with every field editable",
+        "Confirmation required before any record is created",
+        "Image retention policy with a default that does not keep the photograph",
+        "Routing of low-confidence extractions to the existing clarification inbox"
+      ],
+      "acceptance_criteria": [
+        "Recognition runs entirely on the device and no image leaves it, verified by the traffic capture harness",
+        "No transaction is created without explicit user confirmation",
+        "Every extracted field is editable before confirmation",
+        "By default the photograph is not retained after confirmation, and retention is an explicit user choice",
+        "A low-confidence extraction routes to clarification rather than being applied",
+        "The capture and review screens are screen-reader traversable, with a manual entry path for users who cannot use the camera"
+      ],
+      "contracts_schema": [
+        "Submits a structured payload through the published ingestion contract; no image is ever submitted"
+      ],
+      "security_privacy": [
+        "Images are stored in application-private storage excluded from device backup and from media indexing",
+        "Camera permission is requested contextually and its purpose is recorded in the consent ledger"
+      ],
+      "observability": [
+        "Records capture attempts and confirmation outcomes without content"
+      ],
+      "tests": [
+        "Traffic capture test proving no image egress",
+        "Confirmation requirement test",
+        "Retention default test",
+        "Low-confidence routing test",
+        "Accessibility path test"
+      ],
+      "rollout_rollback": [
+        "Behind a flag, enabled per cohort after the capture evidence is attached",
+        "Rollback hides the capture entry point; confirmed transactions are unaffected"
+      ],
+      "non_goals": [
+        "Server-side image processing of any kind",
+        "Storing receipt images in the backend"
+      ],
+      "dependencies": [
+        "T-ING-01",
+        "android#11"
+      ],
+      "parallel_boundary": "Primary repo android. Owns capture, recognition and review. Only the structured result crosses the boundary.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ING-03",
+      "title": "Reconcile ATM withdrawals and cash spending against the existing manual entries",
+      "repo": "api",
+      "epic": "E28",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "feature",
+        "P2-medium"
+      ],
+      "outcome": "As a user who withdraws cash, I see the withdrawal as a movement into a cash account and I am prompted to reconcile it against the cash spending I already record by hand, so cash stops being a hole in the picture without asking me to re-enter what I already entered.",
+      "context": "Manual cash entry already exists, so a second manual cash source would duplicate it. The gap is reconciliation: an ATM withdrawal is currently an expense rather than a transfer into cash held, and the manual cash entries are never matched against it.",
+      "scope": [
+        "ATM withdrawal detection from existing ingested events, classified as a transfer into a cash account rather than as spending",
+        "Cash account balance derived from withdrawals in and manual cash entries out",
+        "Reconciliation prompt when the derived cash balance drifts beyond a stated threshold or a stated age",
+        "Adjustment entries recorded explicitly so a reconciliation never rewrites a prior entry",
+        "Precedence and deduplication rules so a withdrawal is not counted both as an expense and as a transfer"
+      ],
+      "acceptance_criteria": [
+        "An ATM withdrawal creates a transfer into the cash account and does not appear as spending in any report",
+        "The derived cash balance equals withdrawals in minus manual cash entries out plus adjustments, with no created or destroyed minor units",
+        "A reconciliation adjustment is a new explicit entry; no prior entry is mutated, proven by an append-only test",
+        "Users who never withdraw cash see no new prompt and no new account",
+        "A withdrawal ingested twice from two sources reconciles to one transfer, and the surviving record is explainable",
+        "All arithmetic agrees with the independent model, including the adjustment path"
+      ],
+      "contracts_schema": [
+        "Cash account and reconciliation adjustment expressed as additive registrations on the published ledger and ingestion contracts"
+      ],
+      "security_privacy": [
+        "Reconciliation prompts carry no counterparty text and no location data",
+        "Cash balances are ordinary ledger data and inherit the existing encryption and tenancy controls"
+      ],
+      "observability": [
+        "Reconciliation prompt shown, accepted and dismissed counts published without amounts",
+        "Drift distribution published so the threshold can be tuned without inspecting user data"
+      ],
+      "tests": [
+        "Property test asserting zero-sum across the withdrawal, the manual entry and the adjustment",
+        "Deduplication test for a withdrawal observed on two sources",
+        "Regression test proving existing manual cash entry behaviour is unchanged"
+      ],
+      "rollout_rollback": [
+        "Shipped behind a flag defaulting to off; enabled for users who have at least one detected withdrawal",
+        "Rollback disables detection and prompts; already-created transfers remain valid ledger entries"
+      ],
+      "non_goals": [
+        "A second manual cash entry surface, which already exists",
+        "Cash forecasting, which belongs to the income and budgeting epic"
+      ],
+      "dependencies": [
+        "api#17",
+        "T-CON-02",
+        "T-ADR-LEDGER-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns detection, the cash account derivation and the adjustment entry. Client surfaces reuse the existing clarification and transaction contracts.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    }
+  ]
+}

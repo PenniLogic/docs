@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic backlog v2 existing-item snapshot",
+  "description": "Offline record of every item already on PenniLogic Delivery. It exists so validate-backlog-v2.ps1 can check schedule ordering against real sprints with no network access. It is reference data, not a target: the sync script never writes an item from this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "group", "description", "captured_at", "items"],
+  "properties": {
+    "kind": { "const": "existing_items" },
+    "group": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "description": { "type": "string", "minLength": 1 },
+    "captured_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "repo", "number", "kind", "sprint", "status", "estimate", "title", "dependencies"],
+        "properties": {
+          "ref": { "$ref": "enums.schema.json#/definitions/issue_ref" },
+          "repo": { "$ref": "enums.schema.json#/definitions/repo" },
+          "number": { "type": "integer", "minimum": 1 },
+          "kind": { "$ref": "enums.schema.json#/definitions/kind" },
+          "sprint": { "$ref": "enums.schema.json#/definitions/sprint" },
+          "status": { "$ref": "enums.schema.json#/definitions/status" },
+          "estimate": {
+            "description": "Null on epics, which carry Rollup instead of Estimate.",
+            "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+          },
+          "title": { "type": "string", "minLength": 1 },
+          "dependencies": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "$ref": "enums.schema.json#/definitions/reference" }
+          }
+        }
+      }
+    }
+  }
+}

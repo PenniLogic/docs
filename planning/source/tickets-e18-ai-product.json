@@ -1,0 +1,430 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e18-ai-product",
+  "epic_refs": [
+    "docs#18"
+  ],
+  "items": [
+    {
+      "stable_id": "T-AIP-01",
+      "title": "Ship categorisation and merchant enrichment gated on the deterministic baseline",
+      "repo": "ai-service",
+      "epic": "docs#18",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, my transactions are categorised more accurately than the rule-based system managed, and whenever I disagree my correction wins and stays won.",
+      "context": "Model categorisation is only worth its cost and risk if it measurably beats the deterministic baseline that already exists. Without that gate the product takes on model risk for no gain, and users experience regressions on categories the rules used to get right.",
+      "scope": [
+        "Categorisation pipeline routed to the cheap model tier",
+        "Merchant enrichment reusing the normalised dictionary rather than inventing names",
+        "Comparison against the deterministic baseline on the golden corpus before replacement",
+        "User override that persists and takes precedence permanently",
+        "Confidence routing so low-confidence results go to the clarification queue instead of being applied"
+      ],
+      "acceptance_criteria": [
+        "The pipeline beats the deterministic baseline on the golden corpus before it replaces it, and the comparison is recorded",
+        "A user override persists, wins over any later model result and is auditable",
+        "Categorisation never touches the expensive model tier, verified by a routing assertion",
+        "Low-confidence results are routed to clarification rather than silently applied",
+        "Enrichment never invents a merchant name absent from the dictionary without marking it as unverified",
+        "Disabling the feature returns the system to the deterministic baseline with no data migration"
+      ],
+      "contracts_schema": [
+        "Consumes the published tool and clarification contracts; results are written through the existing ingestion path"
+      ],
+      "security_privacy": [
+        "Merchant strings are minimised before any external call",
+        "No categorisation result is trusted enough to move money or change a balance"
+      ],
+      "observability": [
+        "Publishes accuracy against the corpus, override rate and routing tier distribution"
+      ],
+      "tests": [
+        "Baseline comparison on the golden corpus",
+        "Override persistence test",
+        "Routing tier assertion",
+        "Low-confidence routing test"
+      ],
+      "rollout_rollback": [
+        "Behind a flag, enabled per cohort after the baseline comparison passes",
+        "Rollback returns to the deterministic baseline immediately with no data loss"
+      ],
+      "non_goals": [
+        "Numeric answers of any kind, which the provenance ticket governs"
+      ],
+      "dependencies": [
+        "T-AI-05",
+        "api#19",
+        "T-AI-06"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns the pipeline. Overrides are stored by the api through the existing contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AIP-02",
+      "title": "Enforce numeric provenance and ship grounded question answering with citations and insights",
+      "repo": "ai-service",
+      "epic": "docs#18",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, every figure the assistant shows me is traceable to my own data, every claim links to the records it came from, and the assistant refuses rather than guesses when it cannot ground an answer.",
+      "context": "The single unrecoverable failure for a finance assistant is a confidently wrong number. Provenance enforcement is what makes that structurally impossible: a response containing a figure absent from tool output is blocked before it reaches the user.",
+      "scope": [
+        "Post-processing that rejects any figure absent from tool output",
+        "Grounded answering that cites the user's own records for each claim",
+        "A path from any answer to the full calculation behind it",
+        "Proactive insights derived from deterministic aggregates with hedged language",
+        "Batched periodic reviews generated off-peak for cost",
+        "Refusal behaviour when grounding is unavailable",
+        "Goal and debt narrative explanations generated only from deterministic projection output and its provenance",
+        "Weekly and monthly review narratives generated from deterministic aggregates with an explicit as-of time"
+      ],
+      "acceptance_criteria": [
+        "A response containing a figure not present in tool output is blocked and alerted, proven by an injected test case",
+        "Every claim links to the source records and the link resolves to data the user owns",
+        "An answer that cannot be grounded produces an explicit refusal rather than a plausible guess",
+        "Insights are derived from aggregates and never assert causation",
+        "Batched reviews are skipped for inactive users and their cost per run is tracked against the model",
+        "Figures shown are never rounded away from the values the tools returned",
+        "Every goal or debt narrative links to the deterministic calculation and is refused when provenance is incomplete",
+        "Periodic reviews state their covered interval and as-of time and contain no figure absent from tool output"
+      ],
+      "contracts_schema": [
+        "Consumes the tool contract; provenance identifiers from tool results are carried through to the response"
+      ],
+      "security_privacy": [
+        "Grounding data is scoped by the tool layer, so a compromised prompt cannot widen the source set",
+        "Citations reference records the requesting user owns and nothing else"
+      ],
+      "observability": [
+        "Publishes provenance rejection counts, refusal rate and cost per active user"
+      ],
+      "tests": [
+        "Injected unsupported figure test",
+        "Citation resolution test",
+        "Refusal behaviour test",
+        "Cost per run tracking test",
+        "Goal and debt narrative provenance tests",
+        "Periodic review interval, as-of time and unsupported-figure rejection tests"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per surface; provenance enforcement is never optional and ships with the first surface",
+        "Rollback disables the surface rather than relaxing provenance"
+      ],
+      "non_goals": [
+        "Any arithmetic performed by the model, which is prohibited by design"
+      ],
+      "dependencies": [
+        "T-AI-05",
+        "T-AI-04",
+        "T-AI-06"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns provenance enforcement and answer construction. All figures originate from the api tool layer.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AIP-03",
+      "title": "Build the Android assistant surfaces with disclosure, override, refusal and advice-boundary guardrails",
+      "repo": "android",
+      "epic": "docs#18",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "As a user, I always know when I am reading model output, I can contest or override anything it produced, and it declines to tell me what to buy or invest in rather than crossing into regulated advice.",
+      "context": "The regulatory boundary is that the product is a calculator and a mirror, never an adviser, and the debt wedge fortunately sits outside the sensitive scope. The controls have to be visible in the interface, because the obligation is about what the user is told, not what the server intended.",
+      "scope": [
+        "Disclosure on every surface where model output appears",
+        "Disclaimer rendering driven by the versioned compliance text rather than local copy",
+        "Contest and override controls on any model-produced categorisation or narrative",
+        "Refusal presentation that explains why rather than failing silently",
+        "Banned-term scan in the build for creditworthiness-adjacent and product-recommendation language",
+        "Clarification assistance integrated with the existing inbox without nagging",
+        "BYOK and custom-endpoint registration, validation, replacement and revocation through backend APIs only",
+        "Plan quota usage, reset time and provider status without exposing key material",
+        "T-AIP-05 natural-language transaction draft review, correction and explicit confirmation through the normal transaction API",
+        "History-off state plus opt-in thread list, provenance, expiry, export and per-thread or bulk deletion using T-CON-14"
+      ],
+      "acceptance_criteria": [
+        "Every surface showing model output carries the disclosure and the current disclaimer version",
+        "A user can contest any model output and the override persists and is auditable",
+        "A refusal is presented in plain language with a route to the deterministic answer where one exists",
+        "The build fails if banned terminology appears in user-facing copy",
+        "Suggestions are batched and never interrupt the user repeatedly for the same item",
+        "All assistant surfaces are screen-reader traversable and usable at the largest text scale",
+        "The Android client never calls a provider endpoint directly and never receives a stored provider key back",
+        "A revoked or replaced key and a disabled custom endpoint produce a clear recoverable state",
+        "Adding or changing a key or endpoint requires a fresh passkey step-up; risk-triggered changes show their twenty-four-hour pending window, notification channel and cancellation action",
+        "After account recovery, suspended provider configuration is explained and must be re-enrolled rather than silently reactivated",
+        "A natural-language draft cannot write until every field is visible and the user explicitly confirms",
+        "History is off by default; enabling it shows retention, persisted threads are accessible and deletable, and ephemeral turns never appear later"
+      ],
+      "contracts_schema": [
+        "Consumes the published assistant contract and the versioned disclaimer identifier"
+      ],
+      "security_privacy": [
+        "Model output is never presented as authoritative for a monetary figure without its provenance link",
+        "No assistant surface fires analytics containing message or transaction content"
+      ],
+      "observability": [
+        "Records disclosure impressions and override actions without content"
+      ],
+      "tests": [
+        "Disclosure presence test on every surface",
+        "Override persistence test",
+        "Banned-term build scan with planted copy",
+        "Accessibility traversal test",
+        "BYOK and custom-endpoint registration, replacement and revocation instrumented tests",
+        "Step-up expiry, pending activation, notification cancellation and post-recovery re-enrollment tests",
+        "No-direct-provider network assertion",
+        "Natural-language draft correction, confirmation, expiry and cancellation tests",
+        "History-off no-reappearance, thread export and accessible deletion tests"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per surface, enabled only after the refusal suite and provenance enforcement are green",
+        "Rollback hides the surface and leaves deterministic screens untouched"
+      ],
+      "non_goals": [
+        "Server-side guardrails, which the ai-service tickets own"
+      ],
+      "dependencies": [
+        "T-AIP-02",
+        "android#11",
+        "T-AI-03",
+        "T-AIP-05",
+        "T-CON-16",
+        "T-CON-14",
+        "T-AIP-06"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the assistant surfaces. Disclaimer text comes from the published compliance version and is never authored locally.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AIP-04",
+      "title": "Build the web assistant with citations, disclosure, BYOK and custom-endpoint management",
+      "repo": "web",
+      "epic": "docs#18",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R11 Prompt injection",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "security",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can ask the assistant a question in natural language on the web and get an answer with citations, derivation and a refusal when appropriate, I can bring my own provider key or register a custom endpoint with it validated before acceptance and revocable at any time, and I can see my current quota status.",
+      "context": "This mirrors the disclosure and guardrail obligations T-AIP-03 already built for Android, and extends T-AIP-02's grounded, provenance-carrying answering to the web surface. It also exposes the bring-your-own-key and custom-endpoint registration that T-AI-03's adversarial validation suite exists to defend, so registration, validation and revocation all have to be visible and reversible from the same surface that shows billing quota.",
+      "scope": [
+        "Natural-language entry point for the assistant with citation, derivation and refusal presentation",
+        "Bring-your-own-key registration flow that stores the key only through the gateway's envelope encryption and never in browser storage",
+        "Custom-endpoint registration that runs the request through the existing adversarial validation suite before it is accepted",
+        "Explicit revocation control for any registered key or endpoint",
+        "Fresh passkey step-up and risk-triggered pending-activation experience showing the activation time, verified notification and cancellation control",
+        "Post-recovery suspended state requiring re-enrollment rather than automatic reuse",
+        "Quota status display sourced from the same billing quota state the customer billing portal surfaces",
+        "Disclaimer rendered on every assistant surface from the versioned compliance text",
+        "T-AIP-05 natural-language transaction draft review with every parsed field, correction, cancellation, expiry and explicit confirmation through the normal transaction API",
+        "History-off state plus opt-in thread list, provenance, expiry, export and per-thread or bulk deletion using T-CON-14"
+      ],
+      "acceptance_criteria": [
+        "Every assistant answer carries its citations and provenance links",
+        "A refusal is presented in plain language with a route to a deterministic answer where one exists",
+        "A bring-your-own-key is never observable from browser script storage or client-side logs, proven by a test",
+        "A custom endpoint targeting a disallowed destination, such as a private or loopback address, fails registration",
+        "Revoking a key or endpoint takes effect before the next assistant request completes",
+        "A stale step-up cannot submit a change, and a pending change cannot be used before its activation time",
+        "The verified-channel notification opens a cancellation path that remains usable without exposing the key or full endpoint",
+        "After account recovery, every prior provider configuration is visibly suspended and cannot be reactivated without fresh enrollment",
+        "A natural-language request cannot write financial state until every T-CON-16 draft field is visible and the user explicitly confirms; cancellation or expiry writes nothing and a retried confirmation creates one transaction",
+        "Quota status shown matches the server figure exactly, and keyboard, screen-reader and two-hundred-percent zoom users can complete every assistant action",
+        "History is off by default; enabling it shows retention, persisted threads are keyboard accessible and deletable, and ephemeral turns never reappear"
+      ],
+      "contracts_schema": [
+        "Consumes the published assistant contract, the billing quota contract and the versioned disclaimer identifier"
+      ],
+      "security_privacy": [
+        "Bring-your-own-key material is held only in the encrypted gateway path and never reaches application logs or analytics",
+        "Custom-endpoint validation reuses the existing adversarial request-forgery suite rather than a lighter web-only check"
+      ],
+      "observability": [
+        "Records assistant interaction outcomes, registration and revocation events and quota status views without content or key material"
+      ],
+      "tests": [
+        "Citation and refusal presentation tests",
+        "Browser-storage exposure test for bring-your-own-key material",
+        "Custom-endpoint adversarial validation reuse test",
+        "Revocation timing test",
+        "Step-up expiry, risk-triggered cooling-off, notification cancellation and recovery-suspension tests",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set",
+        "Natural-language draft correction, cancellation, expiry and idempotent-confirmation tests",
+        "History-off no-reappearance, export and deletion propagation tests"
+      ],
+      "rollout_rollback": [
+        "Shipped behind a flag enabled only after the adversarial validation suite and browser-storage exposure test are green",
+        "Rollback hides the assistant entry point and revokes no existing key or endpoint registration"
+      ],
+      "non_goals": [
+        "Server-side routing, failover and evaluation gating, which the ai-service tickets own",
+        "Native mobile assistant surfaces, which the Android ticket owns"
+      ],
+      "dependencies": [
+        "T-AIP-02",
+        "T-AI-03",
+        "T-WEB-01",
+        "T-BIL-09",
+        "T-AIP-05",
+        "T-CON-16",
+        "T-CON-14",
+        "T-AIP-06"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the assistant surface and the key and endpoint management interface. Validation and gateway enforcement remain owned by ai-service.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-AIP-05",
+      "title": "Build confirmation-gated natural-language transaction entry",
+      "repo": "ai-service",
+      "epic": "docs#18",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R11 Prompt injection",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "security",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can describe a transaction in ordinary language, review a complete structured draft, and explicitly confirm it through the normal transaction API without the model ever writing data or initiating a payment.",
+      "context": "Natural-language entry is promised by the product specification but the AI tool surface is intentionally read-only. A draft-only parser preserves that safety boundary: the model proposes fields, the client shows them, and the existing deterministic transaction path performs the confirmed write.",
+      "scope": [
+        "Natural-language parsing into a versioned structured transaction draft with confidence per field",
+        "Explicit refusal or clarification when amount, currency, direction, account or date is ambiguous",
+        "Draft expiry and one-time confirmation token that cannot itself create a transaction",
+        "Hostile-text handling that cannot change tool allowlists, system policy or user scope",
+        "Bounded retention and deletion of the original text after the draft policy window"
+      ],
+      "acceptance_criteria": [
+        "No model or AI endpoint can create, edit, delete, settle or pay a transaction",
+        "Every parsed field is visible to the user before confirmation and low-confidence fields require correction",
+        "Confirmation submits the reviewed fields through the ordinary idempotent transaction API",
+        "A hostile input cannot invoke an unapproved tool or alter the user scope, proven by an adversarial corpus",
+        "Expired or replayed confirmation tokens are rejected without creating a ledger effect",
+        "Original text is absent from logs, traces and retained records after the bounded policy window"
+      ],
+      "contracts_schema": [
+        "Consumes the structured capture contract from T-CON-02 and publishes a draft envelope with per-field confidence, expiry and a one-time confirmation token",
+        "The draft contract contains no operation capable of writing a transaction"
+      ],
+      "security_privacy": [
+        "Original text is treated as hostile and sensitive, minimized before inference and never used as an instruction",
+        "Confirmation requires the authenticated user and cannot widen account or tenant scope"
+      ],
+      "observability": [
+        "Publishes draft completion, clarification, refusal, expiry and confirmation counts without text or monetary values"
+      ],
+      "tests": [
+        "Structured-draft contract tests",
+        "Adversarial prompt-injection corpus",
+        "Ambiguous-field refusal and clarification tests",
+        "Expired and replayed confirmation-token tests",
+        "Negative test proving the AI service has no ledger-write capability",
+        "Load test for bounded draft parsing latency without retaining request content"
+      ],
+      "rollout_rollback": [
+        "Behind a per-surface flag and enabled only after the injection and no-write suites are green",
+        "Rollback disables draft creation; confirmed transactions already written through the normal API remain unchanged"
+      ],
+      "non_goals": [
+        "Initiating a payment, settlement or transfer, permanently",
+        "Committing a transaction without an explicit user review and confirmation",
+        "Voice transcription, which may feed this text contract later but is not implemented here"
+      ],
+      "dependencies": [
+        "T-AI-05",
+        "T-CON-02",
+        "T-CON-16"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns text-to-draft parsing and the draft contract implementation; clients own review and confirmation while api owns the ordinary transaction write.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    }
+  ]
+}

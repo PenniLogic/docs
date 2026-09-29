@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "number": "ADR-015",
+      "ticket": "T-ADR-MONEY-01",
+      "state": "PENDING",
+      "question": "Money wire format, time representation and idempotency: the exact JSON form of an amount, UTC instants plus an explicit user time zone, idempotency key scope, lifetime and conflict behaviour, and the Kotlin, TypeScript and Python wrapper types with their serialisation seams",
+      "blocks": "Contracts, generated clients, every financial write path"
+    },
+    {
+      "number": "ADR-016",
+      "ticket": "T-ADR-CAT-02",
+      "state": "PENDING",
+      "question": "Category model: append-only reporting dimension versus mutable rows that silently rewrite historical reports",
+      "blocks": "Ledger schema, budgets, reporting"
+    },
+    {
+      "number": "ADR-017",
+      "ticket": "T-ADR-LEDGER-03",
+      "state": "PENDING",
+      "question": "Ledger currency, foreign-exchange reservation, and how a debt balance is derived rather than cached",
+      "blocks": "Ledger schema, debt engine, multi-currency (E30)"
+    },
+    {
+      "number": "ADR-018",
+      "ticket": "T-ADR-CRYPTO-04",
+      "state": "PENDING",
+      "question": "Encryption scope, searchable fields, row-level security and grant-mediated reads; also the distinct device-local raw-message HMAC, server structured dedupe key and reversible fuzzy-match semantics that supersede ADR-004's ambiguous hash sentence",
+      "blocks": "Data protection floor (E19), capture contract (E02), sharing (E15, E16), any environment holding real data"
+    },
+    {
+      "number": "ADR-019",
+      "ticket": "T-ADR-AUTH-05",
+      "state": "PENDING",
+      "question": "Authentication provider, passkeys, the relying-party identifier, and account recovery",
+      "blocks": "Auth, onboarding, recovery, all clients"
+    },
+    {
+      "number": "ADR-020",
+      "ticket": "T-ADR-ADMIN-06",
+      "state": "PENDING",
+      "question": "Administrative boundary: deployment separation, database role, and how the foundational audit trail, the chained administrative log and the subject-visible transparency stream relate - stores, and single or dual write",
+      "blocks": "Admin console (E13), audit and insider-risk controls, transparency surfaces"
+    },
+    {
+      "number": "ADR-021",
+      "ticket": "T-ADR-ERASE-07",
+      "state": "PENDING",
+      "question": "Shared-data erasure and cross-user key access - the open question ADR-006 named",
+      "blocks": "Sharing and split groups (E15, E16), erasure and data-principal rights"
+    },
+    {
+      "number": "ADR-022",
+      "ticket": "T-ADR-AIEGRESS-08",
+      "state": "PENDING",
+      "question": "AI egress path, runtime platform, and Mode C custom endpoints - including which destinations are code-managed and which are runtime registered, validated and pinned",
+      "blocks": "AI harness (E17), AI product surfaces (E18), BYOK, platform (E24)"
+    },
+    {
+      "number": "ADR-023",
+      "ticket": "T-ADR-ENT-09",
+      "state": "PENDING",
+      "question": "Entitlement and quota model: plan and feature identity, request and token quota dimensions, per-plan model allowlist and unlisted-model refusal, BYOK quota treatment, event-sourced usage versus materialized counters, and the reset boundary and its time zone. **Supersedes** the conflicting sketches in `architecture/01-domain-model.md` \u00a75 and `architecture/03-stack-and-monetization.md` \u00a78",
+      "blocks": "Quota contract (`T-CON-03`), billing (`T-BIL-01`, `T-BIL-02`), AI gateway (`T-AI-01`)"
+    }
+  ]
+}

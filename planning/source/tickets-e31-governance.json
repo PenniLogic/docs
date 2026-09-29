@@ -1,0 +1,429 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e31-governance",
+  "epic_refs": [
+    "E31"
+  ],
+  "items": [
+    {
+      "stable_id": "T-EXT-01",
+      "title": "Obtain a GitHub plan that permits branch protection on private repositories",
+      "repo": "infra",
+      "epic": "E31",
+      "kind": "Chore",
+      "phase": "P0 Foundations",
+      "sprint": "Backlog",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R14 Key-person",
+      "status": "Done",
+      "estimate": 3,
+      "labels": [
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "The PenniLogic organisation holds a plan under which branch protection, rulesets and required reviews can be configured on private repositories, and that capability is proven on a private fixture repository by an API call that previously returned HTTP 403.",
+      "context": "PenniLogic began on GitHub Free with eight private repositories, where the branch-protection and ruleset endpoints returned HTTP 403 with an upgrade-required message. The plan owner upgraded the organisation to GitHub Team on 2026-09-02. A temporary private-repository fixture then proved active rulesets, required review and a required status check by leaving pull request 58 blocked with its check pending. The pull request, ruleset, protection rule and two temporary branches were removed, and the capability evidence is now versioned in PenniLogic/infra. The repositories remained private throughout.",
+      "scope": [
+        "Record the current plan, the private repository count and the exact API responses that prove the capability is unavailable",
+        "Price GitHub Team and the next tier above it against the seat count that T-GOV-03 assumes, including the second reviewer seat when one exists",
+        "Obtain the billing decision from the named plan owner and record it with a date",
+        "Apply the plan change on the PenniLogic organisation",
+        "Create a private fixture repository and prove branch protection, a repository ruleset and a required review can be created and enforced on it",
+        "Record the proof, then delete the fixture repository",
+        "Publish the capability matrix that T-GOV-03 and T-SCA-INF-01 read: which controls are available on the current plan and which are not"
+      ],
+      "acceptance_criteria": [
+        "The ticket records the organisation plan name before the change, the number of private repositories, and the verbatim HTTP 403 response bodies from the branch-protection and rulesets endpoints",
+        "The plan owner is named on the ticket and the billing decision is recorded with a date, an approver and the chosen tier",
+        "After the change, creating a branch protection rule on a private fixture repository returns success rather than HTTP 403, and the response is attached",
+        "After the change, creating a repository ruleset with a required pull request review on the private fixture repository returns success, and the response is attached",
+        "A pull request on the fixture repository is demonstrably blocked by the required review and by a failing required status check, with both screenshots or API responses attached",
+        "The fixture repository is deleted after the evidence is captured, and its deletion is recorded",
+        "All eight product repositories remain private throughout; the evidence shows visibility unchanged",
+        "The published capability matrix names every control T-GOV-03 depends on and marks each available or unavailable on the plan actually purchased"
+      ],
+      "contracts_schema": [
+        "Capability matrix published as machine-readable data in the infra repository: control name, endpoint, available true or false, plan tier required, evidence link",
+        "T-GOV-03 reads that matrix rather than assuming a capability, so a policy that cannot be enforced is a validation failure instead of a silent no-op"
+      ],
+      "security_privacy": [
+        "The evidence contains no token, no secret and no organisation member personal data beyond the plan owner name already public in the organisation",
+        "The fixture repository is created private, contains no product code and is deleted after the run",
+        "Billing details and invoices are referenced, never pasted, and stay in the billing system"
+      ],
+      "observability": [
+        "The capability matrix carries the date it was verified, so a silent downgrade is detectable",
+        "A scheduled check re-reads one protected-branch endpoint and fails if the capability disappears, which is how a lapsed or downgraded plan becomes visible"
+      ],
+      "tests": [
+        "Negative test recorded before the change: branch-protection API returns HTTP 403 on a private repository",
+        "Positive test after the change: the same call on the private fixture repository succeeds",
+        "Enforcement test: a pull request that fails a required check cannot be merged on the fixture repository",
+        "Enforcement test: a pull request without the required review cannot be merged on the fixture repository",
+        "Capability-matrix schema test proving every control T-GOV-03 names is present with an availability value"
+      ],
+      "rollout_rollback": [
+        "The plan change applies to the whole organisation at once; there is no partial rollout",
+        "Rollback is downgrading the plan, which removes every protected branch rule; the capability matrix and the scheduled check make that removal visible instead of silent",
+        "If the billing decision is refused, the ticket is closed as refused and T-GOV-03 must be rewritten around the controls the free plan actually offers; making the repositories public is explicitly not an option"
+      ],
+      "non_goals": [
+        "Making any product repository public in order to obtain free branch protection",
+        "Configuring branch protection on the product repositories, which T-SCA-INF-01 solely owns",
+        "Writing the protection policy itself, which T-GOV-03 owns",
+        "Purchasing GitHub Advanced Security, Copilot seats or any add-on beyond the tier that unlocks branch protection and rulesets",
+        "Hiring the second reviewer, which is a separate external blocker"
+      ],
+      "dependencies": [],
+      "parallel_boundary": "Primary repo infra. Owns only the capability matrix data file and the evidence record; it changes an organisation billing setting outside every repository. No product repository is modified, and no CODEOWNERS or protection rule is written here.",
+      "definition_of_done": [
+        "The plan owner decision, the purchased tier and the effective date are recorded on the ticket",
+        "Before and after API responses are attached, showing HTTP 403 then success on a private fixture repository",
+        "Required-review and required-check enforcement are both demonstrated on the fixture repository and the fixture is deleted",
+        "The capability matrix is merged into the infra repository and referenced by T-GOV-03",
+        "All eight product repositories are confirmed still private",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOV-01",
+      "title": "Make native GitHub dependencies authoritative and reconcile the Ready state",
+      "repo": "docs",
+      "epic": "E31",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "Every declared dependency exists as a native blockedBy edge, ticket bodies mirror those edges, and no ticket with an open blocker can sit in the Ready state.",
+      "context": "Dependencies are currently prose in ticket bodies and the native dependency graph has no edges at all. Several blocked tickets are marked Ready, so an agent picking up work has no reliable signal about what is startable. This is the single defect that makes the board unsafe to parallelise from.",
+      "scope": [
+        "Parser that extracts declared dependencies from ticket bodies into a canonical list",
+        "Reconciliation job that creates missing native edges and reports edges that exist without a body declaration",
+        "Ready-state check that moves or flags any Ready item with an unresolved blocker",
+        "Definition of Ready and Definition of Done adopted per repository, including a threat-model refresh item",
+        "Scheduled run with a report that is visible without opening the board"
+      ],
+      "acceptance_criteria": [
+        "Running the reconciliation on the current board creates every declared edge and reports zero unexplained drift",
+        "A ticket with an open blocker cannot remain Ready; the check fails and names the blocker",
+        "A dependency added natively but missing from the body is reported as drift rather than silently accepted",
+        "The report distinguishes existing item references from proposed stable identifiers and fails on an unresolvable reference",
+        "Re-running the job with no changes produces no writes"
+      ],
+      "contracts_schema": [
+        "Canonical dependency reference format defined for both existing items and proposed stable identifiers",
+        "Report schema published so downstream automation can consume it"
+      ],
+      "security_privacy": [
+        "Automation uses a scoped token with the minimum project and issue permissions",
+        "No ticket content is copied outside the organisation"
+      ],
+      "observability": [
+        "Job publishes counts of edges created, drift found and Ready violations per run",
+        "Failures notify the project owner rather than only failing silently in a log"
+      ],
+      "tests": [
+        "Unit tests on the body parser covering malformed and mixed reference styles",
+        "Dry-run mode test proving no writes occur",
+        "Idempotency test proving a second run is a no-op"
+      ],
+      "rollout_rollback": [
+        "Runs in report-only mode first, then enabled to write edges once the first report is reviewed",
+        "Rollback is disabling the scheduled run; created edges are inspectable and reversible individually"
+      ],
+      "non_goals": [
+        "Changing project field schemas or renaming existing field options",
+        "Automatically closing or reprioritising tickets"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo docs. Owns the reconciliation script, the Definition of Ready and Done documents and the scheduled workflow. No other repository is modified.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOV-02",
+      "title": "Publish the cross-repository parallel pull request and expand-migrate-contract protocol",
+      "repo": "docs",
+      "epic": "E31",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "A written, enforced protocol lets several agents change contract, server and client in parallel without a window in which any deployed component is broken.",
+      "context": "Work is deliberately split so that one ticket has one primary repository, which means most meaningful changes span repositories. Without a sequencing protocol those splits either serialise into a critical chain or land in an order that breaks production.",
+      "scope": [
+        "Expand, migrate and contract sequencing rules for schema, contract and wire changes",
+        "Rules for additive-first contract changes and for when a breaking change is permitted",
+        "Pull request linkage convention so related cross-repository changes are discoverable",
+        "Compatibility window policy stating how long both shapes must be supported",
+        "Checklist that a contract change must satisfy before a consumer change starts",
+        "One ticket per branch and worktree, with branch format <type>/<stable-id-lower>-<short-kebab-slug> and pull request title [STABLE-ID] followed by the outcome",
+        "Early draft pull request timing and ordered Stack links for dependent cross-repository pull requests",
+        "Bottom-up merge order, restack ownership and force-push rules after review begins",
+        "Merge-queue or documented serialized-merge policy per repository",
+        "Numeric work-in-progress caps for implementation pull requests and for money or security reviews awaiting the independent reviewer"
+      ],
+      "acceptance_criteria": [
+        "The protocol states, for each change class, the exact order of merges and what must be deployed between them",
+        "A worked example covers a field rename across contracts, api and android",
+        "The protocol defines the rollback position at each step, not only at the end",
+        "A contract change that removes a field without a completed migrate phase is rejected by the checklist",
+        "The document names who resolves a disagreement when two repositories are ready in the wrong order",
+        "A worked cross-repository stack names branches, worktrees, base branches, merge order, restack owner and rollback at each layer",
+        "The protocol states numeric implementation and review WIP caps and what is paused when either cap is reached",
+        "The protocol states whether each repository uses a merge queue or serialized manual merge and forbids an unspecified third state",
+        "The protocol defines when a reviewed branch may be force-pushed and how reviewers are notified and re-requested"
+      ],
+      "contracts_schema": [
+        "Defines the compatibility rules in governance/parallel-delivery/v1/contract.json for later contracts-pipeline enforcement owned by T-GOV-04"
+      ],
+      "security_privacy": [
+        "States that a migration must not widen data exposure during the compatibility window"
+      ],
+      "observability": [
+        "Requires each phase to name the signal that proves the previous phase is complete"
+      ],
+      "tests": [
+        "python scripts/validate_parallel_delivery_protocol.py check validates three versioned positive/negative dry-run fixtures",
+        "python -m unittest scripts.test_parallel_delivery_protocol -v covers compatibility, money, migration, rollback and serialization boundaries",
+        "The required backlog validator runs both commands without claiming T-GOV-04 live enforcement"
+      ],
+      "rollout_rollback": [
+        "Activates only when docs#36 is accepted, then applies to new cross-repository work; the Producer records every historical in-flight exception with owner, blocker, resume condition and an expiry no later than 30 days after acceptance",
+        "Rollback restores the last accepted prose and machine contract together and pauses new cross-repository admission until a replacement passes review"
+      ],
+      "non_goals": [
+        "Tooling to automate the sequencing, which can follow once the protocol is proven"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo docs. Owns the protocol document. Repositories reference it from their contribution guide.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and the options rejected recorded",
+        "Linked from every epic and ticket it unblocks",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Follow-up implementation tickets created or updated to reference it",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOV-03",
+      "title": "Define branch protection, agent-review and adoption-gate policy",
+      "repo": "infra",
+      "epic": "E31",
+      "kind": "Chore",
+      "phase": "P0 Foundations",
+      "sprint": "Backlog",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R14 Key-person",
+      "status": "In Progress",
+      "estimate": 5,
+      "labels": [
+        "chore",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "A machine-readable policy defines protected paths, required agent-review classes and narrow adoption bootstrap, and fixture tests prove every pull request has fresh external reviewer-agent evidence without requiring a second GitHub account.",
+      "context": "The organisation has one GitHub user and no teams, but development is fully agentic. GitHub cannot count the author approving their own pull request, so a blanket GitHub approval rule would deadlock. Independence is instead enforced as role and session separation: the developer records its agent/session ID, qualified reviewer agents operate in separate read-only sessions, and the required policy check validates structured attestations bound to the current head SHA. This is process separation rather than cryptographic human-identity separation and the limitation is explicit. T-EXT-01 proved private-repository rulesets and required checks are available.",
+      "scope": [
+        "General main-branch rule: pull request, strict policy status check, conversation resolution, linear history, no force push/deletion and squash-only merge",
+        "Machine-readable protected-path policy and CODEOWNERS documentation that T-SCA-INF-01 composes after infra#4 creates each baseline file",
+        "Structured review-attestation contract binding repository, plan item, pull request, head SHA, reviewer profile, reviewer session, durable session-evidence reference and digest, clean-tree assertion, decision and expiry",
+        "Narrow adoption exception limited to initial policy files and ending when the active ruleset exists or on 2026-10-16, whichever happens first; no date-wide general exception",
+        "Administrator bypass of branch protection disabled, or alerted on where the platform cannot disable it",
+        "Agent-role routing for core, QA, contract, money, security, privacy, compliance, accessibility, design, reliability and release review classes",
+        "Reviewer qualification matrix per agent profile and protected path class, with approved scope and expiry",
+        "Organization-level agent role catalogue separating producer, developer, core, contract, QA, money, security, privacy, compliance, accessibility, design, reliability and release reviewers",
+        "Repository policy requiring two developer self-review rounds while rejecting self-review or same-session subagent output as independent approval",
+        "Release sign-off role recorded separately from the implementing role",
+        "Capability check that reads the T-EXT-01 capability matrix and fails when a control this policy requires is unavailable on the current plan"
+      ],
+      "acceptance_criteria": [
+        "The policy encodes pull-request and required-check rules for every protected branch, and a fixture repository proves the generated rule blocks a failing check",
+        "GitHub approval count remains zero because only one account exists, while a fixture proves the policy check blocks a pull request without the required separate reviewer-agent attestations",
+        "A fixture blocks money-path or security-path changes without current qualified specialist-agent attestations",
+        "The policy blocks every non-adoption change without at least core reviewer-agent evidence and adds QA or specialist evidence by risk",
+        "The initial adoption exception matches only the governance branch, plan item, policy version and allowed files and stops when the active ruleset exists or on 2026-10-16, whichever happens first",
+        "A new head SHA invalidates every prior attestation and the check names the stale reviewer evidence",
+        "Administrator override of branch protection is disabled, or alerted on where the platform cannot disable it",
+        "Beta and public release checklists both name this control as a hard gate",
+        "No ticket whose only blocker is the absence of a qualified reviewer-agent is marked Ready",
+        "A money-path or security-path ticket cannot become Ready when reviewer-agent qualification is absent, expired, out of scope or held by the developer session",
+        "A developer-authored pull request cannot satisfy external review using the developer profile/session or a reviewer invoked inside that same session",
+        "Reviewer agents are read-only and qualification records constrain which review classes their approval may satisfy",
+        "The policy names, for every rule it defines, the API capability it needs, and validation fails when the T-EXT-01 capability matrix marks that capability unavailable"
+      ],
+      "contracts_schema": [
+        "Protected path and review-routing policy published as strict machine-readable data",
+        "CODEOWNERS documentation published per repository and referenced by the release checklist without claiming GitHub account separation",
+        "Reviewer-agent profiles and qualification scopes published as machine-readable, expiring policy inputs",
+        "Review-attestation schema published with current-head binding, developer/reviewer session separation, durable session-evidence reference and digest, clean-tree assertion and evidence fields",
+        "Consumes the T-EXT-01 capability matrix as its input contract, so an unenforceable rule is a failure rather than a silent no-op"
+      ],
+      "security_privacy": [
+        "Money-path and security-path changes require distinct developer and specialist-reviewer agent sessions even though both operate under one GitHub account",
+        "Policy documentation states that agent-session separation is not cryptographic human separation and does not overclaim the control",
+        "Bypass attempts are recorded in the organisation audit log"
+      ],
+      "observability": [
+        "Alert on any protection bypass or force push to a protected branch",
+        "Attestation expiry and stale-head failures identify the missing reviewer class and session",
+        "The capability check reports which required controls are unavailable, so a lapsed or downgraded plan surfaces before a merge relies on it"
+      ],
+      "tests": [
+        "Fixture-generation test proving a failing required check is blocked by the produced policy",
+        "Fixture test proving a money-path change is blocked without matching money and security reviewer-agent attestations",
+        "Policy-schema test proving force push and administrator bypass are disabled or explicitly alerted",
+        "Adoption-exception test proving it ends when the active ruleset exists",
+        "Adoption-exception date-backstop test advancing the clock beyond 2026-10-16",
+        "Qualification-scope, expiry, stale-head and missing-review-class tests",
+        "Same-session reviewer, developer-profile attestation and duplicate reviewer-session rejection tests"
+      ],
+      "rollout_rollback": [
+        "The T-GOV-03/infra#4 adoption applies the baseline policy rule repository by repository and exports each prior live rule set; T-SCA-INF-01 later adds stack checks",
+        "Rollback is restoring the previous protection rule set, which is exported before the change"
+      ],
+      "non_goals": [
+        "Hiring or staffing decisions",
+        "Administrative console four-eyes controls, which are implemented in E13",
+        "Stack-specific build, test and lint workflow wiring, which T-SCA-INF-01 owns after scaffolds exist",
+        "Editing any repository CODEOWNERS file or live branch protection rule in this ticket",
+        "Changing the GitHub organisation plan or its billing, which T-EXT-01 completed"
+      ],
+      "dependencies": [],
+      "parallel_boundary": "Primary repo infra. T-GOV-03 and infra#4 own baseline agent policy, generated governance files and the `policy` ruleset; T-SCA-INF-01 later owns only stack-specific build, test and lint required checks.",
+      "definition_of_done": [
+        "Initial adoption uses the narrow machine-checked exception; all subsequent changes require separate reviewer-agent attestations",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and local reproduction commands are recorded for T-SCA-INF-01; stack-specific required-check wiring is verified after scaffolds exist, while baseline policy enforcement remains owned by T-GOV-03 and infra#4",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Organization-level agent profiles and repository-local policy references are published",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOV-04",
+      "title": "Enforce the delivery protocol in CI: contract-first metadata, migration lock and dependency validation",
+      "repo": "infra",
+      "epic": "E31",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "The parallel delivery rules stop being prose that reviewers are asked to remember: contract-first ordering, one in-flight migration, reversible migration evidence, linked-issue validation and early draft visibility are each enforced by a required check that fails the pull request.",
+      "context": "T-GOV-02 publishes the protocol and T-GOV-01 makes native dependency edges authoritative, but nothing yet makes either fail a merge. A protocol that is only asserted is a protocol that is followed until the first deadline. This ticket converts rules four to six of the published protocol, plus the dependency and visibility rules, into required checks over the standardised workflows that T-SCA-INF-01 wires up.",
+      "scope": [
+        "Pull request metadata check requiring the change class and, for a consumer change, the contract pull request that precedes it",
+        "Migration registry in the primary repository recording every migration and its state, with a lock permitting exactly one in-flight database migration at a time",
+        "Check that fails a pull request adding a migration while another is in flight, naming the holder of the lock",
+        "Reversible or compensating migration evidence required on the pull request: either a rehearsed down migration or a recorded compensating change, with the rehearsal output attached",
+        "Linked issue validation asserting that the pull request names a plan item and that the item native blockedBy edges are all closed",
+        "Draft pull request visibility rule: a branch that has been pushed for longer than the published window without an open pull request is reported",
+        "Branch-name, pull-request-title, linked-plan-item and ordered-stack metadata validation",
+        "Work-in-progress cap reporting and enforcement for implementation and independent-review queues",
+        "Agent policy check validating PR metadata, risk classification, adoption-exception termination, reviewer-agent attestations and stack-specific command activation",
+        "Governance drift check validating generated AGENTS, Copilot instructions, skills, app config, hooks and workflows against the infra-owned policy version",
+        "Merge-queue or serialized-merge policy conformance check per repository",
+        "Check that the epic owning a pull request has a current threat-model refresh record, enforced on the first pull request against that epic"
+      ],
+      "acceptance_criteria": [
+        "A consumer pull request that cites no preceding contract pull request for a breaking change is failed by the metadata check",
+        "A pull request that adds a second in-flight migration is failed and the message names the migration holding the lock",
+        "A migration pull request without reversal or compensating evidence is failed; attaching a rehearsed down migration passes it",
+        "A pull request that names no plan item, or names one whose native blockers are still open, is failed",
+        "A branch pushed beyond the published window with no open pull request is reported where the team can see it, not only in a log",
+        "Every check in this ticket is a required check under the branch protection that T-SCA-INF-01 wires, and a deliberately non-conforming pull request proves each one fails",
+        "A non-conforming branch name, pull request title or missing plan item fails with the exact expected format",
+        "A protected-path pull request fails when required reviewer-agent evidence is absent, stale, out of scope or issued by the developer session",
+        "A repository scaffold manifest fails policy until real bootstrap, build, test, lint and coverage commands replace inactive placeholders",
+        "A stacked pull request without ordered links, merge order or restack owner fails",
+        "Exceeding an implementation or independent-review WIP cap blocks new work from entering that queue and names what must finish",
+        "A repository without the declared merge-queue or serialized-merge behavior fails conformance",
+        "The first pull request against an epic fails when that epic has no threat-model refresh record, and the failure names the epic and the owner who must record one",
+        "A refresh record older than the published cadence is treated as missing rather than as present",
+        "The check reads the machine-readable refresh record T-QA-14 publishes and never parses prose"
+      ],
+      "contracts_schema": [
+        "Migration registry published as machine-readable data with one record per migration: identifier, repository, state, owner and reversal evidence",
+        "Pull request metadata schema published so the check and the template cannot drift apart"
+      ],
+      "security_privacy": [
+        "Checks run with a read-scoped token; no check can merge, close or relabel a pull request",
+        "The registry records identifiers and states only, never migration content or data"
+      ],
+      "observability": [
+        "Publishes per-check failure counts so a rule that fails constantly is visible as a process problem rather than as noise",
+        "Publishes lock hold duration so a migration that is stuck in flight is visible"
+      ],
+      "tests": [
+        "Fixture pull requests exercising each rule in both the passing and the failing direction",
+        "Concurrency test acquiring the migration lock twice and asserting the second acquisition fails",
+        "Idempotency test proving a re-run of every check on an unchanged pull request produces the same result",
+        "Invalid branch, title, stack metadata, WIP overflow and merge-policy fixture tests",
+        "Generated-policy drift, adoption-exception-termination, developer-session conflict, unqualified-reviewer and scaffold-activation fixtures"
+      ],
+      "rollout_rollback": [
+        "Each check ships in report-only mode for one sprint, then becomes required; the migration lock is required from the first day because a concurrent migration is not recoverable by a later fix",
+        "Rollback returns a check to report-only, which is a recorded change rather than a silent one"
+      ],
+      "non_goals": [
+        "Writing the protocol itself, which T-GOV-02 owns",
+        "Branch protection wiring, which T-SCA-INF-01 solely owns",
+        "The dependency reconciliation job itself, which T-GOV-01 owns; this ticket consumes its output"
+      ],
+      "dependencies": [
+        "T-GOV-01",
+        "T-GOV-02",
+        "T-SCA-INF-01",
+        "T-QA-14"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns the checks, the migration registry and the lock. Every other repository adopts them through the shared workflow that T-SCA-INF-01 already wires, so no repository is edited by this ticket beyond that adoption line.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

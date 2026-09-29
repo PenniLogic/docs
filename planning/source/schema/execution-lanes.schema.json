@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic numbered-sprint lane proof",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "schema_version", "description", "points_per_lane", "items"],
+  "properties": {
+    "kind": { "const": "execution_lanes" },
+    "schema_version": { "const": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "points_per_lane": { "type": "integer", "minimum": 1 },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "sprint", "lane", "start", "end", "estimate"],
+        "properties": {
+          "ref": { "$ref": "enums.schema.json#/definitions/reference" },
+          "sprint": { "$ref": "enums.schema.json#/definitions/sprint" },
+          "lane": { "type": "integer", "minimum": 1 },
+          "start": { "type": "integer", "minimum": 0 },
+          "end": { "type": "integer", "minimum": 1 },
+          "estimate": { "$ref": "enums.schema.json#/definitions/estimate" },
+          "capacity_pool": { "$ref": "enums.schema.json#/definitions/capacity_pool" }
+        }
+      }
+    }
+  }
+}

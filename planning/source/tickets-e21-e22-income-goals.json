@@ -1,0 +1,855 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e21-e22-income-goals",
+  "epic_refs": [
+    "docs#23",
+    "docs#24"
+  ],
+  "items": [
+    {
+      "stable_id": "T-INC-01",
+      "title": "Model income, detect payroll expectations and build the variable-income budgeting engine",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, the application knows what I expect to earn and when, notices when my salary is late or short, handles irregular income properly, and produces budgets that still work when my income is not the same every month.",
+      "context": "A payoff plan that ignores income is guesswork, and variable income is the case most budgeting products handle badly. Getting it right is a differentiator; getting it wrong makes the product useless to freelancers and to anyone paid irregularly.",
+      "scope": [
+        "Salary configuration with amount, frequency and next expected date",
+        "Expected versus received detection across the transaction stream",
+        "Additional and irregular income typed and excluded correctly from fixed budgets",
+        "Budgeting engine that works from a distribution rather than a fixed monthly figure",
+        "Category budgets with rollover across period boundaries"
+      ],
+      "acceptance_criteria": [
+        "A late or short salary is surfaced with the expectation it was measured against",
+        "The detector's false positive rate is measured on a synthetic corpus and recorded",
+        "Budgets produce correct results for weekly, fortnightly, monthly and irregular income, proven by property tests",
+        "Rollover arithmetic is exact across month boundaries including short and long months",
+        "All arithmetic agrees with the independent model across the case matrix",
+        "Income records use the published money representation with no floating point anywhere"
+      ],
+      "contracts_schema": [
+        "Implements the published income and budget contract"
+      ],
+      "security_privacy": [
+        "Salary amount is treated as sensitive descriptive data under the encryption decision",
+        "Detection never sends income data outside the system"
+      ],
+      "observability": [
+        "Publishes detection counts and budget computation latency without amounts"
+      ],
+      "tests": [
+        "Property tests across pay frequencies",
+        "Rollover boundary tests",
+        "Independent model agreement tests",
+        "Detector false positive measurement on a synthetic corpus"
+      ],
+      "rollout_rollback": [
+        "Behind a flag; the detector ships in observe-only mode first so false positives do not alarm users",
+        "Rollback disables detection while budgets remain functional"
+      ],
+      "non_goals": [
+        "Tax computation and investment tracking",
+        "Any recommendation to buy a financial product"
+      ],
+      "dependencies": [
+        "api#7",
+        "api#17",
+        "T-GOV-03",
+        "T-ADR-MONEY-01",
+        "T-ADR-CAT-02"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the income and budget modules and their migrations.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-INC-02",
+      "title": "Compute safe-to-spend, cash-flow forecast and the surplus feed to the debt simulator",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, I can see what I can safely spend today, what my next ninety days look like, and how much spare money I could put toward my debt this month, with every figure reconciling exactly against my ledger.",
+      "context": "Safe-to-spend is the number people act on, so it has to reconcile exactly or it becomes a reason to distrust everything else. Feeding surplus into the debt simulator is what closes the loop between budgeting and the product wedge.",
+      "scope": [
+        "Safe-to-spend computed from income less committed outflows, debt payments and goal contributions",
+        "Derivation exposed so a client can show how the figure was reached",
+        "Thirty, sixty and ninety day cash-flow forecast computed deterministically",
+        "Bill and subscription calendar with due dates feeding the forecast",
+        "Surplus detection offered to the debt simulator as a suggested extra payment",
+        "Budget threshold and overspend messages are enqueued through the T-NOT-01 outbox; this ticket sends nothing directly and adds no delivery mechanism"
+      ],
+      "acceptance_criteria": [
+        "Safe-to-spend reconciles exactly against the ledger; a discrepancy fails the test rather than being rounded away",
+        "The derivation lists every input so a client renders it without recomputing",
+        "The forecast is deterministic and is validated against a subsequent real month on synthetic data",
+        "No forecast figure is produced by a model; all arithmetic is deterministic",
+        "A suggested extra payment never exceeds the computed surplus",
+        "All figures agree with the independent model"
+      ],
+      "contracts_schema": [
+        "Implements the published safe-to-spend, forecast and surplus contract including derivation fields"
+      ],
+      "security_privacy": [
+        "Reminder payloads carry no monetary values",
+        "Forecast outputs are scoped to the requesting user only"
+      ],
+      "observability": [
+        "Publishes computation latency and reconciliation mismatch counts, alerting on any mismatch"
+      ],
+      "tests": [
+        "Ledger reconciliation test",
+        "Forecast determinism test",
+        "Independent model agreement test",
+        "Surplus bound test"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per surface so the forecast can be withdrawn without removing safe-to-spend",
+        "Rollback hides the figure rather than showing a stale one"
+      ],
+      "non_goals": [
+        "Model-generated projections of any kind",
+        "Notification delivery, scheduling, preferences and provider integration, which T-NOT-01 owns"
+      ],
+      "dependencies": [
+        "T-INC-01",
+        "api#15",
+        "T-GOV-03",
+        "T-ADR-MONEY-01",
+        "T-ADR-LEDGER-03",
+        "T-NOT-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the computation modules. Clients render the derivation rather than recomputing it.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-INC-03",
+      "title": "Build Android income, budget and bill calendar surfaces",
+      "repo": "android",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can set up my income, see my budgets and safe-to-spend, view what is due when, and get a reminder before a bill lands, without any amount appearing in a notification.",
+      "context": "Budgeting is where a user meets the income engine, and it is also where a careless notification leaks a salary figure onto a lock screen in public. The surfaces and the notification policy have to be designed together.",
+      "scope": [
+        "Income setup including irregular income entry",
+        "Budget list, category detail and rollover presentation",
+        "Safe-to-spend surface with the derivation view",
+        "Bill and subscription calendar with due dates",
+        "Reminders that carry no monetary values",
+        "Late or short salary presentation with a clear explanation",
+        "Confirmed recurring-charge list and sinking-fund progress with derivations from T-RCR-01 and T-BUD-01"
+      ],
+      "acceptance_criteria": [
+        "A user can configure fixed and irregular income and see budgets that reflect both",
+        "The safe-to-spend derivation opens to show every input and no figure is recomputed on the device",
+        "No notification or push payload contains a monetary value, verified by the traffic capture harness",
+        "A late salary is explained with what was expected and what arrived",
+        "All surfaces are screen-reader traversable and usable at the largest text scale",
+        "The surfaces work offline against locally cached values and show their staleness",
+        "Recurring charges expose confirmation, ignore, price-change and cancel-assist states, while sinking funds show their safe-to-spend effect without a ledger balance change"
+      ],
+      "contracts_schema": [
+        "Consumes the published income, budget and forecast contracts including derivation fields"
+      ],
+      "security_privacy": [
+        "Amounts are excluded from notifications, analytics and crash reports",
+        "Local cached budget data is encrypted and excluded from device backup"
+      ],
+      "observability": [
+        "Records surface views and reminder interactions without amounts"
+      ],
+      "tests": [
+        "Instrumented setup and budget tests",
+        "Notification payload assertion test",
+        "Offline staleness presentation test",
+        "Accessibility traversal test",
+        "Recurring-charge and sinking-fund derivation journeys"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per surface; reminders ship after the payload assertion is green",
+        "Rollback hides the surface and cancels scheduled reminders"
+      ],
+      "non_goals": [
+        "Server-side budgeting arithmetic, which the api tickets own"
+      ],
+      "dependencies": [
+        "T-INC-02",
+        "T-AND-02",
+        "T-RCR-01",
+        "T-BUD-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the income and budget feature modules.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOL-01",
+      "title": "Build the goal engine with projections, multi-goal competition and income-gap analysis",
+      "repo": "api",
+      "epic": "docs#24",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, I can set long-horizon goals, see honestly whether I am on track, and see exactly how funding one goal delays another, all computed deterministically from my own data.",
+      "context": "Once the payoff date is known, the same deterministic machinery answers what comes next. The differentiating and honest feature is showing the trade-off between goals rather than pretending they are independent, and the regulatory line is that this remains a calculator rather than an adviser.",
+      "scope": [
+        "Goal model with target amount, target date, priority and linked accounts",
+        "Goal types covering debt-free, purchase, emergency fund and custom",
+        "Required savings rate and projected completion computed deterministically",
+        "Multi-goal competition showing the exact delay one goal imposes on another",
+        "Income-gap analysis computed only from the user's own data",
+        "Scenario comparison presented as options rather than instructions",
+        "Goal milestone and off-track messages are enqueued through the T-NOT-01 outbox; this ticket sends nothing directly and adds no delivery mechanism"
+      ],
+      "acceptance_criteria": [
+        "Projections are deterministic and agree with the independent model across the case matrix",
+        "Funding one goal shows the exact delay to each other goal, with the derivation inspectable",
+        "Income-gap analysis uses no external benchmark in the computation path",
+        "No projection is produced by a model; the engine is the only source",
+        "An unreachable goal produces an explicit result stating the shortfall rather than an optimistic date",
+        "Every projection response carries the disclaimer version identifier the client must render"
+      ],
+      "contracts_schema": [
+        "Implements the published goal contract including competition and derivation fields"
+      ],
+      "security_privacy": [
+        "Goal data is scoped to the owner; shared household goals go through the sharing authorization model",
+        "No output names a financial product or a specific security"
+      ],
+      "observability": [
+        "Publishes projection computation counts and latency without amounts"
+      ],
+      "tests": [
+        "Independent model agreement tests",
+        "Competition delay derivation tests",
+        "Unreachable goal case test",
+        "Copy scan for advice-boundary terms in generated text"
+      ],
+      "rollout_rollback": [
+        "Behind a flag; projections ship after the independent model comparison is green",
+        "Rollback hides projections while stored goals remain intact"
+      ],
+      "non_goals": [
+        "Recommending investment products or lenders, permanently",
+        "Any lending or brokering activity, permanently",
+        "Notification delivery, scheduling, preferences and provider integration, which T-NOT-01 owns"
+      ],
+      "dependencies": [
+        "T-INC-02",
+        "api#13",
+        "T-GOV-03",
+        "T-NOT-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the goal engine and its migrations.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOL-02",
+      "title": "Build Android goal surfaces with scenario comparison, disclaimers and offline support",
+      "repo": "android",
+      "epic": "docs#24",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "compliance",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can create goals, compare scenarios and choose between them myself, see the required disclaimer on every projection, and use the screens offline.",
+      "context": "The framing is what keeps this on the right side of the advice boundary: the application presents options the user selects between, never instructions. That is a user interface property as much as a server one, so it has to be tested here.",
+      "scope": [
+        "Goal creation, editing and progress surfaces",
+        "Scenario comparison presented as options the user chooses between",
+        "Milestone tracking with notifications that contain no amounts",
+        "Disclaimer rendered on every projection surface from the versioned compliance text",
+        "Offline support with deterministic conflict handling through the sync path",
+        "Optional salary-market range view showing source, geography, methodology, as-of date and unavailable or stale states from T-GOL-04"
+      ],
+      "acceptance_criteria": [
+        "No projection surface renders without the current disclaimer, enforced by an automated check",
+        "Scenario copy presents options and never instructs; a copy scan enforces the reviewed wording",
+        "Milestone notifications contain no monetary values, verified by the traffic capture harness",
+        "Goals are usable offline and edits converge without lost updates under fault injection",
+        "All goal surfaces are screen-reader traversable and usable at the largest text scale",
+        "No projection is recomputed on the device",
+        "Salary-market information never appears without provenance and never uses recommendation or guaranteed-outcome language"
+      ],
+      "contracts_schema": [
+        "Consumes the published goal contract and the versioned disclaimer identifier"
+      ],
+      "security_privacy": [
+        "Goal amounts are excluded from notifications, analytics and crash reports"
+      ],
+      "observability": [
+        "Records goal creation and scenario selection without amounts"
+      ],
+      "tests": [
+        "Disclaimer presence check across surfaces",
+        "Copy scan against reviewed wording",
+        "Offline convergence test under fault injection",
+        "Notification payload assertion",
+        "Salary-market provenance, stale-state and advice-boundary copy tests"
+      ],
+      "rollout_rollback": [
+        "Behind a flag; enabled after the copy scan and disclaimer checks are green",
+        "Rollback hides the surfaces and leaves stored goals intact"
+      ],
+      "non_goals": [
+        "Server-side projection arithmetic, which the api ticket owns"
+      ],
+      "dependencies": [
+        "T-GOL-01",
+        "T-GOL-04",
+        "T-SYN-03"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the goal feature module.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-NWT-01",
+      "title": "Compute personal net worth and its trend from the ledger with per-currency separation",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, my net worth and its trend are computed deterministically from my own ledger, held as one bucket per currency rather than combined into a single false total, with the full derivation exposed and an explicit incomplete-data state whenever a linked account's balance is missing or stale.",
+      "context": "Net worth is the first cross-account rollup the product ships, and the most common way to get it wrong is to add balances in different currencies into one friendlier-looking number. The ledger and money-format decision records both require that a mixed-currency total never be produced silently, so this ticket returns a snapshot and trend per currency; combining currencies into one total stays out of scope until the globalization epic delivers a conversion path.",
+      "scope": [
+        "Net-worth snapshot computed as assets minus liabilities, held as a separate bucket per currency",
+        "Historical trend series derived from ledger snapshots at a defined cadence",
+        "Derivation listing every account and balance that contributed to a bucket",
+        "Explicit incomplete-data state when an account's balance is stale or unavailable, rather than silently omitting it",
+        "No currency conversion or combined cross-currency total anywhere in the computation path"
+      ],
+      "acceptance_criteria": [
+        "A user with accounts in two currencies never receives a single combined total, proven by a test asserting one bucket per currency",
+        "The trend series reconciles exactly against the ledger snapshots it was derived from",
+        "An account with a stale or missing balance produces the explicit incomplete-data state rather than being silently excluded",
+        "The derivation lists every contributing account and balance so a client can render it without recomputing",
+        "All figures agree with the independent model across the case matrix, and no floating point value appears anywhere in the response"
+      ],
+      "contracts_schema": [
+        "Implements the published net-worth contract from T-CON-08 including its per-currency bucket and derivation shapes"
+      ],
+      "security_privacy": [
+        "Net-worth figures are scoped to the requesting user only and reuse the encryption and access rules already established for account balances"
+      ],
+      "observability": [
+        "Publishes computation latency and reconciliation mismatch counts, alerting on any mismatch"
+      ],
+      "tests": [
+        "Per-currency separation test",
+        "Ledger reconciliation test",
+        "Stale-balance incomplete-data test",
+        "Independent model agreement test"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per surface so the figure can be withdrawn without removing the underlying accounts",
+        "Rollback hides the figure rather than showing a stale one"
+      ],
+      "non_goals": [
+        "Currency conversion and any combined cross-currency total, which stays out of scope until the globalization epic (E30) delivers a conversion path",
+        "Any forecast or projection of future net worth"
+      ],
+      "dependencies": [
+        "T-CON-08",
+        "api#6",
+        "api#7",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the net-worth computation module. Clients render the per-currency derivation rather than recomputing or converting it.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-NWT-02",
+      "title": "Build Android net worth dashboard with trend, drill-down and offline support",
+      "repo": "android",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can see my net worth per currency, its trend over time, drill down into what makes it up, know when the figure is stale or I am offline, and control whether it appears on a glanceable surface, using a screen reader or the largest text scale if I need to.",
+      "context": "This is the first Android surface for the per-currency figure T-NWT-01 computes, and the failure this ticket exists to prevent is a client silently adding currencies together to produce one friendlier-looking number, which the server ticket explicitly refuses to do.",
+      "scope": [
+        "Net-worth dashboard showing one card per currency rather than a combined figure",
+        "Trend chart over the published history window",
+        "Drill-down into the contributing accounts and balances",
+        "Staleness indicator when the underlying figure is older than the published freshness window",
+        "Offline presentation against the last cached snapshot with its staleness shown",
+        "Privacy control to hide the figure from any glanceable or lock-screen surface"
+      ],
+      "acceptance_criteria": [
+        "A user with balances in two currencies sees two separate cards and never a combined total",
+        "Drilling down shows the exact accounts and balances the server derivation listed",
+        "A stale figure is visibly marked as stale rather than presented as current",
+        "The dashboard renders correctly offline from cache with its staleness shown",
+        "A privacy toggle hides the figure from any glanceable surface",
+        "All dashboard screens are screen-reader traversable and usable at the largest text scale"
+      ],
+      "contracts_schema": [
+        "Consumes the published net-worth contract from T-CON-08 including its per-currency and derivation shapes; no currency conversion is performed on the device"
+      ],
+      "security_privacy": [
+        "Net-worth figures are excluded from any glanceable notification or lock-screen surface unless the user opts in",
+        "Cached snapshots are encrypted at rest and excluded from device backup"
+      ],
+      "observability": [
+        "Records dashboard views and drill-down interactions without amounts"
+      ],
+      "tests": [
+        "Per-currency card separation test",
+        "Drill-down accuracy test",
+        "Staleness indicator test",
+        "Offline cache presentation test",
+        "Accessibility traversal test"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per cohort",
+        "Rollback hides the dashboard while the underlying accounts remain unaffected"
+      ],
+      "non_goals": [
+        "Server-side computation and currency separation logic, which T-NWT-01 owns",
+        "Any currency conversion, which stays out of scope until the globalization epic (E30)"
+      ],
+      "dependencies": [
+        "T-NWT-01",
+        "T-AND-02"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the net-worth dashboard feature module. All computation and currency separation happen server-side.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-NWT-03",
+      "title": "Build the web net worth dashboard with trend, drill-down and export",
+      "repo": "web",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can see my net worth per currency on the web, its trend, drill down into what makes it up, export the figures, and use the dashboard with a keyboard, a screen reader, or at two hundred percent zoom.",
+      "context": "This is the second surface for the per-currency figure T-NWT-01 computes, matching the Android dashboard's refusal to combine currencies while adding the export capability every web reporting screen is expected to carry.",
+      "scope": [
+        "Net-worth dashboard showing one card per currency rather than a combined figure",
+        "Trend chart over the published history window",
+        "Drill-down into contributing accounts and balances",
+        "Export of the net-worth snapshot and trend to a downloadable file",
+        "Staleness indicator when the underlying figure is older than the published freshness window"
+      ],
+      "acceptance_criteria": [
+        "A user with balances in two currencies sees two separate cards and never a combined total",
+        "Drilling down shows the exact accounts and balances the server derivation listed",
+        "The exported file reconciles exactly against the figures shown on screen",
+        "A stale figure is visibly marked as stale rather than presented as current",
+        "Keyboard-only and screen-reader users can complete every dashboard action including export, and the dashboard remains readable and operable at two hundred percent text zoom"
+      ],
+      "contracts_schema": [
+        "Consumes the published net-worth contract from T-CON-08 including its per-currency and derivation shapes; no currency conversion is performed in the browser"
+      ],
+      "security_privacy": [
+        "Exported files contain no data beyond what the requesting user is entitled to see",
+        "The export action is logged like any other data export"
+      ],
+      "observability": [
+        "Records dashboard views, drill-down interactions and export completions without amounts"
+      ],
+      "tests": [
+        "Per-currency card separation test",
+        "Drill-down accuracy test",
+        "Export reconciliation test",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per cohort",
+        "Rollback hides the dashboard while the underlying accounts remain unaffected"
+      ],
+      "non_goals": [
+        "Server-side computation and currency separation logic, which T-NWT-01 owns",
+        "Any currency conversion, which stays out of scope until the globalization epic (E30)"
+      ],
+      "dependencies": [
+        "T-NWT-01",
+        "T-WEB-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the net-worth dashboard and export feature. All computation and currency separation happen server-side.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-INC-04",
+      "title": "Build the web income, budgeting, safe-to-spend and bill calendar surfaces",
+      "repo": "web",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can set up my income, see my budgets and safe-to-spend with its full derivation, view what is due when on a bill calendar, and receive reminders that never contain an amount, on the web the same way I can on Android.",
+      "context": "This mirrors T-INC-03's Android surfaces for the web shell, and the same notification discipline applies: a reminder that leaks an amount into an email subject line or a browser notification is exactly as damaging as one that leaks it onto a lock screen.",
+      "scope": [
+        "Income setup including irregular income entry",
+        "Budget list, category detail and rollover presentation",
+        "Safe-to-spend surface with the full derivation view",
+        "Bill and subscription calendar with due dates",
+        "Reminder scheduling that carries no monetary values in its content",
+        "Late or short salary presentation with a clear explanation",
+        "Confirmed recurring-charge list and sinking-fund progress with derivations from T-RCR-01 and T-BUD-01"
+      ],
+      "acceptance_criteria": [
+        "A user can configure fixed and irregular income and see budgets that reflect both",
+        "The safe-to-spend derivation opens to show every input and no figure is recomputed in the browser",
+        "No reminder, email or browser notification payload contains a monetary value, verified by a payload assertion test",
+        "A late salary is explained with what was expected and what arrived",
+        "Keyboard-only and screen-reader users can complete every surface including reminder setup, and the surfaces remain readable and operable at two hundred percent text zoom",
+        "Recurring charges expose confirmation, ignore, price-change and cancel-assist states, while sinking funds show their safe-to-spend effect without a ledger balance change"
+      ],
+      "contracts_schema": [
+        "Consumes the published income, budget, safe-to-spend and forecast contracts from T-CON-08 including derivation fields"
+      ],
+      "security_privacy": [
+        "Amounts are excluded from reminders, notifications, analytics and error output",
+        "Cached budget data is never written to unencrypted browser storage"
+      ],
+      "observability": [
+        "Records surface views and reminder interactions without amounts"
+      ],
+      "tests": [
+        "Setup and budget rendering tests",
+        "Reminder payload assertion test",
+        "Derivation view test",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set",
+        "Recurring-charge and sinking-fund derivation journeys"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per surface; reminders ship after the payload assertion test is green",
+        "Rollback hides the surfaces and cancels scheduled reminders"
+      ],
+      "non_goals": [
+        "Server-side income and budgeting arithmetic, which the api tickets own"
+      ],
+      "dependencies": [
+        "T-INC-02",
+        "T-RCR-01",
+        "T-BUD-01",
+        "T-WEB-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the income and budget feature modules for the web shell.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-GOL-03",
+      "title": "Build web goal, competition and scenario surfaces with the advice-boundary disclaimer",
+      "repo": "web",
+      "epic": "docs#24",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "compliance",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can create goals, see multi-goal competition and compare scenarios I choose between myself on the web, see the required disclaimer on every projection, and use every surface with a keyboard, a screen reader, or at two hundred percent zoom.",
+      "context": "This mirrors T-GOL-02's Android framing for the web shell: the interface presents options a user selects between and never an instruction, which is what keeps the surface on the calculator side of the advice boundary, and that framing has to be tested on this platform independently rather than assumed from the mobile ticket.",
+      "scope": [
+        "Goal creation, editing and progress surfaces",
+        "Multi-goal competition view showing the exact delay one goal imposes on another",
+        "Scenario comparison presented as options the user chooses between",
+        "Disclaimer rendered on every projection surface from the versioned compliance text",
+        "Milestone presentation with no monetary values in any notification",
+        "Optional salary-market range view showing source, geography, methodology, as-of date and unavailable or stale states from T-GOL-04"
+      ],
+      "acceptance_criteria": [
+        "No projection surface renders without the current disclaimer, enforced by an automated check",
+        "Scenario copy presents options and never instructs, enforced by a copy scan against the reviewed wording",
+        "The competition view shows the exact delay the server derivation returned without recomputing it",
+        "Milestone notifications contain no monetary values, verified by a payload assertion test",
+        "Keyboard-only and screen-reader users can complete every goal action including scenario comparison, and the surfaces remain readable and operable at two hundred percent text zoom",
+        "Salary-market information never appears without provenance and never uses recommendation or guaranteed-outcome language"
+      ],
+      "contracts_schema": [
+        "Consumes the published goal contract from T-GOL-01 and the versioned disclaimer identifier"
+      ],
+      "security_privacy": [
+        "Goal amounts are excluded from notifications, analytics and error output"
+      ],
+      "observability": [
+        "Records goal creation and scenario selection without amounts"
+      ],
+      "tests": [
+        "Disclaimer presence check across surfaces",
+        "Copy scan against reviewed wording",
+        "Competition derivation display test",
+        "Notification payload assertion test",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set",
+        "Salary-market provenance, stale-state and advice-boundary copy tests"
+      ],
+      "rollout_rollback": [
+        "Behind a flag, enabled after the copy scan and disclaimer checks are green",
+        "Rollback hides the surfaces and leaves stored goals intact"
+      ],
+      "non_goals": [
+        "Server-side projection arithmetic, which T-GOL-01 owns"
+      ],
+      "dependencies": [
+        "T-GOL-01",
+        "T-GOL-04",
+        "T-WEB-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the goal feature module for the web shell.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AND-05",
+      "title": "Build Android category spending, budgets and reporting parity",
+      "repo": "android",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "An Android user can see where money went by category and period, set and track budgets, and read the same income, budget and net worth figures the web product shows, so the primary client is not the one with the least reporting.",
+      "context": "Income, budgeting, goals and net worth all gained web surfaces and server implementations, and Android - the primary client and the only one with capture - received none of them. That leaves the product in the position of collecting a user's data on the phone and requiring a browser to understand it. Parity here is not a nice-to-have: the categorisation work is only worth anything if the user can see its output where they already are.",
+      "scope": [
+        "Category spending by period with drill-down into the transactions behind a figure",
+        "Budget creation, editing and progress against the server-computed budget state",
+        "Income summary and recurring-income presentation consistent with the server model",
+        "Net worth presentation reading the same derived values as the web surface",
+        "Period selection, comparison against the previous period, and the rule for an incomplete current period",
+        "Offline and stale behaviour: what a report shows when it cannot refresh, using the T-UX-01 taxonomy",
+        "Empty and low-data states that explain what is missing rather than showing an empty chart"
+      ],
+      "acceptance_criteria": [
+        "Category totals, budget progress, income and net worth figures match the server-computed values exactly for the same period, asserted by a test rather than by inspection",
+        "Every figure is derived from the canonical money representation and is never re-parsed from a formatted string",
+        "Drilling into a category total lists exactly the transactions that compose it, and their sum equals the total",
+        "An incomplete current period is labelled as incomplete and is never compared against a complete previous period without saying so",
+        "A stale report is labelled stale and offline is distinguished from stale exactly as T-UX-01 defines",
+        "Empty and low-data states explain what is required to produce a figure rather than rendering a zeroed chart",
+        "The screens pass the accessibility and performance budgets applied to the other core journeys, including chart alternatives for screen readers"
+      ],
+      "contracts_schema": [
+        "Consumes the published income, budget, category and net worth contracts through the generated client; no aggregate is recomputed locally except for offline presentation of already-fetched data"
+      ],
+      "security_privacy": [
+        "Reports are rendered from data the client already holds or is entitled to fetch; no new server capability is introduced",
+        "Screenshots of report surfaces are subject to the same protections as the rest of the financial UI"
+      ],
+      "observability": [
+        "Report open rates, period selections and drill-down rates are recorded so an unused report is visible before it is expanded"
+      ],
+      "tests": [
+        "Server-agreement test for category, budget, income and net worth figures",
+        "Drill-down sum equality test",
+        "Incomplete-period labelling test",
+        "Stale and offline presentation tests",
+        "Accessibility test covering chart alternatives"
+      ],
+      "rollout_rollback": [
+        "Ships one report at a time behind flags, starting with category spending which has the most existing data behind it",
+        "Rollback hides the surfaces; no local schema or server contract changes are required to remove them"
+      ],
+      "non_goals": [
+        "Server-side budgeting, income and net worth computation, which T-INC-01, T-INC-02 and T-NWT-01 own",
+        "Goal planning surfaces, which T-GOL-02 owns",
+        "Export, which the trust and compliance tickets own"
+      ],
+      "dependencies": [
+        "T-INC-02",
+        "T-NWT-01",
+        "T-AND-02",
+        "T-AND-04",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the Android reporting and budgeting surfaces only. Every figure it renders is computed server-side by the income, budget and net worth tickets.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

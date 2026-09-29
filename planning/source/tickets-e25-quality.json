@@ -1,0 +1,1317 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e25-quality",
+  "epic_refs": [
+    "E25"
+  ],
+  "items": [
+    {
+      "stable_id": "T-QA-01",
+      "title": "Build the money-path verification harness: property, mutation, idempotency and independent model",
+      "repo": "api",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 05",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Test",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Every money-path module is verified by generated properties, by a second independent implementation, by a mutation threshold and by an adversarial retry suite, and each of those is a gate rather than a habit.",
+      "context": "The test strategy names independent-model verification and mutation testing as principles, but nothing enforces them. For financial arithmetic, tests written by the same author against the same misunderstanding pass happily. This harness is what makes a wrong number a build failure.",
+      "scope": [
+        "Shared property-based generators for amounts, currencies, dates, schedules and split shares",
+        "Invariant suite covering zero-sum, non-negative-where-required, rounding and period-boundary rules",
+        "Independent second implementation of debt, budgeting and allocation arithmetic used as an oracle",
+        "Mutation testing configured with a threshold that fails the build on money-path packages",
+        "Idempotency and adversarial retry suite covering duplicate, concurrent and out-of-order writes",
+        "Threshold wiring that reads the per-package numeric floors from docs#21 rather than restating them in the harness"
+      ],
+      "acceptance_criteria": [
+        "A deliberately introduced rounding error in a money-path module is caught by the property suite",
+        "A disagreement between the implementation and the independent model fails the build and names the case",
+        "Mutation score below the numeric floor published by docs#21 for that named package fails the build on money-path packages only; the harness reads the published number and never an agreed threshold nobody wrote down",
+        "A duplicated financial write with the same idempotency key produces exactly one ledger effect",
+        "Concurrent writes to the same account under a serializable transaction never produce a negative or unbalanced state",
+        "The harness runs within the numeric pipeline budget published by docs#21, so it is not disabled for speed, and exceeding that budget fails rather than warns",
+        "Line and branch coverage on every money-path package meets the numeric floor published by docs#21 for that package, and a package with no published number fails the run rather than defaulting"
+      ],
+      "contracts_schema": [
+        "Consumes the money representation and idempotency conventions and fails if an endpoint accepts a financial write without a key"
+      ],
+      "security_privacy": [
+        "Generators produce synthetic data only; no production-derived values are used",
+        "Failure output must not print full records, only the minimal reproducing case"
+      ],
+      "observability": [
+        "Publishes mutation score, property case count and oracle disagreement count per run"
+      ],
+      "tests": [
+        "Property suites per invariant",
+        "Mutation run on money-path packages",
+        "Independent-model comparison across the full case matrix",
+        "Adversarial retry and concurrency suite"
+      ],
+      "rollout_rollback": [
+        "Introduced as non-blocking for one week to establish the baseline, then made blocking",
+        "Rollback is lowering the mutation threshold with a recorded expiry, never removing the gate"
+      ],
+      "non_goals": [
+        "Feature-level tests, which each feature ticket owns",
+        "Load and performance testing, which is a separate ticket"
+      ],
+      "dependencies": [
+        "api#3",
+        "docs#21",
+        "T-ADR-MONEY-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the test harness modules and the pipeline gate configuration. Other repositories consume the published invariant list but implement their own tests.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-QA-02",
+      "title": "Run provider and consumer contract testing against the published specification",
+      "repo": "contracts",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 05",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Test",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "A breaking contract change fails the provider pull request, and a consumer that drifts from the published contract fails its own pipeline, so cross-repository work can proceed in parallel safely.",
+      "context": "Contract-first sequencing is the stated protocol for cross-repository change, but nothing verifies it. Without provider and consumer verification the contract becomes documentation and the generated clients diverge quietly.",
+      "scope": [
+        "Provider verification that the running service satisfies the published specification",
+        "Consumer verification for the generated Kotlin, TypeScript and Python clients",
+        "Compatibility checking that classifies a change as additive or breaking",
+        "Pipeline wiring so both directions run on the relevant pull requests",
+        "Published report identifying which consumer versions are compatible with which contract version"
+      ],
+      "acceptance_criteria": [
+        "Removing a response field fails the provider pull request unless the expand and contract protocol was followed",
+        "A consumer using a field the contract no longer offers fails its own pipeline",
+        "Additive changes pass without consumer changes",
+        "The compatibility report names each consumer and its verified contract version",
+        "Verification runs against the published artifact, not a branch build",
+        "The Python consumer is verified on the same terms as the Kotlin and TypeScript consumers; a Python client that drifts from the published contract fails its own pipeline",
+        "The compatibility report names the Python consumer explicitly, so a missing Python row is a failure rather than an omission"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 document is the contract of record; verification consumes the published artifact"
+      ],
+      "security_privacy": [
+        "Verification fixtures contain synthetic data only",
+        "No production endpoint is called during verification"
+      ],
+      "observability": [
+        "Publishes contract version, consumer versions verified and the compatibility verdict"
+      ],
+      "tests": [
+        "Provider verification suite",
+        "Consumer verification per generated client",
+        "Planted breaking change test",
+        "Python consumer verification against the published artifact"
+      ],
+      "rollout_rollback": [
+        "Enabled for additive detection first, then breaking-change blocking once the baseline is clean",
+        "Rollback is downgrading the gate to warning with a recorded expiry"
+      ],
+      "non_goals": [
+        "Writing endpoint specifications, which the contract expansion tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-SCA-CON-01"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the verification harness and the compatibility checker. Consumer repositories run a published verification task and own nothing in contracts.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-03",
+      "title": "Build the tenancy, object-authorization and authentication attack suite",
+      "repo": "api",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 14",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "An automated suite actively attempts cross-tenant reads, broken object authorization, mass assignment and authentication bypass, from both inside the code and from outside the running service, and any success fails the pipeline.",
+      "context": "Isolation is asserted by design documents but never attacked. Assertions that a query filters by tenant prove intent; attempts that try to read another tenant's rows prove behaviour. The audit calls out that only tests which actually try are acceptable here.",
+      "scope": [
+        "White-box tests exercising database policies directly with a foreign tenant context",
+        "Black-box tests against the running service using enumerated and guessed identifiers",
+        "Object-level authorization coverage report across the endpoint inventory",
+        "Mass assignment and parameter tampering attempts on every write endpoint",
+        "Authentication bypass attempts including expired, revoked, replayed and forged credentials"
+      ],
+      "acceptance_criteria": [
+        "Every attempt to read or write another tenant's record is denied and recorded",
+        "An endpoint added without an object-level authorization check fails the coverage report and the build",
+        "Sending an unexpected privileged field in a write payload does not change it",
+        "A replayed or revoked token is rejected and the attempt is auditable",
+        "Under pooled connections and concurrent load, no request observes another tenant's session context",
+        "A deliberately weakened policy in a test fixture causes the suite to fail, proving the suite works"
+      ],
+      "contracts_schema": [
+        "Consumes the endpoint inventory from the published specification so new endpoints are detected automatically"
+      ],
+      "security_privacy": [
+        "Suite runs against synthetic tenants only",
+        "Findings are reported without printing the leaked record contents"
+      ],
+      "observability": [
+        "Publishes attempted, denied and unexpectedly allowed counts per run and alerts on any allowed"
+      ],
+      "tests": [
+        "White-box policy tests",
+        "Black-box attack suite",
+        "Coverage report gate",
+        "Concurrency and pooling isolation test",
+        "Self-test with a weakened fixture"
+      ],
+      "rollout_rollback": [
+        "Runs in the pull request pipeline for the fast subset and nightly for the full suite",
+        "A failing suite blocks deploy; there is no waiver path in the pipeline"
+      ],
+      "non_goals": [
+        "Penetration testing by an external party, which is a separate ticket",
+        "Implementing the isolation controls themselves, which belongs to E19"
+      ],
+      "dependencies": [
+        "T-SEC-01",
+        "api#4",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the suite and the coverage report. The infra repository only wires the nightly schedule.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-QA-04",
+      "title": "Enforce static analysis, dynamic scanning, dependency and secret gates with flaky-test quarantine",
+      "repo": "infra",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Static application security testing, dynamic scanning of a running build, dependency review and secret scanning all run as blocking gates, and flaky tests are quarantined automatically instead of being retried into green.",
+      "context": "Secret scanning and dependency review are already required but static and dynamic security testing have no owner, and there is no flaky-test policy implementation. Silent retries are how a real failure becomes invisible.",
+      "scope": [
+        "Static application security testing per language with an agreed rule set and severity gate",
+        "Dynamic scanning against an ephemeral deployed build for the authenticated and unauthenticated surface",
+        "Dependency review with a severity threshold and an exception process with expiry",
+        "Full-history secret scanning and a rotation trigger on detection",
+        "Automatic quarantine after a defined number of flakes, which opens a ticket rather than muting silently"
+      ],
+      "acceptance_criteria": [
+        "A planted injection-prone pattern is caught by static analysis and fails the pull request",
+        "A dynamic scan of the running build reports and fails on a high severity finding",
+        "A dependency with a high severity advisory fails the build unless an exception with an expiry exists",
+        "A planted secret is blocked and triggers a rotation ticket automatically",
+        "A test that flakes beyond the threshold is quarantined and a ticket is created; a quarantined test cannot silently disappear",
+        "No pipeline step retries a failing test more than the policy allows"
+      ],
+      "contracts_schema": [
+        "Scan results published in a machine-readable format consumed by the release checklist"
+      ],
+      "security_privacy": [
+        "Scanners run against ephemeral environments with synthetic data only",
+        "Scanner credentials are short lived and scoped to the ephemeral environment"
+      ],
+      "observability": [
+        "Publishes finding counts by severity, exception count with expiry dates and quarantine population"
+      ],
+      "tests": [
+        "Planted vulnerability test",
+        "Planted secret test",
+        "Dependency advisory fixture test",
+        "Flaky quarantine simulation"
+      ],
+      "rollout_rollback": [
+        "Introduced as warning-only for one week to measure noise, then made blocking",
+        "Rollback is returning a specific rule to warning with a recorded expiry"
+      ],
+      "non_goals": [
+        "Penetration testing, which is a separate ticket",
+        "Fixing findings, which is owned by the repository where the finding lives"
+      ],
+      "dependencies": [
+        "infra#3",
+        "T-SCA-INF-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns scanner configuration, gates and the quarantine automation. Each repository owns fixing its own findings.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-05",
+      "title": "Build load, stress, soak and chaos suites and run a disaster-recovery game day",
+      "repo": "infra",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 15",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "chore",
+        "P0-critical"
+      ],
+      "outcome": "The system is exercised at peak load, past peak, for a sustained period and under deliberate component failure, and a disaster-recovery game day proves the restore path works under time pressure.",
+      "context": "None of load, stress, soak, chaos or a recovery game day has an owner. For a financial application the failure modes that matter, such as a key service outage or a connection pool exhaustion, are exactly the ones that never appear in functional tests.",
+      "scope": [
+        "Load profiles for realistic peak traffic with latency and error budgets",
+        "Stress profile that finds the breaking point and records the failure mode",
+        "Sustained soak run checking for memory growth, connection leaks and counter drift",
+        "Fault injection covering database failover, key service outage, cache loss, provider outage and webhook storms",
+        "Disaster-recovery game day restoring into a clean environment against the clock"
+      ],
+      "acceptance_criteria": [
+        "Peak load meets the published latency and error budgets and a regression fails the release",
+        "The stress run records the breaking point and the system degrades rather than corrupting data",
+        "A sustained run shows no unbounded memory or connection growth and quota counters remain exact",
+        "Each injected fault has a defined, observed behaviour; a key service outage must never corrupt or expose data",
+        "The game day meets the published recovery objectives and the runbook is corrected afterwards",
+        "All runs use synthetic data and an isolated environment"
+      ],
+      "contracts_schema": [
+        "Load profiles and budgets published so a regression can be attributed to a specific endpoint"
+      ],
+      "security_privacy": [
+        "No production traffic replay and no production data in any profile",
+        "Fault injection is confined to non-production environments"
+      ],
+      "observability": [
+        "Publishes latency percentiles, error rates, saturation and the observed failure mode per run"
+      ],
+      "tests": [
+        "Load and stress runs",
+        "Soak run with leak and drift assertions",
+        "Fault injection scenarios with expected behaviour assertions",
+        "Timed restore game day"
+      ],
+      "rollout_rollback": [
+        "Run on a schedule and before each release candidate; failures block promotion",
+        "Rollback is not applicable; a failed run blocks rather than changes production"
+      ],
+      "non_goals": [
+        "Application performance optimisation, which belongs to the owning feature ticket",
+        "Client-side performance budgets, which are separate tickets"
+      ],
+      "dependencies": [
+        "T-PLT-02",
+        "T-PLT-03"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns profiles, harness and scheduling. Application repositories own only the fixes for the regressions found.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-06",
+      "title": "Gate the web application on end-to-end journeys, accessibility and performance budgets",
+      "repo": "web",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "QA",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P1-high"
+      ],
+      "gate": "terminal",
+      "outcome": "Critical web journeys are covered by end-to-end tests, accessibility conformance is checked automatically and by a keyboard and screen-reader walkthrough, and performance budgets fail a pull request that regresses them.",
+      "context": "Accessibility is inconsistent across screens and no target level is stated anywhere, and performance budgets exist only as a sentence in the release checklist. On a screen where people read their debt position, an unreadable or unusable page is a product failure.",
+      "scope": [
+        "End-to-end coverage of login, transaction entry, payoff view, import and export",
+        "Automated accessibility checks against a named WCAG 2.2 AA ruleset and its pinned version, with zero critical violations on core journeys",
+        "Keyboard-only and screen-reader walkthrough evidence for each core journey",
+        "Text scaling and zoom verification without truncation or overlap",
+        "Performance budgets for load, interactivity and bundle size enforced per pull request",
+        "Locale-aware INR formatting checks covering symbol placement, the Indian digit grouping convention and the decimal separator",
+        "Pseudo-localization run over every core journey to surface hardcoded strings and truncation before a translator is ever hired",
+        "Long-string and right-to-left layout safety checks on every core screen",
+        "Latest-stable Chromium, Firefox and WebKit coverage at desktop and representative mobile viewports",
+        "Client state coverage check asserting every web surface handles every applicable T-UX-01 state identifier"
+      ],
+      "acceptance_criteria": [
+        "Each critical journey passes end to end against a seeded synthetic environment",
+        "Automated accessibility scanning reports zero critical violations on core journeys",
+        "A keyboard-only user can complete every core journey and the evidence is attached",
+        "Monetary values carry accessible labels so a screen reader announces them unambiguously",
+        "Content remains readable and operable at two hundred percent text scaling",
+        "A deliberate bundle size or interactivity regression fails the pull request",
+        "Every monetary value renders through the locale-aware INR formatter; a hardcoded currency symbol, grouping or separator fails the check",
+        "A pseudo-localized build completes every core journey with no hardcoded string, no clipped label and no concatenated sentence fragment",
+        "Core screens survive a long-string locale and a right-to-left layout without overlap, clipping or unmirrored directional affordances",
+        "These are MVP quality criteria for the single-currency INR product; multi-currency behaviour is not claimed and remains E30 work",
+        "Critical journeys pass independently on latest-stable Chromium, Firefox and WebKit, and a browser-specific failure is reported by engine",
+        "The conformance target is WCAG 2.2 AA, stated explicitly, and the automated ruleset and its version are named in the configuration rather than left to the tool default",
+        "The WCAG 2.2 additions that apply to this product - focus appearance, target size, dragging alternatives and redundant entry - are each covered by a named check or a recorded manual walkthrough step",
+        "A rule that the automated scanner cannot decide is routed to the manual walkthrough rather than silently passing",
+        "The client state coverage check fails when a surface omits an applicable T-UX-01 state identifier, proven with a planted omission"
+      ],
+      "contracts_schema": [
+        "Journeys are driven through the published contract; no test reaches into internal state"
+      ],
+      "security_privacy": [
+        "Tests use synthetic accounts; no production credentials exist in the suite",
+        "Recorded artifacts are scrubbed of any test personal data before upload"
+      ],
+      "observability": [
+        "Publishes journey pass rate, accessibility violation counts and budget headroom per run"
+      ],
+      "tests": [
+        "End-to-end journey suite",
+        "Automated accessibility scan",
+        "Manual keyboard and screen-reader walkthrough with recorded evidence",
+        "Performance budget checks with a planted regression test",
+        "Locale-aware INR formatting tests including grouping and separator cases",
+        "Pseudo-localization journey run with hardcoded-string and truncation detection",
+        "Long-string and right-to-left layout safety checks",
+        "Per-engine planted regression proving Chromium, Firefox and WebKit matrix failures are isolated and blocking"
+      ],
+      "rollout_rollback": [
+        "Runs on every pull request for the fast subset and on release candidates for the full suite",
+        "Quarantine policy applies; a quarantined journey creates a ticket and blocks release if it is a core journey",
+        "Fast Chromium subset runs on every pull request; the complete three-engine and viewport matrix blocks release candidates"
+      ],
+      "non_goals": [
+        "Android quality gates, which are a separate ticket",
+        "Design changes to fix findings, which belong to the owning web ticket",
+        "Multi-currency and foreign-exchange behaviour, which E30 owns; these checks assert INR formatting and layout safety only"
+      ],
+      "dependencies": [
+        "T-WEB-01",
+        "T-UX-01",
+        "T-DQA-10",
+        "T-DQA-11"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the test suites and budget configuration. The infra repository provides the runner image only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-07",
+      "title": "Procure and provision the physical Android test device",
+      "repo": "android",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Test",
+      "risk": "R1 SMS permission",
+      "status": "Ready",
+      "estimate": 3,
+      "capacity_pool": "Quality Assurance",
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "A dedicated mid-range Android device with an Indian SIM and synthetic test account is physically available, securely provisioned and capable of exercising real SMS and notification permission behavior.",
+      "context": "Device procurement has lead time but no technical prerequisite. Splitting it from corpus governance lets acquisition start immediately while T-QA-12 waits for the published test strategy.",
+      "scope": [
+        "Procure and inventory one representative mid-range Android device with an Indian SIM",
+        "Provision a dedicated synthetic test account with no personal financial data",
+        "Record operating-system, OEM, memory and permission capabilities in the device inventory",
+        "Verify receipt of structurally realistic bank-format test SMS without retaining a real person's message",
+        "Exercise notification restricted-settings, grant and revocation paths",
+        "Define and execute secure wipe between test campaigns"
+      ],
+      "acceptance_criteria": [
+        "The device and SIM are physically available and recorded in the controlled inventory",
+        "No personal account, real bank credential or real financial message is stored on the device",
+        "A structurally realistic test SMS can be received and exercised by the application test harness",
+        "Notification grant, Android restricted-settings and post-grant revocation paths can be reproduced",
+        "A wipe returns the device to the documented clean state between campaigns",
+        "Device capabilities and limitations are recorded for T-QA-12"
+      ],
+      "contracts_schema": [
+        "Device inventory record includes asset owner, OS, OEM, memory class, SIM test capability, last wipe and permitted test-data classes"
+      ],
+      "security_privacy": [
+        "Only synthetic accounts and messages are used; a real message may be observed to learn structure but is never copied, photographed, attached or retained",
+        "The device is access-controlled, encrypted and wiped between campaigns"
+      ],
+      "observability": [
+        "Publishes procurement state, last successful permission smoke run and last wipe date without device secrets"
+      ],
+      "tests": [
+        "Synthetic SMS receipt and parser-harness smoke test",
+        "Notification grant, restricted-settings and revocation smoke tests",
+        "Secure-wipe verification against the documented clean-state checklist"
+      ],
+      "rollout_rollback": [
+        "Procurement and provisioning proceed immediately; runner automation follows in T-QA-12",
+        "A lost or compromised device is remotely invalidated, removed from the inventory and wiped before replacement"
+      ],
+      "non_goals": [
+        "Building or governing the sanitized parser corpus, which T-QA-12 owns",
+        "Defining the complete Android compatibility matrix, which T-QA-12 owns",
+        "Implementing parser or permission features"
+      ],
+      "dependencies": [],
+      "parallel_boundary": "Primary repo android. Owns the inventory record and provisioning runbook; procurement is external work and T-QA-12 consumes the ready device without changing this ticket.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI where automatable, and manual device evidence is attached",
+        "Observability, rollout and rollback notes recorded on the ticket before closure",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-08",
+      "title": "Gate the Android application on instrumented journeys, accessibility and performance budgets",
+      "repo": "android",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 16",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "gate": "release",
+      "outcome": "Critical Android journeys run as instrumented tests on the device matrix, accessibility is verified with a screen reader, and cold start and list performance budgets fail the pipeline when they regress.",
+      "context": "Accessibility is inconsistent across the debt and clarification screens and performance targets exist only as prose. These are the screens a user opens when they are anxious about money, which is exactly when a broken screen reader path or a slow cold start does the most damage.",
+      "scope": [
+        "Instrumented coverage of onboarding, debt entry, payoff view, clarification and settings",
+        "Screen-reader traversal verification for each core screen",
+        "Text scaling, contrast and touch target verification",
+        "Cold start and large-list scrolling budgets measured on the physical device",
+        "Pipeline gating on the device matrix with the quarantine policy applied",
+        "Locale-aware INR formatting checks covering symbol placement, the Indian digit grouping convention and the decimal separator",
+        "Pseudo-localization run over every core journey to surface hardcoded strings and truncation before a translator is ever hired",
+        "Long-string and right-to-left layout safety checks on every core screen",
+        "Android accessibility baseline covering TalkBack order and labels, 48dp touch targets, contrast, reduced motion and largest supported font scale",
+        "Instrumented coverage of the transaction timeline: search, filter, detail, correction by reversal, pending, offline, stale, empty, loading and error states",
+        "Client state coverage check asserting every surface handles every applicable T-UX-01 state identifier",
+        "Release-gate integration so the budgets in this ticket are the budgets T-REL-01 halts a staged rollout on",
+        "Minimum-supported low-memory profile from T-QA-12 as a required beta lane, not an optional compatibility report"
+      ],
+      "acceptance_criteria": [
+        "Each critical journey passes on the oldest supported release and on the current release",
+        "Every core screen is fully traversable with a screen reader and every monetary value is announced with its meaning",
+        "Content remains usable at the largest supported text scale without truncation",
+        "Cold start on the mid-range physical device meets the published budget and a regression fails the pipeline",
+        "A large transaction list scrolls within the published frame budget",
+        "A deliberately regressed budget fails the pipeline, proving the gate works",
+        "Every monetary value renders through the locale-aware INR formatter; a hardcoded currency symbol, grouping or separator fails the check",
+        "A pseudo-localized build completes every core journey with no hardcoded string, no clipped label and no concatenated sentence fragment",
+        "Core screens survive a long-string locale and a right-to-left layout without overlap, clipping or unmirrored directional affordances",
+        "These are MVP quality criteria for the single-currency INR product; multi-currency behaviour is not claimed and remains E30 work",
+        "Every core journey passes the Android accessibility baseline and any applicable WCAG 2.2 AA content criterion",
+        "A planted unlabeled control, undersized target, contrast failure or unbounded motion fails the accessibility gate",
+        "The transaction timeline in T-AND-04 passes instrumented journey, accessibility and performance gates on the physical device matrix, including its pending, offline, stale, empty and error states",
+        "The client state coverage check fails when a surface omits an applicable T-UX-01 state identifier, proven with a planted omission",
+        "Locale-aware INR rendering is asserted against the framework T-GLO-02 owns; this gate verifies the output and does not implement the formatter",
+        "The crash and ANR budgets this gate publishes are the same numeric budgets T-REL-01 halts a staged rollout on, read from one source",
+        "Cold start, ten-thousand-row timeline, offline queue and background capture meet their budgets on the minimum-supported low-memory profile T-QA-12 publishes"
+      ],
+      "contracts_schema": [
+        "Journeys drive the published contract through the generated client, not internal test hooks"
+      ],
+      "security_privacy": [
+        "Tests run against synthetic accounts and a scrubbed corpus",
+        "Screenshots captured on failure are scrubbed of any monetary values before upload"
+      ],
+      "observability": [
+        "Publishes journey pass rate, accessibility findings and start and frame timings per run"
+      ],
+      "tests": [
+        "Instrumented journey suite",
+        "Accessibility traversal checks",
+        "Performance budget checks with a planted regression",
+        "Locale-aware INR formatting tests including grouping and separator cases",
+        "Pseudo-localization journey run with hardcoded-string and truncation detection",
+        "Long-string and right-to-left layout safety checks",
+        "TalkBack order and label tests",
+        "48dp target, contrast, reduced-motion and largest-font planted violation tests",
+        "Minimum-supported low-memory journey, paging and process-death suite"
+      ],
+      "rollout_rollback": [
+        "Runs on pull requests for the emulator subset and on release candidates for the physical device",
+        "A core journey failure blocks release; quarantine creates a ticket and never hides a failure"
+      ],
+      "non_goals": [
+        "Web quality gates, which are a separate ticket",
+        "Fixing the findings, which belongs to the owning feature ticket",
+        "Multi-currency and foreign-exchange behaviour, which E30 owns; these checks assert INR formatting and layout safety only",
+        "The localization framework itself, which T-GLO-02 owns; this ticket owns the gate that verifies its output",
+        "Release pipeline, tracks and rollout mechanics, which T-REL-01 owns"
+      ],
+      "dependencies": [
+        "T-QA-07",
+        "T-QA-12",
+        "android#1",
+        "android#11",
+        "T-AND-04",
+        "T-SYN-04",
+        "T-REL-01",
+        "T-GLO-02",
+        "T-UX-01",
+        "T-DQA-10"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the instrumented suites and budget configuration.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-09",
+      "title": "Automate privacy traffic inspection on every release candidate",
+      "repo": "android",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 09",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R1 SMS permission",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Every release candidate is exercised through an intercepting proxy and the captured traffic is asserted to contain no raw message text, no monetary values in analytics and no unknown destination hosts, with a failure blocking the pipeline.",
+      "context": "The Data Safety declaration and the third-party component inventory both need captured evidence, so the capture harness must exist before the compliance floor is assembled and well before beta. The harness is built against the Android scaffold and the shared workflows, then runs against every release candidate as builds appear.",
+      "scope": [
+        "Automated run of core journeys through an intercepting proxy on a release candidate build",
+        "Assertions covering absence of raw message text, absence of monetary values in analytics payloads and an allowlist of destination hosts",
+        "Payload allowlist shared with the analytics instrumentation so the two cannot drift",
+        "Captured evidence stored as a release artifact",
+        "Pipeline gate that fails the release candidate on any violation"
+      ],
+      "acceptance_criteria": [
+        "A planted raw message string in an outbound payload fails the run",
+        "A planted monetary value in an analytics payload fails the run",
+        "A request to a host outside the allowlist fails the run and names the host",
+        "The evidence artifact is attached to the release record and is reviewable without rerunning the pipeline",
+        "The run covers the ingestion, clarification and analytics paths, not only application start",
+        "Adding a new third-party component without updating the allowlist fails the run",
+        "The harness produces a signed evidence pack that the Data Safety declaration and the component inventory consume before beta",
+        "The harness runs against every release candidate once application builds exist, and a new undeclared destination fails the release"
+      ],
+      "contracts_schema": [
+        "Allowlist and payload schema published and consumed by both the analytics code and this harness"
+      ],
+      "security_privacy": [
+        "Capture runs against synthetic accounts only; no real user traffic is intercepted",
+        "Captured artifacts are scanned and scrubbed before storage and have a bounded retention"
+      ],
+      "observability": [
+        "Publishes host inventory, payload field inventory and violation counts per run"
+      ],
+      "tests": [
+        "Planted raw message test",
+        "Planted monetary value test",
+        "Unknown host test",
+        "Coverage check that the run exercised the required journeys"
+      ],
+      "rollout_rollback": [
+        "Introduced as reporting for one release candidate to establish the host inventory, then blocking",
+        "Rollback is reverting to reporting with a recorded expiry; the evidence requirement stays"
+      ],
+      "non_goals": [
+        "Backend log inspection, which the platform scrubbing ticket owns",
+        "The data safety declaration itself, which is a compliance floor ticket"
+      ],
+      "dependencies": [
+        "T-SCA-AND-01",
+        "T-SCA-INF-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the harness, allowlist and assertions. The infra repository provides the proxy-enabled runner only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-10",
+      "title": "Run the independent penetration test and named red-team scenarios before public launch",
+      "repo": "docs",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "An independent penetration test is completed against the current threat model with every high and critical finding closed and retested, and named red-team scenarios are exercised beyond the scope of that test, before public launch.",
+      "context": "A penetration test against an unrefreshed model tests the wrong things, which is why the per-epic threat-model refresh loop is now a separate, much earlier ticket - T-QA-14 in Sprint 02 - rather than bundled here. This ticket is the external test itself: it can only happen once the system exists, it depends on a third party's calendar, and its remediation gate is a launch blocker.",
+      "scope": [
+        "Independent penetration test scoped against the threat model T-QA-14 keeps refreshed",
+        "Remediation gate requiring high and critical findings to be closed and retested",
+        "Red-team scenarios covering a malicious administrator, a malicious family member, a hostile merchant string and a stolen unlocked device",
+        "Mobile security verification self-assessment feeding the external scope",
+        "Accepted-risk register for findings that will not be fixed before release, each with an owner and an expiry"
+      ],
+      "acceptance_criteria": [
+        "The penetration test scope is derived from the current refreshed threat model, and a scope that predates the latest refresh is rejected",
+        "The penetration test report is received and every high and critical finding is closed and retested before public release",
+        "Each red-team scenario has a written outcome stating what the attacker achieved and what stopped them",
+        "The mobile self-assessment gap list is closed or explicitly accepted with a reason",
+        "Findings that cannot be fixed before release are recorded as accepted risk with an owner and an expiry, and an expired accepted risk fails the release gate"
+      ],
+      "contracts_schema": [
+        "Findings are tracked as tickets in the owning repository with the reference recorded here"
+      ],
+      "security_privacy": [
+        "Test scoped to non-production with synthetic data, or to production only with explicit written authorisation",
+        "The report is treated as confidential and is not committed to a public location"
+      ],
+      "observability": [
+        "Publishes finding counts by severity, closure rate and retest status"
+      ],
+      "tests": [
+        "Penetration test execution",
+        "Red-team scenario walkthroughs",
+        "Retest of every high and critical finding"
+      ],
+      "rollout_rollback": [
+        "Gated before public release; the beta may proceed only with a written, time-boxed exception",
+        "Rollback is not applicable; unresolved high findings block the release"
+      ],
+      "non_goals": [
+        "The per-epic threat-model refresh loop, which T-QA-14 owns",
+        "Implementing the fixes, which belongs to the repository that owns the affected code",
+        "Continuous scanning, which is a separate ticket"
+      ],
+      "dependencies": [
+        "docs#22",
+        "T-SEC-01",
+        "T-ADM-03",
+        "T-ADM-05",
+        "T-QA-14"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the model, the scope and the evidence. Fixes land in the repository that owns the affected code.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and the options rejected recorded",
+        "Linked from every epic and ticket it unblocks",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Follow-up implementation tickets created or updated to reference it",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-11",
+      "title": "Enforce IaC, container, mobile and software-supply-chain verification",
+      "repo": "infra",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Infrastructure, container, Android and built-artifact risks are scanned by blocking gates, and every deployed artifact has a signed bill of materials and provenance record that can be verified independently.",
+      "context": "The existing security gate covers source, dynamic, dependency and secret scanning but does not own infrastructure policy, image, mobile-binary or artifact-provenance verification. Those omissions leave deploy-time and supply-chain paths outside the merge gate.",
+      "scope": [
+        "Infrastructure-as-code policy and vulnerability scanning with a reviewed severity threshold",
+        "Container image scanning before publication and again before deployment",
+        "Android static analysis of release candidates for insecure manifest, storage and network configuration",
+        "CycloneDX software bill of materials generated for every deployable artifact",
+        "Signed artifact and provenance verification enforced by the deployment gate"
+      ],
+      "acceptance_criteria": [
+        "A planted high-severity infrastructure misconfiguration fails the pull request",
+        "A vulnerable package planted in a container image blocks publication",
+        "An insecure Android release fixture fails the mobile static analysis gate",
+        "Every release artifact has a complete CycloneDX bill of materials linked from its release record",
+        "A tampered or unsigned artifact is rejected by the deployment gate",
+        "Exceptions require an owner, reason and expiry and are visible in the release checklist"
+      ],
+      "contracts_schema": [
+        "Scan, software-bill-of-materials and provenance result schemas are published in machine-readable form for the release checklist"
+      ],
+      "security_privacy": [
+        "Scanners use synthetic fixtures and short-lived credentials and never receive production data",
+        "Signing keys remain in managed key custody and are unavailable to build steps that do not sign"
+      ],
+      "observability": [
+        "Publishes findings by scanner and severity, exception age, unsigned-artifact rejections and provenance verification failures"
+      ],
+      "tests": [
+        "Planted vulnerable infrastructure fixture test",
+        "Planted vulnerable container image test",
+        "Planted insecure Android release fixture test",
+        "Tampered and unsigned artifact rejection tests",
+        "Software bill of materials completeness test"
+      ],
+      "rollout_rollback": [
+        "Run in report-only mode long enough to establish noise and then make high and critical findings blocking per scanner",
+        "Rollback may return one noisy rule to reporting with a named owner and expiry; signature verification is never disabled"
+      ],
+      "non_goals": [
+        "Source-code SAST, DAST, dependency review, secret scanning and flaky-test quarantine, which T-QA-04 owns",
+        "Fixing a finding, which belongs to the repository that owns the affected artifact"
+      ],
+      "dependencies": [
+        "T-SCA-INF-01",
+        "infra#3",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns scanner configuration, bill-of-materials generation, signing and deploy verification; application repositories own only the fixes and scanner adoption hooks.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-QA-12",
+      "title": "Publish the sanitized parser corpus and Android compatibility matrix",
+      "repo": "android",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 12",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Test",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "Parser changes run against a privacy-safe corpus and a representative Android compatibility matrix, so format, operating-system, low-memory and OEM-specific regressions fail before release.",
+      "context": "Physical device procurement has no technical dependency and is split into T-QA-07. Corpus governance and the wider compatibility matrix do depend on the test strategy, and they need a separate owner so procurement can start without waiting.",
+      "scope": [
+        "Synthetic, structurally faithful bank-message corpus with an automated privacy scan",
+        "Versioned corpus schema and contribution protocol that forbids pasting a real message",
+        "Emulator coverage for the oldest supported and current Android releases",
+        "Managed-device coverage for low-memory hardware and at least two representative OEM Android variants with aggressive background restrictions",
+        "Physical-device runner integration using the provisioned T-QA-07 device"
+      ],
+      "acceptance_criteria": [
+        "No corpus entry contains a real account number, name, amount or message identifier, proven by an automated scan",
+        "A newly observed format is transcribed into synthetic structure under review rather than copied from a real message",
+        "Parser and permission journeys pass on the oldest supported release and the current release",
+        "Background capture and recovery are exercised on two representative OEM variants and on a low-memory profile",
+        "A parser change cannot merge when the corpus or required compatibility subset regresses",
+        "Corpus coverage by issuer and rule version is published with no raw content"
+      ],
+      "contracts_schema": [
+        "Corpus entries carry issuer pattern, rule version, structured synthetic input and expected parse output under a versioned schema",
+        "Compatibility-matrix records identify OS, memory class, OEM variant, test subset and result"
+      ],
+      "security_privacy": [
+        "No real message is committed, attached to an issue, uploaded as a test artifact or printed on failure",
+        "Managed devices use synthetic accounts and are wiped after each campaign"
+      ],
+      "observability": [
+        "Publishes corpus size and coverage plus compatibility pass rate by OS, memory class and OEM variant"
+      ],
+      "tests": [
+        "Corpus privacy scan with planted identifiers",
+        "Parser regression against the complete corpus",
+        "Oldest and current Android instrumented matrix",
+        "Low-memory and representative OEM background-restriction tests",
+        "Physical-device permission and parser smoke test"
+      ],
+      "rollout_rollback": [
+        "Fast emulator and corpus subsets run on pull requests; the complete managed and physical matrix runs on release candidates",
+        "A required matrix failure blocks release; a quarantined case receives an owner and expiry and cannot silently disappear"
+      ],
+      "non_goals": [
+        "Purchasing or provisioning the physical Indian-SIM device, which T-QA-07 owns",
+        "Implementing parser rules or permission screens, which their feature tickets own"
+      ],
+      "dependencies": [
+        "docs#21",
+        "T-QA-07"
+      ],
+      "parallel_boundary": "Primary repo android. Owns corpus governance, matrix definitions and test runners; infra only provides managed runner capacity and the feature tickets fix regressions.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-14",
+      "title": "Run the per-epic STRIDE threat-model refresh at Definition of Ready",
+      "repo": "docs",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Every epic carries a dated STRIDE threat-model refresh with a named owner before its first ticket starts, the currently missing categories are added, and the refresh has a published cadence rather than being done once and forgotten.",
+      "context": "The existing threat model has no entries for billing forgery, entitlement tampering, AI service compromise, request forgery, prompt injection, split manipulation or administrative single sign-on compromise, and no mechanism refreshes it. It was previously bundled with the external penetration test, which put a Sprint 02 activity behind a pre-launch one. The refresh is cheap, it is the input every security decision reads, and it belongs at Definition of Ready where it can still change a design.",
+      "scope": [
+        "STRIDE refresh template with the per-category prompts and the evidence a refresh must record",
+        "The seven currently missing categories added with named owners: billing forgery, entitlement tampering, AI service compromise, request forgery, prompt injection, split manipulation and administrative identity compromise",
+        "Definition of Ready item requiring a dated refresh for the epic before its first ticket starts",
+        "Published cadence for re-refreshing an epic that is still open, and the trigger events that force an early refresh",
+        "Machine-readable refresh record per epic: epic, date, owner, categories reviewed, findings raised",
+        "Handoff of each finding to an owning ticket rather than leaving it in the model"
+      ],
+      "acceptance_criteria": [
+        "Every epic entering implementation has a dated threat-model refresh record naming its owner and the categories reviewed",
+        "The model contains all seven previously missing categories, each with an owner",
+        "The refresh record is machine-readable, so T-GOV-04 can check it without a human reading the document",
+        "The cadence is published as a number of weeks or a named trigger, and an epic whose refresh is older than the cadence is reported as stale",
+        "Every finding raised by a refresh is either closed or handed to a named ticket; a finding with no owner fails the refresh",
+        "A refresh that reviews fewer than the required categories is invalid rather than partially credited"
+      ],
+      "contracts_schema": [
+        "Refresh record published as machine-readable data with a documented schema, consumed by the T-GOV-04 check"
+      ],
+      "security_privacy": [
+        "The threat model names attack paths and controls; it contains no credential, no live endpoint and no customer data",
+        "A refresh record is visible to everyone who can see the repository, because a threat model nobody reads is not a control"
+      ],
+      "observability": [
+        "Count of epics with a current refresh, a stale refresh and no refresh is reported without opening the board"
+      ],
+      "tests": [
+        "Schema test on the refresh record",
+        "Stale-refresh detection test with the clock advanced past the cadence",
+        "Invalid-refresh test omitting a required category",
+        "Ownerless-finding rejection test"
+      ],
+      "rollout_rollback": [
+        "The template and the seven categories land first, then the Definition of Ready item, then the automated check in T-GOV-04",
+        "Rollback removes the automated check; the refresh records already written remain valid evidence"
+      ],
+      "non_goals": [
+        "The independent penetration test and red-team scenarios, which T-QA-10 owns",
+        "Implementing any mitigation, which belongs to the ticket a finding is handed to"
+      ],
+      "dependencies": [
+        "T-GOV-02",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the threat-model template, the category list, the refresh records and the Definition of Ready item. T-GOV-04 owns the pull request check that reads the records.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-QA-13",
+      "title": "Gate the admin console on operator journeys, accessibility and performance",
+      "repo": "admin",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P1 High",
+      "perspective": "QA",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P1-high"
+      ],
+      "gate": "release",
+      "outcome": "The admin console has the same class of quality gate the customer surfaces have: end-to-end operator journeys, WCAG 2.2 AA conformance, performance budgets, and a planted-defect check proving the redaction, unmask and four-eyes controls actually fail when they are broken.",
+      "context": "The admin console is the highest-privilege surface in the product and the only client with no quality gate. That is exactly backwards: a redaction that silently stops redacting is invisible in code review and catastrophic in production. Accessibility is not optional here either - an operator surface excluded from the accessibility bar is a hiring constraint disguised as a technical decision.",
+      "scope": [
+        "End-to-end operator journeys: search a subject, read redacted data, request an unmask, approve as the second pair of eyes, and complete a support-verified action",
+        "Planted-defect gate: deliberately weakened redaction, unmask without an open verified ticket, and a self-approved four-eyes action must all fail the suite",
+        "WCAG 2.2 AA conformance with a named, pinned ruleset and a keyboard-only and screen-reader walkthrough",
+        "Performance budgets for the console's list and detail surfaces",
+        "Client state coverage against the T-UX-01 identifiers, including permission-denied and degraded",
+        "Evidence capture so the console's controls can be demonstrated to a reviewer without a live production session"
+      ],
+      "acceptance_criteria": [
+        "Each operator journey passes end to end against a seeded synthetic environment with no production data",
+        "A deliberately weakened redaction rule fails the suite, proving the redaction assertions are meaningful rather than incidental",
+        "An unmask attempted with no open verified support ticket fails the suite, and a four-eyes action approved by its own initiator fails the suite",
+        "The conformance target is WCAG 2.2 AA, stated explicitly, with the automated ruleset and its version named in the configuration",
+        "A keyboard-only operator can complete every journey and the evidence is attached",
+        "A deliberate performance regression fails the pull request",
+        "The client state coverage check fails when a console surface omits an applicable T-UX-01 state identifier",
+        "No test fixture contains real customer data, proven by an automated scan"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative contract; the suite asserts contract-level responses rather than internal state"
+      ],
+      "security_privacy": [
+        "Every fixture is synthetic; the suite never runs against production and holds no production credential",
+        "The planted-defect cases are the security value of this ticket: they prove the insider-risk controls fail closed",
+        "Evidence artifacts carry no unmasked value, even from synthetic data, so an artifact cannot become a training set for a real one"
+      ],
+      "observability": [
+        "Suite results are published per journey and per control, so a regression names the control it broke rather than a test file"
+      ],
+      "tests": [
+        "Operator journey end-to-end suite",
+        "Planted weakened-redaction failure test",
+        "Unmask-without-verified-ticket failure test",
+        "Self-approved four-eyes failure test",
+        "WCAG 2.2 AA automated scan plus keyboard walkthrough evidence",
+        "Performance budget regression test",
+        "Fixture scan for real customer data"
+      ],
+      "rollout_rollback": [
+        "Journeys land as the console surfaces land, with the planted-defect cases added at the same time as the control they test",
+        "Rollback disables the gate, which is why the planted-defect cases are recorded as release-blocking rather than advisory"
+      ],
+      "non_goals": [
+        "Building the console surfaces, which T-ADM-04 and T-ADM-07 to T-ADM-11 own",
+        "Server-side administrative controls, which T-ADM-01 to T-ADM-06 own",
+        "The malicious-operator red-team suite, which T-ADM-12 owns",
+        "Penetration testing, which T-QA-10 owns"
+      ],
+      "dependencies": [
+        "T-ADM-04",
+        "T-ADM-05",
+        "T-ADM-07",
+        "T-ADM-09",
+        "T-ADM-10",
+        "T-ADM-12",
+        "T-SUP-01",
+        "T-UX-01",
+        "T-SCA-ADM-01",
+        "T-DQA-10",
+        "T-DQA-11"
+      ],
+      "parallel_boundary": "Primary repo admin. Owns the operator journey suites, the planted-defect cases and the budget configuration. The controls themselves are implemented in api and rendered by the console shell and its capability screens.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-REL-02",
+      "title": "Run the executable MVP and private-beta evidence gate",
+      "repo": "docs",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P4 Network",
+      "sprint": "Sprint 16",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "gate": "release",
+      "outcome": "One executable gate collects the evidence that private beta may start - contract verification, the data protection floor, the compliance floor, the Android journeys, the traffic capture, a rehearsed rollback and the trust surfaces - and fails with the named missing item rather than producing a checklist somebody signs.",
+      "context": "The plan has a HOLD model, a compliance floor and a release checklist, and no single thing that decides whether beta may start. A checklist a person ticks is not a gate: it passes on a good day and it passes on a bad one. This gate reads the evidence the other tickets already produce - test results, capture artifacts, drill records, published policies - and refuses when one is missing, stale or failing.",
+      "scope": [
+        "Executable gate that reads evidence artifacts from every contributing ticket rather than asking a human",
+        "Contract evidence: provider and consumer verification green across all three generated clients",
+        "Security evidence: the data protection floor live in the beta environment, with the isolation suite passing and a proven restore",
+        "Compliance evidence: consent ledger, purpose registry, rights path, retention jobs, data safety declaration and the breach drill record",
+        "Android evidence: instrumented journeys, accessibility and performance budgets, and a staged rollout that can be halted",
+        "Privacy evidence: traffic capture proving no raw message content egresses on the release candidate",
+        "Rollback evidence: a rehearsed deploy rollback and a rehearsed release halt, both dated",
+        "Trust evidence: the user-visible transparency, export, deletion and consent surfaces present and generated from real payloads",
+        "Freshness rule: every artifact carries a date and an artifact older than the published window fails the gate"
+      ],
+      "acceptance_criteria": [
+        "Running the gate produces a pass or a fail and, on failure, names each missing, stale or failing artifact and the ticket that owns it",
+        "The gate fails when any single contributing artifact is absent, proven by a test that removes one",
+        "The gate fails when an artifact is present but older than the published freshness window, proven with an aged fixture",
+        "The gate cannot be passed by a manual override; an exception requires a recorded, dated, expiring waiver with a named owner, and an expired waiver fails",
+        "Every contributing ticket is named in the gate definition, so an unowned requirement cannot exist in it",
+        "The gate is run and green before any real user account exists in the beta environment"
+      ],
+      "contracts_schema": [
+        "Evidence manifest published as machine-readable data: artifact name, owning ticket, producing check, freshness window"
+      ],
+      "security_privacy": [
+        "The gate reads artifact metadata and results; it never copies customer data into an evidence bundle",
+        "A waiver is itself evidence: recorded, dated, expiring and attributable"
+      ],
+      "observability": [
+        "Gate result and the list of failing artifacts are published without opening the board, so beta readiness is a number rather than an opinion"
+      ],
+      "tests": [
+        "Missing-artifact failure test",
+        "Stale-artifact failure test",
+        "Expired-waiver failure test",
+        "Full-pass test against a complete fixture set"
+      ],
+      "rollout_rollback": [
+        "The gate is written and run in report-only mode as its contributing artifacts appear, so its first blocking run is not its first run",
+        "Rollback is disabling the blocking behaviour, which returns the decision to a human checklist and is recorded as a deliberate downgrade"
+      ],
+      "non_goals": [
+        "The public-launch gate, which T-REL-03 owns",
+        "Producing any of the underlying evidence, which the contributing tickets own",
+        "Go-to-market and marketing readiness"
+      ],
+      "dependencies": [
+        "docs#22",
+        "T-QA-02",
+        "T-QA-03",
+        "T-QA-04",
+        "T-QA-05",
+        "T-QA-08",
+        "T-QA-09",
+        "T-QA-11",
+        "T-SEC-01",
+        "T-SEC-02",
+        "T-SEC-04",
+        "T-SEC-05",
+        "T-CMP-01",
+        "T-CMP-02",
+        "T-CMP-03",
+        "T-CMP-04",
+        "T-PLT-01",
+        "T-TRU-01",
+        "T-TRU-02",
+        "T-QA-14",
+        "T-SYN-04",
+        "T-PLT-05",
+        "T-SEC-07",
+        "T-ADM-13",
+        "T-CMP-05",
+        "android#9",
+        "T-DQA-11",
+        "T-DQA-12",
+        "T-PRS-02"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the gate definition, the evidence manifest and the waiver rule. Every artifact it reads is produced by another ticket in that ticket's own repository.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-REL-03",
+      "title": "Run the public-launch evidence gate",
+      "repo": "docs",
+      "epic": "E25",
+      "kind": "Task",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "gate": "terminal",
+      "outcome": "One executable gate decides whether public launch may proceed: the beta gate still green, Play approval in hand, load, soak and chaos results within budget, a penetration test with no open high or critical finding, a staffed support path, and the production evidence that only exists once real traffic does.",
+      "context": "Private beta and public launch fail for different reasons. Beta fails on correctness and compliance; launch fails on scale, on a store decision we do not control, and on the absence of anyone to answer a user. Separating the two gates keeps the beta gate honest - it does not wait on a penetration test that cannot be scheduled yet - and keeps the launch gate from being a rubber stamp on the beta one.",
+      "scope": [
+        "Re-run of the T-REL-02 beta gate as a precondition, with its freshness window applied",
+        "Play approval evidence: the permissions declaration decision and the production track availability",
+        "Load, soak and chaos results within the published budgets, dated against the release candidate",
+        "Independent penetration test with every high and critical finding closed and retested, plus the red-team outcomes",
+        "Support readiness: intake live, response targets published, an on-call rota and a named escalation path",
+        "Production evidence: a proven restore in production, an alert that reached a human, and a rehearsed production rollback",
+        "Billing readiness: purchase, renewal, refund and entitlement replay green against the production configuration",
+        "Accepted-risk register reviewed, with no expired entry"
+      ],
+      "acceptance_criteria": [
+        "The gate fails unless the beta gate is green and within its freshness window",
+        "The gate fails without Play approval evidence; the approval is a third-party decision and is never assumed",
+        "Load, soak and chaos results are present, dated against the release candidate, and within the published budgets",
+        "No high or critical penetration-test finding is open, and every closed one has a retest record",
+        "Support intake is live, its response targets are published, and an on-call rota with an escalation path is recorded",
+        "A production restore, a production alert that reached a human, and a production rollback rehearsal are all evidenced",
+        "Billing replay is green against the production configuration rather than a staging one",
+        "No accepted risk in the register has passed its expiry",
+        "A manual override is impossible; an exception requires a recorded, dated, expiring waiver with a named owner"
+      ],
+      "contracts_schema": [
+        "Extends the T-REL-02 evidence manifest with the launch-only artifacts and their freshness windows"
+      ],
+      "security_privacy": [
+        "Penetration-test findings are referenced by identifier in the gate, and the report itself stays in its restricted location",
+        "Production evidence records the fact and the timestamp of a drill, never a data extract"
+      ],
+      "observability": [
+        "Launch readiness is published as the same artifact list and pass or fail result, so the state is visible without a meeting"
+      ],
+      "tests": [
+        "Stale-beta-gate failure test",
+        "Missing Play approval failure test",
+        "Open critical finding failure test",
+        "Expired accepted-risk failure test",
+        "Full-pass test against a complete fixture set"
+      ],
+      "rollout_rollback": [
+        "Run in report-only mode from the start of beta so the missing artifacts are visible early rather than at launch",
+        "Rollback is disabling the blocking behaviour, recorded as a deliberate downgrade with an owner"
+      ],
+      "non_goals": [
+        "Producing any of the underlying evidence, which the contributing tickets own",
+        "The private-beta gate, which T-REL-02 owns",
+        "Pricing, marketing and launch communications"
+      ],
+      "dependencies": [
+        "T-REL-02",
+        "T-QA-05",
+        "T-QA-10",
+        "T-QA-13",
+        "T-SUP-01",
+        "T-CMR-01",
+        "T-BIL-06",
+        "T-PLT-02",
+        "T-REL-01",
+        "android#9"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the launch gate definition and its manifest extension. Every artifact it reads is produced elsewhere, and it creates none of them.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

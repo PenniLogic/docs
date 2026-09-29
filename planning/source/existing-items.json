@@ -1,0 +1,933 @@
+{
+  "kind": "existing_items",
+  "group": "existing-items",
+  "description": "Offline snapshot of every item already on PenniLogic Delivery (project 2). It is the sprint map the validator uses to detect schedule inversions without network access. Titles are ASCII-folded for storage here; the live issue titles are unchanged and this file is never written back to GitHub. Refresh it with sync-backlog-v2.ps1 -RefreshExisting.",
+  "captured_at": "2026-09-03",
+  "items": [
+    {
+      "ref": "android#1",
+      "repo": "android",
+      "number": 1,
+      "kind": "Task",
+      "sprint": "Sprint 08",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Set up the Android application skeleton and architecture",
+      "dependencies": [
+        "contracts#1",
+        "T-SCA-AND-01",
+        "T-AND-07",
+        "T-DQA-12",
+        "T-UXA-01",
+        "T-UXA-13"
+      ]
+    },
+    {
+      "ref": "android#10",
+      "repo": "android",
+      "number": 10,
+      "kind": "Story",
+      "sprint": "Sprint 16",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Build notification access onboarding and verify the Android 12 restricted-settings path",
+      "dependencies": [
+        "android#12",
+        "T-DQA-12",
+        "T-UXA-02"
+      ]
+    },
+    {
+      "ref": "android#11",
+      "repo": "android",
+      "number": 11,
+      "kind": "Story",
+      "sprint": "Sprint 15",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Build the clarification inbox for low-confidence transactions",
+      "dependencies": [
+        "api#18",
+        "api#19",
+        "android#5",
+        "T-DQA-12",
+        "T-UXA-06"
+      ]
+    },
+    {
+      "ref": "android#12",
+      "repo": "android",
+      "number": 12,
+      "kind": "Story",
+      "sprint": "Sprint 14",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Implement notification capture with on-device parsing",
+      "dependencies": [
+        "android#7",
+        "api#18",
+        "T-CON-15",
+        "T-DQA-12",
+        "T-UXA-06"
+      ]
+    },
+    {
+      "ref": "android#2",
+      "repo": "android",
+      "number": 2,
+      "kind": "Story",
+      "sprint": "Sprint 08",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Build the debt-free countdown as the primary home surface",
+      "dependencies": [
+        "android#1",
+        "api#13",
+        "T-DQA-12",
+        "T-UXA-03"
+      ]
+    },
+    {
+      "ref": "android#3",
+      "repo": "android",
+      "number": 3,
+      "kind": "Story",
+      "sprint": "Sprint 09",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Build debt entry, list and detail screens",
+      "dependencies": [
+        "android#1",
+        "api#11",
+        "T-DQA-12",
+        "T-UXA-03"
+      ]
+    },
+    {
+      "ref": "android#4",
+      "repo": "android",
+      "number": 4,
+      "kind": "Story",
+      "sprint": "Sprint 11",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Build the strategy comparison and extra-payment simulator UI",
+      "dependencies": [
+        "android#2",
+        "api#14",
+        "api#15",
+        "T-DQA-12",
+        "T-UXA-04"
+      ]
+    },
+    {
+      "ref": "android#5",
+      "repo": "android",
+      "number": 5,
+      "kind": "Task",
+      "sprint": "Sprint 11",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Implement offline-first persistence and sync queue",
+      "dependencies": [
+        "android#1",
+        "api#7",
+        "T-SYN-01",
+        "T-SYN-04",
+        "T-CON-15",
+        "T-DQA-12",
+        "T-UXA-06"
+      ]
+    },
+    {
+      "ref": "android#6",
+      "repo": "android",
+      "number": 6,
+      "kind": "Story",
+      "sprint": "Sprint 10",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Instrument the activation funnel and retention cohorts",
+      "dependencies": [
+        "android#2",
+        "android#3",
+        "T-PLT-03",
+        "T-CMP-03",
+        "T-QA-09"
+      ]
+    },
+    {
+      "ref": "android#7",
+      "repo": "android",
+      "number": 7,
+      "kind": "Task",
+      "sprint": "Sprint 13",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Implement the on-device deterministic SMS parser",
+      "dependencies": [
+        "android#1",
+        "api#17",
+        "T-CON-02",
+        "T-CON-15"
+      ]
+    },
+    {
+      "ref": "android#8",
+      "repo": "android",
+      "number": 8,
+      "kind": "Task",
+      "sprint": "Sprint 14",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Ship parser rules as remotely updatable configuration",
+      "dependencies": [
+        "android#7"
+      ]
+    },
+    {
+      "ref": "android#9",
+      "repo": "android",
+      "number": 9,
+      "kind": "Story",
+      "sprint": "Sprint 15",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Build SMS permission onboarding and file the Play Permissions Declaration",
+      "dependencies": [
+        "android#7",
+        "android#8",
+        "T-QA-07",
+        "T-CMP-02",
+        "T-REL-01",
+        "T-DQA-12",
+        "T-UXA-02"
+      ]
+    },
+    {
+      "ref": "api#1",
+      "repo": "api",
+      "number": 1,
+      "kind": "Task",
+      "sprint": "Sprint 03",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Implement the Money primitive and ban floating-point money in CI",
+      "dependencies": [
+        "contracts#1",
+        "T-SCA-API-01",
+        "T-ADR-MONEY-01",
+        "T-GOV-03"
+      ]
+    },
+    {
+      "ref": "api#10",
+      "repo": "api",
+      "number": 10,
+      "kind": "Story",
+      "sprint": "Sprint 10",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Implement CSV and bank statement import with dry-run preview",
+      "dependencies": [
+        "api#7",
+        "T-ADR-MONEY-01",
+        "T-CON-10"
+      ]
+    },
+    {
+      "ref": "api#11",
+      "repo": "api",
+      "number": 11,
+      "kind": "Story",
+      "sprint": "Sprint 06",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Model debts with their real-world terms",
+      "dependencies": [
+        "api#6",
+        "T-ADR-LEDGER-03",
+        "T-GOV-03"
+      ]
+    },
+    {
+      "ref": "api#12",
+      "repo": "api",
+      "number": 12,
+      "kind": "Task",
+      "sprint": "Sprint 07",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Build the amortisation engine",
+      "dependencies": [
+        "api#11",
+        "api#1",
+        "T-QA-01"
+      ]
+    },
+    {
+      "ref": "api#13",
+      "repo": "api",
+      "number": 13,
+      "kind": "Story",
+      "sprint": "Sprint 08",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Compute payoff projections across the debt portfolio",
+      "dependencies": [
+        "api#12",
+        "T-QA-01"
+      ]
+    },
+    {
+      "ref": "api#14",
+      "repo": "api",
+      "number": 14,
+      "kind": "Story",
+      "sprint": "Sprint 08",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Implement avalanche, snowball and custom payoff strategies with comparison",
+      "dependencies": [
+        "api#13",
+        "T-QA-01"
+      ]
+    },
+    {
+      "ref": "api#15",
+      "repo": "api",
+      "number": 15,
+      "kind": "Story",
+      "sprint": "Sprint 09",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Build the extra-payment simulator",
+      "dependencies": [
+        "api#13",
+        "api#14",
+        "T-QA-01"
+      ]
+    },
+    {
+      "ref": "api#16",
+      "repo": "api",
+      "number": 16,
+      "kind": "Task",
+      "sprint": "Sprint 09",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Build the independent verification suite for all debt mathematics",
+      "dependencies": [
+        "api#12",
+        "api#13",
+        "api#14",
+        "api#15",
+        "T-QA-01"
+      ]
+    },
+    {
+      "ref": "api#17",
+      "repo": "api",
+      "number": 17,
+      "kind": "Task",
+      "sprint": "Sprint 12",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Build the source-agnostic ingestion pipeline",
+      "dependencies": [
+        "api#7",
+        "T-CON-02",
+        "T-CON-15"
+      ]
+    },
+    {
+      "ref": "api#18",
+      "repo": "api",
+      "number": 18,
+      "kind": "Task",
+      "sprint": "Sprint 13",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Implement cross-channel deduplication with source precedence",
+      "dependencies": [
+        "api#17",
+        "T-CON-02",
+        "T-CON-10",
+        "T-CON-15"
+      ]
+    },
+    {
+      "ref": "api#19",
+      "repo": "api",
+      "number": 19,
+      "kind": "Story",
+      "sprint": "Sprint 14",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Implement merchant normalisation, categorisation rules and recurring detection",
+      "dependencies": [
+        "api#18"
+      ]
+    },
+    {
+      "ref": "api#2",
+      "repo": "api",
+      "number": 2,
+      "kind": "Task",
+      "sprint": "Sprint 04",
+      "status": "Backlog",
+      "estimate": 13,
+      "title": "Create the double-entry ledger schema with a database-enforced zero-sum invariant",
+      "dependencies": [
+        "api#1",
+        "T-ADR-LEDGER-03",
+        "T-ADR-CRYPTO-04",
+        "T-GOV-03",
+        "T-MIG-01",
+        "T-QA-04"
+      ]
+    },
+    {
+      "ref": "api#3",
+      "repo": "api",
+      "number": 3,
+      "kind": "Task",
+      "sprint": "Sprint 04",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Establish the test harness: property-based testing and contract tests",
+      "dependencies": [
+        "api#2",
+        "docs#21"
+      ]
+    },
+    {
+      "ref": "api#4",
+      "repo": "api",
+      "number": 4,
+      "kind": "Story",
+      "sprint": "Sprint 05",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Implement registration, login and session management",
+      "dependencies": [
+        "api#2",
+        "contracts#1",
+        "T-ADR-AUTH-05",
+        "T-SEC-03",
+        "T-GOV-03"
+      ]
+    },
+    {
+      "ref": "api#5",
+      "repo": "api",
+      "number": 5,
+      "kind": "Task",
+      "sprint": "Sprint 06",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Implement refresh token rotation with reuse detection",
+      "dependencies": [
+        "api#4",
+        "T-ADR-AUTH-05",
+        "T-SEC-03",
+        "T-GOV-03"
+      ]
+    },
+    {
+      "ref": "api#6",
+      "repo": "api",
+      "number": 6,
+      "kind": "Story",
+      "sprint": "Sprint 06",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Implement financial account management",
+      "dependencies": [
+        "api#2",
+        "api#4"
+      ]
+    },
+    {
+      "ref": "api#7",
+      "repo": "api",
+      "number": 7,
+      "kind": "Story",
+      "sprint": "Sprint 07",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Implement transaction creation with correct double entries",
+      "dependencies": [
+        "api#2",
+        "api#6",
+        "T-ADR-MONEY-01",
+        "T-GOV-03"
+      ]
+    },
+    {
+      "ref": "api#8",
+      "repo": "api",
+      "number": 8,
+      "kind": "Task",
+      "sprint": "Sprint 10",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Handle transfers between the users own accounts correctly",
+      "dependencies": [
+        "api#7"
+      ]
+    },
+    {
+      "ref": "api#9",
+      "repo": "api",
+      "number": 9,
+      "kind": "Story",
+      "sprint": "Sprint 08",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Implement categories with hierarchy and system defaults",
+      "dependencies": [
+        "api#7",
+        "T-ADR-CAT-02"
+      ]
+    },
+    {
+      "ref": "contracts#1",
+      "repo": "contracts",
+      "number": 1,
+      "kind": "Task",
+      "sprint": "Sprint 03",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Define the OpenAPI contract skeleton and generate clients",
+      "dependencies": [
+        "infra#1",
+        "T-SCA-CON-01",
+        "T-ADR-MONEY-01"
+      ]
+    },
+    {
+      "ref": "docs#1",
+      "repo": "docs",
+      "number": 1,
+      "kind": "Epic",
+      "sprint": "Sprint 01",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E01 - Engineering foundations",
+      "dependencies": [
+        "T-GOV-01"
+      ]
+    },
+    {
+      "ref": "docs#10",
+      "repo": "docs",
+      "number": 10,
+      "kind": "Epic",
+      "sprint": "Sprint 13",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E10 - Notification capture",
+      "dependencies": [
+        "docs#8"
+      ]
+    },
+    {
+      "ref": "docs#11",
+      "repo": "docs",
+      "number": 11,
+      "kind": "Epic",
+      "sprint": "Sprint 14",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E11 - Clarification inbox",
+      "dependencies": [
+        "docs#8"
+      ]
+    },
+    {
+      "ref": "docs#12",
+      "repo": "docs",
+      "number": 12,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E12 - Web application",
+      "dependencies": [
+        "docs#5",
+        "docs#4",
+        "T-ADR-AUTH-05",
+        "T-CON-01",
+        "T-SEC-04"
+      ]
+    },
+    {
+      "ref": "docs#13",
+      "repo": "docs",
+      "number": 13,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E13 - Admin console",
+      "dependencies": [
+        "docs#3",
+        "docs#14",
+        "T-ADR-ADMIN-06",
+        "T-ADR-CRYPTO-04",
+        "T-SEC-03"
+      ]
+    },
+    {
+      "ref": "docs#14",
+      "repo": "docs",
+      "number": 14,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E14 - Subscriptions and entitlements",
+      "dependencies": [
+        "docs#3",
+        "T-ADR-MONEY-01",
+        "T-SEC-01",
+        "T-QA-01"
+      ]
+    },
+    {
+      "ref": "docs#15",
+      "repo": "docs",
+      "number": 15,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E15 - Split groups",
+      "dependencies": [
+        "docs#4",
+        "T-ADR-ERASE-07",
+        "T-SEC-02"
+      ]
+    },
+    {
+      "ref": "docs#16",
+      "repo": "docs",
+      "number": 16,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E16 - Family groups",
+      "dependencies": [
+        "docs#4",
+        "docs#3",
+        "T-ADR-ERASE-07",
+        "T-SEC-01",
+        "T-SEC-02"
+      ]
+    },
+    {
+      "ref": "docs#17",
+      "repo": "docs",
+      "number": 17,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E17 - AI harness",
+      "dependencies": [
+        "docs#5",
+        "T-ADR-CRYPTO-04",
+        "T-ADR-AIEGRESS-08",
+        "T-CON-03"
+      ]
+    },
+    {
+      "ref": "docs#18",
+      "repo": "docs",
+      "number": 18,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E18 - AI product features",
+      "dependencies": [
+        "docs#17",
+        "docs#5",
+        "docs#8",
+        "T-AI-04",
+        "T-AI-05"
+      ]
+    },
+    {
+      "ref": "docs#19",
+      "repo": "docs",
+      "number": 19,
+      "kind": "Epic",
+      "sprint": "Sprint 05",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E19 - Security hardening",
+      "dependencies": [
+        "docs#3",
+        "docs#4",
+        "T-ADR-CRYPTO-04",
+        "E24"
+      ]
+    },
+    {
+      "ref": "docs#2",
+      "repo": "docs",
+      "number": 2,
+      "kind": "Epic",
+      "sprint": "Sprint 03",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E02 - Contracts and domain model",
+      "dependencies": [
+        "docs#1",
+        "T-ADR-MONEY-01",
+        "T-ADR-CAT-02",
+        "T-ADR-LEDGER-03"
+      ]
+    },
+    {
+      "ref": "docs#20",
+      "repo": "docs",
+      "number": 20,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E20 - Compliance readiness",
+      "dependencies": [
+        "docs#19",
+        "E27"
+      ]
+    },
+    {
+      "ref": "docs#21",
+      "repo": "docs",
+      "number": 21,
+      "kind": "Task",
+      "sprint": "Sprint 02",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Define and publish the test strategy",
+      "dependencies": [
+        "T-GOV-01"
+      ]
+    },
+    {
+      "ref": "docs#22",
+      "repo": "docs",
+      "number": 22,
+      "kind": "Task",
+      "sprint": "Sprint 14",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Define the release checklist and non-functional quality gates",
+      "dependencies": [
+        "docs#21",
+        "T-QA-09",
+        "T-PLT-02",
+        "T-GOV-03"
+      ]
+    },
+    {
+      "ref": "docs#23",
+      "repo": "docs",
+      "number": 23,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E21 - Income and budgeting",
+      "dependencies": [
+        "docs#4",
+        "docs#8",
+        "T-ADR-MONEY-01"
+      ]
+    },
+    {
+      "ref": "docs#24",
+      "repo": "docs",
+      "number": 24,
+      "kind": "Epic",
+      "sprint": "Future",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E22 - Goal planning",
+      "dependencies": [
+        "docs#5",
+        "docs#23",
+        "T-ADR-MONEY-01"
+      ]
+    },
+    {
+      "ref": "docs#25",
+      "repo": "docs",
+      "number": 25,
+      "kind": "Epic",
+      "sprint": "Sprint 18",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E23 - User-facing trust and privacy controls",
+      "dependencies": [
+        "docs#19",
+        "T-QA-09",
+        "T-CMP-03"
+      ]
+    },
+    {
+      "ref": "docs#3",
+      "repo": "docs",
+      "number": 3,
+      "kind": "Epic",
+      "sprint": "Sprint 05",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E03 - Identity and accounts",
+      "dependencies": [
+        "docs#2",
+        "T-ADR-AUTH-05",
+        "T-SEC-03"
+      ]
+    },
+    {
+      "ref": "docs#4",
+      "repo": "docs",
+      "number": 4,
+      "kind": "Epic",
+      "sprint": "Sprint 05",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E04 - Ledger and transactions",
+      "dependencies": [
+        "docs#2",
+        "docs#3"
+      ]
+    },
+    {
+      "ref": "docs#5",
+      "repo": "docs",
+      "number": 5,
+      "kind": "Epic",
+      "sprint": "Sprint 07",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E05 - Debt engine",
+      "dependencies": [
+        "docs#4"
+      ]
+    },
+    {
+      "ref": "docs#6",
+      "repo": "docs",
+      "number": 6,
+      "kind": "Epic",
+      "sprint": "Sprint 07",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E06 - Debt experience (Android)",
+      "dependencies": [
+        "docs#5"
+      ]
+    },
+    {
+      "ref": "docs#7",
+      "repo": "docs",
+      "number": 7,
+      "kind": "Epic",
+      "sprint": "Sprint 10",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E07 - Retention instrumentation",
+      "dependencies": [
+        "docs#6"
+      ]
+    },
+    {
+      "ref": "docs#8",
+      "repo": "docs",
+      "number": 8,
+      "kind": "Epic",
+      "sprint": "Sprint 11",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E08 - Ingestion pipeline",
+      "dependencies": [
+        "docs#4"
+      ]
+    },
+    {
+      "ref": "docs#9",
+      "repo": "docs",
+      "number": 9,
+      "kind": "Epic",
+      "sprint": "Sprint 12",
+      "status": "Backlog",
+      "estimate": null,
+      "title": "[EPIC] E09 - SMS capture and Play declaration",
+      "dependencies": [
+        "docs#8"
+      ]
+    },
+    {
+      "ref": "infra#1",
+      "repo": "infra",
+      "number": 1,
+      "kind": "Task",
+      "sprint": "Sprint 02",
+      "status": "Backlog",
+      "estimate": 8,
+      "title": "Enforce CI conformance across the eight repositories",
+      "dependencies": [
+        "T-SCA-INF-01",
+        "T-SCA-API-01",
+        "T-SCA-CON-01",
+        "T-SCA-WEB-01",
+        "T-SCA-ADM-01",
+        "T-SCA-AIS-01",
+        "T-SCA-AND-01"
+      ]
+    },
+    {
+      "ref": "infra#2",
+      "repo": "infra",
+      "number": 2,
+      "kind": "Task",
+      "sprint": "Sprint 01",
+      "status": "Ready",
+      "estimate": 5,
+      "title": "Provide an idempotent local infrastructure bootstrap with healthy Postgres and Redis",
+      "dependencies": []
+    },
+    {
+      "ref": "infra#3",
+      "repo": "infra",
+      "number": 3,
+      "kind": "Task",
+      "sprint": "Sprint 03",
+      "status": "Backlog",
+      "estimate": 5,
+      "title": "Enforce secret scanning, dependency review and the SDK allowlist in CI",
+      "dependencies": [
+        "infra#1",
+        "T-SCA-INF-01"
+      ]
+    },
+    {
+      "ref": "infra#4",
+      "repo": "infra",
+      "number": 4,
+      "kind": "Chore",
+      "sprint": "Sprint 01",
+      "status": "Ready",
+      "estimate": 3,
+      "title": "Add CODEOWNERS, PR template and contribution conventions",
+      "dependencies": []
+    }
+  ]
+}

@@ -1,0 +1,811 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e02-contracts",
+  "epic_refs": [
+    "docs#2"
+  ],
+  "items": [
+    {
+      "stable_id": "T-CON-01",
+      "title": "Expand the contract for debts, strategies and simulation",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 04",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Debt terms, amortisation schedules, payoff projections, strategy comparison and extra-payment simulation are published as a versioned contract with generated clients, so the server and both clients build against one definition.",
+      "context": "The debt engine is the product wedge and is being implemented server-side, but only the contract skeleton exists. Without published shapes for schedules and projections, each client will invent its own and derived numbers will disagree between surfaces.",
+      "scope": [
+        "Debt entity with its real-world terms including rate type, compounding, fees and minimum payment rules",
+        "Amortisation schedule representation with per-period principal, interest and fee components",
+        "Payoff projection and strategy comparison responses including the derivation inputs",
+        "Extra-payment simulation request and response including the assumptions used",
+        "Lender statement reconciliation snapshot shape as defined by the ledger decision record",
+        "Error shapes for infeasible plans such as a payment below accruing interest",
+        "Hybrid payoff strategy with deterministic transition and tie-break rules",
+        "Refinance or consolidation scenario request and response shapes carrying replacement terms, fees, break-even point and assumptions without naming a lender",
+        "Optional credit-card statement date, due date, grace period, minimum due and revolving-balance terms",
+        "Strategy vocabulary reserving utilization-first, highest-monthly-payment and highest-monthly-interest-cost values"
+      ],
+      "acceptance_criteria": [
+        "Every monetary field uses the published money representation and no field is a floating point number",
+        "A projection response carries enough information for a client to display the derivation without recomputing it",
+        "The infeasible-plan case has an explicit error shape rather than an empty schedule",
+        "Generated Kotlin and TypeScript clients compile and pass contract verification",
+        "The schedule shape supports both fixed and variable rate debts without a client-side branch on debt type",
+        "Reconciliation snapshots are distinguishable from computed balances in the response",
+        "Hybrid strategy output is reproducible and distinguishable from avalanche, snowball and custom order",
+        "Refinance scenarios expose break-even and total-cost deltas with derivation and never contain a product or lender recommendation",
+        "Older clients can ignore additive card-cycle fields and unsupported strategy values fail with an explicit capability result rather than a guessed fallback"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions with examples for at least one fixed rate and one variable rate debt"
+      ],
+      "security_privacy": [
+        "No lender account identifier is exposed in full; the contract specifies a masked form",
+        "Projection endpoints are tenant scoped and carry no cross-user aggregate"
+      ],
+      "observability": [
+        "Contract requires a computation identifier on projection responses so a support query can trace a number"
+      ],
+      "tests": [
+        "Provider and consumer contract verification",
+        "Example validation against the schema",
+        "Hybrid strategy transition and tie-break contract examples",
+        "Refinance break-even and advice-boundary contract tests",
+        "Credit-card cycle and advanced-strategy compatibility examples"
+      ],
+      "rollout_rollback": [
+        "Additive publication under the expand and contract protocol; consumers pin a version"
+      ],
+      "non_goals": [
+        "Engine implementation, which the api debt tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-LEDGER-03"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the specification additions. The api repository implements against the published version and the clients consume the generated artifacts.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-02",
+      "title": "Expand the contract for ingestion, deduplication and clarification",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 11",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "Structured capture submission, source precedence, deduplication outcomes, confidence and the clarification queue are published as a versioned contract, so on-device parsers and the server agree on exactly what crosses the boundary.",
+      "context": "The device must send a structured payload and never raw message text, and the deduplication rules must be understandable by the client that shows the result. Without a published shape the privacy promise and the deduplication behaviour are both unverifiable.",
+      "scope": [
+        "Structured capture payload with source, issuer pattern identifier, confidence and parsed fields",
+        "Explicit prohibition of raw message text in the schema, expressed so a violation is a contract violation",
+        "Deduplication outcome shape naming the surviving record and the reason",
+        "Clarification item, question and resolution shapes including rule rollback",
+        "Source precedence declaration extensible to future sources without a breaking change",
+        "Reuse of the shared confidence-band and dedup-outcome components published by T-CON-10 rather than a second encoding for the automated path",
+        "Reuse of T-CON-15 SourceEvent, TransactionCandidate, source_event_id, dedup-decision and persisted-provenance components rather than a second ingestion envelope",
+        "Server-computed dedupe_key over canonical structured fields, with the exact construction and key class consumed from T-ADR-CRYPTO-04"
+      ],
+      "acceptance_criteria": [
+        "The schema has no field capable of carrying raw message text and the examples demonstrate the structured form",
+        "A deduplication outcome states which record survived and why, in terms a client can display",
+        "A clarification resolution can create, amend or roll back a rule and the shape distinguishes the three",
+        "Adding a new capture source requires no breaking change to existing consumers",
+        "Generated clients compile and pass contract verification",
+        "Confidence is a defined scale with documented thresholds rather than an opaque number",
+        "Confidence and dedup outcomes reuse the T-CON-10 components; a parallel encoding for automated ingestion fails contract verification",
+        "A single client rendering can display a statement-import duplicate and a cross-channel duplicate without branching on the source",
+        "The capture, sync and export schemas reference T-CON-15 source_event_id and contain no raw-derived digest field; a planted raw_hash or message_digest property fails schema verification",
+        "The server dedupe_key is output-only and cannot be supplied or overridden by a client",
+        "Android and API consumers import the T-CON-15 source_event_id shape; any locally redeclared hash field or divergent identifier fails consumer verification"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions with examples per source type"
+      ],
+      "security_privacy": [
+        "Schema-level prohibition of raw content is the primary privacy control at the boundary",
+        "Issuer pattern identifiers are opaque and carry no account information",
+        "A digest derived from raw text is treated as raw content and prohibited at every network boundary, even when the original text field is absent"
+      ],
+      "observability": [
+        "Contract requires a capture identifier so a clarification can be traced to its source event without content"
+      ],
+      "tests": [
+        "Provider and consumer contract verification",
+        "Schema test asserting no free-text content field exists",
+        "Negative schema fixtures for raw_hash, message_digest and client-supplied dedupe_key",
+        "Android consumer test proving source_event_id is stable across retries while the raw-message HMAC remains local"
+      ],
+      "rollout_rollback": [
+        "Additive publication; new sources are added additively under the protocol"
+      ],
+      "non_goals": [
+        "Parser rules and server pipeline behaviour, which their own tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-CON-15",
+        "T-ADR-CAT-02",
+        "T-ADR-CRYPTO-04",
+        "T-CON-10"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the specification additions consumed by android and api.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-03",
+      "title": "Expand the contract for billing, entitlements and quota",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R7 AI cost",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "Plans, entitlements, quota reservation and reconciliation, and subscription lifecycle states are published as a versioned contract, so the entitlement producer and every consumer agree before any implementation begins.",
+      "context": "Entitlements and AI quota currently form a dependency loop between two epics because neither owns the boundary. Publishing the contract first breaks the loop: the quota primitive becomes a contract that the AI harness consumes rather than a feature it waits for.",
+      "scope": [
+        "Plan, feature and entitlement resolution shapes with default deny semantics",
+        "Quota reservation, commit and release operations with explicit reconciliation semantics",
+        "Subscription lifecycle states covering active, grace, dunning, expired and downgraded",
+        "Purchase verification and provider notification shapes",
+        "Read-only degradation semantics for over-limit data",
+        "Allowed model list per plan and the refusal result for an unlisted model",
+        "Request and token quota carried as separate dimensions, each with its unit and measurement point, exactly as T-ADR-ENT-09 fixes them"
+      ],
+      "acceptance_criteria": [
+        "Entitlement resolution has an explicit deny result; absence of an entitlement is never an implicit allow",
+        "A reservation that is never committed is specified to expire and to release without charging",
+        "The lifecycle states and their permitted transitions are enumerated so a state machine can be generated from them",
+        "The contract states that a downgrade makes excess data read only and never deletes it",
+        "Generated clients compile and pass contract verification",
+        "Provider notification shapes carry an identifier that makes replay detectable",
+        "Entitlement resolution returns an allowed model list, and the contract states that a request naming a model outside that list is refused with its own distinguishable result rather than downgraded to another model",
+        "Request quota and token quota are separate dimensions in the schema; neither is derivable from the other and an endpoint that reports only one fails verification",
+        "The contract states which dimensions a BYOK request consumes and which it does not, matching T-ADR-ENT-09 rather than restating it differently",
+        "Reset boundary and its time zone are carried in the entitlement payload, so a client renders the same boundary the server enforces"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions with a worked example of a streaming reservation and reconciliation",
+        "Quota dimension vocabulary and model allowlist shape taken from T-ADR-ENT-09; the contract references the record rather than re-deciding it"
+      ],
+      "security_privacy": [
+        "The contract forbids returning any provider secret or key material",
+        "Quota state is server authoritative; the contract exposes no client-writable counter"
+      ],
+      "observability": [
+        "Contract requires a reservation identifier so metering can be traced end to end"
+      ],
+      "tests": [
+        "Provider and consumer contract verification",
+        "State transition table review",
+        "Schema test proving an unlisted-model request has a distinguishable refusal result",
+        "Schema test proving request and token dimensions are independently reported"
+      ],
+      "rollout_rollback": [
+        "Additive publication; the quota interface is frozen before AI consumers implement against it"
+      ],
+      "non_goals": [
+        "Billing implementation and provider integration, which the api and android tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-MONEY-01",
+        "T-ADR-ENT-09"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the specification additions. This contract is the freeze point that lets billing and the AI harness proceed in parallel.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-04",
+      "title": "Publish the sharing contract for groups, grants, splits and settlements",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Group and family sharing is published as a versioned contract whose authorization and redaction semantics are stated in the schema rather than implied by the implementation.",
+      "context": "Sharing decides who can read whose money and is the surface with the highest abuse potential of the three that had no published contract. It is split from the AI tool and administrative contracts so the sharing, AI and admin tracks can be reviewed, published and consumed independently.",
+      "scope": [
+        "Group, membership, grant and revocation shapes with per-member and per-category granularity",
+        "Explicit separation of aggregate and detail read permissions in the schema",
+        "Split expense, share allocation and settlement shapes with the sum constraint stated",
+        "Access transparency log shape readable by the data subject",
+        "Counterparty erasure semantics expressed in the shapes rather than left to the implementation",
+        "Debt-simplification proposal shape grouped by currency with original-obligation and derivation references",
+        "Split-dispute creation, status, evidence-free reason code and resolution shapes",
+        "Grant reference bound to the database policy identifier published by T-SEC-01, so a grant reference in the schema names a real enforcement object",
+        "Revocation-effectiveness bounds published as part of the contract: the online bound and the offline lease bound, each with its unit and its measurement point",
+        "Household aggregate response shapes grouped by currency with fixed closed-period identifiers, snapshot version, completeness state and suppression reason",
+        "Joint-goal, per-member contribution and authorized drill-down shapes that never imply a detail grant from an aggregate grant",
+        "Aggregate query constraints forbidding arbitrary ranges, exclusion filters and overlapping rolling windows, with rate-limit and privacy-budget refusal results"
+      ],
+      "acceptance_criteria": [
+        "Aggregate and detail reads are separate operations, not one operation with a flag",
+        "A grant shape cannot express a grant to a whole group when the intent is a single member",
+        "Split share allocations are specified to sum exactly to the expense amount",
+        "The schema forbids returning another user detail data without an explicit grant reference",
+        "Generated clients compile and pass contract verification",
+        "A simplification proposal cannot mix currencies or mutate original expense and share records",
+        "Clients can show how every proposed settlement derives from original obligations",
+        "A disputed share has an explicit lifecycle and resolution visible to every authorized member",
+        "Every operation that returns another user's detail data carries a grant reference whose value is the identifier of the database policy that admitted it, not a free-text label",
+        "A grant reference that names no published policy identifier fails contract verification",
+        "The contract publishes a numeric online revocation-effectiveness bound: the maximum interval between a successful revoke call and the first denied read on a server-served request",
+        "The contract publishes a numeric offline revocation bound: the maximum lease lifetime an offline client may serve previously granted data for before it must refuse, and states that the two bounds are different numbers and neither may be described as immediate",
+        "The contract states that a client which cannot reach the server past its lease expiry must deny rather than serve stale shared data",
+        "The same viewer and closed-period query returns the same immutable snapshot; a caller cannot vary a range or exclusion filter to subtract one member or transaction",
+        "A suppressed or partial household aggregate is distinguishable from zero and carries no member identity the viewer lacks permission to see"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions published as one additive sharing group with its own version",
+        "Grant reference type documented as the database policy identifier published by T-SEC-01",
+        "Revocation-effectiveness bounds published as machine-readable contract metadata so clients and tests read one number rather than restating prose",
+        "Fixed household-period, aggregate snapshot, completeness, joint-goal contribution and privacy-budget refusal schemas"
+      ],
+      "security_privacy": [
+        "The schema forbids returning another user detail data without an explicit grant reference",
+        "Revocation is expressed as a first-class operation rather than an absence of a grant"
+      ],
+      "observability": [
+        "Contract requires an access event identifier on every detail read so the transparency log can be reconstructed"
+      ],
+      "tests": [
+        "Provider and consumer contract verification for the sharing group",
+        "Schema tests proving no operation exposes detail data without a grant reference",
+        "Debt-simplification derivation and currency-separation schema tests",
+        "Split-dispute lifecycle contract tests",
+        "Schema test proving a grant reference that names no published policy identifier is rejected",
+        "Contract test asserting both revocation bounds are present, numeric and distinct",
+        "Aggregate differencing contract tests for arbitrary range, overlapping window, exclusion filter, rapid polling and suppressed result"
+      ],
+      "rollout_rollback": [
+        "Published as one additive group so the sharing track can start without waiting on the AI or admin contracts"
+      ],
+      "non_goals": [
+        "Implementation of sharing, which the split and family tickets own",
+        "AI tool and administrative shapes, which are their own contract tickets"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-ERASE-07",
+        "T-SEC-01",
+        "T-ADR-LEDGER-03",
+        "T-ADR-MONEY-01"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the sharing specification group only, which is what lets the AI and admin contract tickets proceed at the same time.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-06",
+      "title": "Publish the deterministic AI tool contract with server-derived user scope",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R11 Prompt injection",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "The deterministic AI tool interface is published as a versioned contract in which the user scope is a required, server-derived parameter, so no tool can be specified in a way that lets the model widen its own reach.",
+      "context": "The tool interface decides what the model can reach. Publishing it separately from sharing and administration means the AI track has a frozen boundary to build against without waiting for either of the other two surfaces to be agreed.",
+      "scope": [
+        "Deterministic AI tool interface with user scope derived from authenticated internal caller context and absent from model-controlled arguments",
+        "Explicit refusal shape so a tool that cannot answer never returns a partial or approximate result",
+        "Provenance identifiers on every returned value so an answer can be traced to the record it came from",
+        "Statement that the tool surface is read-only and carries no write operation"
+      ],
+      "acceptance_criteria": [
+        "Every AI tool operation resolves an authenticated user scope before execution and no model-controlled field can set or widen it",
+        "No tool operation in the contract performs a write",
+        "A tool result shape carries provenance identifiers alongside every value",
+        "The refusal shape is distinguishable from an empty result",
+        "Generated clients compile and pass contract verification"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions published as one additive AI tool group with its own version",
+        "Internal service identity and delegated-subject envelope with audience, issuer, expiry, request binding and replay identifier"
+      ],
+      "security_privacy": [
+        "Tool responses carry no raw counterparty text beyond the stated policy",
+        "The request body has no authoritative user-scope field; subject context is accepted only from the signed internal delegation bound to workload identity"
+      ],
+      "observability": [
+        "Contract requires a tool name and scope on every call record, without arguments containing personal data"
+      ],
+      "tests": [
+        "Provider and consumer contract verification for the AI tool group",
+        "Schema tests proving no operation omits the required user scope",
+        "Contract tests for missing, forged, wrong-audience, expired, replayed and widened delegated subject context"
+      ],
+      "rollout_rollback": [
+        "Published as one additive group so the AI track can start without waiting on the sharing or admin contracts"
+      ],
+      "non_goals": [
+        "Tool implementation, which the api ticket owns",
+        "Prompt construction and model routing, which the ai-service tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-AIEGRESS-08",
+        "T-ADR-AUTH-05"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the AI tool specification group only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-07",
+      "title": "Publish the administrative API contract with redaction as the default representation",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Sprint 04",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "The administrative API is published as a separate versioned contract in which masked values are the default representation and unmasking is a distinct, auditable operation.",
+      "context": "The administrative API decides what an operator can see. It is published as its own document with its own base path so the administrative surface can never be reached accidentally through the customer-facing specification.",
+      "scope": [
+        "Administrative API shapes with redaction as the default representation",
+        "Unmasking specified as a distinct operation carrying a justification and a ticket reference",
+        "Separate document and base path for the administrative surface",
+        "Audit event shape emitted by every administrative read"
+      ],
+      "acceptance_criteria": [
+        "Administrative read shapes return masked values by default and the unmask operation is separate and auditable",
+        "The unmask operation requires a justification field and a ticket reference in the request",
+        "The administrative surface is a separate document with its own base path",
+        "Generated clients compile and pass contract verification"
+      ],
+      "contracts_schema": [
+        "The administrative surface is published as a separate OpenAPI 3.1 document with its own base path and version"
+      ],
+      "security_privacy": [
+        "Administrative unmasking requires a justification field and a ticket reference in the request",
+        "No administrative shape returns an unmasked financial value without an explicit unmask operation"
+      ],
+      "observability": [
+        "Contract requires an access event identifier on every administrative read"
+      ],
+      "tests": [
+        "Provider and consumer contract verification for the administrative document",
+        "Schema tests proving no administrative read returns an unmasked value by default"
+      ],
+      "rollout_rollback": [
+        "Published as its own document so the admin track can start without waiting on the sharing or AI contracts"
+      ],
+      "non_goals": [
+        "Implementation of the administrative surface, which E13 owns",
+        "Sharing and AI tool shapes, which are their own contract tickets"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-ADMIN-06"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the administrative specification document only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-08",
+      "title": "Publish the contract for income, budgeting, safe-to-spend, net worth and goals",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Income, budgeting, safe-to-spend, net worth and goal shapes are published as one versioned contract with generated clients, so every client renders the same derivations from the same server-computed figures.",
+      "context": "The income, net-worth and goal engines are being built server-side across several api tickets, but no contract exists for any of them yet. Without one, each client would invent its own shape for a safe-to-spend derivation or a net-worth bucket, and the ledger and money-format decision records would have nothing concrete to bind to.",
+      "scope": [
+        "Income model shapes covering salary configuration, expected-versus-received detection and irregular income",
+        "Budget and category shapes including rollover across period boundaries",
+        "Safe-to-spend and cash-flow forecast shapes including the full derivation inputs",
+        "Net-worth snapshot and trend shapes held as separate buckets per currency, with no combined or converted total field",
+        "Goal shapes including target, projection, multi-goal competition and the versioned disclaimer identifier",
+        "Explicit incomplete-data and unreachable-goal error shapes rather than an empty or optimistic result",
+        "Sinking-fund state, contribution schedule and derivation shapes with no ledger-balance field",
+        "Salary-market source, range, geography, methodology, as-of date and unavailable or stale result shapes"
+      ],
+      "acceptance_criteria": [
+        "Every monetary field uses the published money representation and no field is a floating point number",
+        "The net-worth shape has no field capable of expressing a combined total across two different currencies",
+        "A safe-to-spend or goal response carries enough information for a client to display the derivation without recomputing it",
+        "The incomplete-data and unreachable-goal cases have explicit error shapes rather than a silently omitted or optimistic result",
+        "Generated Kotlin and TypeScript clients compile and pass contract verification",
+        "A sinking-fund response cannot claim an account balance change and a salary-market response cannot omit provenance or freshness"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions with examples including a two-currency net-worth response and an unreachable-goal error"
+      ],
+      "security_privacy": [
+        "No field in any shape permits a cross-user aggregate or benchmark comparison",
+        "Salary, budget, net-worth and goal fields are marked for the descriptive-data encryption path defined by the security decision record"
+      ],
+      "observability": [
+        "Contract requires a computation identifier on every derived response so a support query can trace a figure"
+      ],
+      "tests": [
+        "Provider and consumer contract verification",
+        "Example validation against the schema including the two-currency and incomplete-data cases",
+        "Sinking-fund no-ledger-effect and salary-market provenance schema tests"
+      ],
+      "rollout_rollback": [
+        "Additive publication under the expand and contract protocol; consumers pin a version"
+      ],
+      "non_goals": [
+        "Engine implementation, which the api income, net-worth and goal tickets own",
+        "Currency conversion or any combined cross-currency total, which stays out of scope until the globalization epic (E30) delivers a conversion path"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-MONEY-01",
+        "T-ADR-LEDGER-03"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the specification additions. The api repository implements against the published version and the android and web clients consume the generated artifacts.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-CON-10",
+      "title": "Publish the shared statement-import contract components",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 05",
+      "component": "contracts",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": [
+        "task",
+        "P1-high"
+      ],
+      "outcome": "Preview, commit, column mapping, row error, idempotency, confidence band and dedup outcome are published once as shared contract components, so statement import, cross-channel deduplication and every client review screen use one shape instead of three.",
+      "context": "api#10 currently carries its import preview inline in the API ticket, api#18 invents its own confidence and duplicate reporting for cross-channel deduplication, and T-CON-02 adds a third for categorisation. Three encodings of the same idea means three client renderings, three sets of tests and a guaranteed divergence the first time a band is renamed. Import is also the ingestion mitigation entirely within our control, so its review screen is a trust surface, not a utility.",
+      "scope": [
+        "Import preview component: per-row action, reason, source row number and the counts that summarise it",
+        "Import commit component: what was created, skipped and rejected, with a stable reference to the preview it came from",
+        "Column mapping component: institution preset, detected columns, user overrides and unmapped columns",
+        "Row error component: position, machine-readable reason code and a human message that carries no raw account identifier",
+        "Idempotency semantics for preview and commit, keyed so a repeated commit of the same preview is a no-op",
+        "Confidence band component with a fixed vocabulary rather than a free numeric scale reinvented per endpoint",
+        "Dedup outcome component naming the matched record, the match basis and the source precedence that decided it"
+      ],
+      "acceptance_criteria": [
+        "Preview and commit are separate operations and a commit references the preview it was produced from; a commit with no preview reference is rejected by the schema",
+        "Committing the same preview reference twice is specified as a no-op that returns the original result rather than importing again",
+        "The confidence band vocabulary is closed and shared; an endpoint that returns a band outside it fails contract verification",
+        "The dedup outcome names the matched record, the basis of the match and the precedence rule applied, so a client can explain a skipped row without a second call",
+        "The row error reason codes are enumerated and no reason code carries a raw account number or a full statement line",
+        "Generated Kotlin, TypeScript and Python clients compile against these components and pass contract verification",
+        "api#10 and api#18 both reference these components; a locally declared preview, confidence or dedup shape fails verification"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 components published as one additive import group with its own version",
+        "Components are referenced, never copied: an endpoint that inlines an equivalent shape fails the lint rule this ticket adds"
+      ],
+      "security_privacy": [
+        "No component carries raw statement file content, and the row error message is specified to exclude full account identifiers",
+        "The preview reference is unguessable and scoped to its owner, so one user cannot commit another user's preview"
+      ],
+      "observability": [
+        "The counts in the preview and commit components are the same counts the import metrics record, so a client total and a server metric cannot disagree"
+      ],
+      "tests": [
+        "Provider and consumer contract verification for the import group across all three generated clients",
+        "Schema test proving a commit without a preview reference is rejected",
+        "Lint test proving an inlined duplicate of a shared component fails"
+      ],
+      "rollout_rollback": [
+        "Published additively ahead of api#10, so the API ticket consumes the components rather than inventing them",
+        "Rollback is unpublishing the component group before any consumer pins it; after that, the expand-migrate-contract protocol applies"
+      ],
+      "non_goals": [
+        "Import implementation, parsing and institution presets, which api#10 owns",
+        "Cross-channel deduplication logic, which api#18 owns",
+        "Category inference, which T-CON-02 and the ingestion tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-ADR-MONEY-01",
+        "T-ADR-CAT-02"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the import component group only, which is what lets api#10, api#18 and the client import screens proceed against one shape at the same time.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Generated Kotlin, TypeScript and Python clients regenerated and contract verification green",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-09",
+      "title": "Publish the export, consent, rights-request and transparency contract",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 07",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "Data export, the consent and purpose registry, data-principal rights requests and their status, and the user-visible transparency payload are published as one versioned contract, so the compliance floor, the Android trust surfaces and the web trust centre implement the same shapes rather than three private ones.",
+      "context": "The compliance floor, the Android trust controls and the web trust centre all read and write the same four things - what a user consented to, what they asked us to do about their data, how far that request has got, and what we did with their data - and none of them has a published shape for any of it. Export in particular is a legal obligation with a format consequence: a versioned CSV and JSON export is a promise about column stability, and a promise nobody wrote down is one nobody can keep across a schema change.",
+      "scope": [
+        "Versioned export contract: the CSV column set and the JSON document shape, their version identifier, and the compatibility rule for adding or removing a column",
+        "Export request, progress and delivery shapes, including expiry of a generated artifact",
+        "Consent and purpose registry shapes: purpose identifier, version, grant and withdrawal events, and the evidence recorded with each",
+        "Data-principal rights request shapes: request type, submission, acknowledgement, status transitions, outcome and refusal reason",
+        "Status shape carrying the statutory clock: when the request started, what the response deadline is and how much of it remains",
+        "Transparency payload shape: what was accessed, by which class of actor, under which purpose, and when",
+        "Nominee and grievance-contact shapes so a rights request can be raised on behalf of a data principal",
+        "Explicit export exclusion for every device-local raw-event field, including the raw-message HMAC and parser diagnostic state"
+      ],
+      "acceptance_criteria": [
+        "The export contract carries an explicit format version, and adding a column is specified as additive while removing one requires the expand-migrate-contract path with a stated compatibility window",
+        "The CSV and JSON exports are specified to contain the same content, so a client cannot be told the two formats differ in what they include",
+        "A consent record names its purpose identifier and purpose version, and a withdrawal references the exact grant it withdraws rather than a purpose in general",
+        "A rights request has an enumerated type, an enumerated status set and defined transitions, so a state machine can be generated from the contract",
+        "The status shape exposes the response deadline and the time remaining, so a client cannot compute a different clock from the server",
+        "A refused rights request carries an enumerated refusal reason; a free-text-only refusal fails the schema",
+        "The transparency payload never carries administrative identity or an internal reason code outside the published vocabulary",
+        "Generated Kotlin, TypeScript and Python clients compile against the contract and pass verification",
+        "The export manifest contains structured transactions and source identifiers but cannot name or carry the device-local raw-message digest"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions published as one additive privacy group with its own version, plus the CSV column manifest as machine-readable data",
+        "Purpose identifiers and rights-request types are closed vocabularies referenced by the compliance implementation rather than restated in it"
+      ],
+      "security_privacy": [
+        "An export artifact reference is unguessable, scoped to its owner and expires; the contract states the expiry as a required field",
+        "The transparency payload is specified as subject-visible, which fixes what it may never contain: administrative identity, another user's identity, or key material",
+        "A rights request shape carries no authentication material and no session token"
+      ],
+      "observability": [
+        "The status shape is the same data the compliance service reports on, so an overdue request is visible from the contract-level field rather than an internal metric only"
+      ],
+      "tests": [
+        "Provider and consumer contract verification for the privacy group across all three generated clients",
+        "Schema test proving a withdrawal without a grant reference is rejected",
+        "Schema test proving a refusal without an enumerated reason is rejected",
+        "Export manifest test proving the CSV column set and the JSON shape declare the same content",
+        "Negative export-schema fixture proving raw_hash and message_digest are forbidden"
+      ],
+      "rollout_rollback": [
+        "Published additively ahead of the compliance floor implementation, so T-CMP-01 consumes the shapes rather than inventing them",
+        "Rollback is unpublishing the group before a consumer pins it; afterwards the expand-migrate-contract protocol applies, and the export format version makes a client's expectation explicit"
+      ],
+      "non_goals": [
+        "Compliance implementation, retention jobs and the consent ledger itself, which E27 owns",
+        "Client surfaces, which the Android and web trust tickets own",
+        "Legal interpretation of any obligation, which the counsel-reviewed jurisdiction profile owns",
+        "The administrative audit stream and its relationship to this subject-visible transparency stream, which T-ADR-ADMIN-06 decides; this contract publishes the subject-visible stream only and may never carry administrative identity"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-CON-15",
+        "T-CON-10",
+        "T-ADR-CRYPTO-04",
+        "T-ADR-ERASE-07"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the privacy contract group and the export column manifest only, which is what lets the compliance floor, the Android trust surfaces and the web trust centre proceed in parallel against one shape.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Generated Kotlin, TypeScript and Python clients regenerated and contract verification green",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-11",
+      "title": "Publish the messaging preference, device and support request contract",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "P1-high"
+      ],
+      "outcome": "Messaging preferences, device registration, delivery status, and support request creation and status are published as one versioned contract, so the notification service, both clients and the support surfaces agree on the shapes before any of them is built.",
+      "context": "Two unowned systems are referenced across the plan without a schema: something that decides whether a user may be messaged, and something that receives a support request. Without published shapes the notification service and the clients would each invent their own preference model, and the help links already described in the trust and onboarding tickets would point at nothing. Publishing the contract first is what lets the api, android and web work start in parallel.",
+      "scope": [
+        "Message class vocabulary shared by the server and both clients, closed rather than free-text",
+        "Per-class preference shapes with an explicit opt-out and an unsubscribe reference that works without a session",
+        "Quiet-hours shape with its time zone, and the rule for a message that becomes deliverable after quiet hours end",
+        "Device registration, refresh and deregistration shapes with a platform discriminator",
+        "Delivery status shape covering queued, sent, delivered, suppressed and failed, with a machine-readable suppression reason",
+        "Support request creation, category, status transitions and message thread shapes",
+        "Support attachment reference shape with its retention and expiry declared in the contract"
+      ],
+      "acceptance_criteria": [
+        "The message class vocabulary is closed; a preference or a delivery record naming an unknown class fails verification",
+        "Every message class carries an explicit user preference, and the contract states that the absence of a preference is not consent for a class that requires one",
+        "The unsubscribe reference is usable without an authenticated session and is scoped to one class and one recipient",
+        "Suppression is a first-class delivery outcome with an enumerated reason, so a suppressed message is distinguishable from a failed one",
+        "A support request has an enumerated category, an enumerated status set and defined transitions, so a state machine can be generated from it",
+        "Support attachment references declare their expiry in the contract rather than in the implementation",
+        "Generated Kotlin, TypeScript and Python clients compile and pass contract verification"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 additions published as one additive messaging and support group with its own version",
+        "Reuses the state and error vocabulary published by T-UX-01 where a client-visible state is implied"
+      ],
+      "security_privacy": [
+        "No notification payload shape carries a monetary amount, a merchant name or another user's identity; the contract makes the payload a pointer",
+        "A support request shape carries no session token and no key material, and the attachment reference is unguessable and expiring",
+        "The unsubscribe reference is single-purpose: it can withdraw consent and can do nothing else"
+      ],
+      "observability": [
+        "Delivery status and suppression reason are contract-level fields, so the delivery funnel is measurable from the same data a client can see"
+      ],
+      "tests": [
+        "Provider and consumer contract verification across all three generated clients",
+        "Schema test proving an unknown message class is rejected",
+        "Schema test proving an unsubscribe reference cannot be used to read or change anything else"
+      ],
+      "rollout_rollback": [
+        "Published additively ahead of T-NOT-01 and T-SUP-01 so both consume the shapes rather than inventing them",
+        "Rollback is unpublishing the group before a consumer pins it; afterwards the expand-migrate-contract protocol applies"
+      ],
+      "non_goals": [
+        "Notification delivery, scheduling and provider integration, which T-NOT-01 owns",
+        "Support triage, vendor integration and operator tooling, which T-SUP-01 owns",
+        "Marketing campaign management of any kind"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the messaging and support contract group only, which is what lets the notification service, the support service and the client surfaces proceed at the same time.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

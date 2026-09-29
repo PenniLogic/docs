@@ -1,0 +1,276 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic backlog v2 manifest",
+  "description": "Index of every durable backlog-v2 file, the live Project 2 enumerations that constrain item fields, and the sprint calendar used to derive Start and Due.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_from",
+    "description",
+    "project",
+    "repos",
+    "enums",
+    "sprint_order",
+    "sprint_calendar",
+    "forecast",
+    "experience",
+    "marker_format",
+    "counts",
+    "capacity",
+    "project_metadata",
+    "files",
+    "governance_corrections",
+    "ticket_size",
+    "roadmap_partial_span"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "generated_from": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["org", "number", "title", "epic_repo", "schema_file"],
+      "properties": {
+        "org": { "const": "PenniLogic" },
+        "number": { "const": 2 },
+        "title": { "type": "string", "minLength": 1 },
+        "epic_repo": { "const": "docs" },
+        "schema_file": { "type": "string", "minLength": 1 }
+      }
+    },
+    "repos": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "enums.schema.json#/definitions/repo" }
+    },
+    "enums": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Kind", "Phase", "Sprint", "Component", "Priority", "Perspective", "Risk", "Status", "Estimate"],
+      "properties": {
+        "Kind": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/kind" } },
+        "Phase": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/phase" } },
+        "Sprint": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/sprint" } },
+        "Component": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/component" } },
+        "Priority": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/priority" } },
+        "Perspective": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/perspective" } },
+        "Risk": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/risk" } },
+        "Status": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/status" } },
+        "Estimate": { "type": "array", "items": { "$ref": "enums.schema.json#/definitions/estimate" } }
+      }
+    },
+    "sprint_order": {
+      "type": "object",
+      "description": "Numeric rank per Sprint option. Backlog sorts first, Future last. Used to detect schedule inversions.",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "sprint_calendar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first_sprint_start", "sprint_length_days", "working_span_days", "sprint_count", "undated_sprints"],
+      "properties": {
+        "first_sprint_start": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "sprint_length_days": { "type": "integer", "minimum": 1 },
+        "working_span_days": { "type": "integer", "minimum": 1 },
+        "sprint_count": { "type": "integer", "minimum": 1 },
+        "undated_sprints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "forecast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first_indicative_window", "description", "confidence_options", "phase_floor"],
+      "properties": {
+        "first_indicative_window": { "type": "integer", "minimum": 1 },
+        "description": { "type": "string", "minLength": 40 },
+        "confidence_options": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": { "enum": ["Completed", "Ready", "Planned", "Indicative"] }
+        },
+        "phase_floor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["P0 Foundations", "P1 Debt Engine", "P2 Automation", "P3 Reach", "P4 Network", "P5 Intelligence", "P6 Moat"],
+          "properties": {
+            "P0 Foundations": { "type": "integer", "minimum": 1 },
+            "P1 Debt Engine": { "type": "integer", "minimum": 1 },
+            "P2 Automation": { "type": "integer", "minimum": 1 },
+            "P3 Reach": { "type": "integer", "minimum": 1 },
+            "P4 Network": { "type": "integer", "minimum": 1 },
+            "P5 Intelligence": { "type": "integer", "minimum": 1 },
+            "P6 Moat": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "experience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coverage_file", "schema_file", "handoff_schema_file", "readiness_schema_file", "readiness_gate", "platforms", "client_repositories", "non_frontend_ticket_exclusions"],
+      "properties": {
+        "coverage_file": { "const": "evidence/experience-coverage.json" },
+        "schema_file": { "const": "schema/experience-coverage.schema.json" },
+        "handoff_schema_file": { "const": "schema/handoff-manifest.schema.json" },
+        "readiness_schema_file": { "const": "schema/design-readiness.schema.json" },
+        "readiness_gate": { "$ref": "enums.schema.json#/definitions/stable_id" },
+        "platforms": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["android", "web", "admin"] }
+        },
+        "client_repositories": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["android", "web", "admin"] }
+        },
+        "non_frontend_ticket_exclusions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ref", "rationale"],
+            "properties": {
+              "ref": { "$ref": "enums.schema.json#/definitions/reference" },
+              "rationale": { "type": "string", "minLength": 30 }
+            }
+          }
+        }
+      }
+    },
+    "marker_format": { "const": "<!-- plan-id: ID -->" },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["epics", "tickets", "patches", "existing_items"],
+      "properties": {
+        "epics": { "type": "integer", "minimum": 0 },
+        "tickets": { "type": "integer", "minimum": 0 },
+        "patches": { "type": "integer", "minimum": 0 },
+        "existing_items": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "description": "Planning capacity by independent delivery pool. Every pool shares one points-per-lane sprint clock and has its own lane and review ceilings.",
+      "additionalProperties": false,
+      "required": ["points_per_lane_per_sprint", "execution_lanes_file", "pools", "description"],
+      "properties": {
+        "points_per_lane_per_sprint": { "type": "integer", "minimum": 1 },
+        "execution_lanes_file": { "const": "evidence/execution-lanes.json" },
+        "pools": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["Engineering", "Product Design and UX", "Quality Assurance"],
+          "properties": {
+            "Engineering": { "$ref": "#/definitions/capacity_pool" },
+            "Product Design and UX": { "$ref": "#/definitions/capacity_pool" },
+            "Quality Assurance": { "$ref": "#/definitions/capacity_pool" }
+          }
+        },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "project_metadata": {
+      "type": "object",
+      "description": "Durable Project 2 metadata. The README is a file in this directory so it is reviewable and diffable; the short description is a template because hardcoding a count guarantees it goes stale the next time an epic is added.",
+      "additionalProperties": false,
+      "required": ["readme_file", "short_description_template", "description", "epic_kind_field", "epic_kind_value"],
+      "properties": {
+        "readme_file": { "type": "string", "pattern": "^[a-z0-9._-]+\\.md$" },
+        "short_description_template": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 240,
+          "pattern": "^[\\x20-\\x7E]+$",
+          "description": "Must contain the {epics} and {tickets} placeholders and no standalone number, so the rendered value is always derived at run time."
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "epic_kind_field": { "type": "string", "minLength": 1 },
+        "epic_kind_value": { "type": "string", "minLength": 1 }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "kind", "count"],
+        "properties": {
+          "path": { "type": "string", "pattern": "^[a-z0-9._-]+\\.json$" },
+          "kind": { "enum": ["epics", "tickets", "patches", "existing_items"] },
+          "count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "governance_corrections": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "ticket_size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["split_threshold", "description", "unsplit_allowlist"],
+      "properties": {
+        "split_threshold": { "type": "integer", "minimum": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "unsplit_allowlist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["stable_id", "sprint", "split_by", "reason"],
+            "properties": {
+              "stable_id": { "$ref": "enums.schema.json#/definitions/reference" },
+              "sprint": { "$ref": "enums.schema.json#/definitions/sprint" },
+              "split_by": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+              "reason": { "type": "string", "minLength": 20 }
+            }
+          }
+        }
+      }
+    },
+    "roadmap_partial_span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "bar_means", "undated_epic_behaviour", "legacy_dated_epics", "allowed"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "bar_means": { "type": "string", "minLength": 1 },
+        "undated_epic_behaviour": { "type": "string", "minLength": 1 },
+        "legacy_dated_epics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "enums.schema.json#/definitions/issue_ref" }
+        },
+        "allowed": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "enums.schema.json#/definitions/reference" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "capacity_pool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lanes", "points_per_lane_per_sprint", "review_points_per_sprint_max", "review_effort_divisor", "review_effort_minimum"],
+      "properties": {
+        "lanes": { "type": "integer", "minimum": 1 },
+        "points_per_lane_per_sprint": { "type": "integer", "minimum": 1 },
+        "review_points_per_sprint_max": { "type": "integer", "minimum": 1 },
+        "review_effort_divisor": { "type": "integer", "minimum": 1 },
+        "review_effort_minimum": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

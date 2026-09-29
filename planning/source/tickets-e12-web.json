@@ -1,0 +1,353 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e12-web",
+  "epic_refs": [
+    "docs#12"
+  ],
+  "items": [
+    {
+      "stable_id": "T-WEB-01",
+      "title": "Build the web shell with session parity, security headers and the money primitive",
+      "repo": "web",
+      "epic": "docs#12",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "The web application has an authenticated shell whose session rules match mobile exactly, a strict content policy and request forgery defence, and a money type that makes a floating point amount impossible to compile.",
+      "context": "The web epic is the second place a user sees their financial position, and the two most common ways to get it wrong are a token in browser storage and a floating point amount in a chart. Both are prevented at the shell layer or not at all.",
+      "scope": [
+        "Session handling with secure, same-site, http-only cookies and refresh rotation matching the server rules",
+        "Reuse detection handling that signs the user out with an explanation",
+        "Nonce-based content security policy with no inline script allowance",
+        "Request forgery protection on every state-changing route",
+        "Money type in TypeScript wrapping integer minor units with a currency",
+        "Static analysis rule failing the build when a money field is typed as a plain number",
+        "Locale-aware rendering at the render boundary only, defaulting to INR presentation",
+        "Discoverable privacy-safe help and support entry from signed-out, signed-in and error states",
+        "Web registration, channel verification and account recovery journeys implementing the published T-AUTH-01 contract, including the cooling-off and cancellation states"
+      ],
+      "acceptance_criteria": [
+        "No authentication token is reachable from browser script storage, proven by a test",
+        "A refresh token reuse revokes the session family and the user is told why",
+        "The content policy blocks an injected inline script in a test page",
+        "A state-changing request without a valid token is rejected",
+        "A deliberate floating point amount fails the build",
+        "Formatting happens only at the render boundary; the domain layer contains no formatted strings",
+        "Security headers are asserted by an automated test rather than reviewed by eye",
+        "Help is keyboard reachable without authentication and any diagnostic bundle excludes money, message content, provider keys and credentials",
+        "A user can register, verify their channel and complete account recovery entirely on the web, using only the published contract",
+        "The web recovery journey shows the cooling-off window and offers cancellation, and never describes recovery as instant",
+        "Registration and recovery responses reveal nothing about whether an account exists, in body, status or timing band"
+      ],
+      "contracts_schema": [
+        "Consumes the generated TypeScript client for the published authentication contract and money representation"
+      ],
+      "security_privacy": [
+        "No secret reaches the client bundle, enforced by the scaffold check",
+        "Error output never includes tokens or amounts"
+      ],
+      "observability": [
+        "Client errors reported with scrubbed payloads and no monetary values"
+      ],
+      "tests": [
+        "Storage inspection test",
+        "Reuse detection test",
+        "Policy and header assertion tests",
+        "Planted floating point build failure test",
+        "Signed-out help navigation, keyboard access and planted-sensitive-value diagnostic scrub tests",
+        "Web registration, verification and recovery journey tests",
+        "Account enumeration test across the web registration and recovery routes"
+      ],
+      "rollout_rollback": [
+        "Shipped behind an internal access gate until the quality gate passes",
+        "Rollback removes the public entry point; no user data is affected"
+      ],
+      "non_goals": [
+        "Feature screens, which are the other web tickets",
+        "Administrative functionality, which lives in a separate repository"
+      ],
+      "dependencies": [
+        "T-SCA-WEB-01",
+        "api#4",
+        "api#5",
+        "T-ADR-MONEY-01",
+        "T-AUTH-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the shell, session client and money type. Server behaviour is consumed through the published contract only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-WEB-02",
+      "title": "Build web transactions, bulk edit, statement import and full data export",
+      "repo": "web",
+      "epic": "docs#12",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user on a large screen, I can manage accounts, categories and individual transactions, work through thousands of records quickly, reconcile cash and refunds, import with a preview, and export complete data that imports back cleanly.",
+      "context": "Bulk work and export are the reasons the web application exists; they are painful on a phone. Export in particular is a trust commitment: a product that asks for message access must make leaving easy and complete.",
+      "scope": [
+        "Virtualised transaction list that stays responsive at large record counts",
+        "Bulk edit applied as a single idempotent batch operation",
+        "Statement import with column mapping and a dry-run preview before commit",
+        "Full export in both a tabular and a structured format, covering every user-owned entity",
+        "Export gated behind step-up authentication and rate limited",
+        "Progress, cancellation and result reporting for long-running operations",
+        "Access-log and account-deletion surfaces with reauthentication, request status and irreversible-action confirmation",
+        "Export, consent and rights-request surfaces built on the versioned shapes published by T-CON-09 rather than a web-only schema",
+        "Create, edit and archive accounts through the published account contract, with balances always server-derived",
+        "Create and correct individual transactions and category splits through the idempotent transaction API",
+        "Cash reconciliation and refund review using T-CON-13, including pending, offline, stale, conflict and correction states"
+      ],
+      "acceptance_criteria": [
+        "The list stays within the published interaction budget at ten thousand records",
+        "A bulk edit is one batch call carrying an idempotency key and a retry produces no duplicate change",
+        "Nothing is written until the user commits from the import preview and re-importing the same file creates no duplicates",
+        "An export re-imports into an empty account and produces an equivalent dataset, verified by a round-trip test",
+        "Export without a fresh step-up proof is refused",
+        "A cancelled import or export leaves no partial state",
+        "A user can inspect access events about themselves and cannot access another user's event",
+        "Account deletion requires recent reauthentication, shows progress and reports completion only after the erasure workflow verifies it",
+        "Export offers the versioned CSV and JSON formats published by T-CON-09 and shows the format version; a web-only export shape fails contract verification",
+        "A keyboard-only user can create an account, enter and split a transaction, reconcile cash and relink a refund without client-side money arithmetic",
+        "A correction creates the published reversing relation and never mutates ledger history",
+        "Pending or failed refunds are never rendered as settled income, and a cash withdrawal is shown as a transfer rather than spending"
+      ],
+      "contracts_schema": [
+        "Uses the published transactions, import and export contracts; export format is versioned and documented"
+      ],
+      "security_privacy": [
+        "Export is one of the highest value targets for a stolen session, so step-up and rate limiting are mandatory",
+        "Export files are delivered over an expiring link and are not retained beyond the published window",
+        "Deletion and access-log views never expose another subject and never claim completion before server verification"
+      ],
+      "observability": [
+        "Export and import events record counts and outcomes only, never content"
+      ],
+      "tests": [
+        "Round-trip export and import equivalence test",
+        "Bulk edit idempotency test",
+        "Step-up refusal test",
+        "Large list interaction budget test",
+        "Cross-user access-log denial test",
+        "Reauthentication, deletion progress and verified-completion end-to-end tests",
+        "Account, manual transaction and category-split keyboard and screen-reader journeys",
+        "Cash reconciliation and refund relink contract journeys"
+      ],
+      "rollout_rollback": [
+        "Export ships behind a flag until the round-trip test is green in staging",
+        "Rollback disables the export entry point; previously issued links expire normally"
+      ],
+      "non_goals": [
+        "Server import parsing, which the api import ticket owns",
+        "Administrative bulk export, which is deliberately a different, gated path"
+      ],
+      "dependencies": [
+        "T-WEB-01",
+        "api#6",
+        "api#7",
+        "api#9",
+        "api#10",
+        "T-SEC-04",
+        "T-CMP-01",
+        "T-SEC-02",
+        "T-CON-09",
+        "T-CON-13",
+        "T-TXN-03",
+        "T-TXN-01",
+        "T-ING-03"
+      ],
+      "parallel_boundary": "Primary repo web. Owns account, transaction, cash, refund, bulk edit, import and export surfaces. Server behavior and every monetary derivation are consumed through generated contracts.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-WEB-03",
+      "title": "Build the web debt dashboard, strategy comparison and derivation inspector with budgets and reporting",
+      "repo": "web",
+      "epic": "docs#12",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can see my payoff position, compare strategies, simulate extra payments and open any derived number to see exactly where it came from, alongside budgets and reporting for analysis.",
+      "context": "The product promise is that a user can see why a payoff date is what it is. That is only credible if the client never recomputes anything and every number expands into its inputs, which is also the defence against a client and server disagreeing.",
+      "scope": [
+        "Payoff dashboard sourced entirely from server computations",
+        "Strategy comparison across the supported strategies with the assumptions shown",
+        "Extra-payment simulator that states what it assumed",
+        "Derivation inspector expanding any derived figure into its inputs and formula",
+        "Budgets, categories and reporting views for analysis",
+        "Empty, partial and error states for every surface"
+      ],
+      "acceptance_criteria": [
+        "No derived monetary figure is computed in client code, enforced by review and by a static check on the money module",
+        "Every derived figure on screen can be expanded to its inputs and the computation identifier",
+        "Strategy comparison shows the assumptions used and refuses to display a comparison when the inputs are infeasible",
+        "Charts read from the same server values as the tables and cannot disagree with them",
+        "Reporting views render correctly with no data, with one record and with a large history",
+        "Monetary values carry accessible labels so a screen reader announces them unambiguously"
+      ],
+      "contracts_schema": [
+        "Consumes the published debt, strategy, simulation and budget contracts including the derivation fields"
+      ],
+      "security_privacy": [
+        "Screens are export-safe: no monetary value reaches an analytics payload",
+        "Computation identifiers are opaque and reveal nothing about other users"
+      ],
+      "observability": [
+        "View events record surface and outcome only, never amounts"
+      ],
+      "tests": [
+        "Derivation expansion test per derived figure",
+        "Chart and table consistency test",
+        "Empty, single and large dataset rendering tests",
+        "Accessibility announcement test"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag per surface so an incorrect derivation can be withdrawn without removing the dashboard",
+        "Rollback hides the affected surface and shows an explanatory state rather than a stale number"
+      ],
+      "non_goals": [
+        "Engine implementation, which the api debt tickets own",
+        "Goal planning surfaces, which belong to E22"
+      ],
+      "dependencies": [
+        "T-WEB-01",
+        "T-CON-01",
+        "api#14"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the dashboard, comparison and reporting surfaces. All arithmetic stays on the server.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SUP-03",
+      "title": "Build the web support intake and request status surface",
+      "repo": "web",
+      "epic": "docs#12",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "P2-medium"
+      ],
+      "outcome": "A web user can raise a support request, attach permitted evidence, follow its status against the published response target, and reach it from every help entry point in the product, so no help link points at an unowned mailbox.",
+      "context": "Help and contact links already appear in the web billing, trust and onboarding surfaces and resolve to nothing owned. Web is also where a user goes when the app itself is the problem, which makes it the surface that must work when the Android client cannot, including for a user who cannot sign in.",
+      "scope": [
+        "Request creation with category selection and the response target shown before submission",
+        "Attachment upload within the permitted types, sizes and expiry, with the rule stated at the point of upload",
+        "Request list and detail with the status, the thread and the remaining response time",
+        "Unauthenticated intake path for a user who cannot sign in, with the reduced capability that implies",
+        "Replacement of every existing help and contact entry point in the web product with a link to this surface",
+        "Applicable states from the T-UX-01 taxonomy on every screen"
+      ],
+      "acceptance_criteria": [
+        "A request can be created, its status followed and messages added, using only the published contract",
+        "The response target shown to the user is the value the server returns, including the priority-support variant, and is never computed in the client",
+        "An attachment outside the permitted types or size is refused in the client with the reason, and the server refusal is handled without data loss in the form",
+        "The unauthenticated intake path works without a session and clearly states what it cannot do, and it never reveals whether an account exists for an entered address",
+        "Every help or contact entry point in the web product resolves to this surface; a link to an unowned mailbox or an external form fails review",
+        "Every applicable T-UX-01 state identifier is handled, asserted by the client state coverage check",
+        "The surface meets the same accessibility budget as the rest of the web product"
+      ],
+      "contracts_schema": [
+        "Consumes the support shapes published by T-CON-11 through the generated TypeScript client"
+      ],
+      "security_privacy": [
+        "The form rejects credentials, session tokens and recovery codes before submission and explains why",
+        "The unauthenticated path is rate limited and gives an identical response whether or not the address matches an account",
+        "No support content is cached in the browser beyond the session"
+      ],
+      "observability": [
+        "Submission, abandonment and attachment-refusal rates are recorded so a confusing form is visible"
+      ],
+      "tests": [
+        "Request creation and status journey test",
+        "Attachment refusal test",
+        "Unauthenticated intake enumeration test",
+        "Help-entry-point link audit test",
+        "State coverage test against the T-UX-01 identifiers"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag with the existing help links redirected only once intake is live",
+        "Rollback restores the previous links, which is why the previous destination is recorded rather than deleted"
+      ],
+      "non_goals": [
+        "Support service, triage and vendor integration, which T-SUP-01 owns",
+        "Android support surfaces, which T-SUP-02 owns",
+        "Live chat or telephony"
+      ],
+      "dependencies": [
+        "T-SUP-01",
+        "T-CON-11",
+        "T-WEB-01",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the intake form, the request list and detail, and the help entry points in the web product. The service, the vendor adapter and the verification endpoint belong to T-SUP-01.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

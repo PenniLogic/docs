@@ -1,0 +1,177 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e03-identity",
+  "epic_refs": [
+    "docs#3"
+  ],
+  "items": [
+    {
+      "stable_id": "T-AUTH-01",
+      "title": "Implement account recovery, reverification and session revocation",
+      "repo": "api",
+      "epic": "docs#3",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 07",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "A user who has lost their passkey or device can regain access through recovery codes or channel reverification, under a cooling-off window, and every recovery revokes existing sessions and devices, so recovery is a controlled path rather than the weakest link in authentication.",
+      "context": "Passkey-first authentication moves the entire risk of the system onto the recovery path: an attacker does not break the passkey, they claim to have lost it. T-ADR-AUTH-05 decides the provider, the relying-party identifier and the recovery model, and nothing implements the decision. Today registration and login exist in api#4 and api#5 and recovery exists nowhere, which means the first user who changes phones is unrecoverable and the first attacker who social-engineers support is unstoppable.",
+      "scope": [
+        "Recovery code issuance at enrolment: single-use codes, hashed at rest, count and regeneration rules",
+        "Channel reverification as the second recovery route, with the channel proven at enrolment rather than at recovery time",
+        "Cooling-off window between an accepted recovery attempt and the credential change taking effect, with notification to every registered channel",
+        "Cancellation path so the legitimate owner can stop a recovery in progress during the cooling-off window",
+        "Session and device revocation on successful recovery, including refresh-token families",
+        "Rate limits and lockout on recovery attempts, separate from the login rate limits",
+        "Audit events for every recovery attempt, acceptance, cancellation and completion",
+        "Anti-enumeration behaviour so the response does not reveal whether an account, a channel or a code exists"
+      ],
+      "acceptance_criteria": [
+        "A user with a valid unused recovery code completes recovery and can authenticate again, and the code cannot be used a second time",
+        "Recovery codes are stored hashed; a database read yields no usable code, proven by a test",
+        "A recovery attempt starts a cooling-off window of the published length, notifies every registered channel, and does not change any credential until the window elapses",
+        "Cancelling during the cooling-off window aborts the recovery and leaves every existing credential and session intact",
+        "Completing recovery revokes every active session, every refresh-token family and every registered device, proven by a test that replays a pre-recovery refresh token and asserts rejection",
+        "Recovery attempts are rate limited and locked out independently of login, proven by a test that exhausts recovery attempts without locking normal login for other users",
+        "Responses to recovery initiation are identical for an existing and a non-existing account, in body, status and timing band, proven by an enumeration test",
+        "Every recovery attempt, cancellation and completion writes an audit event carrying the route used and the outcome",
+        "Channel reverification uses only a channel proven at enrolment; a channel added during the recovery flow is refused"
+      ],
+      "contracts_schema": [
+        "Recovery initiation, verification, cancellation and completion published in the OpenAPI document with generated clients and contract verification",
+        "Recovery route is an enumerated value in the contract, so a client cannot invent a third route"
+      ],
+      "security_privacy": [
+        "No recovery response distinguishes an existing account from a non-existing one, including by timing band",
+        "Recovery codes are never logged, never returned after issuance and never retrievable",
+        "A completed recovery is treated as a credential compromise event: sessions, devices and refresh families are all revoked rather than selectively kept",
+        "The cooling-off notification is the control that makes a silent account takeover visible to the legitimate owner"
+      ],
+      "observability": [
+        "Recovery initiation, acceptance, cancellation and completion rates are recorded, and an unusual initiation rate raises an alert",
+        "Lockout events are recorded with the reason so a support request can be answered without inspecting the database"
+      ],
+      "tests": [
+        "Single-use recovery code test",
+        "Hashed-at-rest storage test",
+        "Cooling-off and cancellation tests",
+        "Post-recovery refresh-token replay rejection test",
+        "Recovery-specific rate limit and lockout test",
+        "Account enumeration test covering body, status and timing band"
+      ],
+      "rollout_rollback": [
+        "Recovery is enabled behind a flag and exercised end to end in staging before any real account exists",
+        "Rollback disables the recovery routes and leaves login and registration untouched; no credential state is migrated by this ticket"
+      ],
+      "non_goals": [
+        "Support-operated manual account recovery, which requires the support intake and verification path in T-SUP-01 and the administrative controls in E13",
+        "Client recovery screens, which T-AUTH-02 owns for Android and T-WEB-01 owns for web",
+        "Choosing the authentication provider or the relying-party identifier, which T-ADR-AUTH-05 decides"
+      ],
+      "dependencies": [
+        "api#4",
+        "api#5",
+        "T-ADR-AUTH-05",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the recovery endpoints, the code store, the cooling-off timer and the revocation cascade. Clients consume the published contract and own no recovery logic of their own.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AUTH-02",
+      "title": "Build the Android recovery, lost-device and re-enrolment journey",
+      "repo": "android",
+      "epic": "docs#3",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Sprint 10",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "security",
+        "P1-high"
+      ],
+      "outcome": "An Android user who has lost their device or their passkey can start recovery, understand the cooling-off window, cancel a recovery they did not start, and re-enrol a credential on a new device, without contacting support.",
+      "context": "The server-side recovery path in T-AUTH-01 is unusable without a client surface, and the lost-device case is precisely the case where the user does not have the app they are being asked to open. The journey therefore has to work on a fresh install on a new device, and it has to make the cooling-off window and the cancellation option understandable, because the cancellation notification is the only defence a legitimate owner has against a silent takeover.",
+      "scope": [
+        "Recovery entry point reachable before authentication, on a fresh install",
+        "Recovery code entry and channel reverification routes, presented as a choice with their consequences stated",
+        "Cooling-off state surface: what is happening, when it completes, and how to cancel",
+        "Cancellation journey reachable from the notification, working on a device that is not enrolled",
+        "Credential re-enrolment on the new device after recovery completes",
+        "Recovery code storage guidance at enrolment, including regeneration",
+        "Every state from the T-UX-01 taxonomy that applies: loading, error, offline, permission-denied and degraded"
+      ],
+      "acceptance_criteria": [
+        "Recovery can be started from a fresh install with no existing session, proven by an instrumented test on a clean profile",
+        "The two recovery routes are presented with their real consequences, and the screen never claims recovery is instant when a cooling-off window applies",
+        "The cooling-off screen shows the completion time and a working cancellation action, and the cancellation action succeeds from a device that has never been enrolled",
+        "Re-enrolment on the new device completes and the previous device's session is shown as revoked",
+        "Recovery codes are never rendered into a screenshot-eligible surface without an explicit user action, and are never written to logs",
+        "Every applicable T-UX-01 state identifier is handled on every recovery screen, asserted by the client state coverage check",
+        "The journey is accessible under TalkBack and passes the accessibility budget applied to the other core journeys"
+      ],
+      "contracts_schema": [
+        "Consumes the published recovery contract from T-AUTH-01 through the generated client; no recovery endpoint is called by hand-written request code"
+      ],
+      "security_privacy": [
+        "Recovery codes are not stored on the device after use and are excluded from backup and autofill",
+        "The recovery screens reveal nothing about whether an account exists for an entered identifier",
+        "Screenshots are suppressed on the recovery code surface"
+      ],
+      "observability": [
+        "Client records recovery start, route chosen, cancellation and completion so drop-off in the journey is visible"
+      ],
+      "tests": [
+        "Fresh-install recovery instrumented test",
+        "Cancellation-from-notification test on an unenrolled device",
+        "Re-enrolment and old-session-revoked test",
+        "Screenshot suppression and log-absence test for recovery codes",
+        "State coverage test against the T-UX-01 identifiers"
+      ],
+      "rollout_rollback": [
+        "Shipped behind the same flag as the server routes, enabled together in staging first",
+        "Rollback hides the client entry point; the server routes remain and no local state is migrated"
+      ],
+      "non_goals": [
+        "Server-side recovery logic, which T-AUTH-01 owns",
+        "Web recovery, which T-WEB-01 owns",
+        "Support-operated recovery, which needs T-SUP-01"
+      ],
+      "dependencies": [
+        "T-AUTH-01",
+        "T-AND-01",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the recovery, cooling-off, cancellation and re-enrolment screens. The contract and every server rule belong to T-AUTH-01.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

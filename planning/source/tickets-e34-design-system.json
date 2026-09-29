@@ -1,0 +1,592 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e34-design-system",
+  "epic_refs": ["E34"],
+  "items": [
+    {
+      "stable_id": "T-DSY-02",
+      "title": "Establish the governed Figma libraries and component contribution model",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design-system", "design-ops", "P0-critical"],
+      "outcome": "Android, web and admin designers publish from governed foundation and component libraries with explicit ownership, contribution, versioning, deprecation and platform-variant rules.",
+      "context": "Tokens alone do not prevent duplicate components or breaking visual changes. A large team needs a library API and contribution workflow before feature files multiply.",
+      "scope": [
+        "Foundation, shared semantic component and platform-variant library boundaries",
+        "Component naming, properties, variants, slots, content limits, descriptions and status",
+        "Contribution request, review, test, release, deprecation and migration flow",
+        "Semantic versioning, release notes, dependency update and rollback",
+        "CDO major-release and Design Systems Lead minor-release decision rights"
+      ],
+      "acceptance_criteria": [
+        "Every published component has an owner, description, property contract, accessibility behavior and supported platforms",
+        "A local duplicate of a published semantic component is rejected by review and registry lint",
+        "Breaking token or component changes require a major version, migration plan and CDO approval",
+        "Deprecated components name a replacement and removal version and remain available through migration",
+        "Figma permissions prevent feature squads from publishing directly to shared libraries"
+      ],
+      "contracts_schema": [
+        "Library, component, property, platform variant, version, status, replacement and owner records referenced by T-UXR-06"
+      ],
+      "security_privacy": [
+        "Library examples contain synthetic values and no production screenshots",
+        "External library access and asset export are auditable and revoked on offboarding"
+      ],
+      "observability": [
+        "Library adoption, duplicate component, deprecated instance, review age and version lag by platform"
+      ],
+      "tests": [
+        "Duplicate semantic component and missing owner rejection",
+        "Breaking-change version and migration fixture",
+        "Permission and offboarding tabletop"
+      ],
+      "rollout_rollback": [
+        "Publish empty governed shells before component work; existing drafts import as unpublished candidates",
+        "Rollback unpublishes a bad version and restores the prior library without deleting dependent instances"
+      ],
+      "non_goals": [
+        "Designing product flows",
+        "Frontend package implementation",
+        "One component implementation shared unchanged across platforms"
+      ],
+      "dependencies": ["T-UXR-01", "T-UXR-07"],
+      "parallel_boundary": "Primary repo docs and governed Figma libraries. Design Systems owns shared files; platform squads contribute through isolated branches and review requests.",
+      "definition_of_done": [
+        "Library topology and contribution contract operational",
+        "Design Systems, DesignOps, Accessibility, UX Engineering and CDO approvals recorded",
+        "Versioning, permission and duplicate tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-DSY-03",
+      "title": "Define typography, iconography, illustration and financial visual language",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design-system", "brand", "P1-high"],
+      "outcome": "The selected direction becomes a legible, culturally appropriate and platform-adaptable type, icon, illustration and financial-notation system rather than a mood board.",
+      "context": "Finance screens depend on dense numbers, uncertainty and status. Decorative identity that weakens numeral distinction, localization or platform recognition is a correctness defect.",
+      "scope": [
+        "UI type roles, tabular numerals, currency, percentages, dates, hierarchy and long-form explanation",
+        "Icon grid, stroke/fill rules, metaphors, labels and platform adaptation",
+        "Illustration purpose, subject boundaries, synthetic-data treatment and asset production",
+        "Financial notation for positive, negative, projected, pending, stale, reversed, shared and redacted values",
+        "Light, dark and high-contrast examples across Android, web and admin"
+      ],
+      "acceptance_criteria": [
+        "Amounts, decimal positions, signs, currencies and dates remain unambiguous at minimum supported size",
+        "Icons never carry a critical action or state without text or accessible naming",
+        "Projected, stale, pending and confirmed values remain distinguishable without color",
+        "Type and illustration survive pseudo-localization, 200 percent zoom and largest Android text scale",
+        "The CDO and Accessibility Lead approve the system against representative debt, transaction and operator screens"
+      ],
+      "contracts_schema": [
+        "Typography, icon, illustration and financial-notation asset roles extend T-DSY-01 semantic tokens"
+      ],
+      "security_privacy": [
+        "No illustration or example implies guaranteed payoff, investment advice or unsafe household access",
+        "Assets carry no real financial or participant data"
+      ],
+      "observability": [
+        "Unmapped icon, non-tabular financial numeral, asset version and pseudo-localization defect counts"
+      ],
+      "tests": [
+        "Numeral ambiguity and no-color state tests",
+        "Pseudo-localization, large-text and high-contrast review",
+        "Icon name and text-equivalent coverage lint"
+      ],
+      "rollout_rollback": [
+        "Publish as a versioned foundation release consumed by component tickets",
+        "Rollback restores prior assets and token aliases while affected screens migrate"
+      ],
+      "non_goals": [
+        "Marketing campaign illustration",
+        "Screen-specific layout",
+        "Embedding unlicensed fonts or icons"
+      ],
+      "dependencies": ["T-DSY-01", "T-DSY-02"],
+      "parallel_boundary": "Primary repo docs and foundations library. Type, icon and illustration subteams own non-overlapping asset pages under one CDO direction.",
+      "definition_of_done": [
+        "Foundation assets and usage guidance published",
+        "License, accessibility, localization and platform reviews pass",
+        "Representative screen applications approved by CDO",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-DSY-04",
+      "title": "Design navigation, action, form and validation component families",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design-system", "accessibility", "P0-critical"],
+      "outcome": "Platform squads assemble navigation and input-heavy financial journeys from tested semantic components instead of inventing controls, validation and focus behavior per screen.",
+      "context": "Debt, transaction, billing and admin workflows contain high-risk numeric and destructive inputs. Missing states or inconsistent validation create financial errors and inaccessible dead ends.",
+      "scope": [
+        "App bars, navigation bar/rail/drawer, side navigation, breadcrumbs, tabs, steppers and deep-link landing",
+        "Buttons, icon actions, menus, FAB policy, links and destructive actions",
+        "Text, number, money, rate, date, select, autocomplete, checkbox, radio, switch, slider, OTP/passkey and file inputs",
+        "Inline validation, help, required/optional, units, min/max, conflict and server-error behavior",
+        "Android Material, responsive web and dense admin variants"
+      ],
+      "acceptance_criteria": [
+        "Every interactive component covers default, focus, active, selected, disabled, loading and error where applicable",
+        "Money/rate inputs show units, accepted precision, bounds and server normalization before submission",
+        "All actions are keyboard/switch reachable and Android targets meet 48dp with spacing",
+        "Destructive actions show consequence, scope and recovery and never rely on a generic confirmation",
+        "Navigation components adapt structurally across compact, expanded and narrow web layouts"
+      ],
+      "contracts_schema": [
+        "Component property and validation-state contracts map to API error codes and T-UX-01 state IDs"
+      ],
+      "security_privacy": [
+        "Credential, key and recovery inputs never expose values in examples, analytics or error copy",
+        "Denied controls do not reveal hidden resource existence"
+      ],
+      "observability": [
+        "Validation error, abandoned form, focus trap, inaccessible target and duplicate component counts"
+      ],
+      "tests": [
+        "Keyboard, focus, screen-reader and Android target-size specifications",
+        "Money/rate boundary and server-error mapping fixtures",
+        "Destructive action and hidden-resource review"
+      ],
+      "rollout_rollback": [
+        "Publish additive component versions before platform flows finalize",
+        "Breaking interaction changes use deprecation and migration rather than silent instance updates"
+      ],
+      "non_goals": [
+        "Business validation rules",
+        "Platform screen composition",
+        "Custom controls where a native semantic control suffices"
+      ],
+      "dependencies": ["T-DSY-01", "T-DSY-02"],
+      "parallel_boundary": "Primary repo docs and components library. Navigation, action and form teams use separate component sets and converge through shared state and token contracts.",
+      "definition_of_done": [
+        "All component families and platform variants published",
+        "Accessibility, Security, Content and UX Engineering approvals recorded",
+        "State, validation and interaction tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-DSY-05",
+      "title": "Design money, data display, collection and visualization components",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design-system", "money-path", "P0-critical"],
+      "outcome": "Every amount, debt result, transaction, list, table, chart and derivation uses one semantics-first component contract that preserves precision, provenance and accessible alternatives.",
+      "context": "Visual inconsistency can turn a correct integer amount into an ambiguous or misleading decision. Charts, totals and projected figures need explicit semantics rather than cosmetic reuse.",
+      "scope": [
+        "Amount, balance, delta, percentage, rate, payoff date, confidence, provenance and derivation primitives",
+        "Transaction, account, debt, goal, holding, split, household and audit record patterns",
+        "List, timeline, table, pagination, search, filter, sort, selection, bulk action and comparison",
+        "Trend, categorical spend, debt trajectory, scenario comparison, composition and progress visualization",
+        "Partial, zero, unavailable, stale, pending, projected, redacted and overflow variants"
+      ],
+      "acceptance_criteria": [
+        "Currency and source are visible for every consequential amount and mixed-currency totals are impossible without an approved conversion",
+        "Every chart has a text or table equivalent using the same server values and ordering",
+        "Projected, partial, stale, reversed and unconfirmed data cannot be mistaken for confirmed current values",
+        "Tables define keyboard, screen-reader, responsive and virtualized behavior before implementation",
+        "Derivation access is consistent and discoverable for every computed financial figure"
+      ],
+      "contracts_schema": [
+        "Display component properties reference MinorUnitAmount, provenance, confidence, freshness, completeness and derivation contract fields"
+      ],
+      "security_privacy": [
+        "Components support privacy masking, redaction and aggregate-only views without layout leaks",
+        "Examples use synthetic values and no merchant or account identifiers from production"
+      ],
+      "observability": [
+        "Missing currency/provenance, chart-table divergence, overflow, stale-data and derivation-open rates"
+      ],
+      "tests": [
+        "Integer/currency and mixed-total design fixtures",
+        "Chart/table parity and no-color tests",
+        "Virtualized table keyboard and screen-reader specification review"
+      ],
+      "rollout_rollback": [
+        "Publish primitives before platform high-fidelity flows",
+        "Rollback pins consumers to the prior component version and preserves data semantics"
+      ],
+      "non_goals": [
+        "Financial calculations",
+        "Dashboard composition",
+        "Client-side recomputation of server results"
+      ],
+      "dependencies": ["T-DSY-01", "T-DSY-02"],
+      "parallel_boundary": "Primary repo docs and components library. Money primitives are frozen by the Design Systems Lead and money-path reviewer before platform composition.",
+      "definition_of_done": [
+        "Financial and collection component families published",
+        "Money-path, Accessibility, Content and UX Engineering approvals recorded",
+        "Semantic, parity and privacy variants tested",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-DSY-06",
+      "title": "Design feedback, overlay, trust, consent and security components",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design-system", "security", "accessibility", "P0-critical"],
+      "outcome": "Errors, status, permissions, consent, sharing, access, step-up and destructive decisions use consistent components that make risk, scope, recovery and authority explicit.",
+      "context": "The highest-risk states appear across platforms. If each team invents banners, dialogs or approval affordances, denial can leak data and dangerous actions can look routine.",
+      "scope": [
+        "Skeleton, progress, inline error, banner, snackbar, empty, offline, stale, degraded, retry, undo and success",
+        "Dialog, alert, sheet/drawer, popover, tooltip, date picker and focus/escape/back behavior",
+        "Permission rationale, consent, disclosure, grant, access log, privacy mask and safe exit",
+        "Step-up, approval chain, provenance, SLA clock, redaction, unmask and break-glass",
+        "Destructive, irreversible, cooling-off, revoked and recovery states"
+      ],
+      "acceptance_criteria": [
+        "Every T-UX-01 state has required, forbidden and recovery content plus platform adaptations",
+        "Consent and grant components show purpose, scope, duration, consequence and withdrawal before acceptance",
+        "Authorization denial reveals no hidden resource and never offers an ineligible bypass",
+        "Overlays restore focus or Back state, escape containers and never trap assistive technology",
+        "High-risk actions use purpose-built flows with provenance and diff rather than a generic modal"
+      ],
+      "contracts_schema": [
+        "State, permission, consent, grant, approval, denial, expiry and audit component properties map to published enums"
+      ],
+      "security_privacy": [
+        "Components default to least disclosure and safe failure",
+        "Coercion and shoulder-surfing variants include discreet exit, concealment and neutral notifications"
+      ],
+      "observability": [
+        "State exposure, retry, undo, denial, abandoned consent, approval expiry and focus failure events without content"
+      ],
+      "tests": [
+        "Denied-resource and unsafe-bypass design fixtures",
+        "Focus, escape, Back and screen-reader overlay specifications",
+        "Consent comprehension and coercion-safety review"
+      ],
+      "rollout_rollback": [
+        "Security components require independent review before publication",
+        "Rollback disables a risky action or pins the prior component; it never falls back to a generic confirmation"
+      ],
+      "non_goals": [
+        "Authorization logic",
+        "Policy interpretation",
+        "Platform-specific feature flow composition"
+      ],
+      "dependencies": ["T-DSY-01", "T-DSY-02", "T-CNT-01"],
+      "parallel_boundary": "Primary repo docs and components library. Trust/security components require Design Systems, Security, Content and Accessibility co-review before platform use.",
+      "definition_of_done": [
+        "Feedback, overlay and trust component families published",
+        "Security, Privacy, Accessibility and Content approvals recorded",
+        "Denial, coercion, focus and recovery tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-DSY-07",
+      "title": "Specify adaptive layout, themes, motion, haptics and reduced-motion behavior",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design-system", "responsive", "accessibility", "P1-high"],
+      "outcome": "Platform teams share explicit layout, theme and motion behavior while Android, customer web and admin retain native information density and interaction conventions.",
+      "context": "Responsive behavior is structural, not a late breakpoint patch. Dark mode, high contrast, large text and reduced motion must influence components and flows before screen approval.",
+      "scope": [
+        "Android compact, medium and expanded window classes, insets, IME and posture",
+        "Customer-web and admin grid, navigation, table and content-density breakpoints",
+        "Light, dark, high-contrast and dynamic-color policy",
+        "Largest text, 200 percent zoom, reflow, touch target and pointer/keyboard behavior",
+        "Motion duration/easing, state transitions, haptic roles and reduced-motion substitutions"
+      ],
+      "acceptance_criteria": [
+        "No approved screen is a stretched compact layout or a clipped desktop table at narrow width",
+        "Every token and component resolves in light, dark and high-contrast modes",
+        "Largest Android text and 200 percent web zoom preserve task completion without two-dimensional scrolling except data tables",
+        "Motion conveys state, meets performance budgets and has a reduced or instant alternative",
+        "Haptics never carry meaning without visual and accessible feedback"
+      ],
+      "contracts_schema": [
+        "Breakpoint, window class, density, theme, motion and haptic semantic records consumed by platform files"
+      ],
+      "security_privacy": [
+        "Privacy masks and redactions remain effective across themes and responsive rearrangement",
+        "Motion never reveals hidden content during transition"
+      ],
+      "observability": [
+        "Layout overflow, theme token gap, reduced-motion use, text-scale failure and breakpoint-specific task failure"
+      ],
+      "tests": [
+        "Window-class, zoom, text-scale and theme matrix",
+        "Reduced-motion and haptic-equivalence review",
+        "Responsive table and overlay containment fixtures"
+      ],
+      "rollout_rollback": [
+        "Publish behavior contracts before high-fidelity platform screens",
+        "Rollback pins prior layout/motion version and does not remove accessibility modes"
+      ],
+      "non_goals": [
+        "Screen-specific hierarchy",
+        "Animating decorative page loads",
+        "Forcing identical density on consumer and operator products"
+      ],
+      "dependencies": ["T-DSY-01", "T-DSY-02"],
+      "parallel_boundary": "Primary repo docs. Responsive, theme and motion specialists own separate specifications and platform leads verify adaptation in their files.",
+      "definition_of_done": [
+        "Adaptive, theme and motion contracts published",
+        "Android, Web, Admin, Accessibility and CDO approvals recorded",
+        "Full matrix and reduced-motion tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CNT-01",
+      "title": "Publish the product glossary, voice and regulated content patterns",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "content-design", "compliance", "P0-critical"],
+      "outcome": "Every platform uses one understandable, non-shaming and legally governed language system for money, debt, states, permissions, AI, sharing, billing, support and operator actions.",
+      "context": "Inconsistent terms can make users misread debt, projections, access or reversals. Regulated and security copy must be versioned, while ordinary product copy still needs a coherent voice.",
+      "scope": [
+        "Canonical financial, debt, transaction, sharing, AI, billing, rights and operator glossary",
+        "Voice principles, reading level, sentence and number conventions and prohibited shame/hype/advice patterns",
+        "Empty, loading, error, stale, denied, destructive, success and recovery copy templates",
+        "Consent, permission, disclaimer, plan change, refund, deletion, access and incident approval workflow",
+        "Minimum, typical and maximum content ranges with source-of-copy ownership"
+      ],
+      "acceptance_criteria": [
+        "A term has one definition and preferred label across Android, web, admin, contracts and support",
+        "Copy states source, status, consequence, safe remainder and next action without inventing a cause",
+        "Debt and correction language never shames, guarantees or disguises uncertainty",
+        "Regulated/security copy has version, reviewer, effective date, expiry and fail-closed behavior",
+        "Comprehension testing covers payoff, projected, available, pending, reversed, aggregate and revoked terms"
+      ],
+      "contracts_schema": [
+        "Glossary, message key, state, content range, regulated-copy version and approval records"
+      ],
+      "security_privacy": [
+        "Messages never echo raw content, credentials, hidden resource identity or operator identity where prohibited",
+        "Neutral safe-exit and notification copy is available for shared-device and coercive contexts"
+      ],
+      "observability": [
+        "Unknown term, copy-version mismatch, comprehension failure and support contact caused by wording"
+      ],
+      "tests": [
+        "Glossary duplicate and banned-language lint",
+        "Regulated-copy expiry and missing-reviewer failure",
+        "Financial comprehension and no-blame review"
+      ],
+      "rollout_rollback": [
+        "Publish source strings before platform flow finalization",
+        "Rollback pins the prior approved copy version and never substitutes local text"
+      ],
+      "non_goals": [
+        "Legal interpretation",
+        "Marketing campaign copy",
+        "Machine translation"
+      ],
+      "dependencies": ["T-UX-01", "T-UXR-03"],
+      "parallel_boundary": "Primary repo docs. Content Design owns glossary and source copy; Legal/Compliance approve governed strings and platform designers consume keys.",
+      "definition_of_done": [
+        "Glossary, voice and content patterns merged",
+        "Content, Compliance, Accessibility and CDO approvals recorded",
+        "Lint, expiry and comprehension tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CNT-02",
+      "title": "Define localization, pseudo-localization and bidirectional content readiness",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "content-design", "localization", "accessibility", "P1-high"],
+      "outcome": "Layouts, components, source copy and test fixtures are ready for approved Indian languages and bidirectional expansion before screens hardcode English dimensions or word order.",
+      "context": "Translation after layout approval creates truncation and inaccessible rework. The initial language set remains a product decision, but every surface can be made localization-ready now.",
+      "scope": [
+        "Language decision input covering user evidence, support and regulatory feasibility",
+        "Message keys, plural, gender, date, number, currency and list formatting rules",
+        "Pseudo-localization expansion, diacritic, missing-key and mirrored-layout fixtures",
+        "Icon/text ordering, charts, tables, screenshots and asset localization",
+        "Translator context, review, versioning and fallback behavior"
+      ],
+      "acceptance_criteria": [
+        "Every user-visible string is represented by a source key with context and owner",
+        "Pseudo-localization at maximum expansion produces no clipped action or hidden consequence",
+        "Currency and number formatting uses locale rules without changing stored value or currency",
+        "Bidirectional fixtures preserve logical reading and data ordering where supported",
+        "Missing or expired regulated translations fail closed to an approved fallback"
+      ],
+      "contracts_schema": [
+        "Locale, message key, plural variables, formatting role, translation version and approval records"
+      ],
+      "security_privacy": [
+        "Localization files contain no secrets or live user content",
+        "Fallback never removes a consent, warning or destructive consequence"
+      ],
+      "observability": [
+        "Missing key, fallback, truncation, locale-format and translation-version mismatch counts"
+      ],
+      "tests": [
+        "Pseudo-localization and maximum-expansion matrix",
+        "Number/currency round-trip and bidi fixtures",
+        "Regulated-copy fallback failure test"
+      ],
+      "rollout_rollback": [
+        "Ship framework and pseudo locale before production translations",
+        "Rollback disables an incomplete locale while preserving approved source language"
+      ],
+      "non_goals": [
+        "Selecting languages without research",
+        "Machine-translating regulated copy",
+        "Converting currencies based on locale"
+      ],
+      "dependencies": ["T-CNT-01", "T-DSY-07"],
+      "parallel_boundary": "Primary repo docs. Localization owns source-key and fixture contracts; platform teams test layout, and translators work in versioned locale files.",
+      "definition_of_done": [
+        "Localization readiness and pseudo-locale specifications published",
+        "Content, Localization, Accessibility and platform approvals recorded",
+        "Expansion, bidi and number tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-HND-01",
+      "title": "Publish the design-to-code handoff and conformance contract",
+      "repo": "docs",
+      "epic": "E34",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design", "handoff", "P0-critical"],
+      "outcome": "A D6 artifact gives an implementation agent everything needed to build and test a screen without guessing layout, behavior, content, contracts, states, accessibility or assets.",
+      "context": "A Figma link without version, component mapping, state table or contract fields is not a handoff. Three frontend repositories need one definition of implementation readiness and drift.",
+      "scope": [
+        "Handoff checklist for flow, screen, component, state, data range, interaction, responsive, accessibility, content and telemetry",
+        "Figma version and frame IDs, asset manifest, token package and component mapping",
+        "API/contract fields, authorization, freshness, errors and synthetic fixtures per screen",
+        "Code Connect or equivalent source mapping and approved platform divergence",
+        "Design-to-code screenshot, semantic and interaction conformance evidence"
+      ],
+      "acceptance_criteria": [
+        "Every frontend ticket cites an immutable D6 artifact version and exact screen/flow IDs",
+        "Every screen handoff includes all applicable states, realistic content ranges and contract fields",
+        "Every component maps to a published library item and intended code component or records a reviewed gap",
+        "Assets include license, format, density, theme and accessibility metadata",
+        "A cold implementation reviewer can derive automated test IDs and acceptance scenarios without asking the designer"
+      ],
+      "contracts_schema": [
+        "schema/handoff-manifest.schema.json links immutable artifact/frame version, screens, flows, components, designed/inherited/exempt states, contract version, fixtures, assets, implementation tickets, QA scenarios, approvals, expiry and checksum"
+      ],
+      "security_privacy": [
+        "Handoff fixtures are synthetic and least-disclosing",
+        "Sensitive designs and exports follow Figma access and retention policy"
+      ],
+      "observability": [
+        "Missing handoff field, unmapped component, design drift, approved deviation and stale artifact counts"
+      ],
+      "tests": [
+        "Cold-start handoff completeness exercise",
+        "Missing state/contract/component negative fixtures",
+        "Design-to-code screenshot and semantic baseline generation"
+      ],
+      "rollout_rollback": [
+        "D6 is required before frontend Ready; existing tickets remain Backlog until mapped",
+        "A handoff change creates a new version and reopens only affected implementation dependencies"
+      ],
+      "non_goals": [
+        "Generating production code from screenshots",
+        "Replacing implementation tests",
+        "Allowing mutable latest-only Figma links"
+      ],
+      "dependencies": ["T-DSY-03", "T-DSY-04", "T-DSY-05", "T-DSY-06", "T-DSY-07", "T-CNT-01"],
+      "parallel_boundary": "Primary repo docs. UX Engineering owns the handoff schema and mappings; platform squads own manifests for their screens and implementation teams consume pinned versions.",
+      "definition_of_done": [
+        "Handoff schema, template and conformance checks merged",
+        "Android, web and admin pilot handoffs pass cold-start review",
+        "UX Engineering, QA, Accessibility and CDO approvals recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

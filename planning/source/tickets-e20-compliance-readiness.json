@@ -1,0 +1,80 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e20-compliance-readiness",
+  "epic_refs": [
+    "docs#20"
+  ],
+  "items": [
+    {
+      "stable_id": "T-CMR-01",
+      "title": "Complete post-beta compliance readiness: counsel review, roles, transfers and payment self-assessment",
+      "repo": "docs",
+      "epic": "docs#20",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "The readiness work that is not launch blocking but is required before public release is completed: counsel review of the advice boundary and consent design, a named privacy owner, a cross-border transfer position per processor, the payment self-assessment and a maintained processing record.",
+      "context": "The compliance floor covers what a beta user makes mandatory. This ticket carries what a public launch and a real payment flow make mandatory, so neither set is diluted by being merged into one late epic.",
+      "scope": [
+        "Counsel review of the advice boundary across application copy, store listing and model output",
+        "Named privacy owner with a defined review cadence and a watch item for significant-entity criteria",
+        "Cross-border transfer position documented for every processor including model providers",
+        "Payment self-assessment appropriate to a hosted payment page arrangement",
+        "Records of processing and a data-flow map from device through the backend to any processor",
+        "Verification sweep of every unverified claim that feeds a critical decision"
+      ],
+      "acceptance_criteria": [
+        "Counsel review is completed and recorded, with any required copy changes ticketed",
+        "Every processor has a documented transfer position and a signed agreement",
+        "The self-assessment confirms no card data reaches our systems and the traffic evidence supports it",
+        "The data-flow map matches the captured traffic evidence and is updated per release",
+        "Each previously unverified claim is either re-verified with a date and source or marked as an assumption with a fallback",
+        "A named owner exists for every ongoing obligation rather than the epic owning it collectively"
+      ],
+      "contracts_schema": [
+        "Processing record published in a machine-readable form so it can be diffed per release"
+      ],
+      "security_privacy": [
+        "The record states which data leaves the country and under what basis",
+        "No claim is published that the traffic evidence does not support"
+      ],
+      "observability": [
+        "Review completion dates and the next review date tracked and visible"
+      ],
+      "tests": [
+        "Reconciliation of the data-flow map against captured traffic",
+        "Copy scan against the reviewed advice-boundary wording"
+      ],
+      "rollout_rollback": [
+        "Gated before public release; the beta proceeds on the compliance floor alone"
+      ],
+      "non_goals": [
+        "Launch-blocking obligations, which belong to the compliance floor epic",
+        "Account aggregator positioning, which is its own epic"
+      ],
+      "dependencies": [
+        "T-CMP-04",
+        "T-BIL-04"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the reviews and records. Copy changes land in the repository that renders them.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and the options rejected recorded",
+        "Linked from every epic and ticket it unblocks",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Follow-up implementation tickets created or updated to reference it",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

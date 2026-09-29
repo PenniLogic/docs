@@ -1,0 +1,567 @@
+{
+  "source_repository": "PenniLogic-old/docs",
+  "source_commit": "18600cec194c4cf2ceead5ff0288f45374d5f84f",
+  "source_history_copied": false,
+  "private_discussions_or_actions_logs_copied": false,
+  "unmerged_changes_copied": false,
+  "files": [
+    {
+      "path": "history/private-era-executive-summary.md",
+      "source_path": "00-EXECUTIVE-SUMMARY.md",
+      "source_sha256": "ab6f38917a86acfc9be8d229559f0ce60d18897f2675688a1cf7ba7bd91d68df",
+      "export_sha256": "ab6f38917a86acfc9be8d229559f0ce60d18897f2675688a1cf7ba7bd91d68df"
+    },
+    {
+      "path": "PRODUCT.md",
+      "source_path": "PRODUCT.md",
+      "source_sha256": "b387414dc7c5dff23272509ced7be049979234b95da6e3c721760d7c890daac6",
+      "export_sha256": "b387414dc7c5dff23272509ced7be049979234b95da6e3c721760d7c890daac6"
+    },
+    {
+      "path": "adr/ADR-001.md",
+      "source_path": "adr/ADR-001.md",
+      "source_sha256": "1b00ed1e1efce08cb9d7825c1cdd16c375e7bbc62a422728593220a790c9c14f",
+      "export_sha256": "1b00ed1e1efce08cb9d7825c1cdd16c375e7bbc62a422728593220a790c9c14f"
+    },
+    {
+      "path": "adr/ADR-002.md",
+      "source_path": "adr/ADR-002.md",
+      "source_sha256": "2cc4581758cb0d78ab9596c5efd296762bde06c518532eb4792aabb367f9faac",
+      "export_sha256": "2cc4581758cb0d78ab9596c5efd296762bde06c518532eb4792aabb367f9faac"
+    },
+    {
+      "path": "adr/ADR-003.md",
+      "source_path": "adr/ADR-003.md",
+      "source_sha256": "17ff945c9641da9ea303b4e015fab960d89bb1477cec42662c04ee9a215d8a3a",
+      "export_sha256": "17ff945c9641da9ea303b4e015fab960d89bb1477cec42662c04ee9a215d8a3a"
+    },
+    {
+      "path": "adr/ADR-004.md",
+      "source_path": "adr/ADR-004.md",
+      "source_sha256": "f3a794dff4ef5cecba48f20739f2f2b0547eefbf671b077949140b35452983ed",
+      "export_sha256": "f3a794dff4ef5cecba48f20739f2f2b0547eefbf671b077949140b35452983ed"
+    },
+    {
+      "path": "adr/ADR-005.md",
+      "source_path": "adr/ADR-005.md",
+      "source_sha256": "bda65c207198188efda9798ef45aa1b41131dc7e974104653bb22eab40c38b24",
+      "export_sha256": "bda65c207198188efda9798ef45aa1b41131dc7e974104653bb22eab40c38b24"
+    },
+    {
+      "path": "adr/ADR-006.md",
+      "source_path": "adr/ADR-006.md",
+      "source_sha256": "e670862780385ba11d653af513c6f8d9152150ece1c606878e387a5b77c13022",
+      "export_sha256": "e670862780385ba11d653af513c6f8d9152150ece1c606878e387a5b77c13022"
+    },
+    {
+      "path": "adr/ADR-007.md",
+      "source_path": "adr/ADR-007.md",
+      "source_sha256": "fc8f8bd37de97adf96f4a05a2bd00c1dd7b01dffdb35522e7ad7dd84f23561cd",
+      "export_sha256": "fc8f8bd37de97adf96f4a05a2bd00c1dd7b01dffdb35522e7ad7dd84f23561cd"
+    },
+    {
+      "path": "adr/ADR-008.md",
+      "source_path": "adr/ADR-008.md",
+      "source_sha256": "67a1dd6781766e0a96246cf35c3836e11fea8eb67c1c86a64422781bff39e6b9",
+      "export_sha256": "67a1dd6781766e0a96246cf35c3836e11fea8eb67c1c86a64422781bff39e6b9"
+    },
+    {
+      "path": "adr/ADR-009.md",
+      "source_path": "adr/ADR-009.md",
+      "source_sha256": "14d9e06b7a1d92a1cef30c3ca8d5b0816c10839571dd1b73324b26330b4a8c52",
+      "export_sha256": "14d9e06b7a1d92a1cef30c3ca8d5b0816c10839571dd1b73324b26330b4a8c52"
+    },
+    {
+      "path": "adr/ADR-010.md",
+      "source_path": "adr/ADR-010.md",
+      "source_sha256": "d510020bbfdd58741312169855143fcd2c035806034b1fd0018c9df5eb021d55",
+      "export_sha256": "d510020bbfdd58741312169855143fcd2c035806034b1fd0018c9df5eb021d55"
+    },
+    {
+      "path": "adr/ADR-011.md",
+      "source_path": "adr/ADR-011.md",
+      "source_sha256": "50d953d3753f448c3414bf75c47247c3b1bbbca02ccfde4de2e5cb866f49bcc5",
+      "export_sha256": "50d953d3753f448c3414bf75c47247c3b1bbbca02ccfde4de2e5cb866f49bcc5"
+    },
+    {
+      "path": "adr/ADR-012.md",
+      "source_path": "adr/ADR-012.md",
+      "source_sha256": "3a498bc9055b9d55602b029c9bc8e6f0e2c72e1fe42ed2bbb509af32b55a2b5e",
+      "export_sha256": "3a498bc9055b9d55602b029c9bc8e6f0e2c72e1fe42ed2bbb509af32b55a2b5e"
+    },
+    {
+      "path": "adr/ADR-013.md",
+      "source_path": "adr/ADR-013.md",
+      "source_sha256": "a5dfcd6b8076014ffe6a68ba78c3ca26d6edb94ed34e94c92ce46fb0359332d0",
+      "export_sha256": "a5dfcd6b8076014ffe6a68ba78c3ca26d6edb94ed34e94c92ce46fb0359332d0"
+    },
+    {
+      "path": "adr/ADR-014.md",
+      "source_path": "adr/ADR-014.md",
+      "source_sha256": "60850ceb68d884b5a9cc4d416ebe0fe76accf8255a258be385388317924efb36",
+      "export_sha256": "60850ceb68d884b5a9cc4d416ebe0fe76accf8255a258be385388317924efb36"
+    },
+    {
+      "path": "adr/LAYOUT.md",
+      "source_path": "adr/LAYOUT.md",
+      "source_sha256": "fc6571c165dd44a586c08f5fa307bacd00078a1217ac45869b28aafe738dfdc6",
+      "export_sha256": "fc6571c165dd44a586c08f5fa307bacd00078a1217ac45869b28aafe738dfdc6"
+    },
+    {
+      "path": "adr/README.md",
+      "source_path": "adr/README.md",
+      "source_sha256": "c8f4165ba6b10c33f70f5c155fe31d6834175e2e3068209753683bacd5ea7d80",
+      "export_sha256": "c8f4165ba6b10c33f70f5c155fe31d6834175e2e3068209753683bacd5ea7d80"
+    },
+    {
+      "path": "adr/legacy-bodies.json",
+      "source_path": "adr/legacy-bodies.json",
+      "source_sha256": "f0970563f88a9a41d0f8a2e5af835c7b75abe6608231b976fd943ff8f8957c7b",
+      "export_sha256": "f0970563f88a9a41d0f8a2e5af835c7b75abe6608231b976fd943ff8f8957c7b"
+    },
+    {
+      "path": "adr/presplit-reference.md",
+      "source_path": "adr/presplit-reference.md",
+      "source_sha256": "995641e20e49dc13c2074f15fff4515c9f4ca78a5b2b2beced39fcb2c62314fd",
+      "export_sha256": "995641e20e49dc13c2074f15fff4515c9f4ca78a5b2b2beced39fcb2c62314fd"
+    },
+    {
+      "path": "adr/reservations.json",
+      "source_path": "adr/reservations.json",
+      "source_sha256": "6782a88e91770c8ed746e7c93ea95ca05aac97197d3dab58972f345cb3c0bf77",
+      "export_sha256": "6782a88e91770c8ed746e7c93ea95ca05aac97197d3dab58972f345cb3c0bf77"
+    },
+    {
+      "path": "ai/01-ai-harness-research.md",
+      "source_path": "ai/01-ai-harness-research.md",
+      "source_sha256": "fcfe73aab047b7baa7523d3942ec91c7b2c94ac0fa9c9aa476914abf43aaafc6",
+      "export_sha256": "fcfe73aab047b7baa7523d3942ec91c7b2c94ac0fa9c9aa476914abf43aaafc6"
+    },
+    {
+      "path": "architecture/01-domain-model.md",
+      "source_path": "architecture/01-domain-model.md",
+      "source_sha256": "2a47408ce9a0466b5dce33f217d8bd470003a1fd8b738cf03befa47d6600b97b",
+      "export_sha256": "2a47408ce9a0466b5dce33f217d8bd470003a1fd8b738cf03befa47d6600b97b"
+    },
+    {
+      "path": "architecture/02-security-architecture.md",
+      "source_path": "architecture/02-security-architecture.md",
+      "source_sha256": "286a0e768d91149bf5a42c7c5c5698e4510049f5e6981caa01b70e1fc1c7ac4b",
+      "export_sha256": "286a0e768d91149bf5a42c7c5c5698e4510049f5e6981caa01b70e1fc1c7ac4b"
+    },
+    {
+      "path": "architecture/03-stack-and-monetization.md",
+      "source_path": "architecture/03-stack-and-monetization.md",
+      "source_sha256": "787d5aa70399c0d5daf3592cf44ca68b9d47c0bbbf72054f335b138bcf2cee37",
+      "export_sha256": "787d5aa70399c0d5daf3592cf44ca68b9d47c0bbbf72054f335b138bcf2cee37"
+    },
+    {
+      "path": "compliance/01-regulatory-landscape.md",
+      "source_path": "compliance/01-regulatory-landscape.md",
+      "source_sha256": "fdd8dce76caa10bd0e1b039551236364e52e08127e4fdcef7321acb7395109d2",
+      "export_sha256": "fdd8dce76caa10bd0e1b039551236364e52e08127e4fdcef7321acb7395109d2"
+    },
+    {
+      "path": "planning/source/README.md",
+      "source_path": "planning-automation/backlog-v2/README.md",
+      "source_sha256": "8b74aaaacdc55e5bd88ce9c23e94d8db0bef655d56fe371a1c082aa346d6b7d2",
+      "export_sha256": "973a9ab74e375add9b2bbae49f05fafe782f26b264035643421be1d34a781ced"
+    },
+    {
+      "path": "planning/source/epics.json",
+      "source_path": "planning-automation/backlog-v2/epics.json",
+      "source_sha256": "3d7f07cad95dd0e7d9cec70085ec28973dadb72ee82f7feaf3e81ef9d589327a",
+      "export_sha256": "3d7f07cad95dd0e7d9cec70085ec28973dadb72ee82f7feaf3e81ef9d589327a"
+    },
+    {
+      "path": "planning/source/evidence/execution-lanes.json",
+      "source_path": "planning-automation/backlog-v2/evidence/execution-lanes.json",
+      "source_sha256": "7f20d56da8111fcb08a3232d349bdb26604b0585d011f9724cd2e5b5a44c5143",
+      "export_sha256": "7f20d56da8111fcb08a3232d349bdb26604b0585d011f9724cd2e5b5a44c5143"
+    },
+    {
+      "path": "planning/source/evidence/experience-coverage.json",
+      "source_path": "planning-automation/backlog-v2/evidence/experience-coverage.json",
+      "source_sha256": "2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a",
+      "export_sha256": "2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
+    },
+    {
+      "path": "planning/source/existing-items.json",
+      "source_path": "planning-automation/backlog-v2/existing-items.json",
+      "source_sha256": "b32b29fbe5e42fe141a50e6f3d9e9ad7a2fea53c8a7302a348f0459c902f8592",
+      "export_sha256": "b32b29fbe5e42fe141a50e6f3d9e9ad7a2fea53c8a7302a348f0459c902f8592"
+    },
+    {
+      "path": "planning/source/manifest.json",
+      "source_path": "planning-automation/backlog-v2/manifest.json",
+      "source_sha256": "6601149d7e143a02a6f629a4c8bf6ce4581566345d46cb9d4c22ae8955fc548b",
+      "export_sha256": "6601149d7e143a02a6f629a4c8bf6ce4581566345d46cb9d4c22ae8955fc548b"
+    },
+    {
+      "path": "planning/source/patches-existing-tickets.json",
+      "source_path": "planning-automation/backlog-v2/patches-existing-tickets.json",
+      "source_sha256": "c313ffe7b0779e594a81c7e1ee3ac6d8712ab74805bd1431072fd31ac5b8bbc7",
+      "export_sha256": "c313ffe7b0779e594a81c7e1ee3ac6d8712ab74805bd1431072fd31ac5b8bbc7"
+    },
+    {
+      "path": "planning/source/project-readme.md",
+      "source_path": "planning-automation/backlog-v2/project-readme.md",
+      "source_sha256": "b38d6a7215d673202afafeb49a46682db393716de387b8e75ec2f13f09bbc1e6",
+      "export_sha256": "b38d6a7215d673202afafeb49a46682db393716de387b8e75ec2f13f09bbc1e6"
+    },
+    {
+      "path": "planning/source/schema/design-readiness.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/design-readiness.schema.json",
+      "source_sha256": "3478bceda77cc996f2300cd642082d64261462f2e43fd6811d6e20e873482b60",
+      "export_sha256": "3478bceda77cc996f2300cd642082d64261462f2e43fd6811d6e20e873482b60"
+    },
+    {
+      "path": "planning/source/schema/enums.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/enums.schema.json",
+      "source_sha256": "64bff19e1f76bd7f39b33652be2fd67402108252229d5ecba28b838de4316d1e",
+      "export_sha256": "64bff19e1f76bd7f39b33652be2fd67402108252229d5ecba28b838de4316d1e"
+    },
+    {
+      "path": "planning/source/schema/epics.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/epics.schema.json",
+      "source_sha256": "47ad1c263c8863ed4727c7f194c4b5b33821e41ccf221790dcbaf982bc16e110",
+      "export_sha256": "47ad1c263c8863ed4727c7f194c4b5b33821e41ccf221790dcbaf982bc16e110"
+    },
+    {
+      "path": "planning/source/schema/execution-lanes.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/execution-lanes.schema.json",
+      "source_sha256": "a91a1dfd09615205197221ac2434213e9b0f504dbebd768612c10d99d7daa70c",
+      "export_sha256": "a91a1dfd09615205197221ac2434213e9b0f504dbebd768612c10d99d7daa70c"
+    },
+    {
+      "path": "planning/source/schema/existing-items.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/existing-items.schema.json",
+      "source_sha256": "df7a7b9f0e5d3fd970ae0c9a3d5b15e7e9ae0138529a194797c330934d8df290",
+      "export_sha256": "df7a7b9f0e5d3fd970ae0c9a3d5b15e7e9ae0138529a194797c330934d8df290"
+    },
+    {
+      "path": "planning/source/schema/experience-coverage.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/experience-coverage.schema.json",
+      "source_sha256": "3db74388d461fec2a4f1a4db3c2d750cbbc3a10f284c59814804bc5de03d1e18",
+      "export_sha256": "3db74388d461fec2a4f1a4db3c2d750cbbc3a10f284c59814804bc5de03d1e18"
+    },
+    {
+      "path": "planning/source/schema/handoff-manifest.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/handoff-manifest.schema.json",
+      "source_sha256": "4ce1aa4b36d9618743b95c5b26d8f2d26e9c83a9a30f41ceb1600f581381c8d9",
+      "export_sha256": "4ce1aa4b36d9618743b95c5b26d8f2d26e9c83a9a30f41ceb1600f581381c8d9"
+    },
+    {
+      "path": "planning/source/schema/manifest.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/manifest.schema.json",
+      "source_sha256": "66ec7673ffdf852a333cf56f251b2cdf4ba19999fc729d7b1a9d18b52581b81a",
+      "export_sha256": "66ec7673ffdf852a333cf56f251b2cdf4ba19999fc729d7b1a9d18b52581b81a"
+    },
+    {
+      "path": "planning/source/schema/patches.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/patches.schema.json",
+      "source_sha256": "635dcabf042164260fee2410576fded25bd40f501f46ad27fa1309aefb565bc7",
+      "export_sha256": "635dcabf042164260fee2410576fded25bd40f501f46ad27fa1309aefb565bc7"
+    },
+    {
+      "path": "planning/source/schema/tickets.schema.json",
+      "source_path": "planning-automation/backlog-v2/schema/tickets.schema.json",
+      "source_sha256": "aaad743dc31864e8490d3e0608b1eb331d8d26d91a2a4bfa22e7fc05ef81a137",
+      "export_sha256": "aaad743dc31864e8490d3e0608b1eb331d8d26d91a2a4bfa22e7fc05ef81a137"
+    },
+    {
+      "path": "planning/source/tickets-assurance-iteration-2.json",
+      "source_path": "planning-automation/backlog-v2/tickets-assurance-iteration-2.json",
+      "source_sha256": "b22cc7996eb958a4241db7c6f9e5253fd8ae8f35a1fad5c4c6460a1b9c657e18",
+      "export_sha256": "b22cc7996eb958a4241db7c6f9e5253fd8ae8f35a1fad5c4c6460a1b9c657e18"
+    },
+    {
+      "path": "planning/source/tickets-assurance-remediation.json",
+      "source_path": "planning-automation/backlog-v2/tickets-assurance-remediation.json",
+      "source_sha256": "22d5239c4b8db12805860431b420603b4d5e5ec4decd6d45e0294f1eac3909b7",
+      "export_sha256": "22d5239c4b8db12805860431b420603b4d5e5ec4decd6d45e0294f1eac3909b7"
+    },
+    {
+      "path": "planning/source/tickets-audit-remediation.json",
+      "source_path": "planning-automation/backlog-v2/tickets-audit-remediation.json",
+      "source_sha256": "40f8de7492620db4641c347dc9ecbd976b41b09068d6508f2bac5909cb72ddbf",
+      "export_sha256": "40f8de7492620db4641c347dc9ecbd976b41b09068d6508f2bac5909cb72ddbf"
+    },
+    {
+      "path": "planning/source/tickets-e01-foundations.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e01-foundations.json",
+      "source_sha256": "7f7d4fcc79ada69cb183dfeb2df1fbdefdca4f8513c37b1cf806b7413cba70fd",
+      "export_sha256": "7f7d4fcc79ada69cb183dfeb2df1fbdefdca4f8513c37b1cf806b7413cba70fd"
+    },
+    {
+      "path": "planning/source/tickets-e02-contracts.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e02-contracts.json",
+      "source_sha256": "8fa2a0951fd9886ce2765baa0c5a290db5fc92756065d18047f3da3594ff1145",
+      "export_sha256": "8fa2a0951fd9886ce2765baa0c5a290db5fc92756065d18047f3da3594ff1145"
+    },
+    {
+      "path": "planning/source/tickets-e03-identity.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e03-identity.json",
+      "source_sha256": "b2e3f9edb4464351943088804e3146e8201b4b7cc6d8d8eed55cdf778b7901e5",
+      "export_sha256": "b2e3f9edb4464351943088804e3146e8201b4b7cc6d8d8eed55cdf778b7901e5"
+    },
+    {
+      "path": "planning/source/tickets-e05-debt-engine.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e05-debt-engine.json",
+      "source_sha256": "28dabdb83ed39e50911ecde4d178983de9dda03fc5b593228a523938a92116e4",
+      "export_sha256": "28dabdb83ed39e50911ecde4d178983de9dda03fc5b593228a523938a92116e4"
+    },
+    {
+      "path": "planning/source/tickets-e06-debt-experience.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e06-debt-experience.json",
+      "source_sha256": "143eb1963635e40cdff7637f0b800647384da4243f1b419f3d8faafb91b8a941",
+      "export_sha256": "143eb1963635e40cdff7637f0b800647384da4243f1b419f3d8faafb91b8a941"
+    },
+    {
+      "path": "planning/source/tickets-e07-retention.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e07-retention.json",
+      "source_sha256": "e0dcd390723217f517ca3b7060b45bfbf4ecca48884885e117a524658d4aa775",
+      "export_sha256": "e0dcd390723217f517ca3b7060b45bfbf4ecca48884885e117a524658d4aa775"
+    },
+    {
+      "path": "planning/source/tickets-e12-web.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e12-web.json",
+      "source_sha256": "b8822874a16340dbfb01e6e657c584bf59fbb62c40d11fe01b7e5cae164b9be5",
+      "export_sha256": "b8822874a16340dbfb01e6e657c584bf59fbb62c40d11fe01b7e5cae164b9be5"
+    },
+    {
+      "path": "planning/source/tickets-e13-admin.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e13-admin.json",
+      "source_sha256": "378786c61ae9ec827515eb4da6e783e1626e66d969db24873eb4a2c5ce021bd2",
+      "export_sha256": "378786c61ae9ec827515eb4da6e783e1626e66d969db24873eb4a2c5ce021bd2"
+    },
+    {
+      "path": "planning/source/tickets-e14-billing.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e14-billing.json",
+      "source_sha256": "5a0fdeea8df1d932207aeb8e89e46fa205664317defd1199148ed6d7de698e04",
+      "export_sha256": "5a0fdeea8df1d932207aeb8e89e46fa205664317defd1199148ed6d7de698e04"
+    },
+    {
+      "path": "planning/source/tickets-e15-e16-groups.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e15-e16-groups.json",
+      "source_sha256": "1fede671facc5c34ae6a2ec9a7a7b8b86b7e0d56c01061ccaf726d6eeadd49f0",
+      "export_sha256": "1fede671facc5c34ae6a2ec9a7a7b8b86b7e0d56c01061ccaf726d6eeadd49f0"
+    },
+    {
+      "path": "planning/source/tickets-e17-ai-harness.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e17-ai-harness.json",
+      "source_sha256": "09374a42e338e7544c0c664c819a7e201762192a620c92db8e27639fe86361a4",
+      "export_sha256": "09374a42e338e7544c0c664c819a7e201762192a620c92db8e27639fe86361a4"
+    },
+    {
+      "path": "planning/source/tickets-e18-ai-product.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e18-ai-product.json",
+      "source_sha256": "e39cc1440bcc6b1b90cfb1109c629369fb9a4bac7be127825c1fc3916cd0dc83",
+      "export_sha256": "e39cc1440bcc6b1b90cfb1109c629369fb9a4bac7be127825c1fc3916cd0dc83"
+    },
+    {
+      "path": "planning/source/tickets-e19-security.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e19-security.json",
+      "source_sha256": "4bef026e7833069e329b505f09feaeefcd72b715484087bcc736673529376662",
+      "export_sha256": "4bef026e7833069e329b505f09feaeefcd72b715484087bcc736673529376662"
+    },
+    {
+      "path": "planning/source/tickets-e20-compliance-readiness.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e20-compliance-readiness.json",
+      "source_sha256": "74c7939dd1e2bc5ac3fe03e1b41e296357f1f590a5c49eba827fd942e936d2a0",
+      "export_sha256": "74c7939dd1e2bc5ac3fe03e1b41e296357f1f590a5c49eba827fd942e936d2a0"
+    },
+    {
+      "path": "planning/source/tickets-e21-e22-income-goals.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e21-e22-income-goals.json",
+      "source_sha256": "456a5a719e94549e28d93afe70d137ed0a2824d19e094ae2c054ffb99312dabd",
+      "export_sha256": "456a5a719e94549e28d93afe70d137ed0a2824d19e094ae2c054ffb99312dabd"
+    },
+    {
+      "path": "planning/source/tickets-e23-trust-controls.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e23-trust-controls.json",
+      "source_sha256": "c3a3769e63a20baded1ef1a6e4a590f0bfc317d935e4e61b15b09e202c2e94b5",
+      "export_sha256": "c3a3769e63a20baded1ef1a6e4a590f0bfc317d935e4e61b15b09e202c2e94b5"
+    },
+    {
+      "path": "planning/source/tickets-e24-platform.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e24-platform.json",
+      "source_sha256": "791fba866f741b88dd73c427d844cd8ae26af0b7ce0f708d5ee833ac74cedcb3",
+      "export_sha256": "791fba866f741b88dd73c427d844cd8ae26af0b7ce0f708d5ee833ac74cedcb3"
+    },
+    {
+      "path": "planning/source/tickets-e25-quality.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e25-quality.json",
+      "source_sha256": "f110e3d8b2da3007e27014f516a69e445454ca33d2db4ca0cca5418887a87ad6",
+      "export_sha256": "f110e3d8b2da3007e27014f516a69e445454ca33d2db4ca0cca5418887a87ad6"
+    },
+    {
+      "path": "planning/source/tickets-e26-architecture-gates.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e26-architecture-gates.json",
+      "source_sha256": "c6ad0d5c86fba470e448497ee5851bd1322bb49fb534692e5f5cf58a9a63548c",
+      "export_sha256": "c6ad0d5c86fba470e448497ee5851bd1322bb49fb534692e5f5cf58a9a63548c"
+    },
+    {
+      "path": "planning/source/tickets-e27-compliance-floor.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e27-compliance-floor.json",
+      "source_sha256": "8f49ff5b4abb2e65d022a186c0ae882abf9b4467111294f831c333817b09120f",
+      "export_sha256": "8f49ff5b4abb2e65d022a186c0ae882abf9b4467111294f831c333817b09120f"
+    },
+    {
+      "path": "planning/source/tickets-e28-advanced-ingestion.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e28-advanced-ingestion.json",
+      "source_sha256": "d1609bd13e17793bf6ac6b072579e3eb8e0a7b2f55b2f94acb841df358e8c866",
+      "export_sha256": "d1609bd13e17793bf6ac6b072579e3eb8e0a7b2f55b2f94acb841df358e8c866"
+    },
+    {
+      "path": "planning/source/tickets-e29-account-aggregator.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e29-account-aggregator.json",
+      "source_sha256": "2902f5ed1224cc9efc6a578f1316190051ced18894a88380b982a87a978d4f05",
+      "export_sha256": "2902f5ed1224cc9efc6a578f1316190051ced18894a88380b982a87a978d4f05"
+    },
+    {
+      "path": "planning/source/tickets-e30-globalization.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e30-globalization.json",
+      "source_sha256": "e678870f478bc1abac95c0140ce25f77e2d613bd370072dbd0f06dd5020776a9",
+      "export_sha256": "e678870f478bc1abac95c0140ce25f77e2d613bd370072dbd0f06dd5020776a9"
+    },
+    {
+      "path": "planning/source/tickets-e31-governance.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e31-governance.json",
+      "source_sha256": "c6db75fb4764c09ab2d849c54c675a1d7523db500d82346d5a6a6d132b32ba4b",
+      "export_sha256": "c6db75fb4764c09ab2d849c54c675a1d7523db500d82346d5a6a6d132b32ba4b"
+    },
+    {
+      "path": "planning/source/tickets-e32-sync.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e32-sync.json",
+      "source_sha256": "8d92a114414fb7b615322e240003b65c4a49fac866f5fc2d0d8413b8fe0efa33",
+      "export_sha256": "8d92a114414fb7b615322e240003b65c4a49fac866f5fc2d0d8413b8fe0efa33"
+    },
+    {
+      "path": "planning/source/tickets-e33-experience-strategy.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e33-experience-strategy.json",
+      "source_sha256": "3ea96b84c62dc6200f8aea6ef74f5e85ca08eea4d3470ff52fda47dd247d3e71",
+      "export_sha256": "3ea96b84c62dc6200f8aea6ef74f5e85ca08eea4d3470ff52fda47dd247d3e71"
+    },
+    {
+      "path": "planning/source/tickets-e34-design-system.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e34-design-system.json",
+      "source_sha256": "57eb5ae38f693414b8dff9333eb951627ed4978cb7a62df089bad5eaf856d1f9",
+      "export_sha256": "57eb5ae38f693414b8dff9333eb951627ed4978cb7a62df089bad5eaf856d1f9"
+    },
+    {
+      "path": "planning/source/tickets-e35-android-design.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e35-android-design.json",
+      "source_sha256": "3de24204f792be54457aed00490a5d351a7c581bb304ba5ad29e1fe431797499",
+      "export_sha256": "3de24204f792be54457aed00490a5d351a7c581bb304ba5ad29e1fe431797499"
+    },
+    {
+      "path": "planning/source/tickets-e36-web-design.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e36-web-design.json",
+      "source_sha256": "d5e1a9935799c8f21399bab2a7d6f0c6d4d68f1b9c30e682a67c92a3de538e5f",
+      "export_sha256": "d5e1a9935799c8f21399bab2a7d6f0c6d4d68f1b9c30e682a67c92a3de538e5f"
+    },
+    {
+      "path": "planning/source/tickets-e37-admin-design.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e37-admin-design.json",
+      "source_sha256": "b21122caf2b85cbe88d1bfb875c33872dd5791d7be8420378c6ece3d5eb54127",
+      "export_sha256": "b21122caf2b85cbe88d1bfb875c33872dd5791d7be8420378c6ece3d5eb54127"
+    },
+    {
+      "path": "planning/source/tickets-e38-design-qa.json",
+      "source_path": "planning-automation/backlog-v2/tickets-e38-design-qa.json",
+      "source_sha256": "6a283eb05e3ee87f1aba5092489cde6dda104279ff6ca3c1200a51502c8413a9",
+      "export_sha256": "6a283eb05e3ee87f1aba5092489cde6dda104279ff6ca3c1200a51502c8413a9"
+    },
+    {
+      "path": "planning/source/tickets-experience-implementation-gaps.json",
+      "source_path": "planning-automation/backlog-v2/tickets-experience-implementation-gaps.json",
+      "source_sha256": "58f9b541f5269b1e87bba1da38b1a078e73cb5823eece8ceae62697314cd9033",
+      "export_sha256": "58f9b541f5269b1e87bba1da38b1a078e73cb5823eece8ceae62697314cd9033"
+    },
+    {
+      "path": "product/01-product-spec.md",
+      "source_path": "product/01-product-spec.md",
+      "source_sha256": "6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221",
+      "export_sha256": "6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+    },
+    {
+      "path": "product/02-risk-register.md",
+      "source_path": "product/02-risk-register.md",
+      "source_sha256": "66df78a77b30cea84b89d117844b0570663f9260e3e637c84d346bb79d94fd4e",
+      "export_sha256": "66df78a77b30cea84b89d117844b0570663f9260e3e637c84d346bb79d94fd4e"
+    },
+    {
+      "path": "product/03-delivery-plan.md",
+      "source_path": "product/03-delivery-plan.md",
+      "source_sha256": "e74742e195670979c3affe7d2c3e454231dd104b6a7b21e8b5ac0da4c3ea320c",
+      "export_sha256": "1cc72688910fe24d7797fb72710303fd75b11997d908306e80d558d839190ffa"
+    },
+    {
+      "path": "product/04-execution-readiness-review.md",
+      "source_path": "product/04-execution-readiness-review.md",
+      "source_sha256": "07963fe9df9a30de5894973ff91320aaf13a14622f7654945d8d047b0270738e",
+      "export_sha256": "3da441b247d07362d3cc0853412891953622a49880977cd218bf1e76a690bfd4"
+    },
+    {
+      "path": "product/05-planning-completeness-audit.md",
+      "source_path": "product/05-planning-completeness-audit.md",
+      "source_sha256": "8e4b4ab3d1502e6ef86e9497c7b446a71501f587b9788781c459203306202865",
+      "export_sha256": "8e4b4ab3d1502e6ef86e9497c7b446a71501f587b9788781c459203306202865"
+    },
+    {
+      "path": "product/06-planning-assurance-audit.md",
+      "source_path": "product/06-planning-assurance-audit.md",
+      "source_sha256": "b7c3b411aae5c2063d9520a4f4d0022864b729181e9a3908efd60b6e91917084",
+      "export_sha256": "b7c3b411aae5c2063d9520a4f4d0022864b729181e9a3908efd60b6e91917084"
+    },
+    {
+      "path": "product/07-planning-assurance-iteration-2.md",
+      "source_path": "product/07-planning-assurance-iteration-2.md",
+      "source_sha256": "6a73aedadf4826029bc1cdf0e31f20ac02286e744ed9ca2be85dfd6f694a7814",
+      "export_sha256": "6a73aedadf4826029bc1cdf0e31f20ac02286e744ed9ca2be85dfd6f694a7814"
+    },
+    {
+      "path": "product/08-experience-design-and-sdlc-plan.md",
+      "source_path": "product/08-experience-design-and-sdlc-plan.md",
+      "source_sha256": "5d2debf72fe535ee239f14fbd2afdadc038f2a79d2eb98d41baa7947d14a2d37",
+      "export_sha256": "5d2debf72fe535ee239f14fbd2afdadc038f2a79d2eb98d41baa7947d14a2d37"
+    },
+    {
+      "path": "product/09-design-first-planning-assurance.md",
+      "source_path": "product/09-design-first-planning-assurance.md",
+      "source_sha256": "b872ce821b33408d6596e1030da32534cf998f7655896758fccadf2fc13486d6",
+      "export_sha256": "b872ce821b33408d6596e1030da32534cf998f7655896758fccadf2fc13486d6"
+    },
+    {
+      "path": "research/00-dev-environment-and-tooling.md",
+      "source_path": "research/00-dev-environment-and-tooling.md",
+      "source_sha256": "192442a8034be7ef2e8ff6f0cb59a436ed0b2af4ac19a4c5556a8f0a5e423672",
+      "export_sha256": "192442a8034be7ef2e8ff6f0cb59a436ed0b2af4ac19a4c5556a8f0a5e423672"
+    },
+    {
+      "path": "research/01-data-ingestion-feasibility.md",
+      "source_path": "research/01-data-ingestion-feasibility.md",
+      "source_sha256": "10ef30497fc9892df61bf0fb2f740ebead1c21d4548443085e8747f70bfbf25e",
+      "export_sha256": "10ef30497fc9892df61bf0fb2f740ebead1c21d4548443085e8747f70bfbf25e"
+    },
+    {
+      "path": "research/02-competitive-landscape.md",
+      "source_path": "research/02-competitive-landscape.md",
+      "source_sha256": "f35a03ad71a069b589433488802c3ec10ba56c2db50f00e0c3b626f1240683ba",
+      "export_sha256": "f35a03ad71a069b589433488802c3ec10ba56c2db50f00e0c3b626f1240683ba"
+    },
+    {
+      "path": "research/03-data-aggregation-strategy.md",
+      "source_path": "research/03-data-aggregation-strategy.md",
+      "source_sha256": "e3b214a9cdf9b2722932231c74e085c1bae67a59ea91b199582e76c1eb21ff46",
+      "export_sha256": "e3b214a9cdf9b2722932231c74e085c1bae67a59ea91b199582e76c1eb21ff46"
+    },
+    {
+      "path": "research/spikes/sms_parser_spike.py",
+      "source_path": "research/spikes/sms_parser_spike.py",
+      "source_sha256": "17ebab59a41283cbdd7aca5a979be04680e388978fdf71894327d07bd2526147",
+      "export_sha256": "17ebab59a41283cbdd7aca5a979be04680e388978fdf71894327d07bd2526147"
+    }
+  ]
+}

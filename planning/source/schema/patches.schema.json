@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic backlog v2 patch file",
+  "description": "Strict edits against issues that already exist on the board. Every pre-v2 item carries a patch, and every patch must state set_fields.sprint and set_fields.status, because the pre-v2 field values are inherited from a superseded plan and are not authoritative. Ticket patches additionally set Outcome and Parallel boundary and append every quality section required by a native v2 ticket. Every add_* list appends to the matching rendered section, every remove_* list and every replace_text old string must be present verbatim, and sync-backlog-v2.ps1 fails rather than drifting when a target is absent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "group",
+    "description",
+    "items"
+  ],
+  "properties": {
+    "kind": {
+      "const": "patches"
+    },
+    "group": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/patch"
+      }
+    }
+  },
+  "definitions": {
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "summary",
+        "set_title",
+        "set_fields",
+        "add_dependencies",
+        "remove_dependencies",
+        "add_acceptance_criteria",
+        "remove_acceptance_criteria",
+        "add_contracts_schema",
+        "add_security_privacy",
+        "add_observability",
+        "add_tests",
+        "add_rollout_rollback",
+        "add_non_goals",
+        "replace_text"
+      ],
+      "properties": {
+        "ref": {
+          "$ref": "enums.schema.json#/definitions/issue_ref"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 20,
+          "pattern": "^[\\x20-\\x7E]+$"
+        },
+        "set_title": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 140,
+              "pattern": "^[\\x20-\\x7E]+$"
+            }
+          ]
+        },
+        "set_outcome": {
+          "type": "string",
+          "minLength": 40,
+          "pattern": "^[\\x20-\\x7E]+$"
+        },
+        "set_context": {
+          "type": "string",
+          "minLength": 40,
+          "pattern": "^[\\x20-\\x7E]+$"
+        },
+        "set_parallel_boundary": {
+          "type": "string",
+          "minLength": 40,
+          "pattern": "^[\\x20-\\x7E]+$"
+        },
+        "set_fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Project field values to set on the existing item. Keys are lower-case field names; values must be live Project options. sprint and status are required: an existing item that does not restate both is carrying a field value from the superseded plan.",
+          "properties": {
+            "kind": {
+              "$ref": "enums.schema.json#/definitions/kind"
+            },
+            "phase": {
+              "$ref": "enums.schema.json#/definitions/phase"
+            },
+            "sprint": {
+              "$ref": "enums.schema.json#/definitions/sprint"
+            },
+            "component": {
+              "$ref": "enums.schema.json#/definitions/component"
+            },
+            "priority": {
+              "$ref": "enums.schema.json#/definitions/priority"
+            },
+            "perspective": {
+              "$ref": "enums.schema.json#/definitions/perspective"
+            },
+            "risk": {
+              "$ref": "enums.schema.json#/definitions/risk"
+            },
+            "status": {
+              "$ref": "enums.schema.json#/definitions/status"
+            },
+            "estimate": {
+              "$ref": "enums.schema.json#/definitions/estimate"
+            }
+          },
+          "required": [
+            "sprint",
+            "status"
+          ]
+        },
+        "add_dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "enums.schema.json#/definitions/reference"
+          }
+        },
+        "remove_dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "enums.schema.json#/definitions/reference"
+          }
+        },
+        "add_acceptance_criteria": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "remove_acceptance_criteria": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_contracts_schema": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_security_privacy": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_observability": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_tests": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_rollout_rollback": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_non_goals": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_scope": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_out_of_scope": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_exit_criteria": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "add_definition_of_done": {
+          "$ref": "enums.schema.json#/definitions/prose_list_optional"
+        },
+        "replace_text": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "old",
+              "new"
+            ],
+            "properties": {
+              "old": {
+                "type": "string",
+                "minLength": 1
+              },
+              "new": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

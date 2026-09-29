@@ -1,0 +1,408 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e23-trust-controls",
+  "epic_refs": [
+    "docs#25"
+  ],
+  "items": [
+    {
+      "stable_id": "T-TRU-01",
+      "title": "Build the application lock, privacy mode and screen protection",
+      "repo": "android",
+      "epic": "docs#25",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Sprint 16",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "security",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can lock the application behind biometrics with a timeout I choose, hide my balances at a glance when I am in public, and know that my financial screens cannot be screenshotted or shown in the recents list.",
+      "context": "These are the controls a user can see and touch, and they are the everyday version of the privacy promise. An application lock that a task switch defeats is worse than none, because it advertises a protection that is not there.",
+      "scope": [
+        "Application lock with biometric unlock and a configurable timeout",
+        "Lock enforced across task switching, process death and configuration change",
+        "Privacy mode masking every monetary value including in charts and widgets",
+        "Secure window flag and recents exclusion on sensitive screens",
+        "Fallback when biometrics are unavailable or not enrolled"
+      ],
+      "acceptance_criteria": [
+        "The lock cannot be bypassed by task switching, process death or a configuration change, verified on a physical device",
+        "Privacy mode masks every monetary value including charts, list summaries and notification previews",
+        "A screenshot attempt on a financial screen is blocked and the recents thumbnail is blank, verified by capture",
+        "A device without enrolled biometrics still has a usable, documented fallback",
+        "The lock state survives an application update",
+        "Lock and privacy controls are screen-reader traversable"
+      ],
+      "contracts_schema": [
+        "No contract change; the controls are entirely client side"
+      ],
+      "security_privacy": [
+        "The lock protects local access only and is not a substitute for server authentication",
+        "Masked values are masked before rendering, not hidden with an overlay"
+      ],
+      "observability": [
+        "Records lock activation and privacy mode toggles without amounts"
+      ],
+      "tests": [
+        "Task switch and process death bypass attempts on a physical device",
+        "Screenshot and recents capture test",
+        "Masking coverage test across surfaces",
+        "Biometric fallback test"
+      ],
+      "rollout_rollback": [
+        "Ships enabled by default with the timeout configurable; privacy mode defaults off",
+        "Rollback disables the lock but never leaves a user locked out"
+      ],
+      "non_goals": [
+        "Backend cryptography, which belongs to E19",
+        "Consent and export surfaces, which are the other trust ticket"
+      ],
+      "dependencies": [
+        "T-SEC-05"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the lock, masking and window flags.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-TRU-02",
+      "title": "Build the Android transparency, export, deletion and consent surfaces",
+      "repo": "android",
+      "epic": "docs#25",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Sprint 16",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "As a user, I can see exactly what leaves my device, turn analytics off and have it genuinely stop, export everything I own, and delete my account knowing precisely what is destroyed.",
+      "context": "Radical transparency is the price of asking to read bank messages, not decoration. The critical property is that the transparency screen is generated from the real payload rather than written by hand, because a transparency claim that is wrong is worse than no claim at all. The cross-user access log is deliberately not here: it needs family sharing, which is Future, and the export, deletion and consent controls must not wait for it. T-TRU-04 owns that surface.",
+      "scope": [
+        "Screen showing what leaves the device, generated from the real payload schema",
+        "Analytics opt-out that stops collection rather than only hiding it",
+        "Full export in both formats, prominently offered and re-importable",
+        "Account deletion with a plain-language statement of what is destroyed and what is retained",
+        "Consent centre linking every revocable consent in one place",
+        "Export in the versioned CSV and JSON formats published by T-CON-09, including the format version shown to the user"
+      ],
+      "acceptance_criteria": [
+        "The transparency screen content is generated from the payload schema, so it cannot drift from behaviour, and the traffic capture harness confirms it",
+        "Turning analytics off produces zero outbound analytics calls, proven by capture",
+        "Export produces a complete dataset that re-imports cleanly into an empty account",
+        "Deletion states exactly what is destroyed and what is retained, and the retention statement matches the implemented policy",
+        "Deletion completes within the published window and is verified by the erasure harness",
+        "All surfaces are screen-reader traversable and usable at the largest text scale",
+        "Export uses the versioned formats published by T-CON-09 and shows the format version, so a user who exported last year knows which shape they hold",
+        "Every applicable T-UX-01 state identifier is handled, asserted by the client state coverage check"
+      ],
+      "contracts_schema": [
+        "Consumes the published rights, transparency and export contracts and the payload schema"
+      ],
+      "security_privacy": [
+        "Export and deletion require step-up authentication and are rate limited",
+        "The transparency screen must never claim a protection the capture evidence does not support"
+      ],
+      "observability": [
+        "Records export and deletion requests with outcome only, never content"
+      ],
+      "tests": [
+        "Schema-generated transparency content test",
+        "Analytics opt-out capture test",
+        "Export round-trip re-import test",
+        "Deletion propagation verification",
+        "Accessibility traversal test"
+      ],
+      "rollout_rollback": [
+        "Export and deletion ship behind a flag until their harnesses are green in staging",
+        "Rollback disables new requests; nothing already deleted is restored"
+      ],
+      "non_goals": [
+        "Backend erasure mechanics, which belongs to E19",
+        "Regulatory documentation, which belongs to the compliance epics",
+        "The cross-user access log and shared-data visibility, which T-TRU-04 owns and which is gated on family sharing"
+      ],
+      "dependencies": [
+        "T-CON-09",
+        "T-CMP-01",
+        "T-CMP-02",
+        "T-ADM-13",
+        "T-SEC-02",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the transparency, export, deletion and consent surfaces. Content is generated from published schemas and compliance text rather than authored locally, and the cross-user access log belongs to T-TRU-04.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-TRU-03",
+      "title": "Build the web trust centre: consent, transparency, analytics opt-out and privacy mode",
+      "repo": "web",
+      "epic": "docs#25",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Compliance",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "compliance",
+        "P1-high"
+      ],
+      "outcome": "A web user has one place to see and change every consent, read a generated transparency view of what was accessed and why, opt out of product analytics, and turn on a privacy mode that hides balances on screen, without contacting anyone.",
+      "context": "The compliance floor produces a consent ledger, a purpose registry and a transparency stream, and the Android client gets a surface for them while the web product gets nothing. Web is also the surface a user reaches on a shared or work machine, which is exactly where an on-screen privacy mode matters and where an analytics opt-out is most likely to be exercised. A consent centre that only exists on the phone is not a consent centre.",
+      "scope": [
+        "Consent centre listing every purpose, its version, the current state and the date it was granted or withdrawn",
+        "Granting and withdrawing consent per purpose, with the consequence of withdrawal stated before it is confirmed",
+        "Transparency view generated from the published transparency payload rather than hand-written per event type",
+        "Product analytics opt-out that takes effect immediately and is honoured on the server, not only in the browser",
+        "Privacy mode that masks balances and amounts on screen, persists per device, and is reachable in one action",
+        "Rights request entry point and status, reading the published rights contract",
+        "Applicable states from the T-UX-01 taxonomy, including the case where the transparency stream is unavailable"
+      ],
+      "acceptance_criteria": [
+        "Every purpose in the registry appears in the consent centre with its version and current state; a purpose present on the server and missing from the surface fails a test",
+        "Withdrawing a consent states its consequence before confirmation and takes effect server-side within the published bound",
+        "The transparency view is generated from the published payload: adding a new event type to the contract renders without a code change, proven by a test with a synthetic event type",
+        "The analytics opt-out is enforced server-side; a test asserts no analytics event is accepted for an opted-out user even if a client sends one",
+        "Privacy mode masks every amount and balance on screen, persists across reloads on that device, and never changes the underlying data",
+        "A rights request can be raised and its status and remaining response time read, using the published contract values rather than a client-side clock",
+        "The transparency view never displays administrative identity or an internal reason code outside the published vocabulary",
+        "Every applicable T-UX-01 state identifier is handled, asserted by the client state coverage check"
+      ],
+      "contracts_schema": [
+        "Consumes the consent, purpose, rights-request and transparency shapes published by T-CON-09 through the generated TypeScript client"
+      ],
+      "security_privacy": [
+        "Privacy mode is a presentation control and is never described to the user as a security boundary",
+        "The transparency view is subject-scoped: a test asserts it cannot return another user's events",
+        "Analytics opt-out state is stored server-side so it survives a cleared browser and a new device"
+      ],
+      "observability": [
+        "Consent grant and withdrawal rates per purpose, opt-out rate and transparency view usage are recorded, with no content of the events themselves"
+      ],
+      "tests": [
+        "Purpose coverage test against the registry",
+        "Withdrawal consequence and server-effect test",
+        "Generated transparency view test with a synthetic event type",
+        "Server-side analytics opt-out enforcement test",
+        "Privacy mode masking and persistence test",
+        "Cross-user transparency isolation test",
+        "State coverage test against the T-UX-01 identifiers"
+      ],
+      "rollout_rollback": [
+        "Consent centre and transparency view ship first, then the analytics opt-out, then privacy mode, so each is verifiable on its own",
+        "Rollback hides the surfaces; server-side consent and opt-out state are unaffected because the surface never owned them"
+      ],
+      "non_goals": [
+        "Android trust surfaces, which T-TRU-02 and T-TRU-04 own",
+        "The consent ledger, purpose registry and rights processing, which T-CMP-01 owns",
+        "Cookie banners for a marketing site, which is not this product"
+      ],
+      "dependencies": [
+        "T-CON-09",
+        "T-CMP-01",
+        "T-ADM-13",
+        "T-WEB-01",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the web trust centre surfaces only. Consent, purposes, rights processing and the transparency stream are server-owned and are consumed through the published contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-TRU-04",
+      "title": "Build the Android cross-user access log and shared-data visibility",
+      "repo": "android",
+      "epic": "docs#25",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Compliance",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "A user can see who accessed their shared data, what they saw, when, and under which grant, and can revoke a grant from the same screen, so sharing is visible to the person being shared with rather than only to the person sharing.",
+      "context": "Family and split sharing is the feature with the clearest abuse potential, and the control that makes it safe is visibility: a person who can see that their data was read, by whom and under what grant, can act. That surface depends on the cross-user access events the family authorization work produces, which is why it is separated from the rest of the Android trust surface - the export, deletion and consent controls should not wait for family sharing to exist.",
+      "scope": [
+        "Access log listing cross-user reads: who, what class of data, when, and the grant that permitted it",
+        "Grant list with the ability to revoke from the same screen and see the revocation take effect",
+        "Explanation of the two revocation bounds, online and offline lease, in the user's terms and with the published numbers",
+        "Filtering by person and by period, and an empty state that distinguishes no access from no sharing",
+        "Discreet exit from a shared group, consistent with the abuse-safety design",
+        "Applicable states from the T-UX-01 taxonomy, including stale when the log cannot refresh"
+      ],
+      "acceptance_criteria": [
+        "Every cross-user read recorded by the server appears in the log with its actor, data class, time and grant reference, proven by a test that performs a shared read and asserts the entry",
+        "Revoking a grant from this screen denies the corresponding read within the published online bound, asserted by a test",
+        "The screen states the offline lease bound in the user's terms and never claims revocation is immediate",
+        "An empty log distinguishes no one has accessed your data from you are not sharing anything, with different copy for each",
+        "The log never shows an administrative actor or an internal reason code, consistent with the subject-visible transparency rules",
+        "Discreet exit leaves no notification or visible trace to the other members beyond what the design permits, verified against the abuse-safety criteria",
+        "Every applicable T-UX-01 state identifier is handled, asserted by the client state coverage check"
+      ],
+      "contracts_schema": [
+        "Consumes the transparency payload and grant shapes published by T-CON-09 and T-CON-04 through the generated client"
+      ],
+      "security_privacy": [
+        "The log is subject-scoped; a test asserts it cannot return another user's access events",
+        "Revocation from this screen uses the same server operation as every other revocation path, so there is one revocation implementation",
+        "Discreet exit is designed for the abuse case: it does not announce itself and it does not leave a residual grant"
+      ],
+      "observability": [
+        "Log open rate, revocations initiated from this screen and discreet exits are recorded as counts with no content"
+      ],
+      "tests": [
+        "Shared-read produces a log entry test",
+        "Revoke-from-log online bound test",
+        "Empty-state differentiation test",
+        "Administrative-actor exclusion test",
+        "Discreet exit trace test",
+        "State coverage test against the T-UX-01 identifiers"
+      ],
+      "rollout_rollback": [
+        "Ships with family sharing, behind the same flag, because an access log for a feature nobody has is an empty screen",
+        "Rollback hides the surface; the server-side access events continue to be recorded, so no history is lost"
+      ],
+      "non_goals": [
+        "Export, deletion and consent controls, which T-TRU-02 owns",
+        "The server-side access event stream and grant model, which T-FAM-01 and T-FAM-02 own",
+        "Web equivalents, which T-TRU-03 owns"
+      ],
+      "dependencies": [
+        "T-FAM-02",
+        "T-TRU-02",
+        "T-CON-04",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the access log and grant revocation surface only. The events, the grants and the revocation semantics are server-owned; this ticket renders and triggers them.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SUP-02",
+      "title": "Build the Android support intake and request status surface",
+      "repo": "android",
+      "epic": "docs#25",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "P2-medium"
+      ],
+      "outcome": "An Android user can raise a support request from the app, attach permitted evidence, optionally include a privacy-safe diagnostic bundle, and follow the request status, and every existing in-app help link leads here rather than to an unowned mailbox.",
+      "context": "The app already offers help and contact entry points in onboarding, permissions and billing flows, and none of them resolves to an owned system. Android is also where the diagnostic evidence lives, which is the part that must be handled carefully: a support attachment is the easiest accidental route for raw captured message content to leave the device, and the rule against that is absolute.",
+      "scope": [
+        "Request creation with category selection and the response target shown before submission",
+        "Optional diagnostic bundle, opt-in per request, showing the user exactly what it contains before it is sent",
+        "Attachment selection within the permitted types, sizes and expiry",
+        "Request list and detail with status, thread and remaining response time",
+        "Replacement of every existing in-app help and contact entry point with a link to this surface",
+        "Applicable states from the T-UX-01 taxonomy, including offline submission queued for retry"
+      ],
+      "acceptance_criteria": [
+        "A request can be created, its status followed and messages added, using only the published contract",
+        "The diagnostic bundle is opt-in, its exact contents are shown before sending, and it contains only allowlisted fields, proven by a test with planted financial values",
+        "No raw captured message content can be attached or included in a diagnostic bundle, enforced by a check rather than by guidance, and proven by a test",
+        "The response target shown is the value the server returns, including the priority-support variant",
+        "Every existing in-app help or contact entry point resolves to this surface; a link to an unowned mailbox or an external form fails review",
+        "A request submitted while offline is queued and sent on reconnection without duplication, proven by a test",
+        "Every applicable T-UX-01 state identifier is handled, asserted by the client state coverage check"
+      ],
+      "contracts_schema": [
+        "Consumes the support shapes published by T-CON-11 through the generated client"
+      ],
+      "security_privacy": [
+        "Raw SMS, notification and email content can never leave the device through this surface; the diagnostic allowlist is the enforcement and a test is the proof",
+        "The form rejects credentials, session tokens and recovery codes before submission",
+        "Attachments are removed from local temporary storage once the request is submitted or abandoned"
+      ],
+      "observability": [
+        "Submission, abandonment, diagnostic opt-in rate and offline-queue depth are recorded"
+      ],
+      "tests": [
+        "Request creation and status journey test",
+        "Diagnostic allowlist test with planted financial values",
+        "Raw message content exclusion test",
+        "Offline queue and no-duplicate test",
+        "Help-entry-point link audit test",
+        "State coverage test against the T-UX-01 identifiers"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag with the existing help links redirected only once intake is live",
+        "Rollback restores the previous links, which is why the previous destination is recorded rather than deleted"
+      ],
+      "non_goals": [
+        "Support service, triage and vendor integration, which T-SUP-01 owns",
+        "Web support surfaces, which T-SUP-03 owns",
+        "Live chat or telephony"
+      ],
+      "dependencies": [
+        "T-SUP-01",
+        "T-CON-11",
+        "T-AND-01",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the in-app intake, the diagnostic bundle composition and the help entry points. The service and the allowlist definition belong to T-SUP-01.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,835 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e14-billing",
+  "epic_refs": [
+    "docs#14"
+  ],
+  "items": [
+    {
+      "stable_id": "T-BIL-01",
+      "title": "Implement entitlement storage, server-side resolution, trial anti-abuse and bring-your-own-key guards",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Plans, features and entitlements are owned data resolved server-side with default deny, trials cannot be farmed, and the bring-your-own-key tier cannot be used to obtain features it does not include.",
+      "context": "Entitlement enforcement is revenue-critical infrastructure rather than a feature: an ungated tier destroys the margin regardless of price. It also has to be the authoritative source, with any external provider treated as an event source only, so a vendor outage cannot grant or revoke access.",
+      "scope": [
+        "Plan, feature, plan-feature, subscription and entitlement storage with seed data for every tier",
+        "Resolution middleware that denies by default and caches with explicit invalidation",
+        "External provider treated as an event source; stored state is authoritative",
+        "Trial limits keyed on a verified, hashed phone number with a database-level constraint",
+        "Refund-cycling counter feeding offer eligibility",
+        "Bring-your-own-key feature scoping and a server-side soft cap",
+        "Plan records created as immutable versions from the start, so T-BIL-10 pins rather than retrofits"
+      ],
+      "acceptance_criteria": [
+        "A tampered client obtains nothing; entitlement is decided server-side on every request",
+        "Absence of an entitlement denies rather than allows, proven by a negative test per gated feature",
+        "The trial constraint is enforced by the database, not only by application code",
+        "A provider outage does not change any user's entitlement",
+        "The bring-your-own-key tier cannot reach features excluded from it, proven by attempts on each",
+        "Entitlement changes write audit events with the old and new values",
+        "A plan is written as an immutable version record with a version identifier from the first migration; a mutable plan row is a review failure",
+        "Every subscription stores the plan version it was sold, so no later ticket has to reconstruct it"
+      ],
+      "contracts_schema": [
+        "Implements the published billing and entitlement contract including its explicit deny result"
+      ],
+      "security_privacy": [
+        "Phone numbers are stored hashed with a per-deployment salt, never in the clear",
+        "No provider secret is stored alongside entitlement data"
+      ],
+      "observability": [
+        "Publishes resolution rate, deny rate by feature and cache invalidation counts"
+      ],
+      "tests": [
+        "Negative entitlement test per gated feature",
+        "Trial constraint test at the database level",
+        "Provider outage simulation",
+        "Bring-your-own-key scope attempt tests"
+      ],
+      "rollout_rollback": [
+        "Shipped with every feature gate defaulting to the free tier so a bug denies rather than grants",
+        "Rollback returns all users to their stored entitlement, which is never recomputed from the provider"
+      ],
+      "non_goals": [
+        "Quota metering, which is a separate ticket",
+        "Provider integration, which are separate tickets"
+      ],
+      "dependencies": [
+        "T-CON-03",
+        "api#4",
+        "T-GOV-03",
+        "T-ADR-ENT-09"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the entitlement schema, migrations and middleware. Clients read entitlements through the published contract and never cache them authoritatively.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-02",
+      "title": "Implement quota primitives: reservation, reconciliation and reset semantics",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R7 AI cost",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Quota is a server-owned primitive with reserve, commit and release operations, exact reconciliation for streamed consumption, documented reset semantics and an append-only usage record, consumed by the AI harness rather than implemented inside it.",
+      "context": "The dependency loop between billing and the AI harness exists because neither owns metering. Publishing quota as a primitive here, against the frozen contract, lets both tracks proceed in parallel and stops streaming reconciliation being invented twice.",
+      "scope": [
+        "Reserve, commit and release operations with a bounded reservation lifetime",
+        "Append-only usage event store with no in-place counter as the source of truth",
+        "Reconciliation for streamed consumption with headroom and a hard ceiling",
+        "Reset semantics with a defined time zone and idempotent execution",
+        "Short-window rate limiting independent of the periodic allowance"
+      ],
+      "acceptance_criteria": [
+        "An abandoned reservation expires and releases without consuming allowance",
+        "A failed reconciliation never consumes more than was reserved and never charges the user",
+        "Concurrent requests cannot both consume the last unit of allowance, proven by a race test",
+        "The reset job is idempotent under a double run and its semantics are documented and surfaced",
+        "Usage is reconstructible by replaying the event store",
+        "Exceeding the short-window limit returns a clear response including when it resets",
+        "At the published peak concurrency, sustained reserve, stream and reconcile traffic meets the latency budget and every quota counter remains exact"
+      ],
+      "contracts_schema": [
+        "Implements the published quota contract exactly so the harness can build against it before this lands"
+      ],
+      "security_privacy": [
+        "Quota state is server authoritative and no client-supplied counter is trusted",
+        "Usage events carry no prompt or response content"
+      ],
+      "observability": [
+        "Publishes reservation, commit, release, expiry and reconciliation mismatch counts",
+        "Publishes quota operation latency and saturation alongside reconciliation mismatch counts"
+      ],
+      "tests": [
+        "Reservation expiry test",
+        "Streaming reconciliation exactness test",
+        "Concurrency race test on the last unit",
+        "Reset idempotency test",
+        "Replay reconstruction test",
+        "Sustained concurrent quota load test with exact event-replay reconciliation"
+      ],
+      "rollout_rollback": [
+        "Shipped behind a flag with reservations disabled initially so consumption falls back to post-hoc recording in staging only",
+        "Rollback disables reservation but keeps recording, so no usage is lost"
+      ],
+      "non_goals": [
+        "AI-specific routing and cost control, which belong to E17"
+      ],
+      "dependencies": [
+        "T-BIL-01",
+        "T-ADR-ENT-09",
+        "T-ADR-MONEY-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the quota module. The ai-service repository consumes it through the frozen contract and owns no counter of its own.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-03",
+      "title": "Integrate store billing and real-time notifications on Android",
+      "repo": "android",
+      "epic": "docs#14",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "As a user, I can buy a subscription in the application and receive the entitlement quickly and reliably, and a purchase is never lost because the application closed at the wrong moment.",
+      "context": "Store purchase is the primary payment path for the mobile audience. The failure mode that matters is a purchase that succeeds at the store and never becomes an entitlement, which produces an angry user and a refund rather than revenue.",
+      "scope": [
+        "Purchase flow for the offered tiers with localised pricing",
+        "Purchase acknowledgement and consumption handled correctly for subscriptions",
+        "Server verification of every purchase; the client never grants an entitlement",
+        "Pending and deferred purchase states handled explicitly",
+        "Restore purchases and re-entitlement after reinstall",
+        "Clear messaging for grace, hold and cancellation states",
+        "Current plan, granting channel, quota usage, reset date, grace state and cancellation or restoration entry points",
+        "Upgrade actions rendered only when the server-provided channel-and-region policy capability permits them",
+        "Cancellation parity: cancelling is reachable in no more steps than subscribing, from the same surface",
+        "Auto-renewal disclosure at the point of purchase and before each renewal, with the amount, the date and the cancellation route",
+        "Dark-pattern prohibitions applied to the purchase and cancellation flows, checked rather than asserted"
+      ],
+      "acceptance_criteria": [
+        "A completed purchase results in the entitlement within the published time and the user sees confirmation",
+        "Killing the application mid-purchase still results in the entitlement once the server verification completes",
+        "The client never grants a feature locally on the basis of a purchase result",
+        "Reinstalling and restoring purchases re-establishes the entitlement without a support request",
+        "A pending purchase is shown as pending rather than as failed",
+        "Purchase screens are screen-reader traversable and usable at the largest text scale",
+        "Plan, quota, reset and lifecycle state shown on device match the server-authoritative values exactly",
+        "A channel-and-region fixture cannot render a prohibited checkout or redirect action",
+        "Cancelling a subscription takes no more steps and no more taps than subscribing, measured and asserted by a test rather than reviewed by eye",
+        "The cancellation route is reachable from the same surface as the subscribe route and is never hidden behind a support request",
+        "Auto-renewal is disclosed before purchase with the renewal amount, the renewal date and the cancellation route, and again before each renewal",
+        "No purchase or cancellation screen uses a pre-ticked consent, a confirm-shaming decline, a countdown that is not real, or a visual hierarchy that makes the decline action less discoverable than the accept action, each checked by a named test",
+        "A cancellation started is a cancellation completed: the flow never requires a second confirmation channel the user did not choose",
+        "Regional disclosure requirements are read from the versioned counsel-reviewed jurisdiction profile, and an absent or expired profile fails closed rather than shipping an unreviewed claim"
+      ],
+      "contracts_schema": [
+        "Consumes the published billing contract; purchase tokens are sent for server verification and never trusted locally"
+      ],
+      "security_privacy": [
+        "Purchase tokens are treated as credentials and are not logged",
+        "No price or amount reaches an analytics payload"
+      ],
+      "observability": [
+        "Purchase funnel events record step and outcome only"
+      ],
+      "tests": [
+        "Instrumented purchase, interruption and restore tests",
+        "Local grant attempt test proving the client cannot self-entitle",
+        "Pending state handling test",
+        "Plan and quota state reconciliation test",
+        "Channel-and-region purchase-policy rendering matrix test",
+        "Step-parity test comparing subscribe and cancel paths",
+        "Auto-renewal disclosure presence tests at purchase and pre-renewal",
+        "Dark-pattern checks for pre-ticked consent, confirm-shaming, false urgency and decline-action prominence",
+        "Missing or expired jurisdiction profile fail-closed test"
+      ],
+      "rollout_rollback": [
+        "Released to an internal track first with real test purchases before public availability",
+        "Rollback hides the purchase entry point; existing entitlements are unaffected"
+      ],
+      "non_goals": [
+        "Web checkout, which is a separate ticket",
+        "Entitlement resolution, which is the api ticket"
+      ],
+      "dependencies": [
+        "T-BIL-01",
+        "T-BIL-10",
+        "T-CMP-04",
+        "T-AND-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the purchase flow. All verification and granting happens server-side.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-04",
+      "title": "Implement web checkout for India and international payments with tax invoicing",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "Users can subscribe outside the store through a recurring mandate suited to India and an international card path, receive a compliant invoice, and never lose access because a renewal attempt failed once.",
+      "context": "Card-based recurring payments fail frequently in the target market, so the mandate path is the practical route rather than a nice-to-have. Invoicing is a legal requirement for the domestic path, not a finance convenience.",
+      "scope": [
+        "Recurring mandate setup suited to the domestic market, including its verification step",
+        "International card checkout for the non-domestic audience",
+        "Hosted payment pages only; no card data reaches our servers",
+        "Invoice generation and retrieval with the required tax fields",
+        "Renewal handling that grants a grace period rather than revoking immediately",
+        "Regional pricing applied consistently with the store path",
+        "Versioned jurisdictional invoice profile reviewed by tax counsel before a region is enabled",
+        "Tax profile per transaction: GSTIN capture and validation for business customers, place-of-supply determination, and the resulting tax treatment",
+        "E-invoicing threshold evaluation with the threshold value read from the jurisdiction profile rather than hardcoded",
+        "OIDAR treatment for cross-border digital supply, including the customer status determination it depends on"
+      ],
+      "acceptance_criteria": [
+        "A mandate can be set up, verified and used for a renewal, and the entitlement is granted on success",
+        "A failed renewal moves the subscription to grace rather than revoking access",
+        "No card data is ever received or stored by our systems, verified by a traffic review",
+        "An invoice is generated for every domestic charge and is retrievable by the user",
+        "Currency and price are consistent between the store path and the web path for the same user",
+        "Every payment state transition writes an audit event",
+        "Each enabled region names the required invoice fields and tax treatment in a reviewed, versioned profile rather than provider-specific application code",
+        "Checkout is blocked for a region whose invoice profile is missing, expired or unapproved",
+        "A business customer can supply a GSTIN, its format is validated, and the invoice reflects the resulting tax treatment",
+        "Place of supply is determined by a recorded rule with recorded evidence per transaction, so an invoice can be defended later",
+        "The e-invoicing threshold is read from the versioned counsel-reviewed jurisdiction profile; crossing it changes the invoicing path and the change is evidenced",
+        "Cross-border digital supply is treated according to the recorded OIDAR profile, including the business-or-consumer determination it depends on",
+        "Every tax rate, threshold and treatment rule comes from a versioned counsel-reviewed jurisdiction profile with a review date and an expiry; none is written inline",
+        "An absent or expired jurisdiction profile fails closed: the system refuses to issue an invoice asserting an unreviewed tax position rather than guessing one"
+      ],
+      "contracts_schema": [
+        "Implements the published billing contract; provider-specific fields never leak into the public contract",
+        "Jurisdictional invoice profile and invoice or credit-note schema with version, effective dates and review evidence"
+      ],
+      "security_privacy": [
+        "Provider secrets held in the secret store and never logged",
+        "Checkout redirects are validated against an allowlist to prevent open redirection",
+        "A GSTIN is business identity data: validated, stored under the same protection as other identifiers, and included in the erasure and export paths"
+      ],
+      "observability": [
+        "Publishes checkout starts, completions, failures and grace transitions without personal data"
+      ],
+      "tests": [
+        "Mandate setup and renewal tests against provider sandboxes",
+        "Grace transition test",
+        "Invoice generation test",
+        "Negative test proving no card data path exists",
+        "Missing, expired and unapproved invoice-profile rejection tests",
+        "Provider-to-canonical invoice mapping tests per enabled region",
+        "GSTIN validation and invoice treatment test",
+        "Place-of-supply determination and evidence test",
+        "E-invoicing threshold crossing test driven from the profile",
+        "OIDAR treatment test for a cross-border consumer and a cross-border business",
+        "Missing or expired jurisdiction profile fail-closed test"
+      ],
+      "rollout_rollback": [
+        "Enabled per region behind a flag; the domestic mandate path is enabled first",
+        "Rollback disables new checkouts while existing mandates continue to be honoured"
+      ],
+      "non_goals": [
+        "Store billing, which is the Android ticket",
+        "Payment provider selection, which is a commercial decision recorded elsewhere",
+        "Deriving a tax position: this ticket implements the position recorded in a counsel-reviewed profile and never invents one"
+      ],
+      "dependencies": [
+        "T-BIL-01",
+        "T-BIL-10",
+        "T-CMP-04"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the checkout and invoicing modules. The web repository renders only the hosted redirect.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-05",
+      "title": "Verify provider webhooks and make notification processing idempotent",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Every provider notification is authenticated and freshness-checked before it is processed, and processing is idempotent on the provider event identifier so a replay is a no-op.",
+      "context": "Webhook endpoints are the one place where an external party writes directly into the entitlement system, and they are unauthenticated by necessity. Verification and idempotency are the entry gate; the lifecycle state machine and reconciliation that sit behind it are a separate ticket.",
+      "scope": [
+        "Signature verification and freshness checking on every provider notification",
+        "Idempotent processing keyed on the provider event identifier",
+        "Rate limiting and alerting on failed verification attempts",
+        "Rejected-attempt recording that carries no provider secret"
+      ],
+      "acceptance_criteria": [
+        "A forged notification is rejected and recorded as an attempt",
+        "A replayed notification is a no-op",
+        "A stale notification outside the freshness window is rejected",
+        "Repeated failed verification attempts are rate limited and alerted rather than only logged",
+        "A verified notification produces one normalized event carrying provider event id, effective time and pinned plan-version identity, and this adapter never mutates entitlement or quota state directly"
+      ],
+      "contracts_schema": [
+        "Implements the published notification envelope; the verification rules are stated in the contract rather than in the handler"
+      ],
+      "security_privacy": [
+        "Notification endpoints are unauthenticated by necessity and therefore rely entirely on signature and freshness checks",
+        "Failed verification attempts are rate limited and alerted rather than only logged"
+      ],
+      "observability": [
+        "Publishes notification counts by verification outcome and rate limit activations"
+      ],
+      "tests": [
+        "Forgery rejection test",
+        "Replay no-op test",
+        "Freshness window boundary test",
+        "Rate limit activation test",
+        "Normalized-event ownership test proving the webhook adapter cannot write entitlement or quota tables"
+      ],
+      "rollout_rollback": [
+        "Enabled per provider; a provider can be switched to reconciliation-only if its notification stream is unreliable",
+        "Rollback falls back to reconciliation-driven state, which is slower but never wrong"
+      ],
+      "non_goals": [
+        "The lifecycle state machine, reconciliation and the adversarial replay suite, which are their own ticket",
+        "Provider integration itself, which the checkout and store tickets own"
+      ],
+      "dependencies": [
+        "T-BIL-03",
+        "T-BIL-04",
+        "T-BIL-02",
+        "T-BIL-10"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the webhook verification and idempotency layer only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-06",
+      "title": "Implement the subscription lifecycle, reconciliation and adversarial replay suite",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "The subscription lifecycle is an explicit tested state machine that converges regardless of delivery order, a nightly reconciliation detects drift against the provider, and an adversarial suite proves a forged or replayed notification cannot grant anything.",
+      "context": "Out-of-order delivery is normal and a state machine that was never enumerated will eventually leave a paying user without access or a non-paying user with it. This sits behind the verification gate and is where entitlement correctness is actually decided.",
+      "scope": [
+        "Order-independent convergence so late or duplicated events do not regress state",
+        "Enumerated lifecycle covering active, grace, dunning, expired, cancelled and downgraded",
+        "Downgrade that makes excess data read-only and never deletes financial history",
+        "Nightly reconciliation between provider state and stored state with a drift alarm",
+        "Adversarial replay and forgery suite running in continuous integration"
+      ],
+      "acceptance_criteria": [
+        "Events delivered out of order converge to the same final state as in-order delivery, proven by a permutation test",
+        "Every lifecycle transition is enumerated and tested, including the ones that lose access",
+        "A downgrade leaves all historical financial data readable, proven by a test",
+        "A deliberate drift between provider and stored state raises an alarm within one reconciliation cycle",
+        "The adversarial suite proves that no forged or replayed notification grants an entitlement",
+        "Each accepted transition resolves entitlement against the pinned T-BIL-10 plan version and reconciles quota exclusively through T-BIL-02 reserve, commit and release operations",
+        "An entitlement transition and its quota adjustment are committed atomically or through a replay-safe outbox, so a crash cannot leave split-brain state"
+      ],
+      "contracts_schema": [
+        "Implements the published lifecycle states; the state machine is generated from or verified against the contract"
+      ],
+      "security_privacy": [
+        "Reconciliation reads provider state with a scoped credential and never writes to the provider",
+        "Entitlement changes are recorded with their triggering event identifier"
+      ],
+      "observability": [
+        "Publishes transition counts, reconciliation drift findings and adversarial suite results"
+      ],
+      "tests": [
+        "Event order permutation test",
+        "Lifecycle transition matrix test",
+        "Downgrade data retention test",
+        "Drift detection test with planted divergence",
+        "Adversarial replay and forgery suite",
+        "Crash-between-entitlement-and-quota-write recovery test"
+      ],
+      "rollout_rollback": [
+        "Reconciliation runs in report-only mode for one cycle before it is allowed to correct state",
+        "Rollback falls back to reconciliation-driven state, which is slower but never wrong"
+      ],
+      "non_goals": [
+        "Webhook verification and idempotency, which are their own ticket",
+        "Provider integration itself, which the checkout and store tickets own"
+      ],
+      "dependencies": [
+        "T-BIL-05",
+        "T-BIL-02",
+        "T-BIL-10"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the lifecycle state machine, the reconciliation job and the adversarial suite.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-07",
+      "title": "Implement refund, chargeback and credit-note entitlement and quota unwind",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "A refund, a chargeback or a credit note correctly and idempotently unwinds the entitlement and any unused reserved quota it paid for, every unwind is audited against the charge it corrects, and a retried provider notification never unwinds twice.",
+      "context": "T-BIL-04 issues invoices and T-BIL-06 owns the subscription lifecycle, but neither defines what a refund or a chargeback does to an entitlement or to quota that was already reserved. Left undefined, a refunded user keeps a paid feature indefinitely, or a retried webhook claws back quota a second time.",
+      "scope": [
+        "Refund-triggered entitlement downgrade distinct from a voluntary cancellation",
+        "Chargeback handling that additionally applies the account standing policy a chargeback warrants",
+        "Credit-note issuance tied to the specific invoice it corrects",
+        "Idempotent unwind keyed on the provider event identifier so a retried notification is a no-op",
+        "Quota clawback limited to reserved-but-unused quota; consumed quota is never clawed back",
+        "Audit trail linking every refund, chargeback and credit note to its originating charge"
+      ],
+      "acceptance_criteria": [
+        "A refund downgrades entitlement within the published time and issues a matching credit note",
+        "A chargeback additionally applies the account standing policy, distinct from a voluntary refund",
+        "Replaying the same refund or chargeback notification is a no-op, proven by a test",
+        "Quota already consumed before the refund is never clawed back, proven by a test with quota partially consumed",
+        "Every unwind writes an audit event linking to the original charge",
+        "A credit note total reconciles exactly against the invoice it corrects",
+        "Every unwind resolves the subscription's pinned T-BIL-10 plan version and calls only T-BIL-02 quota primitives; no refund handler edits a counter or plan snapshot directly"
+      ],
+      "contracts_schema": [
+        "Implements the published billing contract's refund, chargeback and credit-note shapes"
+      ],
+      "security_privacy": [
+        "Refund and chargeback events carry only provider-assigned identifiers; no card data is ever received or stored",
+        "Credit notes are retrievable by the user but are not editable by any actor after issuance"
+      ],
+      "observability": [
+        "Publishes refund, chargeback and credit-note counts by outcome, and unwind idempotency hit rate"
+      ],
+      "tests": [
+        "Refund downgrade and credit-note test",
+        "Chargeback standing-policy test",
+        "Replay idempotency no-op test",
+        "Consumed-quota protection test",
+        "Credit-note reconciliation test"
+      ],
+      "rollout_rollback": [
+        "Enabled behind a flag once tested end to end against a provider sandbox",
+        "Rollback halts automatic downgrade and routes refunds to manual review; existing entitlements are unaffected"
+      ],
+      "non_goals": [
+        "Dispute representation with the payment provider, which is a support process rather than engineering scope",
+        "Store-initiated refunds, which the existing reconciliation job in T-BIL-06 already routes through the same lifecycle"
+      ],
+      "dependencies": [
+        "T-BIL-04",
+        "T-BIL-06",
+        "T-BIL-02",
+        "T-BIL-10"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the refund, chargeback and credit-note unwind module. It consumes the lifecycle state machine from T-BIL-06 rather than duplicating it.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-08",
+      "title": "Resolve cross-channel entitlement precedence for simultaneous Play and web subscriptions",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "A user with a simultaneous Play and web subscription, an upgrade, a downgrade or mid-cycle proration across channels resolves to exactly one entitlement, computed deterministically, and is never billed twice.",
+      "context": "T-BIL-03 grants entitlement from the store channel and T-BIL-04 grants it from the web channel independently; neither defines what happens when both are active at once. Without an explicit precedence rule, a user who subscribes on both channels can be charged twice or see the two channels disagree about which plan is active.",
+      "scope": [
+        "Deterministic precedence rule for when both channels show an active subscription, applied consistently regardless of which channel activated first",
+        "Duplicate-billing prevention that blocks starting a second paid subscription on the other channel while one is already active",
+        "Cross-channel upgrade and downgrade handling including mid-cycle proration",
+        "Single entitlement projection surfaced to every client regardless of which channel granted it",
+        "Daily reconciliation between the two channels' recorded state with a drift alarm",
+        "A versioned platform-policy matrix per distribution channel and region that tells clients which checkout, redirect and informational-price actions are currently permitted",
+        "Effective-dated service-fee and billing-fee records, including the announced India policy transition inside the roadmap horizon, with source URL, checked date and revalidation due date"
+      ],
+      "acceptance_criteria": [
+        "A user with both channels flagged active resolves to exactly one entitlement, proven by a test with both channels active",
+        "Attempting to start a second paid subscription on the other channel while one is active is blocked or redirected to a channel-switch flow",
+        "An upgrade or downgrade spanning channels prorates correctly and never double-charges",
+        "The precedence rule is deterministic and reproducible for the same inputs",
+        "Cross-channel state is reconciled at least once per day and a divergence raises an alarm within one cycle",
+        "The resolver returns policy capability flags from the reviewed channel-and-region matrix; a client cannot initiate a prohibited checkout or redirect, while informational pricing remains possible only where current policy permits it",
+        "Economics and pricing reports select the rate effective on the transaction date and fail closed on a missing or expired policy version; no fee is a source-code constant"
+      ],
+      "contracts_schema": [
+        "Implements the published billing contract's cross-channel entitlement projection"
+      ],
+      "security_privacy": [
+        "Channel identifiers are stored but never used as a basis for privilege beyond the resolved entitlement",
+        "Reconciliation reads each channel's state with a scoped credential and never writes to either provider"
+      ],
+      "observability": [
+        "Publishes cross-channel conflict counts, precedence resolution outcomes and reconciliation drift findings"
+      ],
+      "tests": [
+        "Dual-channel active resolution test",
+        "Duplicate-billing block test",
+        "Cross-channel upgrade and downgrade proration tests",
+        "Daily reconciliation drift test",
+        "Channel-and-region policy matrix tests covering prohibited checkout, permitted informational pricing and policy-version expiry",
+        "Boundary test spanning the India fee-policy effective date and stale-source revalidation test"
+      ],
+      "rollout_rollback": [
+        "Enabled after both channel lifecycles, T-BIL-03 and T-BIL-06, are stable in production, behind a flag that falls back to store-channel precedence when disabled",
+        "Rollback keeps the last resolved entitlement rather than recomputing it from scratch"
+      ],
+      "non_goals": [
+        "The store and web checkout flows themselves, which their own tickets own",
+        "Refund and chargeback handling, which T-BIL-07 owns"
+      ],
+      "dependencies": [
+        "T-BIL-03",
+        "T-BIL-04",
+        "T-BIL-06",
+        "T-BIL-10"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the cross-channel precedence resolver and its reconciliation job. Android and web surfaces read the resolved entitlement only and never resolve precedence themselves.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-09",
+      "title": "Build the web customer billing portal with plan, quota and invoice management",
+      "repo": "web",
+      "epic": "docs#14",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can see my resolved plan and which channel granted it, my quota usage and reset date, my invoices and credit notes, and I can manage grace, cancellation and restoration under the current policy for my channel and region.",
+      "context": "Users need self-serve visibility into billing rather than a support ticket for every question, but store rules vary by region and change over time: some prohibit an off-store checkout or redirect while others permit informational pricing. This portal consumes versioned capability flags from T-BIL-08 and the refund and credit-note history from T-BIL-07 rather than encoding policy locally.",
+      "scope": [
+        "Plan and channel state summary showing which channel granted the current resolved entitlement",
+        "Quota usage display with its reset date, read from the published quota contract",
+        "Invoice and credit-note list with retrieval, reconciled against the billing history",
+        "Grace period, cancellation and restoration controls consistent with the server lifecycle state machine",
+        "Upgrade path driven by the versioned channel-and-region capability matrix, with checkout, redirect and informational-price actions rendered only when currently permitted",
+        "Plain-language explanation of cross-channel precedence shown when both channels are detected active"
+      ],
+      "acceptance_criteria": [
+        "The portal shows the correct resolved entitlement and its granting channel regardless of source",
+        "Each channel-and-region fixture renders only the checkout, redirect and informational-price actions allowed by the current reviewed policy matrix",
+        "Quota usage and reset date shown match the server figures exactly",
+        "Invoices and credit notes are downloadable and reconcile exactly against the billing history",
+        "Cancellation and restoration reflect the same rules the server lifecycle state machine enforces",
+        "Keyboard-only and screen-reader users can complete every portal action, and the portal remains readable and operable at two hundred percent text zoom"
+      ],
+      "contracts_schema": [
+        "Consumes the published billing contract's cross-channel entitlement, quota, invoice and credit-note shapes"
+      ],
+      "security_privacy": [
+        "No card data is ever handled by the web portal directly; checkout redirects to the hosted payment page only",
+        "Invoice and credit-note downloads require an authenticated session and are scoped to the owner"
+      ],
+      "observability": [
+        "Records portal views and action outcomes without amounts beyond what the invoice contract already exposes"
+      ],
+      "tests": [
+        "Cross-channel display test",
+        "Channel-and-region billing-policy rendering matrix test",
+        "Quota and invoice reconciliation tests",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set"
+      ],
+      "rollout_rollback": [
+        "Shipped behind an internal access gate until the cross-channel resolver in T-BIL-08 is stable in production",
+        "Rollback hides the portal and directs users to support without affecting any stored entitlement"
+      ],
+      "non_goals": [
+        "Entitlement resolution and refund logic, which the api tickets own",
+        "Native store purchase flows, which the Android ticket owns"
+      ],
+      "dependencies": [
+        "T-BIL-02",
+        "T-BIL-07",
+        "T-BIL-08",
+        "T-WEB-01",
+        "T-BIL-10"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the portal user interface only. All billing logic, precedence and refund rules are read through the published contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-BIL-10",
+      "title": "Implement immutable plan versions, subscription pinning and grandfathering",
+      "repo": "api",
+      "epic": "docs#14",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Compliance",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "A plan is an immutable version, every subscription pins the version it was sold, price and entitlement changes create a new version rather than editing a live one, and moving a subscriber to a new version requires recorded advance notice, so a user is never silently re-priced or silently re-entitled.",
+      "context": "Every billing ticket treats a plan as a mutable row. Editing that row changes what an existing subscriber is paying for and what they are entitled to, retroactively and invisibly, which is both a consumer-protection problem and an accounting one: a refund or a dispute months later cannot be evaluated against a plan definition that has since changed. It is also the mechanism grandfathering needs, and grandfathering is the only humane way to raise a price.",
+      "scope": [
+        "Immutable plan version records: price, currency, entitlement set, quota dimensions and effective window",
+        "Subscription pinning to a plan version, carried through renewals until an explicit migration",
+        "Version creation flow: a change to price or entitlement produces a new version and never edits a published one",
+        "Migration of a subscriber between versions with recorded advance notice, its channel, and the notice period",
+        "Grandfathering: a subscriber may remain on an older version indefinitely, and the conditions under which that ends are stated",
+        "Auditable history: which version applied on any past date for any subscription",
+        "Provider price mapping so a store-side price change cannot silently diverge from the pinned version"
+      ],
+      "acceptance_criteria": [
+        "A published plan version is immutable; an attempt to change its price or entitlement set is refused and the caller is directed to create a new version, proven by a test",
+        "Every subscription references a plan version, and a renewal preserves that reference unless an explicit migration occurred",
+        "Migrating a subscriber requires a recorded notice event with its channel and timestamp, and the migration cannot take effect before the published notice period elapses, proven by a test that attempts an early migration",
+        "For any subscription and any past date, the system reports which plan version applied, proven by a test over a subscription that has migrated at least once",
+        "Grandfathered subscribers keep their version through renewals with no action required, and a report lists how many subscribers are on each version",
+        "An entitlement check resolves against the pinned version, so a new version's entitlements never reach an unmigrated subscriber",
+        "A provider-side price that diverges from the pinned version raises a reconciliation failure rather than being accepted silently",
+        "Notice periods and any regionally mandated notice content are read from the versioned counsel-reviewed jurisdiction profile, and an absent or expired profile fails closed rather than sending an unreviewed notice"
+      ],
+      "contracts_schema": [
+        "Plan version identity and the pinned version reference are published in the billing contract, so clients render the plan the subscriber actually holds",
+        "Extends the entitlement resolution shape fixed by T-ADR-ENT-09 with the version that resolved it"
+      ],
+      "security_privacy": [
+        "Notice records are retained as billing evidence under the billing retention rule and are not deleted with a marketing preference",
+        "No plan version record contains personal data; it is referenced by subscription rather than embedding the subscriber"
+      ],
+      "observability": [
+        "Subscriber counts per plan version, pending migrations and notice-period breaches are all reported",
+        "A divergence between provider price and pinned version raises an alert"
+      ],
+      "tests": [
+        "Immutability refusal test on a published version",
+        "Renewal preserves pinned version test",
+        "Early-migration refusal test and notice-period boundary test",
+        "Historical version resolution test across a migration",
+        "Entitlement resolution against the pinned version test",
+        "Provider price divergence reconciliation test"
+      ],
+      "rollout_rollback": [
+        "Existing plans are frozen as version one before any price or entitlement change is attempted, so no subscriber is migrated as a side effect of introducing versioning",
+        "Rollback is disabling version creation; pinning stays, because unpinning a subscription would reintroduce exactly the silent re-pricing this ticket removes"
+      ],
+      "non_goals": [
+        "Pricing decisions and packaging, which are product decisions",
+        "Store-side price configuration, which the provider console owns",
+        "Dark-pattern and cancellation-parity requirements, which T-BIL-03 owns"
+      ],
+      "dependencies": [
+        "T-BIL-01",
+        "T-ADR-ENT-09",
+        "T-CMP-04",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns plan version records, pinning, migration and notice evidence. The web and Android billing surfaces render the pinned version; the admin console reads the version history and edits nothing.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

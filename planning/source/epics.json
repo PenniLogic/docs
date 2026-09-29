@@ -1,0 +1,655 @@
+{
+  "kind": "epics",
+  "group": "epics",
+  "description": "New epics E24 to E32. Epics live in PenniLogic/docs and carry no Estimate; their Rollup is the sum of child ticket estimates.",
+  "items": [
+    {
+      "stable_id": "E24",
+      "title": "[EPIC] E24 - Platform, deployment and reliability",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "None",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "chore",
+        "P0-critical"
+      ],
+      "goal": "Own the infrastructure, deployment, backup, disaster-recovery and observability work that E01 explicitly deferred and E19 never picked up, so that no service reaches real user data without a runnable environment, a proven restore and an alert that reaches a human.",
+      "scope": [
+        "Infrastructure as code for every environment; no click-ops",
+        "Deploy pipelines with canary, feature flags, kill switches and reversible migrations",
+        "Backups, point-in-time recovery, a secondary region and a performed restore drill",
+        "OpenTelemetry traces, metrics and logs, SLOs, alert routing and on-call rotation",
+        "NTP synchronisation and India-region tamper-evident log retention for CERT-In",
+        "Structured log scrubbing so financial values and PII never reach a log sink"
+      ],
+      "out_of_scope": [
+        "Application-layer cryptography and tenancy isolation (E19)",
+        "Kubernetes; the chosen runtime is ECS Fargate per the stack decision",
+        "Vendor certification programmes such as SOC 2 or ISO 27001"
+      ],
+      "exit_criteria": [
+        "Every environment is created from code and can be destroyed and recreated",
+        "A restore from backup into a clean account has actually been performed and timed against a written RPO and RTO",
+        "Golden-signal dashboards exist and at least one alert has been proven to page the on-call owner",
+        "A deliberately planted financial value in a log line fails the CI log-scan gate",
+        "A rollback has been rehearsed for each deployable component and the evidence is attached to the release record"
+      ],
+      "dependencies": [
+        "docs#1",
+        "E31"
+      ],
+      "traceability": [
+        "docs/architecture/03-stack-and-monetization.md section 15",
+        "docs/compliance/01-regulatory-landscape.md CERT-In requirements",
+        "planning-audit-input.md: deployment, IaC, backups, restore, DR, observability, SLOs, alerting and on-call have no owner"
+      ]
+    },
+    {
+      "stable_id": "E25",
+      "title": "[EPIC] E25 - Quality, verification and release assurance",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "None",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "chore",
+        "P0-critical"
+      ],
+      "goal": "Turn the written test strategy into executable, enforced gates covering the whole verification surface: unit, property, integration, contract and end-to-end; black-box and white-box security testing; SAST and DAST; mutation testing; load, stress and soak; chaos; backup, restore and disaster recovery; accessibility; performance budgets; privacy traffic inspection; penetration testing; and release and rollback evidence. This epic is cross-cutting: its tickets span Sprint 02 to post-beta, and the platform work it consumes is expressed as ticket-level dependencies rather than an epic-level block.",
+      "scope": [
+        "Money-path verification harness: property-based, mutation and independent-model gates plus idempotency and adversarial retry",
+        "Provider and consumer contract testing against the published OpenAPI spec",
+        "Active cross-tenant, BOLA and authentication attack suites (white-box and black-box)",
+        "SAST, DAST, dependency and secret scanning as blocking CI gates, with flaky-test quarantine",
+        "Load, stress, soak and chaos suites plus a disaster-recovery game day",
+        "Accessibility conformance and performance budgets as CI gates on Android and web",
+        "Automated privacy traffic inspection on every release candidate",
+        "Threat-model refresh loop, independent penetration test and black-box red-team scenarios"
+      ],
+      "out_of_scope": [
+        "Writing the feature tests that belong to each feature ticket; this epic owns harnesses, gates and evidence",
+        "Certification audits"
+      ],
+      "exit_criteria": [
+        "Every verification category named in the goal has an owning ticket, a runner and a gate that can fail a pull request or a release",
+        "Money-path modules fail CI when the mutation threshold or the independent-model comparison is not met",
+        "A release candidate cannot be promoted without accessibility, performance, privacy-capture and rollback evidence",
+        "The penetration test has been completed and all high and critical findings are closed and retested",
+        "Epic scheduling is nominal: ticket-level dependencies govern order, and no quality ticket is blocked by the epic sprint value"
+      ],
+      "dependencies": [
+        "docs#21"
+      ],
+      "traceability": [
+        "docs#21 test strategy",
+        "docs#22 release checklist",
+        "planning-audit-input.md: load, stress, soak, chaos, restore drills, accessibility, performance budgets, mutation testing, automated privacy inspection, billing replay, AI eval CI, pen test and rollback rehearsals lack executable tickets"
+      ]
+    },
+    {
+      "stable_id": "E26",
+      "title": "[EPIC] E26 - Architecture decision gates",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "needs-adr",
+        "P0-critical"
+      ],
+      "goal": "Close the nine architecture decisions that currently force implementers to guess, so that no data-touching ticket is written against an undecided model. Each decision is a dated ADR with a chosen option, rejected options and the migration consequence, published as its own reserved file so the nine can be written in parallel.",
+      "scope": [
+        "Money wire format, time and idempotency conventions",
+        "Category model as an append-only reporting dimension",
+        "Ledger, foreign exchange and debt-balance derivation",
+        "Encryption scope, searchable fields and row-level security",
+        "Authentication, passkeys, provider, relying-party identifier, recovery and device binding",
+        "Admin boundary: separate process, host, database role, policy boundary and audit stream",
+        "Shared-data erasure and cross-user key access",
+        "AI egress, runtime platform and Mode C custom endpoints",
+        "Entitlement and quota model: plan and feature identity, request and token dimensions, model allowlist, BYOK treatment, usage accounting and reset boundary",
+        "Per-decision file layout, reserved numbering ADR-015 to ADR-023, and a generated index so nine records never edit the same lines"
+      ],
+      "out_of_scope": [
+        "Implementation of any decision; each ADR is followed by its own implementation tickets",
+        "Decisions with no current implementation consumer"
+      ],
+      "exit_criteria": [
+        "All nine ADRs are merged as ADR-015 to ADR-023, each in its own file, dated and linked from the epics and tickets they unblock, with the index and pending table generated rather than hand-edited",
+        "Every ADR names the option chosen, the options rejected and the migration cost of reversing it",
+        "No ticket in Ready depends on an open ADR",
+        "Each ADR lists the tests that will prove the decision was implemented as written",
+        "The two conflicting entitlement sketches in the research documents are marked superseded in place by the accepted entitlement record"
+      ],
+      "dependencies": [
+        "T-GOV-03"
+      ],
+      "traceability": [
+        "planning-audit-input.md architecture direction items 1 to 12",
+        "docs/architecture/02-security-architecture.md",
+        "docs/ai/01-ai-harness-research.md",
+        "architecture/01-domain-model.md section 5 and architecture/03-stack-and-monetization.md section 8 describe entitlements differently; ADR-023 supersedes one of them"
+      ]
+    },
+    {
+      "stable_id": "E27",
+      "title": "[EPIC] E27 - Launch-blocking compliance floor",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 09",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "compliance",
+        "P0-critical"
+      ],
+      "goal": "Land the compliance obligations that legally must exist before the first real person is onboarded, including the closed beta. E20 keeps the post-beta readiness work; this epic carries only what a beta user makes mandatory.",
+      "scope": [
+        "Consent ledger, purpose registry and data-principal rights with a defined service level",
+        "Pre-onboarding consent, age gate and permission dashboard on Android",
+        "Third-party SDK inventory, payload scrubbing and an accurate Play Data Safety declaration",
+        "Privacy policy, terms, disclaimers and processor agreements published before onboarding",
+        "CERT-In point of contact, six-hour breach reporting runbook and a rehearsed drill",
+        "Retention schedule expressed as enforced jobs rather than a document"
+      ],
+      "out_of_scope": [
+        "Counsel review of expansion markets and Account Aggregator positioning (E20, E29)",
+        "Backend cryptography (E19) and platform log retention (E24)",
+        "Epic-level blocking on the whole security epic; the specific security and platform tickets are named as dependencies instead"
+      ],
+      "exit_criteria": [
+        "No onboarding path exists that does not record a versioned, purpose-specific consent",
+        "Access, correction and erasure requests complete end to end within the published service level",
+        "The Play Data Safety declaration matches captured traffic and the recorded SDK inventory",
+        "The breach drill has been run against the six-hour clock and the gaps found are ticketed",
+        "Retention jobs run on a schedule and their effect is observable",
+        "Every compliance-floor prerequisite named here is closed and evidenced before the first beta invitation is sent, not before public release",
+        "The Data Safety declaration is backed by automated privacy capture evidence produced before beta rather than by a manual questionnaire"
+      ],
+      "dependencies": [
+        "docs#3",
+        "T-SEC-01",
+        "T-SEC-03",
+        "T-PLT-03"
+      ],
+      "traceability": [
+        "docs/compliance/01-regulatory-landscape.md",
+        "planning-audit-input.md: pre-onboarding DPDP consent/privacy/age/CERT-In/Data Safety work is scheduled after beta"
+      ]
+    },
+    {
+      "stable_id": "E28",
+      "title": "[EPIC] E28 - Advanced ingestion: email, receipts and cash",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "story",
+        "P1-high"
+      ],
+      "goal": "Extend capture beyond SMS and notifications to the three sources that close the remaining gaps in a user's picture of their money: emailed statements and receipts, photographed paper receipts, and cash spending that no channel will ever report.",
+      "scope": [
+        "On-device email parsing that emits structured events only; raw email content never leaves the handset",
+        "On-device receipt capture and text recognition with user confirmation",
+        "ATM and cash reconciliation against the manual cash entry that already exists",
+        "Extension of source precedence and deduplication to the new sources",
+        "Revocable, least-privilege mailbox access with a distinct consent purpose"
+      ],
+      "out_of_scope": [
+        "Screen scraping or credential sharing with any bank",
+        "Account Aggregator connectivity (E29)",
+        "Model-generated amounts; every figure is parsed deterministically or confirmed by the user",
+        "Server-side email fetching or parsing, permanently",
+        "A second manual cash entry surface, which already exists"
+      ],
+      "exit_criteria": [
+        "Each new source registers with the ingestion pipeline without a change to the existing SMS and notification paths",
+        "The same transaction arriving through two sources deduplicates deterministically and the surviving record is explainable",
+        "Email access is revocable in the app and revocation stops all fetching, proven by capture",
+        "Receipt optical character recognition never writes a transaction without user confirmation",
+        "Cash balances reconcile against the ledger with no created or destroyed money"
+      ],
+      "dependencies": [
+        "docs#8",
+        "docs#11"
+      ],
+      "traceability": [
+        "docs/product/01-product-spec.md ingestion sections",
+        "planning-audit-input.md: receipt OCR, cash handling and email ingestion are missing from the ticket backlog"
+      ]
+    },
+    {
+      "stable_id": "E29",
+      "title": "[EPIC] E29 - Account Aggregator and open banking readiness",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Compliance",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "compliance",
+        "P2-medium"
+      ],
+      "goal": "Hold Account Aggregator connectivity as a deliberately deferred, fully specified option rather than an unowned assumption, so that the decision to pursue or abandon a Financial Information User role is made on evidence and can be executed without re-planning.",
+      "scope": [
+        "Readiness assessment: role, licensing, cost, consent artefact model and the abandon criteria",
+        "Consent, fetch, mapping and revocation implemented behind a default-off kill switch",
+        "Mapping of aggregator data onto the existing ledger and ingestion precedence rules",
+        "Data minimisation, retention and purpose limitation for aggregator-sourced records"
+      ],
+      "out_of_scope": [
+        "Any launch of the feature before the readiness assessment is accepted",
+        "Holding or moving funds; PenniLogic never acts as a payment processor",
+        "Replacing deterministic SMS and notification capture"
+      ],
+      "exit_criteria": [
+        "A dated assessment records the decision to pursue or defer, with named abandon criteria",
+        "The integration is inert by default and enabling it is a deliberate, audited configuration change",
+        "Aggregator records carry their consent artefact identifier and expire with the consent",
+        "Revoking consent stops fetching and removes derived records within the published service level"
+      ],
+      "dependencies": [
+        "docs#20",
+        "E28"
+      ],
+      "traceability": [
+        "docs/compliance/01-regulatory-landscape.md Account Aggregator and FIU section, ADR-013",
+        "planning-audit-input.md: Account Aggregator work is missing from the ticket backlog"
+      ]
+    },
+    {
+      "stable_id": "E30",
+      "title": "[EPIC] E30 - Globalization and multi-currency",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "story",
+        "money-path",
+        "P2-medium"
+      ],
+      "goal": "Deliver the multi-currency and localization capability that the ledger reserved but deliberately did not implement in the minimum viable product, without weakening the single-currency invariants that protect correctness today.",
+      "scope": [
+        "Foreign exchange clearing accounts and linked exchange groups activated as a real feature",
+        "Quoted rate, rate source and explicit fee stored on every cross-currency exchange",
+        "Reporting currency selection with derivation that shows the rate used",
+        "Localization framework and locale-aware rendering, with INR as the default presentation",
+        "Migration of existing single-currency data with no change to stored amounts",
+        "Contract slice carrying currency, exchange groups, quoted rates and reporting derivation on the wire",
+        "Web rendering slice so multi-currency is not an Android-only capability"
+      ],
+      "out_of_scope": [
+        "Executing currency conversion or holding balances on a user's behalf",
+        "Investment or remittance products",
+        "Changing the internal integer minor-unit representation"
+      ],
+      "exit_criteria": [
+        "A cross-currency exchange is recorded as a linked group whose entries sum to zero per currency",
+        "Every converted figure can be traced to a stored rate, a rate source and a stated fee",
+        "Formatting happens only at the render boundary and never inside the domain layer",
+        "Existing single-currency users see no change in stored amounts or derived balances after migration"
+      ],
+      "dependencies": [
+        "docs#4",
+        "E26"
+      ],
+      "traceability": [
+        "planning-audit-input.md architecture direction item 2 and the INR rendering gap",
+        "docs/architecture domain model, currency and ledger sections"
+      ]
+    },
+    {
+      "stable_id": "E31",
+      "title": "[EPIC] E31 - Program governance and delivery protocol",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R14 Key-person",
+      "status": "In Progress",
+      "labels": [
+        "epic",
+        "chore",
+        "P0-critical"
+      ],
+      "goal": "Make the board mechanically trustworthy and make parallel work safe: native dependency edges instead of prose, a Ready state that means what it says, a written protocol for cross-repository change, and an approval model that a single collaborator organisation cannot silently bypass.",
+      "scope": [
+        "Native GitHub dependency edges as the authoritative source, mirrored into ticket bodies",
+        "Ready-state reconciliation so a blocked ticket cannot sit in Ready",
+        "Definition of Ready and Definition of Done adopted per repository",
+        "Cross-repository parallel pull request protocol using expand, migrate and contract sequencing",
+        "Independent agent-review governance through separate role sessions, current-head attestations and required policy checks under one GitHub user",
+        "Organisation plan capability: branch protection and rulesets on private repositories, proven on a private fixture repository"
+      ],
+      "out_of_scope": [
+        "Project field schema changes that require renaming existing options without a migration",
+        "Any tooling that writes to the board without an audit trail"
+      ],
+      "exit_criteria": [
+        "Every declared dependency exists as a native blockedBy edge and the reconciliation job reports zero drift",
+        "A ticket with an open blocker cannot remain in Ready; the check runs on a schedule and fails loudly",
+        "A cross-repository change lands as sequenced pull requests with no window in which either side is broken",
+        "No developer agent or developer session can satisfy a required external reviewer-agent attestation",
+        "The organisation holds a plan under which branch protection, rulesets and required reviews can be configured on private repositories, evidenced by an API call that previously returned HTTP 403"
+      ],
+      "dependencies": [],
+      "traceability": [
+        "planning-audit-input.md: all dependency declarations are body prose; GitHub blockedBy has zero edges",
+        "planning-audit-input.md: the organization has one collaborator and no teams",
+        "planning-audit-input.md architecture direction items 11 and 12",
+        "T-EXT-01: GitHub Team capability verified on 2026-09-02 with an active private-repository ruleset, required review and required status check; temporary fixture removed"
+      ]
+    },
+    {
+      "stable_id": "E32",
+      "title": "[EPIC] E32 - Server sync and offline data plane",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 07",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "labels": [
+        "epic",
+        "task",
+        "P0-critical"
+      ],
+      "goal": "Give the offline-first client a real, owned server contract. Today the Android sync queue has no counterpart: no change feed, no cursor semantics, no conflict rules and no tenancy story for the sync path.",
+      "scope": [
+        "Sync engine decision recorded before any implementation",
+        "Change feed, cursor and watermark semantics with idempotent apply",
+        "Deterministic conflict resolution rules per entity, including deletes and money-bearing records",
+        "Tenancy isolation on the sync path, including connection-pooler session safety",
+        "Client reconciliation, backoff and poison-message handling"
+      ],
+      "out_of_scope": [
+        "Real-time collaborative editing",
+        "Syncing derived projections that the client can recompute",
+        "Adopting a hosted sync vendor without the recorded decision"
+      ],
+      "exit_criteria": [
+        "A client that has been offline through a schema change can converge without data loss",
+        "Concurrent edits resolve to the same result on every device, proven by a replay test",
+        "A sync request cannot read another tenant's rows, proven by an active attack test under pooled connections",
+        "Replaying a change batch twice produces no duplicate ledger effect"
+      ],
+      "dependencies": [
+        "docs#2",
+        "docs#4",
+        "E26"
+      ],
+      "traceability": [
+        "planning-audit-input.md: server sync contracts and ownership are missing",
+        "docs/architecture/03-stack-and-monetization.md sync sections"
+      ]
+    },
+    {
+      "stable_id": "E33",
+      "title": "[EPIC] E33 - Experience strategy, research and design operations",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "labels": ["epic", "design", "ux-research", "P0-critical"],
+      "goal": "Establish the user evidence, experience architecture, decision rights and artifact operations that let a large design organization plan the complete product before frontend implementation without turning design into an unversioned waterfall.",
+      "scope": [
+        "Chief Design Officer governance, RACI, review queues, approval expiry and decision log",
+        "Research ethics, recruitment, repository, personas, jobs, mental models and baseline evidence",
+        "Journey maps, service blueprints, platform allocation, sitemaps and navigation",
+        "Machine-readable screen, flow, component, diagram and traceability registry",
+        "Visual and interaction direction selected through evidence and accessibility review",
+        "Figma project, file, branch, library, versioning and archival topology",
+        "UX outcome metrics, continuous research and design-debt governance"
+      ],
+      "out_of_scope": [
+        "Production component implementation",
+        "Choosing legal or financial policy in a design artifact",
+        "Treating unvalidated persona hypotheses as market evidence"
+      ],
+      "exit_criteria": [
+        "Every persona, journey, flow, screen, component family and required diagram has a stable identifier and owner",
+        "Android, web and admin sitemaps and platform allocation are approved by the IA Lead",
+        "The CDO has approved one visual and interaction direction with rejected options and risks recorded",
+        "Research evidence, limitations and resulting changes are traceable to backlog tickets",
+        "Figma and decision governance are operational before parallel platform design begins"
+      ],
+      "dependencies": ["T-GOV-02", "T-UX-01"],
+      "traceability": [
+        "product/08-experience-design-and-sdlc-plan.md",
+        "PRODUCT.md",
+        "User request: complete personas, stories, journeys, sitemaps, screens, components and flows before frontend work"
+      ]
+    },
+    {
+      "stable_id": "E34",
+      "title": "[EPIC] E34 - Cross-platform design system, content and handoff",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "labels": ["epic", "design", "design-system", "P0-critical"],
+      "goal": "Publish one governed semantic design and content system with explicit Android, web and admin adaptations, complete component states, accessibility, localization and design-to-code contracts before any product frontend consumes local values or invented patterns.",
+      "scope": [
+        "Brand, token, typography, icon, illustration, data-visualization, grid, motion and haptic foundations",
+        "Navigation, action, input, financial-data, collection, feedback, overlay, trust and operator component families",
+        "Light, dark, high-contrast, large-text, zoom, responsive and adaptive behavior",
+        "Canonical terminology, content patterns, regulated-copy approval and localization",
+        "Versioned libraries, contribution model, deprecation and breaking-change policy",
+        "Token packages, component specs, Code Connect mapping, assets and implementation handoff"
+      ],
+      "out_of_scope": [
+        "One visual implementation shared unchanged across platforms",
+        "Marketing-site design",
+        "Frontend code owned by Android, web or admin repositories"
+      ],
+      "exit_criteria": [
+        "Every registered component family has required variants, states, content limits and accessibility behavior",
+        "All semantic tokens resolve in supported themes and platform transformations",
+        "Money and status meaning never relies on color alone and every chart has a text or table equivalent",
+        "Android, web and admin can consume versioned tokens and mapped component specifications",
+        "The CDO, Accessibility Lead and Design Systems Lead approve the release"
+      ],
+      "dependencies": ["E33", "T-DSY-01"],
+      "traceability": [
+        "product/08-experience-design-and-sdlc-plan.md sections 5, 10, 11 and 12",
+        "architecture/03-stack-and-monetization.md client stack",
+        "T-UX-01 state taxonomy"
+      ]
+    },
+    {
+      "stable_id": "E35",
+      "title": "[EPIC] E35 - Android experience design",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "labels": ["epic", "design", "android", "P0-critical"],
+      "goal": "Design and validate every native Android journey, screen, system handoff and adaptive state as a coherent Material 3 product before the Android application shell or feature frontend is implemented.",
+      "scope": [
+        "Compact, medium and expanded navigation and shell",
+        "Identity, onboarding, consent, permissions, recovery and capture health",
+        "Debt, transactions, planning, goals, net worth and reporting",
+        "Split, family, AI, billing, trust, support and notification preferences",
+        "Offline, process-death, deep-link, restricted-setting, privacy and coercion states",
+        "Complete interactive prototype, usability evidence and implementation handoff"
+      ],
+      "out_of_scope": [
+        "Android service and parser implementation",
+        "Copying desktop web layouts onto tablets",
+        "Using non-Material controls where a native control exists"
+      ],
+      "exit_criteria": [
+        "Every Android registry screen and flow has a versioned D6 artifact and mapped implementation ticket",
+        "Critical journeys pass prototype accessibility, usability, financial-comprehension and safe-exit gates",
+        "Compact and expanded behavior, predictive Back, edge-to-edge and largest text scale are demonstrated",
+        "No Android UI implementation ticket is startable without its exact design dependency",
+        "The Android Design Lead and CDO approve the complete platform handoff"
+      ],
+      "dependencies": ["E33", "E34"],
+      "traceability": [
+        "product/08-experience-design-and-sdlc-plan.md Android sitemap",
+        "planning-automation/backlog-v2/evidence/experience-coverage.json",
+        "All Android story and task tickets"
+      ]
+    },
+    {
+      "stable_id": "E36",
+      "title": "[EPIC] E36 - Customer web experience design",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "web",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "labels": ["epic", "design", "web", "P0-critical"],
+      "goal": "Design and validate every responsive customer-web journey, page, dense financial workflow and recovery path before the web shell or feature frontend is implemented.",
+      "scope": [
+        "Authentication, recovery, responsive shell and overview",
+        "Transactions, bulk management, imports, clarification and export",
+        "Debt, income, budgets, goals, net worth, holdings and reports",
+        "Split, family, AI, billing, preferences, trust and support",
+        "Keyboard, screen-reader, zoom, narrow-layout, browser and failure states",
+        "Complete interactive prototype, usability evidence and implementation handoff"
+      ],
+      "out_of_scope": [
+        "Admin/operator experience",
+        "Marketing-site acquisition pages",
+        "A mobile-web experience that only redirects to Android"
+      ],
+      "exit_criteria": [
+        "Every customer-web registry page and flow has a versioned D6 artifact and mapped implementation ticket",
+        "Bulk, import, debt comparison and export tasks pass usability and comprehension thresholds",
+        "Every journey is keyboard complete and usable at 200 percent zoom",
+        "No customer-web frontend ticket is startable without its exact design dependency",
+        "The Web Design Lead and CDO approve the complete platform handoff"
+      ],
+      "dependencies": ["E33", "E34"],
+      "traceability": [
+        "product/08-experience-design-and-sdlc-plan.md customer-web sitemap",
+        "planning-automation/backlog-v2/evidence/experience-coverage.json",
+        "All web story and task tickets"
+      ]
+    },
+    {
+      "stable_id": "E37",
+      "title": "[EPIC] E37 - Admin and operator experience design",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "admin",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "labels": ["epic", "design", "admin", "security", "P0-critical"],
+      "goal": "Design and validate the complete least-privilege operator product, including queues, approvals, audit, rights, support, billing and incidents, before an admin frontend can expose a capability or normalize unsafe access.",
+      "scope": [
+        "Operator personas, roles, permission-aware sitemap and absent-route behavior",
+        "Plans, features, quotas, providers and spend controls",
+        "Support, customer status, refunds, rights and grievance queues",
+        "Redaction, unmask, elevation, export and four-eyes decisions",
+        "Audit, access monitoring, aggregate analytics, incidents and break-glass",
+        "Failure, SLA-clock, accessibility, density and performance behavior",
+        "Complete operator prototype, simulation evidence and implementation handoff"
+      ],
+      "out_of_scope": [
+        "A browse-all customer or transaction explorer",
+        "Direct database, backup or KMS access",
+        "Combining admin and customer authentication or navigation"
+      ],
+      "exit_criteria": [
+        "Every operator capability is present only for an authorized role and absent otherwise",
+        "Every high-risk action demonstrates provenance, requester/approver separation, expiry, audit and notification",
+        "Statutory-clock, incident and unavailable-dependency simulations pass without an unsafe shortcut",
+        "No admin frontend ticket is startable without its exact design dependency",
+        "The Admin Design Lead, Security, Accessibility Lead and CDO approve the handoff"
+      ],
+      "dependencies": ["E33", "E34", "T-ADR-ADMIN-06"],
+      "traceability": [
+        "product/08-experience-design-and-sdlc-plan.md admin sitemap",
+        "architecture/02-security-architecture.md admin boundary",
+        "All admin and operator tickets"
+      ]
+    },
+    {
+      "stable_id": "E38",
+      "title": "[EPIC] E38 - Experience validation and design quality assurance",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "labels": ["epic", "design-qa", "accessibility", "P0-critical"],
+      "goal": "Operate an independent design-quality lifecycle that tests coverage, usability, accessibility, comprehension, privacy, localization, design-to-code conformance and release readiness rather than allowing designers or developers to approve their own output.",
+      "scope": [
+        "Registry, traceability, component and token lint",
+        "Heuristic review, cognitive walkthrough and prototype accessibility",
+        "Android, web and admin moderated usability",
+        "Financial comprehension, content and localization validation",
+        "Household privacy, coercion, authorization and operator-abuse scenarios",
+        "Design-to-code visual, interaction and semantic regression",
+        "Cross-platform parity, UAT, release design QA and post-launch research"
+      ],
+      "out_of_scope": [
+        "Financial engine correctness testing",
+        "Security penetration testing owned by E25",
+        "Self-certification by the artifact author"
+      ],
+      "exit_criteria": [
+        "Every critical flow has an independent prototype test and implementation-level UAT owner",
+        "Every platform passes its accessibility and usability gates before D6 handoff",
+        "Built screens match approved artifacts or carry an approved documented deviation",
+        "Private beta and public launch require unexpired D8 design evidence",
+        "The Design QA Lead and CDO can inspect coverage and open findings from Project views"
+      ],
+      "dependencies": ["E33", "E34", "E35", "E36", "E37"],
+      "traceability": [
+        "product/08-experience-design-and-sdlc-plan.md sections 4 and 14",
+        "planning-automation/backlog-v2/evidence/experience-coverage.json",
+        "E25 engineering and security verification gates"
+      ]
+    }
+  ]
+}

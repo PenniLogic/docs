@@ -1,0 +1,911 @@
+{
+  "kind": "tickets",
+  "group": "tickets-assurance-remediation",
+  "epic_refs": ["E24", "E26", "E28", "docs#2", "docs#4", "docs#5", "docs#6", "docs#18", "docs#23", "docs#24"],
+  "items": [
+    {
+      "stable_id": "T-ADR-EMBED-12",
+      "title": "ADR: persisted user-derived embeddings or explicit prohibition",
+      "repo": "docs",
+      "epic": "E26",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "needs-adr", "security", "P1-high"],
+      "outcome": "A reviewed decision either prohibits persisted user-derived embeddings or defines their store, tenancy, disclosure risk, retention and hard-delete erasure before any vector extension or embedding column can enter an environment.",
+      "context": "The AI research names pgvector and transaction embeddings, while the accepted erasure design relies on crypto-shredding. A similarity-searchable vector cannot be application-layer encrypted and may leak source text through inversion, so silence would let an unowned datastore bypass the strongest privacy guarantees in the product.",
+      "scope": [
+        "Separate static category prototypes and ephemeral inference from embeddings derived from a user's transaction, merchant, memo or assistant conversation",
+        "Decision on whether any user-derived embedding may be persisted on the server or device",
+        "Store, tenancy, row-level security and network boundary if persistence is approved",
+        "Embedding model, dimension, versioning and full re-index semantics",
+        "Retention, export and hard-delete erasure with a post-erasure residue query",
+        "Embedding-inversion and membership-inference threat analysis",
+        "Database extension allowlist consequence consumed by T-PLT-01"
+      ],
+      "acceptance_criteria": [
+        "The record chooses persisted or prohibited and rejects the alternative with a reason",
+        "Until the record is accepted, the database extension allowlist rejects pgvector and every user-derived embedding column",
+        "If persistence is approved, crypto-shredding is explicitly rejected as sufficient and a hard-delete residue test is specified",
+        "If persistence is approved, the model and vector dimension are pinned and a version change requires a complete re-index rather than mixed generations",
+        "If persistence is prohibited, static prototypes and ephemeral inference are bounded so no user-derived vector is written to durable storage",
+        "The record states whether conversation history and transaction enrichment may use the same store and rejects accidental cross-purpose reuse",
+        "The schema and policy consequences are published as machine-readable artifacts"
+      ],
+      "contracts_schema": [
+        "Decision artifact naming permitted embedding classes, stores, model versions, retention and erasure mechanism"
+      ],
+      "security_privacy": [
+        "Treats a user-derived embedding as personal financial data and an inversion-capable disclosure surface",
+        "No approved decision means no durable user-derived embedding"
+      ],
+      "observability": [
+        "If approved, requires vector counts by model version, stale-generation count, erasure residue result and cross-tenant denial rate"
+      ],
+      "tests": [
+        "Database extension allowlist rejection test while the ADR is open",
+        "Embedding inversion threat review",
+        "Post-erasure similarity-query residue test if persistence is approved",
+        "Model-version re-index conformance test if persistence is approved"
+      ],
+      "rollout_rollback": [
+        "Decision only; any approved implementation remains default off until its erasure and tenancy tests pass",
+        "Rollback removes serving access and schedules verified hard deletion before removing the implementation"
+      ],
+      "non_goals": [
+        "Implementing a vector store",
+        "Changing the deterministic-first categorisation baseline",
+        "Approving retrieval-augmented financial arithmetic"
+      ],
+      "dependencies": ["T-GOV-03", "T-ADR-INDEX-10", "T-ADR-CRYPTO-04"],
+      "parallel_boundary": "Primary repo docs. Owns one decision record and its machine-readable policy artifact; AI, API and infrastructure tickets consume the decision and do not redefine embedding policy.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and rejected options recorded",
+        "Every acceptance criterion demonstrated by a named test or attached evidence",
+        "Machine-readable policy consumed by the database extension gate",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AND-06",
+      "title": "Build adaptive Android behavior for constrained and large-screen devices",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P2 Automation",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "android", "quality", "P1-high"],
+      "outcome": "The Android client remains usable on the minimum supported low-memory device and adapts without clipped or unusable flows on tablets, foldables, landscape and multi-window layouts.",
+      "context": "India-first ingestion must work beyond flagship hardware. T-QA-12 owns the compatibility matrix and T-QA-08 owns the beta gate, but neither ticket owns runtime behavior when memory, storage, battery or window size is constrained.",
+      "scope": [
+        "Paging and bounded-memory rendering for long transaction timelines",
+        "Low-storage and low-memory states with recoverable cache and import behavior",
+        "Battery-aware background work that preserves capture durability",
+        "Responsive Compose layouts for compact, medium and expanded window classes",
+        "Landscape, tablet, foldable and multi-window navigation without duplicated financial state",
+        "Resource-degraded state identifiers added to the T-UX-01 taxonomy"
+      ],
+      "acceptance_criteria": [
+        "A ten-thousand-row timeline stays within the memory and frame budgets published by T-QA-12 on the minimum supported device",
+        "Low storage pauses optional cache growth, preserves queued financial writes and presents a recoverable action",
+        "Process death during constrained background work loses no captured transaction",
+        "Every core surface remains operable in portrait, landscape and split-screen at the largest supported text scale",
+        "Expanded layouts never reveal a second user's cached data after account switching",
+        "Per-device-class crash, ANR, memory and frame metrics can block a staged rollout"
+      ],
+      "contracts_schema": [
+        "Consumes T-UX-01 state identifiers and T-QA-12 device-class identifiers without defining private alternatives"
+      ],
+      "security_privacy": [
+        "Resource pressure never falls back to unencrypted storage or external cache",
+        "Account-switch and multi-window tests prove no stale user data is rendered"
+      ],
+      "observability": [
+        "Crash, ANR, memory, frame and background-work outcomes segmented by approved device class without device identifiers"
+      ],
+      "tests": [
+        "Low-memory process-death durability test",
+        "Low-storage recovery test",
+        "Ten-thousand-row paging and frame-budget test",
+        "Portrait, landscape, tablet, foldable and multi-window screenshot and accessibility matrix",
+        "Account-switch stale-content test"
+      ],
+      "rollout_rollback": [
+        "Enabled by device-class cohort after T-QA-12 publishes the matrix",
+        "Rollback disables expanded layouts and optional caching while preserving the durable queue"
+      ],
+      "non_goals": [
+        "Defining the compatibility matrix, which T-QA-12 owns",
+        "Changing the minimum Android API",
+        "Desktop Android or ChromeOS feature parity"
+      ],
+      "dependencies": ["T-SCA-AND-01", "T-UX-01", "T-QA-12", "T-SYN-03"],
+      "parallel_boundary": "Primary repo android. Owns adaptive runtime and layout behavior; T-QA-12 owns device classification and T-QA-08 owns release evidence.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests run in CI or the governed physical-device lane",
+        "Observability and rollback evidence recorded before rollout",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ING-04",
+      "title": "Build the Android cash-withdrawal reconciliation journey",
+      "repo": "android",
+      "epic": "E28",
+      "kind": "Story",
+      "phase": "P2 Automation",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "ingestion", "android", "P1-high"],
+      "outcome": "A cash withdrawal is explained as a transfer into a cash account, and the user can reconcile later cash spending or dismiss the prompt without the app inventing an expense.",
+      "context": "T-ING-03 owns server reconciliation, but no client owns the question, cash balance or correction flow. Without a journey, ATM withdrawals are either double-counted as spending or leave a cash account users cannot understand.",
+      "scope": [
+        "Withdrawal-as-transfer explanation and cash-account balance",
+        "Prompt showing balance age and candidate cash spending",
+        "Actions to add spending, link a manual entry, create an explicit adjustment or dismiss",
+        "Pending, offline, stale, conflict and already-reconciled states",
+        "Reversible adjustment and audit trail",
+        "Web parity requirements added to T-WEB-02"
+      ],
+      "acceptance_criteria": [
+        "A withdrawal creates no expense and opens no prompt until the server returns a reconciliation candidate",
+        "Adding spending reduces cash once and a retry produces no second ledger effect",
+        "Linking a manual entry preserves its user-confirmed category and creates a visible relation",
+        "An adjustment is labelled, reversible and never disguised as a bank transaction",
+        "Offline actions survive process death and reconcile without duplicating",
+        "TalkBack announces amount, account, balance age and consequence of each action"
+      ],
+      "contracts_schema": [
+        "Consumes the cash-reconciliation shapes published by T-CON-13 and the sync conflict envelope"
+      ],
+      "security_privacy": [
+        "No raw ATM message or full account identifier is displayed or logged",
+        "Cash prompts are owner-scoped and excluded after sign-out"
+      ],
+      "observability": [
+        "Prompt outcome, time-to-resolution, false-candidate reversal and abandonment events without amounts"
+      ],
+      "tests": [
+        "Withdrawal-as-transfer journey test",
+        "Offline retry and process-death test",
+        "Manual-link preservation test",
+        "Adjustment reversal test",
+        "TalkBack and largest-text test"
+      ],
+      "rollout_rollback": [
+        "Ship behind a cohort flag after T-ING-03 shadow metrics are reviewed",
+        "Rollback hides prompts but preserves cash accounts and every explicit adjustment"
+      ],
+      "non_goals": [
+        "Server reconciliation, which T-ING-03 owns",
+        "Inferring cash spending without confirmation",
+        "Cash deposit automation"
+      ],
+      "dependencies": ["T-ING-03", "T-CON-13", "T-AND-02", "T-AND-04", "T-SYN-03", "T-UX-01"],
+      "parallel_boundary": "Primary repo android. Owns the cash reconciliation user journey only; API matching, ledger effects and contract shapes remain in their owning tickets.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Contract, offline and accessibility tests are required checks",
+        "Observability and rollback evidence recorded before rollout",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-13",
+      "title": "Publish transaction lifecycle extensions for refunds, cash and recurring charges",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["task", "contracts", "money-path", "P1-high"],
+      "outcome": "Refund linkage, cash reconciliation and recurring-series state are published as additive contract groups so server and clients cannot classify the same money movement differently.",
+      "context": "The base transaction contract covers creation and capture but not consumer refunds, cash adjustments or the lifecycle after recurring detection. These shapes affect balances, budgets and income, so private client conventions would create incompatible arithmetic.",
+      "scope": [
+        "Refund states covering pending, posted, partial, failed and reversed with original-transaction linkage",
+        "Cash account, withdrawal-transfer, reconciliation candidate, resolution and adjustment shapes",
+        "Recurring-series identity, cadence, expected amount range, confirmation, ignore, price-change and cancellation-assist state",
+        "Stable problem-detail codes for invalid linkage and conflicting state transitions",
+        "Idempotency requirements on every mutating lifecycle operation",
+        "Additive compatibility and deprecation rules"
+      ],
+      "acceptance_criteria": [
+        "A partial refund declares original, refunded and remaining minor units in one currency and cannot exceed the original settled amount",
+        "A refund is a linked reversing transaction rather than an in-place mutation or income record",
+        "Cash adjustment and recurring state transitions are closed vocabularies with invalid transitions rejected",
+        "Every mutation carries the idempotency semantics accepted by T-ADR-MONEY-01",
+        "Generated Kotlin, TypeScript and Python clients compile and pass provider and consumer verification",
+        "Existing transaction consumers continue to compile when the additive groups are published",
+        "Error codes map to the shared RFC 9457 catalogue"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 transaction-lifecycle group with worked refund, cash and recurring examples",
+        "Machine-readable state transition tables and error catalogue references"
+      ],
+      "security_privacy": [
+        "No lifecycle payload accepts raw message content",
+        "Original-transaction and series references are owner-scoped and unguessable"
+      ],
+      "observability": [
+        "Requires correlation identifiers for every lifecycle mutation and a reason code for every rejected transition"
+      ],
+      "tests": [
+        "Provider and consumer contract verification across three generated languages",
+        "Partial-refund bound and currency mismatch tests",
+        "Invalid cash and recurring transition tests",
+        "Idempotent mutation replay tests",
+        "Backward compatibility fixture"
+      ],
+      "rollout_rollback": [
+        "Publish additively before implementations start",
+        "After a consumer pins the group, rollback follows expand-migrate-contract rather than removing fields"
+      ],
+      "non_goals": [
+        "Implementing any lifecycle",
+        "Moving money or cancelling a merchant subscription",
+        "Provider-specific billing refunds, which E14 owns"
+      ],
+      "dependencies": ["contracts#1", "T-CON-02", "T-ADR-MONEY-01", "T-ADR-LEDGER-03", "T-CON-12"],
+      "parallel_boundary": "Primary repo contracts. Owns only shared lifecycle schemas and generated clients; API and client implementations begin against the published version.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by contract verification",
+        "Generated clients and transition artifacts published",
+        "Compatibility and rollback notes recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-TXN-01",
+      "title": "Implement linked consumer refunds without misclassifying income",
+      "repo": "api",
+      "epic": "docs#4",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "money-path", "transactions", "P1-high"],
+      "outcome": "Merchant refunds are linked reversing transactions with deterministic pending, partial, failed and posted behavior, so budgets, income, safe-to-spend and debt surplus remain correct.",
+      "context": "Subscription billing refunds are planned, but a consumer purchase refund has no domain owner. Treating it as income overstates earnings and leaving it unlinked double-counts spend when reports are corrected.",
+      "scope": [
+        "Refund command and state machine from T-CON-13",
+        "Original-purchase linkage and bounded partial refunds",
+        "Append-only ledger entries for posted and reversed refunds",
+        "Pending and failed states with no premature balance effect",
+        "Deterministic category, budget, income and safe-to-spend treatment",
+        "Automatic candidate matching plus user-confirmed correction",
+        "Idempotent provider and manual ingestion"
+      ],
+      "acceptance_criteria": [
+        "A posted full refund exactly reverses the eligible purchase effect without becoming income",
+        "Several partial refunds cannot exceed the original settled amount under concurrent requests",
+        "Pending and failed refunds do not change settled balance or available budget",
+        "A duplicate captured refund produces one ledger effect",
+        "Changing an incorrect original link creates a correcting relation and audit event rather than mutating history",
+        "Reports expose the derivation from purchase and refund entries",
+        "Cross-tenant original references are denied"
+      ],
+      "contracts_schema": [
+        "Implements T-CON-13 refund states, linkage and problem codes without a private state"
+      ],
+      "security_privacy": [
+        "Original references are resolved under forced tenant isolation",
+        "No provider memo or raw captured message is persisted as refund evidence"
+      ],
+      "observability": [
+        "Refund state transitions, duplicate suppression, over-refund rejection and relink counts without amounts"
+      ],
+      "tests": [
+        "Full and partial refund property tests",
+        "Concurrent over-refund race test",
+        "Pending and failed no-balance-effect tests",
+        "Duplicate capture idempotency test",
+        "Cross-tenant linkage attack test",
+        "Budget, income and safe-to-spend regression tests"
+      ],
+      "rollout_rollback": [
+        "Start in candidate-only mode, then enable posting after false-link review",
+        "Rollback stops automatic posting while preserving every linked and correcting ledger entry"
+      ],
+      "non_goals": [
+        "Subscription purchase refunds, which E14 owns",
+        "Client review surfaces",
+        "Chargebacks and disputes beyond explicit refund states"
+      ],
+      "dependencies": ["T-CON-13", "api#7", "T-ADR-LEDGER-03", "T-SEC-03"],
+      "parallel_boundary": "Primary repo api. Owns refund state and ledger effects; contracts own shapes and each client owns its review experience.",
+      "definition_of_done": [
+        "Merged behind an independent money-path review",
+        "Every acceptance criterion demonstrated by named automated tests",
+        "Property, race, isolation and report-regression tests are required checks",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-TXN-02",
+      "title": "Build the Android refund review and correction experience",
+      "repo": "android",
+      "epic": "docs#6",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "android", "transactions", "P1-high"],
+      "outcome": "Users can see pending, partial, failed and posted refunds, inspect the original purchase and correct a bad link without learning ledger internals.",
+      "context": "The API can preserve correct refund arithmetic only if users can resolve ambiguous matches. The existing transaction timeline supports reversal but has no refund relationship, progress or relink state.",
+      "scope": [
+        "Refund badges and progress on timeline and detail views",
+        "Original-purchase navigation and derivation explanation",
+        "Candidate confirmation, search and relink flow",
+        "Pending, failed, partial, posted, corrected, offline and stale states",
+        "Accessible amount and status announcements",
+        "Web parity requirements added to T-WEB-02"
+      ],
+      "acceptance_criteria": [
+        "A partial refund displays refunded and remaining amounts with one accessible derivation",
+        "A pending or failed refund is never displayed as settled income",
+        "Relinking requires confirmation and shows the correcting audit relation after sync",
+        "Offline confirmation survives process death and submits once",
+        "A cross-account purchase cannot be selected",
+        "TalkBack and largest-text users can complete every state transition"
+      ],
+      "contracts_schema": [
+        "Consumes generated T-CON-13 refund types and shared problem codes"
+      ],
+      "security_privacy": [
+        "Purchase search is owner-scoped and reveals no full account identifier",
+        "Analytics carries state and outcome only, never merchant or amount"
+      ],
+      "observability": [
+        "Candidate confirmation, relink, abandonment and error outcomes without financial values"
+      ],
+      "tests": [
+        "Full, partial, failed and pending journey tests",
+        "Offline relink idempotency test",
+        "Cross-account selection denial test",
+        "TalkBack and largest-text tests"
+      ],
+      "rollout_rollback": [
+        "Enabled with the API candidate-only cohort",
+        "Rollback hides matching actions while preserving read-only refund history"
+      ],
+      "non_goals": [
+        "Computing refund ledger effects",
+        "Provider dispute submission",
+        "Web implementation"
+      ],
+      "dependencies": ["T-TXN-01", "T-CON-13", "T-AND-04", "T-SYN-03", "T-UX-01"],
+      "parallel_boundary": "Primary repo android. Owns only refund presentation and correction; the API remains authoritative for states and money effects.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by automated or device evidence",
+        "Offline, accessibility and contract tests are required checks",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GOL-04",
+      "title": "Provide sourced salary-market options for a measured goal income gap",
+      "repo": "api",
+      "epic": "docs#24",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R9 Advice boundary",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "goals", "compliance", "P1-high"],
+      "outcome": "When a deterministic goal projection shows an income gap, the user may request sourced market salary ranges by role and location without receiving a job recommendation or fabricated guarantee.",
+      "context": "The original promise included guidance about the salary needed to reach a goal. Current goal tickets calculate the gap but own no sourced labor-market information, leaving the promised next step absent or tempting an LLM to invent it.",
+      "scope": [
+        "Optional role, seniority and location input separate from financial records",
+        "Versioned salary-range source with geography, sample, methodology and as-of date",
+        "Deterministic comparison between the goal gap and sourced ranges",
+        "Unavailable, stale, sparse-sample and conflicting-source states",
+        "Educational option language and standard advice-boundary disclaimer",
+        "Android and web presentation requirements"
+      ],
+      "acceptance_criteria": [
+        "Every range displays source, geography, methodology and as-of date",
+        "A stale or unsupported role-location pair returns an explicit unavailable result rather than an estimate",
+        "The response never recommends an employer, application, negotiation action or guaranteed salary",
+        "The required-income value is consumed from T-GOL-01 and is never recomputed by a model",
+        "Changing the market source version is visible and reproducible",
+        "Role and salary text never enters analytics labels"
+      ],
+      "contracts_schema": [
+        "Extends T-CON-08 with salary-market source, range, freshness and unavailable-result types"
+      ],
+      "security_privacy": [
+        "Role and location are purpose-limited and not shared with family members by default",
+        "No resume, employer identity or free-form career history is collected"
+      ],
+      "observability": [
+        "Availability, source freshness, disclaimer display and follow-up selection without role or salary values"
+      ],
+      "tests": [
+        "Stale, unsupported and sparse-sample tests",
+        "Deterministic goal-gap comparison test",
+        "Advice-boundary language regression test",
+        "Source-version reproducibility test",
+        "Analytics payload inspection"
+      ],
+      "rollout_rollback": [
+        "Default off until source licensing and freshness monitoring are approved",
+        "Rollback removes market ranges while leaving deterministic goal-gap projections intact"
+      ],
+      "non_goals": [
+        "Job search, application or employer recommendation",
+        "Resume storage",
+        "Investment, lending or compensation advice"
+      ],
+      "dependencies": ["T-GOL-01", "T-CON-08", "T-CMP-04"],
+      "parallel_boundary": "Primary repo api. Owns salary-market retrieval and deterministic comparison; Android and web render the published response and add no salary calculation.",
+      "definition_of_done": [
+        "Merged behind an approved product and compliance review",
+        "Every acceptance criterion demonstrated by named tests or source evidence",
+        "Source license, freshness and disclaimer evidence recorded",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CON-14",
+      "title": "Publish the optional assistant conversation lifecycle contract",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "contracts", "privacy", "P1-high"],
+      "outcome": "History-off behavior, optional conversation persistence, provenance references, export and deletion are one versioned contract so the API and both assistant clients expose the same privacy lifecycle.",
+      "context": "AI answers and provider modes are specified, but the plan does not say whether conversations persist or how users inspect, export and delete them. Conversation text can contain concentrated financial information and must not become an accidental permanent store.",
+      "scope": [
+        "History mode with off as an explicit state and opt-in persistence",
+        "Thread, message, provenance reference and retention-expiry shapes",
+        "Per-thread delete, bulk delete and deletion status",
+        "Export manifest inclusion and format version",
+        "Provider mode disclosure without storing provider keys",
+        "Unavailable, expired, deleted and retention-pending states"
+      ],
+      "acceptance_criteria": [
+        "History-off requests create no durable message record and a contract test proves the absence",
+        "A persisted thread carries purpose version, retention expiry and provenance references",
+        "Delete is idempotent and exposes propagation status until every derived copy is gone",
+        "The export contract includes persisted conversations and excludes ephemeral ones",
+        "No shape can carry a provider key or raw captured message",
+        "Generated Kotlin, TypeScript and Python clients compile and pass verification"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 conversation lifecycle group linked to the T-CON-09 export and rights types"
+      ],
+      "security_privacy": [
+        "History is opt-in and purpose-limited",
+        "Conversation content is classified as sensitive personal financial data"
+      ],
+      "observability": [
+        "Requires mode, persistence outcome, expiry and deletion propagation result without content"
+      ],
+      "tests": [
+        "History-off no-write contract test",
+        "Retention expiry and idempotent delete tests",
+        "Export inclusion and exclusion tests",
+        "Provider-key and raw-message schema rejection tests"
+      ],
+      "rollout_rollback": [
+        "Publish additively with history disabled by default",
+        "Rollback disables new persistence while preserving export and deletion for existing threads"
+      ],
+      "non_goals": [
+        "Storing or routing model requests",
+        "Client conversation interfaces",
+        "Using conversation text for training"
+      ],
+      "dependencies": ["contracts#1", "T-CON-09", "T-ADR-CRYPTO-04", "T-CON-12"],
+      "parallel_boundary": "Primary repo contracts. Owns conversation lifecycle shapes only; API owns storage and clients own presentation.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by provider and consumer verification",
+        "Generated clients published",
+        "Privacy and rollback notes recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AIP-06",
+      "title": "Implement opt-in encrypted assistant history with export and erasure",
+      "repo": "api",
+      "epic": "docs#18",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Security",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "ai", "security", "privacy", "P1-high"],
+      "outcome": "Assistant conversations are ephemeral by default and, when a user opts in, are encrypted, bounded by retention, exportable and verifiably erasable while the AI service remains stateless.",
+      "context": "Conversation history is useful but is also a new concentrated store of financial questions and derived facts. Putting it in ai-service would blur the service boundary and leave rights, encryption and retention outside the core data lifecycle.",
+      "scope": [
+        "Core-API ownership of optional encrypted thread and message records",
+        "History-off request path with no durable write",
+        "Purpose-version and retention-expiry enforcement",
+        "Per-thread and bulk deletion with propagation status",
+        "Export integration and subject access",
+        "AI-service request path using transient context only",
+        "No training, evaluation or analytics reuse of conversation content"
+      ],
+      "acceptance_criteria": [
+        "History is off by default and a no-write test proves no durable message, trace or cache survives",
+        "Opt-in content is encrypted under the user's data key and denied by cross-tenant reads",
+        "Retention expiry and explicit deletion remove primary, cache, search and backup-restoration access through the T-SEC-02 path",
+        "Export contains complete persisted threads with provenance and omits ephemeral turns",
+        "The AI service can answer using transient context without receiving a storage credential",
+        "No raw SMS, notification or email text can enter a conversation record",
+        "Disabling persistence preserves delete and export until all existing threads expire or are removed"
+      ],
+      "contracts_schema": [
+        "Implements T-CON-14 and T-CON-09 without a private conversation or deletion state"
+      ],
+      "security_privacy": [
+        "Conversation content uses envelope encryption, forced tenant isolation and step-up for bulk export or delete",
+        "Content is never used for training and never appears in telemetry"
+      ],
+      "observability": [
+        "History-mode counts, persistence failures, expiry lag and deletion residue without prompts or answers"
+      ],
+      "tests": [
+        "History-off no-write test across database, cache, trace and log",
+        "Cross-tenant read and mass-assignment attack tests",
+        "Retention expiry and idempotent deletion tests",
+        "Export completeness test",
+        "Raw-message and training-path exclusion tests"
+      ],
+      "rollout_rollback": [
+        "Default off and enabled by explicit user opt-in after erasure evidence is green",
+        "Rollback disables new history while preserving read, export and delete for existing records"
+      ],
+      "non_goals": [
+        "AI gateway or model routing",
+        "Persisted user-derived embeddings, which require T-ADR-EMBED-12",
+        "Client assistant history presentation"
+      ],
+      "dependencies": ["T-CON-14", "T-AIP-02", "T-AI-05", "T-SEC-01", "T-SEC-02", "T-CMP-01"],
+      "parallel_boundary": "Primary repo api. Owns conversation persistence and lifecycle; ai-service remains stateless and Android and web consume the generated contract.",
+      "definition_of_done": [
+        "Merged behind independent security and privacy review",
+        "Every acceptance criterion demonstrated by named automated tests",
+        "Isolation, no-write, export and erasure tests are required checks",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-NOT-03",
+      "title": "Build the cross-channel notification preference centre",
+      "repo": "web",
+      "epic": "E24",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "notifications", "web", "P1-high"],
+      "outcome": "Users manage push, email, browser and digest preferences, quiet hours and unsubscribe state in one accessible centre whose displayed state is confirmed by the server.",
+      "context": "The contract and dispatcher own preference semantics and Android owns operating-system channels, but no product surface lets a user manage cross-channel choices consistently.",
+      "scope": [
+        "Per-message-class and per-channel controls",
+        "Quiet hours with explicit time zone",
+        "Required security-message explanation and immutable classes",
+        "Sessionless unsubscribe reconciliation after sign-in",
+        "Denied browser-notification and unavailable-channel states",
+        "Server-confirmed save, retry and conflict behavior",
+        "Android deep link and parity requirements"
+      ],
+      "acceptance_criteria": [
+        "Every class from T-CON-11 appears once and an unknown class fails rendering",
+        "Changing a preference affects all applicable channels and the server-confirmed state survives reload",
+        "Required messages explain why they cannot be disabled without disguising marketing as required",
+        "Quiet hours display and save the same time zone the dispatcher enforces",
+        "Sessionless unsubscribe is visible after sign-in and cannot be silently overwritten",
+        "Keyboard, screen-reader and 200 percent zoom users can complete every action"
+      ],
+      "contracts_schema": [
+        "Consumes T-CON-11 generated preference, quiet-hour, suppression and unsubscribe types"
+      ],
+      "security_privacy": [
+        "Preference analytics contains class and outcome only",
+        "Unsubscribe references cannot read profile or financial data"
+      ],
+      "observability": [
+        "Preference save, conflict, suppression and unsubscribe convergence outcomes without recipient identity"
+      ],
+      "tests": [
+        "Class and channel matrix test",
+        "Quiet-hour time-zone round-trip test",
+        "Sessionless unsubscribe convergence test",
+        "Denied-browser state test",
+        "Keyboard, screen-reader and zoom tests"
+      ],
+      "rollout_rollback": [
+        "Roll out after T-NOT-01 is enforcing preferences",
+        "Rollback leaves server preferences effective and exposes a read-only summary"
+      ],
+      "non_goals": [
+        "Notification delivery, which T-NOT-01 owns",
+        "Android operating-system channel creation, which T-NOT-02 owns",
+        "Marketing campaign composition"
+      ],
+      "dependencies": ["T-CON-11", "T-NOT-01", "T-WEB-01", "T-UX-01"],
+      "parallel_boundary": "Primary repo web. Owns the preference-centre interface only; API and Android retain their delivery and operating-system responsibilities.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by automated or accessibility evidence",
+        "Contract and accessibility tests are required checks",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-DEBT-03",
+      "title": "Model credit-card cycles and advanced payoff strategies",
+      "repo": "api",
+      "epic": "docs#5",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "money-path", "debt", "P1-high"],
+      "outcome": "Credit-card projections understand statement and due dates, interest-free periods, revolving balances and EMI conversion, and users can compare utilization-first, highest-payment and highest-interest-cost strategies.",
+      "context": "The debt engine models amortising loans and basic card payoff, but a card's statement cycle determines whether a purchase incurs interest. Indian users also compare payoff rules beyond avalanche and snowball, and all are deterministic arithmetic over data already held.",
+      "scope": [
+        "Statement date, due date, minimum due, grace period, annual rate and revolving-balance inputs",
+        "Interest-free versus revolving purchase treatment",
+        "EMI conversion and fee representation consumed from T-DEBT-02",
+        "Utilization-first, highest-monthly-payment and highest-monthly-interest-cost strategies",
+        "Deterministic tie-break and custom-order fallback",
+        "Scenario derivation and explanation payload"
+      ],
+      "acceptance_criteria": [
+        "A purchase paid before the due date incurs no revolving interest in the model",
+        "A carried balance applies the published card convention without mixing it with amortising-loan rules",
+        "Each strategy produces a stable order and deterministic tie-break",
+        "A scenario states total interest, payoff date and cash-flow effect per strategy",
+        "No scalar total mixes currencies",
+        "An independent implementation agrees over the generated scenario set"
+      ],
+      "contracts_schema": [
+        "Consumes the T-CON-01 debt contract extended with card-cycle fields and strategy enum values"
+      ],
+      "security_privacy": [
+        "No full card number is collected or stored",
+        "All calculations remain deterministic and no model receives card details"
+      ],
+      "observability": [
+        "Strategy calculation latency, invalid input reason and model-version identifier without balances"
+      ],
+      "tests": [
+        "Statement-cycle boundary and leap-date property tests",
+        "Interest-free and revolving golden scenarios",
+        "Strategy ordering and tie-break tests",
+        "Independent-model differential suite",
+        "Multi-currency refusal test"
+      ],
+      "rollout_rollback": [
+        "Add strategy values behind capability flags after old clients ignore unknown additive values safely",
+        "Rollback removes selection of a strategy but preserves saved card inputs and prior scenario evidence"
+      ],
+      "non_goals": [
+        "Credit-score advice",
+        "Card application or refinancing recommendation",
+        "Automatic EMI conversion"
+      ],
+      "dependencies": ["T-CON-01", "api#12", "T-DEBT-02", "T-ADR-LEDGER-03"],
+      "parallel_boundary": "Primary repo api. Owns deterministic card and strategy calculations; clients render the published scenario and perform no local money arithmetic.",
+      "definition_of_done": [
+        "Merged behind independent money-path review",
+        "Every acceptance criterion demonstrated by property and differential tests",
+        "Money-path tests are required checks with the published mutation threshold",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-RCR-01",
+      "title": "Manage recurring charges with confirmation, price alerts and cancel assist",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "recurring", "budgeting", "P1-high"],
+      "outcome": "Detected recurring charges become a user-confirmed list with renewal forecasts, price-change alerts and safe cancellation assistance instead of remaining an unused classifier result.",
+      "context": "api#19 detects recurring charges but no ticket owns what happens next. Competitors turn this into a high-value subscription view; without confirmation and lifecycle state, false detections pollute forecasts and alerts.",
+      "scope": [
+        "Confirm, ignore, snooze and end recurring-series states",
+        "Expected next date and amount range feeding the cash-flow forecast",
+        "Price-change detection with a user-configurable threshold",
+        "Cancellation-assist metadata limited to verified merchant instructions or links",
+        "Reminder and alert events through T-NOT-01",
+        "Correction and merge behavior when merchant normalization changes"
+      ],
+      "acceptance_criteria": [
+        "No recurring series affects forecasts until confirmed or the published confidence threshold is met and visibly disclosed",
+        "A price-change alert compares equivalent billing periods and does not fire on currency changes or one-time fees",
+        "Ending or ignoring a series stops future alerts without deleting historical transactions",
+        "Cancellation assist never claims to cancel automatically and every external link is allowlisted",
+        "A corrected merchant relation preserves series history through a redirect",
+        "Alerts contain no amount or merchant name on a lock screen"
+      ],
+      "contracts_schema": [
+        "Implements T-CON-13 recurring state, forecast and cancellation-assist shapes"
+      ],
+      "security_privacy": [
+        "Merchant links are validated and cannot target private or unapproved destinations",
+        "Notification payloads remain pointers with no financial detail"
+      ],
+      "observability": [
+        "Confirmation precision, false-positive correction, price-alert outcome and cancel-link failure without merchant labels"
+      ],
+      "tests": [
+        "Recurring cadence and date-drift property tests",
+        "Price-change false-positive corpus",
+        "Ignore and end-state no-alert tests",
+        "Merchant redirect history test",
+        "Cancellation-link allowlist and notification payload tests"
+      ],
+      "rollout_rollback": [
+        "Start with confirmation-only lists before alerts or forecast effects",
+        "Rollback disables alerts and forecast contribution while preserving confirmed series state"
+      ],
+      "non_goals": [
+        "Moving money or cancelling on the user's behalf",
+        "App-store subscription billing, which E14 owns",
+        "Mandate detection, which T-MND-01 owns"
+      ],
+      "dependencies": ["api#19", "T-CON-13", "T-INC-02", "T-NOT-01"],
+      "parallel_boundary": "Primary repo api. Owns recurring lifecycle, forecasts and safe assist metadata; clients own presentation and providers remain outside this service.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by named automated tests",
+        "Forecast, link-safety and notification tests are required checks",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-BUD-01",
+      "title": "Build sinking funds for known irregular expenses",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "budgeting", "goals", "P2-medium"],
+      "outcome": "Users reserve contributions toward known irregular expenses without moving money, and safe-to-spend and competing debt goals show the reservation transparently.",
+      "context": "Rollover budgets cover unused category limits but not a known annual premium, school fee or repair. Treating those as ordinary goals hides their near-term cash-flow effect; treating them as expenses before payment corrupts the ledger.",
+      "scope": [
+        "Target amount, due date, contribution cadence and optional category",
+        "Deterministic required contribution and funded-progress calculation",
+        "Safe-to-spend and cash-flow reservation without a ledger transaction",
+        "Competition with debt and other goals through the T-GOL-01 allocator",
+        "Pause, change, complete and archive states with as-of history",
+        "Android and web presentation requirements"
+      ],
+      "acceptance_criteria": [
+        "Creating a sinking fund creates no ledger entry and never changes an account balance",
+        "Required contribution is deterministic across leap years and irregular pay schedules",
+        "Safe-to-spend shows the reservation and the derivation rather than silently reducing a number",
+        "Competing-goal allocation remains within available surplus and exposes which target moved",
+        "Changing a due date preserves prior as-of projections",
+        "A completed fund stops future reservations without deleting its history"
+      ],
+      "contracts_schema": [
+        "Extends T-CON-08 with sinking-fund state, contribution schedule and derivation fields"
+      ],
+      "security_privacy": [
+        "Fund names are encrypted descriptive data and excluded from analytics",
+        "Shared visibility follows an explicit family grant and defaults to private"
+      ],
+      "observability": [
+        "Create, pause, complete and missed-contribution outcomes without names or amounts"
+      ],
+      "tests": [
+        "Contribution schedule property tests across date boundaries",
+        "No-ledger-effect invariant test",
+        "Safe-to-spend derivation test",
+        "Competing-goal allocation test",
+        "As-of history test"
+      ],
+      "rollout_rollback": [
+        "Behind a feature flag after the goal allocator and safe-to-spend feed are stable",
+        "Rollback stops new reservations while preserving read-only fund history"
+      ],
+      "non_goals": [
+        "Moving money between accounts",
+        "Bank sub-account integration",
+        "Investment recommendations"
+      ],
+      "dependencies": ["T-CON-08", "T-INC-01", "T-INC-02", "T-GOL-01"],
+      "parallel_boundary": "Primary repo api. Owns sinking-fund state and deterministic reservation; clients render the shared contract and perform no local allocation math.",
+      "definition_of_done": [
+        "Merged behind independent money-path review",
+        "Every acceptance criterion demonstrated by property and invariant tests",
+        "Money-path tests are required checks",
+        "Observability and rollback evidence recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

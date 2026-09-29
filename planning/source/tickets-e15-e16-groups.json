@@ -1,0 +1,670 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e15-e16-groups",
+  "epic_refs": [
+    "docs#15",
+    "docs#16"
+  ],
+  "items": [
+    {
+      "stable_id": "T-SPL-01",
+      "title": "Implement the split ledger: groups, share types and deterministic remainder",
+      "repo": "api",
+      "epic": "docs#15",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Groups, expenses and share allocations exist with a database-enforced sum constraint, and every share type allocates the last minor unit deterministically so dividing an amount that does not divide evenly never creates or destroys a minor unit.",
+      "context": "Splitting is viral and is treated as acquisition rather than revenue, so it must be free and it must be correct. The correctness bar is arithmetic and is enforced by the database; authorization, settlement and erasure are a different risk surface and are a separate ticket.",
+      "scope": [
+        "Group, membership, expense and share storage with a sum constraint enforced in the database",
+        "Share types covering equal, exact, percentage, shares and adjustment",
+        "Deterministic remainder allocation that is documented and reproducible",
+        "Placeholder members who are not users, with an atomic identity claim later",
+        "Free-tier entitlement so the full split journey completes without payment",
+        "Deterministic debt simplification per currency that minimizes settlement transfers without rewriting original obligations",
+        "Inspectable derivation from each proposed settlement back to original expenses and shares"
+      ],
+      "acceptance_criteria": [
+        "An unbalanced share set is rejected by the database, proven by a direct insert attempt",
+        "Dividing an amount that does not divide evenly allocates every minor unit deterministically and the same inputs always produce the same allocation",
+        "Every share type is property-tested against the sum constraint over generated inputs",
+        "A placeholder cannot read any other member data, and claiming an identity merges balances atomically",
+        "The full split journey completes on a free account, proven by an entitlement test",
+        "Simplification never mixes currencies and never changes an original expense, share or recorded settlement",
+        "The proposal uses no more transfers than the documented algorithm permits and is deterministic for tied balances",
+        "Every proposal carries a derivation that exactly reconciles to each member's original net balance"
+      ],
+      "contracts_schema": [
+        "Implements the published sharing contract including the stated sum constraint",
+        "Implements the published debt-simplification proposal and derivation shapes"
+      ],
+      "security_privacy": [
+        "Placeholder records hold the minimum identifying data needed to invite",
+        "A share allocation is stored rather than derived, so a later code change cannot silently restate a settled split"
+      ],
+      "observability": [
+        "Publishes group and expense counts and constraint violation attempts without amounts",
+        "Publishes proposal size and computation latency without member identities or amounts"
+      ],
+      "tests": [
+        "Direct database constraint violation test",
+        "Property tests per share type over generated amounts",
+        "Remainder determinism test",
+        "Free-tier entitlement test",
+        "Property tests preserving every member net balance across simplification",
+        "Currency separation, tie-break determinism and original-record immutability tests"
+      ],
+      "rollout_rollback": [
+        "Behind a flag per cohort; disabling the flag hides creation while existing groups remain readable",
+        "Rollback never recomputes existing allocations, which are stored rather than derived"
+      ],
+      "non_goals": [
+        "Group authorization, settlement recording and counterparty erasure, which are their own ticket",
+        "Acting as a payment processor or holding funds, permanently",
+        "Client surfaces, which are the Android ticket"
+      ],
+      "dependencies": [
+        "api#7",
+        "T-CON-04",
+        "T-FAM-01",
+        "T-ADR-MONEY-01",
+        "T-ADR-LEDGER-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the split schema and the allocation arithmetic only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SPL-03",
+      "title": "Implement split authorization, settlement recording and counterparty erasure",
+      "repo": "api",
+      "epic": "docs#15",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Group access is default deny and consistent with the sharing model, settlements are recorded without ever holding funds, and erasing one member leaves every other member balance correct and reconcilable.",
+      "context": "The arithmetic is only half the problem. Who may read a group, what a settlement record is allowed to claim, and what happens to a shared balance when one party exercises erasure are authorization and privacy questions with their own reviewer and their own failure modes.",
+      "scope": [
+        "Group authorization consistent with the sharing model, default deny",
+        "Atomic identity claim hardening so an invitation cannot be hijacked",
+        "Settlement recording and payment deep links, with no funds held",
+        "Counterparty erasure semantics as specified by the erasure decision record",
+        "Settlement and dispute notices are enqueued through the T-NOT-01 outbox and never carry an amount in the payload"
+      ],
+      "acceptance_criteria": [
+        "A hijacked claim attempt fails; the claim requires proof controlled by the invited person",
+        "Leaving a group removes access immediately and historically",
+        "Erasing one member leaves other member balances correct and reconcilable",
+        "Non-members are denied by default and membership is never inferred from an invitation",
+        "No settlement path holds funds at any point, proven by a code-level assertion"
+      ],
+      "contracts_schema": [
+        "Implements the published sharing contract settlement and revocation shapes"
+      ],
+      "security_privacy": [
+        "Non-members are denied by default; membership is never inferred from an invitation",
+        "Settlement deep links carry no amount in a way that a third party could alter meaningfully"
+      ],
+      "observability": [
+        "Publishes authorization denials, claim attempts and erasure reconciliation outcomes without amounts"
+      ],
+      "tests": [
+        "Claim hijack attempt test",
+        "Group authorization default-deny matrix test",
+        "Post-erasure counterparty balance test",
+        "Assertion test proving no settlement path holds funds"
+      ],
+      "rollout_rollback": [
+        "Shipped with the split ledger flag; authorization is never behind its own flag",
+        "Rollback removes settlement recording and leaves balances readable"
+      ],
+      "non_goals": [
+        "Split schema and allocation arithmetic, which are their own ticket",
+        "Acting as a payment processor or holding funds, permanently",
+        "Client surfaces, which are the Android ticket",
+        "Notification delivery, scheduling, preferences and provider integration, which T-NOT-01 owns"
+      ],
+      "dependencies": [
+        "T-SPL-01",
+        "T-ADR-ERASE-07",
+        "T-ADR-MONEY-01",
+        "T-ADR-LEDGER-03",
+        "T-NOT-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns split authorization, settlement records and erasure behaviour. Authorization reuses the sharing model rather than defining a second one.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SPL-02",
+      "title": "Build the Android split experience with itemised bills, settlements and activation instrumentation",
+      "repo": "android",
+      "epic": "docs#15",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R13 Split conversion",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can create a group, split a bill including item by item, invite someone who does not have the application, settle up through a payment link, and always see how a split was calculated.",
+      "context": "The split flow is the acquisition surface, so friction and opacity both cost directly. Showing the derivation matters as much here as in the debt engine: a user who cannot see why they owe a particular amount will not trust the number or the application.",
+      "scope": [
+        "Group creation, invitation and membership management",
+        "Expense entry with every supported share type",
+        "Itemised bill splitting that rolls up exactly to the expense total",
+        "Derivation view showing how each share was calculated including the remainder",
+        "Settlement recording with a payment deep link",
+        "Activation instrumentation from split participation to core usage",
+        "Debt-simplification proposal and derivation view with no client-side arithmetic",
+        "Split-dispute creation, status and resolution history",
+        "Group-scoped CSV and JSON history export with selection, progress, cancellation and expiry states"
+      ],
+      "acceptance_criteria": [
+        "An itemised split rolls up to exactly the expense total and the interface refuses to save otherwise",
+        "The derivation view explains the remainder allocation in plain language",
+        "Inviting someone without an account produces a working invitation and a visible placeholder",
+        "A settlement is recorded and the deep link opens the payment application without the application handling funds",
+        "Instrumentation payloads contain no monetary values, verified by the traffic capture harness",
+        "All split screens are screen-reader traversable and usable at the largest text scale",
+        "A user can trace every simplified settlement to original expenses and shares",
+        "A disputed share is visibly marked and its resolution is shown to every authorized member",
+        "Simplification and dispute journeys are screen-reader traversable and usable at the largest text scale",
+        "A group export reconciles to the displayed balances, excludes revoked-member private data and names its format version"
+      ],
+      "contracts_schema": [
+        "Consumes the published sharing contract; no share arithmetic is performed on the device"
+      ],
+      "security_privacy": [
+        "Invitation links expire and cannot be used to enumerate users",
+        "Group content is excluded from device backup and from crash reports"
+      ],
+      "observability": [
+        "Funnel events record step and outcome only, never amounts or member identities"
+      ],
+      "tests": [
+        "Instrumented split creation and settlement tests",
+        "Itemised rollup test",
+        "Invitation and placeholder test",
+        "Traffic capture assertion on instrumentation payloads",
+        "Debt-simplification derivation and zero-client-arithmetic tests",
+        "Split-dispute lifecycle and accessibility tests",
+        "Group export balance reconciliation, revoked-member exclusion and expiry tests"
+      ],
+      "rollout_rollback": [
+        "Behind the same flag as the server feature, enabled per cohort",
+        "Rollback hides creation while existing groups stay readable"
+      ],
+      "non_goals": [
+        "Server allocation logic, which the api ticket owns"
+      ],
+      "dependencies": [
+        "T-SPL-01",
+        "T-CMP-05",
+        "android#6",
+        "T-SPL-03",
+        "T-CON-09"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the split feature module. All arithmetic stays on the server.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-FAM-01",
+      "title": "Implement the relationship-based authorization model with per-member, per-category grants",
+      "repo": "api",
+      "epic": "docs#16",
+      "kind": "Task",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Sharing is expressed as explicit relationship tuples where a grant is always to one person for one category, aggregate and detail are separate permissions, and the absence of a grant denies.",
+      "context": "Implemented naively, household sharing is a well-documented vector for financial abuse in intimate relationships. The controls that prevent it are structural: a grant to one person must never become a grant to the household, and seeing a total must never imply seeing the line items.",
+      "scope": [
+        "Authorization model versioned in the repository with a migration path",
+        "Per-member, per-category grant creation and inspection",
+        "Aggregate and detail modelled as separate permissions rather than one permission with a flag",
+        "Fixed closed-period aggregate reads with immutable snapshot identifiers, no arbitrary ranges or exclusion filters, and per-viewer query budgets",
+        "Default deny with an explicit decision result for every check",
+        "Latency budget for authorization checks and a caching strategy that invalidates on revocation",
+        "Grant tuples projected into the row-level security session context by the trusted setter T-SEC-01 owns, so the decision point and the database predicate cannot disagree",
+        "Launch age policy enforced on invitation, membership and grant creation; launch defaults to adult-only unless a separately approved parental-consent program exists"
+      ],
+      "acceptance_criteria": [
+        "A grant to one member does not grant any other member, proven by a test",
+        "Holding an aggregate permission never returns line items, proven by an attempted detail read",
+        "Repeated, overlapping or subtractive aggregate queries cannot isolate a member or transaction; the service returns the stable snapshot or a typed suppression response",
+        "Absence of a grant denies, and an expired grant denies",
+        "The model is versioned and a model change is applied by a repeatable migration",
+        "Authorization checks meet the published latency budget under load",
+        "Every grant, change and denial writes an audit event",
+        "Every allow decision is backed by a satisfied database grant predicate: a test that returns allow from the model while the database predicate denies is a failure, not a warning",
+        "An under-age or unknown-eligibility account cannot be invited, added or granted access, and no placeholder membership bypasses that denial"
+      ],
+      "contracts_schema": [
+        "Implements the published sharing contract where aggregate and detail are distinct operations"
+      ],
+      "security_privacy": [
+        "The model is the sole authorization source; no endpoint implements its own sharing rule",
+        "Grant metadata reveals nothing about the content being shared",
+        "The authorization model never reads across users by escalating the database connection; it supplies the grant set the policy predicate evaluates",
+        "Age eligibility is evaluated server-side from the versioned policy T-CMP-04 publishes; a client assertion alone is never trusted"
+      ],
+      "observability": [
+        "Publishes check volume, denial rate and check latency"
+      ],
+      "tests": [
+        "Grant scoping test",
+        "Aggregate versus detail separation test",
+        "Differencing attacks using rapid polling, overlapping windows, exclusion filters and known-self subtraction",
+        "Default deny and expiry tests",
+        "Model migration test",
+        "Latency budget test",
+        "Adult-only invitation, placeholder claim and grant denial tests"
+      ],
+      "rollout_rollback": [
+        "Behind a flag; with the flag off, all sharing checks deny, which is the safe state",
+        "Rollback denies rather than reverting to an older permissive model"
+      ],
+      "non_goals": [
+        "Revocation and transparency, which is a separate ticket",
+        "Client surfaces, which are the Android ticket"
+      ],
+      "dependencies": [
+        "api#4",
+        "T-CON-04",
+        "T-ADR-CRYPTO-04",
+        "T-SEC-01",
+        "T-CMP-04"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the authorization model and its migrations. Every sharing consumer calls the same decision point.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-FAM-02",
+      "title": "Implement instant revocation, safe exit, access transparency and cross-user key access",
+      "repo": "api",
+      "epic": "docs#16",
+      "kind": "Task",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "A person can revoke any grant immediately and unilaterally with no approval and no reason, leaving is quiet and complete, every detail-level view is visible to the person whose data it was, and a grantee's ability to decrypt ends the moment the grant does.",
+      "context": "These controls are the entire mitigation for the abuse risk in household sharing, and the audit is explicit that the epic must not ship with any of them descoped. The cryptographic half is also currently impossible: per-user keys have no cross-user read path at all.",
+      "scope": [
+        "Unilateral revocation with no counterparty approval and no reason required",
+        "Historical access cut on revocation, not only future access",
+        "Safe exit that is quiet, immediate, and retains no cached copies",
+        "Access transparency log of every detail-level view, readable by the data subject and not deletable by the viewer",
+        "Cross-user key access implemented as the erasure and key decision record specifies",
+        "Revocation invalidating the grantee's decryption path",
+        "Offline lease expiry for shared reads: an offline client stops serving previously granted data once the published lease bound elapses",
+        "Grant, revocation and cross-user access notices are enqueued through the T-NOT-01 outbox and carry a pointer rather than the shared data itself"
+      ],
+      "acceptance_criteria": [
+        "Revocation takes effect within the published time and requires no counterparty action",
+        "After revocation the grantee cannot read historical records, proven by an attempted read",
+        "After revocation the grantee cannot decrypt previously readable content, proven cryptographically rather than by an authorization check alone",
+        "Leaving a group sends no notification describing the reason and retains no server-side cache of shared data",
+        "Every detail-level view appears in the data subject's transparency log and the viewer cannot delete or hide it",
+        "A grantee cannot see the transparency log of the person whose data they viewed",
+        "An airplane-mode test proves the client denies a shared read after the published offline lease bound elapses with no reachable server, rather than serving cached shared data indefinitely",
+        "Revocation takes effect on a connected client within the published online bound, measured from the successful revoke call to the first denied read",
+        "The published online and offline bounds are the numbers the tests assert; no test and no user-facing string claims revocation is immediate"
+      ],
+      "contracts_schema": [
+        "Implements the published transparency log and revocation shapes"
+      ],
+      "security_privacy": [
+        "Key access is audited on every use and revocation is recorded as a key event",
+        "Notifications about sharing changes must not become a coercion channel; content is minimal by design",
+        "Revocation is fail-closed offline: an expired lease denies, and the client never extends its own lease"
+      ],
+      "observability": [
+        "Publishes revocation counts, transparency log write volume and key access events"
+      ],
+      "tests": [
+        "Revocation timing test",
+        "Historical access denial test",
+        "Cryptographic revocation test proving decryption fails after revocation",
+        "Transparency log visibility and immutability tests",
+        "Quiet exit test asserting no notification content",
+        "Airplane-mode lease-expiry test: revoke while the client is offline, advance the clock past the lease bound and assert the shared read is denied",
+        "Connected revocation-latency test asserting the online bound"
+      ],
+      "rollout_rollback": [
+        "Ships with the authorization model; sharing cannot be enabled without it",
+        "Rollback disables sharing entirely rather than shipping partial controls"
+      ],
+      "non_goals": [
+        "Device-side cache eviction, which is the Android ticket",
+        "Notification delivery, scheduling, preferences and provider integration, which T-NOT-01 owns"
+      ],
+      "dependencies": [
+        "T-FAM-01",
+        "T-SEC-01",
+        "T-ADR-ERASE-07",
+        "T-SYN-01",
+        "T-NOT-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns revocation, transparency and the key access path. The Android ticket handles only device-side eviction.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-FAM-03",
+      "title": "Build Android family sharing with cached-data eviction and a coercive-control review",
+      "repo": "android",
+      "epic": "docs#16",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "As a household member, I can share specific things with specific people, see who looked at what, revoke instantly, and leave without a scene, and once I revoke, nothing remains readable on the other person's device.",
+      "context": "Server-side revocation is meaningless if the counterparty's phone still holds a readable copy. This ticket also carries the written review that every sharing screen is checked for surveillance affordances, which is the control the abuse risk actually depends on.",
+      "scope": [
+        "Grant management interface, per person and per category, defaulting to aggregate",
+        "Access log surface showing who viewed what and when",
+        "Immediate revocation control that is easy to reach and does not ask for a reason",
+        "Discreet exit that produces no dramatic notification",
+        "Cached shared data eviction on revocation, by signal and by time-to-live",
+        "Written coercive-control review of every sharing screen"
+      ],
+      "acceptance_criteria": [
+        "Sharing defaults to aggregate and granting detail requires a separate, explicit action",
+        "After revocation, the counterparty device shows no shared data once the wipe signal or the time-to-live has elapsed, verified on a physical device",
+        "Revocation is reachable within a small number of taps and never requires stating a reason",
+        "Exit produces no notification that reveals why the person left",
+        "The written review records that no screen offers silent monitoring and that the exit path was walked end to end",
+        "All sharing screens are screen-reader traversable and usable at the largest text scale"
+      ],
+      "contracts_schema": [
+        "Consumes the published sharing and transparency contracts"
+      ],
+      "security_privacy": [
+        "Cached shared data is encrypted at rest and excluded from device backup",
+        "The wipe signal carries no content and cannot be used to infer what was shared"
+      ],
+      "observability": [
+        "Sharing events record action and outcome only, never member identity in analytics"
+      ],
+      "tests": [
+        "On-device eviction test after revocation",
+        "Aggregate default test",
+        "Exit notification content assertion",
+        "Accessibility traversal test",
+        "Coercive-control review walkthrough with a written outcome"
+      ],
+      "rollout_rollback": [
+        "Behind the server flag; the device feature cannot be enabled while server-side revocation is off",
+        "Rollback removes the sharing surface and triggers eviction on affected devices"
+      ],
+      "non_goals": [
+        "Server authorization and transparency, which the api tickets own"
+      ],
+      "dependencies": [
+        "T-FAM-02",
+        "T-CMP-05",
+        "T-AND-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the sharing surfaces and eviction. Enforcement stays on the server.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SPL-04",
+      "title": "Build the web split-group experience with itemised bills, settlement and disputes",
+      "repo": "web",
+      "epic": "docs#15",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user, I can create a group, split a bill including item by item on the web, settle up through a payment link, raise and resolve a dispute over a share, see group debt simplified to the fewest settling payments, export the group's history, and always see how a split and its rounding remainder were calculated.",
+      "context": "This mirrors T-SPL-02's Android split experience for the web shell and adds two capabilities the mobile ticket does not carry: a dispute flow for a contested share, and a debt-simplification view that nets multiple pairwise balances within a group into the fewest settling payments, both of which need the same visible-derivation discipline the split ledger already commits to in its remainder allocation.",
+      "scope": [
+        "Group creation, invitation and membership management",
+        "Expense entry with every supported share type",
+        "Itemised bill splitting that rolls up exactly to the expense total",
+        "Derivation view showing how each share and the remainder were calculated",
+        "Settlement recording with a payment deep link",
+        "Dispute flow letting a member contest a share with a visible resolution outcome",
+        "Debt-simplification view netting group balances into the minimum number of settling payments",
+        "Export of group expense and settlement history"
+      ],
+      "acceptance_criteria": [
+        "An itemised split rolls up to exactly the expense total and the interface refuses to save otherwise",
+        "The derivation view explains the remainder allocation in plain language",
+        "A disputed share is flagged and its resolution is visible to every group member",
+        "The debt-simplification view nets balances into no more settling payments than the mathematical minimum for the group",
+        "The exported history reconciles exactly against the balances shown on screen",
+        "Keyboard-only and screen-reader users can complete every split action including dispute and export, and the surfaces remain readable and operable at two hundred percent text zoom"
+      ],
+      "contracts_schema": [
+        "Consumes the published sharing contract from T-CON-04; no share arithmetic or debt-simplification computation is performed in the browser"
+      ],
+      "security_privacy": [
+        "Group content is excluded from browser storage persisted beyond what the sharing model requires",
+        "Dispute content is visible only to members of the affected expense",
+        "Dispute and settlement notifications contain no monetary values"
+      ],
+      "observability": [
+        "Funnel and dispute-resolution events record step and outcome only, never amounts or member identities"
+      ],
+      "tests": [
+        "Itemised rollup test",
+        "Derivation display test",
+        "Dispute flow and visibility test",
+        "Debt-simplification minimum-payments test",
+        "Export reconciliation test",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set"
+      ],
+      "rollout_rollback": [
+        "Behind the same flag as the server split feature, enabled per cohort",
+        "Rollback hides creation while existing groups stay readable"
+      ],
+      "non_goals": [
+        "Server allocation, authorization and settlement logic, which the api tickets own",
+        "Native mobile split surfaces, which the Android ticket owns"
+      ],
+      "dependencies": [
+        "T-SPL-01",
+        "T-SPL-03",
+        "T-WEB-01",
+        "T-CON-04"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the split feature module for the web shell. All arithmetic, authorization and debt-simplification computation stay on the server.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-FAM-04",
+      "title": "Build web family sharing with grant management, instant revocation and cached-data eviction",
+      "repo": "web",
+      "epic": "docs#16",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "As a household member, I can share specific things with specific people on the web, choose per-member, per-category and detail-level grants, see who looked at what, revoke instantly without stating a reason, leave without a scene, and once I revoke, nothing remains readable in the browser that held it.",
+      "context": "This mirrors T-FAM-03's Android controls for the web shell. Server-side revocation established by T-FAM-02 is meaningless if a browser tab or its cache still holds a readable copy, so this ticket carries the same cached-data eviction obligation and the same coercive-control review discipline the Android ticket already applies.",
+      "scope": [
+        "Grant management interface, per person and per category, defaulting to aggregate",
+        "Access transparency log surface showing who viewed what and when",
+        "Immediate revocation control that is easy to reach and never asks for a reason",
+        "Discreet exit that produces no dramatic notification",
+        "Cached shared data eviction from browser storage on revocation and on session end",
+        "Written coercive-control review of every sharing screen for surveillance affordances"
+      ],
+      "acceptance_criteria": [
+        "Sharing defaults to aggregate and granting detail requires a separate, explicit action",
+        "After revocation the browser holds no readable shared data once the wipe signal is processed, verified by a test",
+        "Revocation is reachable within a small number of clicks and never requires stating a reason",
+        "Exit produces no notification that reveals why the person left",
+        "The access log is visible to the data subject and cannot be hidden or deleted by the viewer",
+        "Keyboard-only and screen-reader users can complete every sharing action including revocation and exit, and the surfaces remain readable and operable at two hundred percent text zoom"
+      ],
+      "contracts_schema": [
+        "Consumes the published sharing and transparency contracts from T-CON-04"
+      ],
+      "security_privacy": [
+        "Cached shared data is never written to unencrypted persistent browser storage and is cleared on revocation and on session end",
+        "The wipe signal carries no content and cannot be used to infer what was shared"
+      ],
+      "observability": [
+        "Sharing events record action and outcome only, never member identity in analytics"
+      ],
+      "tests": [
+        "Browser-cache eviction test after revocation",
+        "Aggregate-default test",
+        "Exit notification content assertion",
+        "Access log visibility and immutability test",
+        "Keyboard and screen-reader walkthrough",
+        "Two-hundred-percent zoom layout test",
+        "Browser-matrix compatibility test across the supported browser set",
+        "Written coercive-control review walkthrough with a recorded outcome"
+      ],
+      "rollout_rollback": [
+        "Behind the server flag; the web surface cannot be enabled while server-side revocation is off",
+        "Rollback removes the sharing surface and triggers cache eviction on affected sessions"
+      ],
+      "non_goals": [
+        "Server authorization, revocation and transparency logic, which the api tickets own",
+        "Native mobile family sharing, which the Android ticket owns"
+      ],
+      "dependencies": [
+        "T-FAM-01",
+        "T-FAM-02",
+        "T-WEB-01",
+        "T-CON-04"
+      ],
+      "parallel_boundary": "Primary repo web. Owns the family sharing surfaces and browser-side eviction for the web shell. Enforcement stays on the server.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    }
+  ]
+}

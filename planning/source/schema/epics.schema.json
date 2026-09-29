@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic backlog v2 epic file",
+  "description": "New epics. Epics live in PenniLogic/docs and deliberately carry no Estimate: epics and their children both sit on the board, so sizing both would double-count every sprint total. Epic sizing is the Rollup field, computed from child estimates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "group", "description", "items"],
+  "properties": {
+    "kind": { "const": "epics" },
+    "group": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "description": { "type": "string", "minLength": 1 },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/epic" }
+    }
+  },
+  "definitions": {
+    "epic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stable_id",
+        "title",
+        "phase",
+        "sprint",
+        "component",
+        "priority",
+        "perspective",
+        "risk",
+        "status",
+        "labels",
+        "goal",
+        "scope",
+        "out_of_scope",
+        "exit_criteria",
+        "dependencies",
+        "traceability"
+      ],
+      "properties": {
+        "stable_id": { "type": "string", "pattern": "^E[0-9]{2,}$" },
+        "title": { "type": "string", "pattern": "^\\[EPIC\\] E[0-9]{2,} - [\\x20-\\x7E]+$", "maxLength": 140 },
+        "phase": { "$ref": "enums.schema.json#/definitions/phase" },
+        "sprint": { "$ref": "enums.schema.json#/definitions/sprint" },
+        "component": { "$ref": "enums.schema.json#/definitions/component" },
+        "priority": { "$ref": "enums.schema.json#/definitions/priority" },
+        "perspective": { "$ref": "enums.schema.json#/definitions/perspective" },
+        "risk": { "$ref": "enums.schema.json#/definitions/risk" },
+        "status": { "$ref": "enums.schema.json#/definitions/status" },
+        "capacity_pool": { "$ref": "enums.schema.json#/definitions/capacity_pool" },
+        "labels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "enums.schema.json#/definitions/label" },
+          "contains": { "const": "epic" }
+        },
+        "goal": { "type": "string", "minLength": 40, "pattern": "^[\\x20-\\x7E]+$" },
+        "scope": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "out_of_scope": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "exit_criteria": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "enums.schema.json#/definitions/reference" }
+        },
+        "traceability": { "$ref": "enums.schema.json#/definitions/prose_list" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "Ready" } }, "required": ["status"] },
+          "then": { "properties": { "dependencies": { "maxItems": 0 } } }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,532 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e33-experience-strategy",
+  "epic_refs": ["E33"],
+  "items": [
+    {
+      "stable_id": "T-UXR-01",
+      "title": "Establish CDO governance, DesignOps and artifact decision rights",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design", "design-ops", "P0-critical"],
+      "outcome": "A large design organization can work in parallel because every artifact, decision, review, approval, SLA, file and escalation has one accountable owner and a durable record.",
+      "context": "Without explicit decision rights, a large team multiplies contradictory sitemaps, components and approvals. The Chief Design Officer must govern outcomes without becoming an unbounded production queue.",
+      "scope": [
+        "RACI for CDO, DesignOps, research, service design, platform design, systems, content, accessibility, UX engineering and Design QA",
+        "D0 through D9 gate definitions, evidence, approver, expiry and reopen conditions",
+        "Figma project, file, page, branch, library, version, review and archive topology",
+        "Design review SLAs, WIP limits, decision log, exception format and escalation",
+        "Artifact naming and ownership rules that prevent concurrent edits to shared pages"
+      ],
+      "acceptance_criteria": [
+        "Every design artifact class has exactly one accountable role and at least one independent verifier",
+        "CDO approval is limited to D2, D6, D8, shared-system major releases and material change exceptions",
+        "A stale approval, unresolved blocking comment or missing evidence prevents the dependent gate from closing",
+        "The Figma topology names files, pages, branch naming, publishing, archive and restoration behavior",
+        "A simulated two-squad conflict resolves through the decision log without either squad overwriting shared work"
+      ],
+      "contracts_schema": [
+        "Publishes machine-readable artifact statuses, gate identifiers, approval roles, version and expiry fields consumed by T-UXR-06"
+      ],
+      "security_privacy": [
+        "Research and design files never contain real financial records, raw messages, credentials or unredacted support evidence",
+        "Figma and research access use least privilege, offboarding and an auditable external-sharing policy"
+      ],
+      "observability": [
+        "Review age, blocked artifact count, approval expiry, WIP by squad and reopened-gate count without participant or financial content"
+      ],
+      "tests": [
+        "RACI uniqueness and missing-approver lint",
+        "Expired approval and unresolved-blocking-comment failure fixtures",
+        "Figma topology and branch-collision tabletop"
+      ],
+      "rollout_rollback": [
+        "Adopt before any shared design file is created; migration imports existing research as read-only evidence",
+        "Rollback freezes publishing and retains the decision history rather than returning to unowned files"
+      ],
+      "non_goals": [
+        "Choosing the visual direction",
+        "Managing engineering branch protection",
+        "Replacing product management or security approval"
+      ],
+      "dependencies": ["T-GOV-03"],
+      "parallel_boundary": "Primary repo docs. DesignOps owns governance and generated indexes; platform squads own separate Figma files and cannot edit governance-controlled regions.",
+      "definition_of_done": [
+        "Governance record and machine-readable gate vocabulary merged",
+        "CDO and every named discipline lead approve their decision rights",
+        "Conflict, expiry and access-control tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-02",
+      "title": "Create the ethical research operations and participant evidence system",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 01",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "ux-research", "privacy", "P0-critical"],
+      "outcome": "Research can recruit representative participants and produce trustworthy evidence without collecting unnecessary financial data or exposing household participants to one another.",
+      "context": "Personas and flows are only as good as their evidence. Finance and coercive-control research introduces consent, retention, recruitment and disclosure risks that ordinary usability operations do not address.",
+      "scope": [
+        "Research consent, screening, incentive, recording, note, anonymization, retention and deletion policy",
+        "Recruitment matrix across debt, income, permission attitude, literacy, language, disability, device and connectivity",
+        "Independent household and safe-exit recruitment that prevents paired disclosure",
+        "Versioned plans, scripts, raw-note access, synthesis, limitations and finding disposition",
+        "Synthetic financial scenario and device-reset protocol"
+      ],
+      "acceptance_criteria": [
+        "No study requires a participant to expose a real account, message, credential, balance or household disclosure",
+        "Every study records target sample, exclusions, method, limitation, retention and decision it can change before recruitment",
+        "Recruitment coverage is measurable against the matrix and convenience sampling is labeled rather than hidden",
+        "Household participants are never recruited or scheduled in a way that reveals one member's private response to another",
+        "Expired recordings and notes become unreadable and deletion evidence is retained without participant identity"
+      ],
+      "contracts_schema": [
+        "Research-plan, participant-code, evidence, limitation and finding-disposition schemas with no financial-value field"
+      ],
+      "security_privacy": [
+        "Research identity mapping is separated from notes, encrypted, access-limited and never copied to design files",
+        "Safe-exit and coercion studies use specialist review and a participant-controlled stop path"
+      ],
+      "observability": [
+        "Recruitment coverage, withdrawal, evidence age and undispositioned finding count without participant identity"
+      ],
+      "tests": [
+        "Planted financial-data and credential rejection tests",
+        "Retention expiry and access-role tests",
+        "Household recruitment disclosure tabletop"
+      ],
+      "rollout_rollback": [
+        "Required before first participant contact",
+        "A policy failure pauses recruitment and preserves only the minimum audit record"
+      ],
+      "non_goals": [
+        "Running a specific study",
+        "Medical or credit research",
+        "Using production telemetry as participant identity"
+      ],
+      "dependencies": ["T-UXR-01"],
+      "parallel_boundary": "Primary repo docs. UX Research owns plans and evidence; designers receive anonymized findings, while Legal and Security review policy without editing synthesis.",
+      "definition_of_done": [
+        "Research operations pack and repository structure merged",
+        "Privacy, Legal, Accessibility and UX Research Lead approvals recorded",
+        "Synthetic-data, retention and safe-recruitment tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-03",
+      "title": "Validate personas, jobs, financial mental models and exclusion risks",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "ux-research", "personas", "P0-critical"],
+      "outcome": "The planning personas and jobs are supported, revised or rejected by launch-market evidence before navigation, language and critical journeys harden around team assumptions.",
+      "context": "The product serves debt, privacy, household, split, AI and operator contexts with different mental models. A demographic persona deck would not tell teams how people interpret balances, payoff, sharing or uncertainty.",
+      "scope": [
+        "Contextual interviews and artifact walkthroughs covering the twelve PRODUCT.md persona hypotheses",
+        "Jobs, triggers, desired progress, anxieties, workarounds, vocabulary and trust signals",
+        "Financial literacy, disability, language, constrained-device and permission-denial needs",
+        "Behavioral segments and anti-personas based on incompatible or unsafe needs",
+        "Evidence-backed persona/JTBD cards with confidence, contradictions and research gaps"
+      ],
+      "acceptance_criteria": [
+        "Every retained persona cites evidence, sample limitation and at least one observable design consequence",
+        "No persona is defined only by age, income or an invented quote",
+        "Debt, manual/privacy-first, automation, household/safe-exit, split, web power-user and operator jobs are explicitly covered",
+        "Terms participants misunderstand or use differently are fed into T-CNT-01",
+        "Contradictory evidence changes the persona model or creates a dated research gap; it is never averaged away"
+      ],
+      "contracts_schema": [
+        "Persona, job, evidence, confidence, risk and design-consequence records referenced by the coverage registry"
+      ],
+      "security_privacy": [
+        "Published personas contain no participant quote or combination that can re-identify a person",
+        "Unsafe or out-of-scope jobs such as lending recommendations are marked non-target rather than converted into features"
+      ],
+      "observability": [
+        "Persona evidence age, confidence, uncovered recruitment cells and unresolved contradiction count"
+      ],
+      "tests": [
+        "Persona-to-evidence traceability audit",
+        "Demographic-only and invented-quote rejection fixtures",
+        "Accessibility and financial-literacy coverage review"
+      ],
+      "rollout_rollback": [
+        "Personas are versioned hypotheses and may split or retire as evidence changes",
+        "A major persona change reopens affected journeys, not every design artifact"
+      ],
+      "non_goals": [
+        "Market-size estimation",
+        "Psychographic targeting for advertising",
+        "Freezing personas after beta"
+      ],
+      "dependencies": ["T-UXR-02", "T-RES-01"],
+      "parallel_boundary": "Primary repo docs. UX Research owns evidence and persona records; service and platform designers consume versioned IDs and propose changes through findings.",
+      "definition_of_done": [
+        "Persona and JTBD set merged with evidence and limitations",
+        "UX Research Lead, Product, Accessibility and CDO approvals recorded",
+        "All traceability and exclusion tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-04",
+      "title": "Map end-to-end journeys and service blueprints across every channel",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "service-design", "journey-map", "P0-critical"],
+      "outcome": "Every critical user and operator outcome is represented as a cross-channel journey and service blueprint with frontstage, backstage, data, policy, failure and recovery ownership.",
+      "context": "A screen list cannot expose handoff gaps between Android capture, API processing, web correction, operator fulfillment and user notification. Service blueprints make those seams reviewable before implementation.",
+      "scope": [
+        "Current and target journeys for activation, debt planning, capture/clarification, import, goals, sharing, split, AI, billing, rights and support",
+        "Operator blueprints for rights, refunds, unmask/elevation, provider change and incidents",
+        "Frontstage screens, system handoffs, backstage services, contract events, policy gates and telemetry",
+        "Failure, offline, timeout, revocation, partial completion, escalation and rollback branches",
+        "Moments of truth and measurable outcome per journey"
+      ],
+      "acceptance_criteria": [
+        "Every critical registry flow belongs to a journey with a named success and failure recovery",
+        "Every cross-platform handoff identifies the authoritative service and what the receiving surface can safely show",
+        "Rights, sharing and billing blueprints include clock, audit, notification and reversal behavior",
+        "No backstage step requires raw message egress, client-side money arithmetic or unauthorized detail access",
+        "Journey gaps create owned backlog items before IA approval"
+      ],
+      "contracts_schema": [
+        "Journey and blueprint step IDs map to screen, flow, service, contract event, policy and telemetry identifiers"
+      ],
+      "security_privacy": [
+        "Blueprints mark data classification and authorization at every boundary",
+        "Household and operator journeys include abuse cases and safe failure, not only cooperative actors"
+      ],
+      "observability": [
+        "Journey completion, abandonment, correction, recovery and escalation signals with content-free event shapes"
+      ],
+      "tests": [
+        "Journey-to-flow completeness audit",
+        "Cross-channel handoff and failure-branch tabletop",
+        "Security/privacy boundary review"
+      ],
+      "rollout_rollback": [
+        "Target journeys supersede current maps with links; no historical evidence is overwritten",
+        "A service or contract change reopens only blueprints that reference it"
+      ],
+      "non_goals": [
+        "Pixel design",
+        "Service implementation",
+        "Declaring a happy path complete when recovery is absent"
+      ],
+      "dependencies": ["T-UXR-03", "T-ADR-MONEY-01", "T-ADR-AUTH-05", "T-ADR-ADMIN-06"],
+      "parallel_boundary": "Primary repo docs. Service Design owns blueprint topology; platform designers own frontstage detail and service teams verify backstage feasibility in review.",
+      "definition_of_done": [
+        "Journey and blueprint set merged with stable identifiers",
+        "Product, Architecture, Security, Operations and IA approvals recorded",
+        "Coverage, handoff and abuse-case tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-05",
+      "title": "Approve platform allocation, sitemaps and navigation architecture",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "information-architecture", "sitemap", "P0-critical"],
+      "outcome": "Android, customer web and admin have complete, tested and intentionally different information architectures so no implementation squad invents navigation or hides an orphaned feature.",
+      "context": "The backlog names features but not where users find them. A shared feature set does not imply shared navigation: Android is capture-first, web is analysis-heavy and admin is queue/role driven.",
+      "scope": [
+        "Platform allocation matrix with parity, divergence and handoff rationale",
+        "Android compact/expanded sitemap and primary navigation",
+        "Customer-web signed-out and signed-in responsive sitemap",
+        "Admin role-aware sitemap with absent-route rules",
+        "Card sorting, tree testing, labels, search/discovery and deep-link destinations"
+      ],
+      "acceptance_criteria": [
+        "Every screen registry entry has exactly one navigation parent or documented external/system entry",
+        "Every planned feature is reachable in a tree test without relying on global search",
+        "Android primary navigation stays within platform limits and defines expanded-width adaptation",
+        "Web narrow layouts remain complete and admin unauthorized destinations are absent rather than disabled",
+        "Cross-platform divergences record user/job rationale and CDO approval"
+      ],
+      "contracts_schema": [
+        "Platform allocation, route, navigation parent, deep-link and role-visibility records consumed by the coverage registry"
+      ],
+      "security_privacy": [
+        "Navigation labels and denied destinations never reveal hidden household, support or operator data",
+        "Admin route absence is tested as authorization behavior, not decoration"
+      ],
+      "observability": [
+        "Tree-test success, first-click correctness, navigation backtrack and orphan-route counts"
+      ],
+      "tests": [
+        "Card sort and tree test with representative personas",
+        "Orphan, duplicate-route and unauthorized-route lints",
+        "Compact, expanded and narrow-web navigation walkthrough"
+      ],
+      "rollout_rollback": [
+        "IA versions are immutable after D1; later changes carry migration and deep-link compatibility",
+        "Rollback restores the previous route map and redirect table"
+      ],
+      "non_goals": [
+        "Final visual styling",
+        "Marketing navigation",
+        "Using one sitemap unchanged on all platforms"
+      ],
+      "dependencies": ["T-UXR-04"],
+      "parallel_boundary": "Primary repo docs. The IA Lead owns canonical route topology; platform squads own layout and interaction within their allocated routes.",
+      "definition_of_done": [
+        "Platform allocation and three sitemaps merged",
+        "Tree-test evidence and unresolved findings dispositioned",
+        "IA, Security, Accessibility and CDO approvals recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-06",
+      "title": "Publish the screen, flow, component and test traceability registry",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "experience-coverage", "design-ops", "P0-critical"],
+      "outcome": "Every persona, journey, flow, screen, state, component, diagram, design artifact, implementation ticket and QA owner is connected by a schema-validated registry.",
+      "context": "A large plan can look comprehensive while still omitting a state or leaving a frontend ticket without design. The registry turns coverage into a failing contract rather than a spreadsheet review.",
+      "scope": [
+        "Versioned JSON registry and JSON Schema for personas, journeys, user stories, flows, screens, components and diagrams",
+        "Stable IDs, cross-references, criticality, platform, surface type, state vocabularies and owner tickets; immutable artifact versions and approval expiry live in the D6 handoff and readiness schemas",
+        "Validator checks for uniqueness, dangling references, orphan screens, unused components and missing design/QA ownership",
+        "Exhaustive partition of every Android, web and admin repository ticket into mapped frontend work or a reasoned non-frontend exclusion",
+        "Frontend-ticket design prerequisite and release-gate coverage checks",
+        "Generated human-readable coverage summary"
+      ],
+      "acceptance_criteria": [
+        "Every Android, web and admin repository ticket is either mapped to at least one screen or flow or has an explicit non-frontend rationale",
+        "Every critical flow has a persona, journey, ordered screens, design owner, implementation owner and independent QA owner",
+        "Every referenced component and state exists and every component is used or explicitly foundational",
+        "The validator fails on a missing screen, dangling ID, unclassified client ticket, platform mismatch, unmapped implementation ticket, missing D6 dependency or release-gate bypass",
+        "Coverage output is deterministic and reviewable in pull requests"
+      ],
+      "contracts_schema": [
+        "experience-coverage.schema.json and stable ID vocabularies for P, J, F, S, C and D records"
+      ],
+      "security_privacy": [
+        "Registry metadata contains no user, participant, financial or credential content",
+        "Security-critical screens must name privacy and authorization states"
+      ],
+      "observability": [
+        "Coverage percentages by platform, criticality, state, design owner, implementation owner and QA owner"
+      ],
+      "tests": [
+        "Dangling-reference, duplicate-ID and orphan-screen negative tests",
+        "Missing-design-dependency and missing-QA-owner negative tests",
+        "Deterministic summary snapshot test"
+      ],
+      "rollout_rollback": [
+        "Land schema and initial complete registry together; partial coverage cannot be marked green",
+        "Rollback keeps the last valid registry and blocks new frontend readiness"
+      ],
+      "non_goals": [
+        "Replacing Figma",
+        "Generating UI code",
+        "Storing screenshots or research evidence in JSON"
+      ],
+      "dependencies": ["T-UXR-05"],
+      "parallel_boundary": "Primary repo docs. DesignOps owns schema and generated summaries; platform squads edit only records assigned to their ID ranges and validator prevents collisions.",
+      "definition_of_done": [
+        "Schema, registry and validator merged",
+        "All existing frontend tickets mapped",
+        "Deliberate negative tests pass",
+        "DesignOps, QA and Architecture approvals recorded",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-07",
+      "title": "Select and record the PenniLogic visual and interaction direction",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "cross-cutting",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 8,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "design", "brand", "P0-critical"],
+      "outcome": "One evidence-led visual and interaction world is selected for the product and translated into platform consequences before component or screen teams invent local identity.",
+      "context": "No approved visual authority exists. A finance category default or a patchwork of three platform aesthetics would undermine recognition and trust; premature token selection would harden an untested direction.",
+      "scope": [
+        "Seven grounded candidate worlds spanning multiple material and graphic traditions, excluding category-default fintech dashboards",
+        "Concept probes for debt progress, transaction clarification, household privacy and operator urgency",
+        "Audience identification, clarity, accessibility, cultural and platform-fit evaluation",
+        "Selected thesis, form, signature interaction, content behavior, risks and rejected alternatives",
+        "Durable direction contract that T-DSY-01 and platform design tickets consume"
+      ],
+      "acceptance_criteria": [
+        "Candidates are materially distinct, grounded in product truth and tested with representative users rather than selected from mood-board preference",
+        "The chosen direction makes debt progress, provenance, uncertainty and control legible without gamification or shame",
+        "Contrast, data density, reduced motion, localization expansion and Material/web/admin adaptation are feasible",
+        "The decision records the selected direction, rejected alternatives, evidence, unresolved risks and implementation consequences",
+        "The CDO makes and signs the final D2 decision; no platform lead self-approves a separate identity"
+      ],
+      "contracts_schema": [
+        "Direction record exposes semantic roles and platform consequences but no raw color or component token contract until T-DSY-01"
+      ],
+      "security_privacy": [
+        "Concept material uses synthetic figures and never depicts unsafe sharing or admin access as ordinary browsing",
+        "Trust claims remain evidence-backed and avoid lock, shield or compliance theater"
+      ],
+      "observability": [
+        "Concept comprehension, identification, task clarity, accessibility defects and unresolved risk disposition"
+      ],
+      "tests": [
+        "Concept comprehension and preference study with order balancing",
+        "Accessibility and localization feasibility review",
+        "CDO decision-record completeness check"
+      ],
+      "rollout_rollback": [
+        "Direction is selected before token/component finalization",
+        "Reversal requires a superseding CDO record and design-system migration plan"
+      ],
+      "non_goals": [
+        "Final component library",
+        "Marketing campaign identity",
+        "Selecting by internal vote alone"
+      ],
+      "dependencies": ["T-UXR-03", "T-RES-01"],
+      "parallel_boundary": "Primary repo docs. A small concept team owns probes and decision record; platform squads may assess feasibility but cannot begin independent visual systems.",
+      "definition_of_done": [
+        "Concept evidence and CDO decision merged",
+        "Accessibility, Content and platform feasibility reviews recorded",
+        "T-DSY-01 and platform tickets reference the selected version",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-UXR-08",
+      "title": "Define UX outcome metrics, continuous research and design debt governance",
+      "repo": "docs",
+      "epic": "E33",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 02",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "ux-research", "analytics", "P1-high"],
+      "outcome": "Design success is measured through task, comprehension, correction, trust and sustained-progress outcomes with a continuous research cadence rather than aesthetic completion.",
+      "context": "The current plan measures engineering and funnel events, but a design can increase clicks while reducing comprehension or safety. Outcome metrics and research triggers must be selected before instrumentation hardens.",
+      "scope": [
+        "Per-journey task success, time, error, correction, abandonment, comprehension and recovery measures",
+        "Guardrails for permission coercion, harmful sharing, support demand, accessibility and dark patterns",
+        "Baseline, target, sample limitation and decision threshold format",
+        "Continuous research calendar, panel health and trigger-based follow-up",
+        "Unmoderated benchmark tasks after moderated defects close and a post-beta longitudinal diary or follow-up protocol",
+        "Design debt register with severity, owner, due date and release impact"
+      ],
+      "acceptance_criteria": [
+        "Every critical journey names one primary outcome and at least one trust or harm guardrail",
+        "No success metric rewards permission grant, AI use, subscription or sharing without user benefit and safety context",
+        "Telemetry events contain no money, raw content, prompt, identity or household relationship detail",
+        "A metric crossing a kill threshold creates a reviewed product decision rather than an automatic nudge",
+        "Each critical journey has a versioned unmoderated benchmark and the post-beta longitudinal plan names cohort, cadence, retention, stop criteria and decisions it may change",
+        "Open high-severity design debt blocks D8 unless the CDO records a dated exception"
+      ],
+      "contracts_schema": [
+        "Metric, guardrail, research trigger, design-debt and decision-threshold records linked to journey IDs"
+      ],
+      "security_privacy": [
+        "Aggregation, minimum cohort, retention and access rules follow T-PLT-03 and privacy consent",
+        "No session recording captures financial or operator-sensitive content"
+      ],
+      "observability": [
+        "This ticket defines the UX observability catalogue and its privacy budget"
+      ],
+      "tests": [
+        "Metric-to-journey coverage lint",
+        "Planted sensitive telemetry field rejection",
+        "Dark-pattern and perverse-incentive review",
+        "Unmoderated benchmark reproducibility and longitudinal retention/privacy review"
+      ],
+      "rollout_rollback": [
+        "Metrics ship disabled until consent, payload and cohort checks pass",
+        "Rollback stops collection and retains only approved aggregate history"
+      ],
+      "non_goals": [
+        "Implementing analytics pipelines",
+        "Marketing attribution",
+        "Replacing qualitative research with dashboards"
+      ],
+      "dependencies": ["T-UXR-02", "T-UXR-03"],
+      "parallel_boundary": "Primary repo docs. UX Research owns outcome definitions; product analytics implements approved event shapes later and cannot add content fields locally.",
+      "definition_of_done": [
+        "Metric and research governance catalogue merged",
+        "Privacy, Product, UX Research and CDO approvals recorded",
+        "Coverage and sensitive-payload tests pass",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

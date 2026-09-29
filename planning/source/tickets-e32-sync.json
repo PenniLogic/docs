@@ -1,0 +1,249 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e32-sync",
+  "epic_refs": [
+    "E32"
+  ],
+  "items": [
+    {
+      "stable_id": "T-SYN-01",
+      "title": "Define the sync contract: change feed, cursors, conflict rules and engine decision",
+      "repo": "contracts",
+      "epic": "E32",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 07",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "needs-adr",
+        "P0-critical"
+      ],
+      "outcome": "The offline client has a published, versioned sync contract with defined cursor semantics and per-entity conflict rules, and the decision to build or adopt a sync engine is recorded rather than assumed.",
+      "context": "The Android offline queue has no server counterpart. A hosted sync engine appears in the cost model and stack notes but in no epic, and its known pitfall with pooled connections and session variables is unaddressed. Without a contract the client and server will each invent incompatible semantics.",
+      "scope": [
+        "Recorded decision to build or adopt, with cost, exit and tenancy consequences",
+        "Change feed shape with monotonic cursors and watermark semantics",
+        "Idempotent apply semantics keyed on client-generated identifiers",
+        "Per-entity conflict resolution rules including deletes and money-bearing records",
+        "Schema evolution rules for a client that has been offline across a change",
+        "Explicit statement of which entities never sync because the client can recompute them",
+        "Allocation-set conflict rules: a split or budget allocation set converges as a whole set, never per member, so the shares cannot stop summing to the expense",
+        "Merge-redirect rules for category and merchant identity, so an entity merged on one device redirects rather than resurrects on another"
+      ],
+      "acceptance_criteria": [
+        "The contract defines cursor ordering, gaps and restart behaviour unambiguously",
+        "Every synced entity has a named conflict rule; there is no default of last write wins for money-bearing records",
+        "Replaying a change batch twice is specified to be a no-op and the contract states how the server detects the replay",
+        "The contract states how a client that has been offline across a schema change converges",
+        "The decision record names the chosen engine approach and the rejected alternative with a reason",
+        "The contract states the tenancy requirement that the sync path must satisfy",
+        "Allocation-bearing records converge as a whole set: the contract states that concurrent edits to a split or budget allocation set are resolved set-wise, and that a per-member last-write-wins result which breaks the sum constraint is invalid",
+        "The contract states the tie-break rule for two concurrent allocation sets and requires the losing set to be preserved for review rather than discarded silently",
+        "Category and merchant merges converge by redirect: the contract defines a tombstone-with-redirect shape, states that a client holding the merged-away identifier follows the redirect, and forbids resurrecting the merged-away row",
+        "A redirect chain is specified to be resolvable and cycle-free, and the contract states what the server returns when a chain cannot be resolved",
+        "No money-bearing or allocation-bearing entity uses last write wins anywhere in the conflict table, checked by a review of the table rather than asserted in prose"
+      ],
+      "contracts_schema": [
+        "Published in the OpenAPI document with generated Kotlin and TypeScript clients and contract verification"
+      ],
+      "security_privacy": [
+        "The contract requires tenant scoping on every sync operation and forbids a shared session variable that survives connection reuse",
+        "Encrypted fields are specified as opaque to the sync layer"
+      ],
+      "observability": [
+        "Contract requires the server to expose feed lag and apply failure counts"
+      ],
+      "tests": [
+        "Contract verification for provider and consumer",
+        "Conflict rule tables reviewed against a worked example per entity",
+        "Allocation-set convergence table review with a worked concurrent-edit example proving the sum constraint holds",
+        "Merge-redirect worked example including a two-hop chain and a rejected cycle"
+      ],
+      "rollout_rollback": [
+        "Additive publication; consumers pin a contract version and adopt under the expand and contract protocol"
+      ],
+      "non_goals": [
+        "Implementation, which belongs to the server and client tickets"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-CON-12",
+        "T-CON-15",
+        "T-ADR-MONEY-01",
+        "T-ADR-CAT-02",
+        "T-ADR-LEDGER-03"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the specification and the decision record. Server and client implementations follow in their own repositories.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SYN-02",
+      "title": "Implement server sync endpoints with tenancy isolation and pooler safety",
+      "repo": "api",
+      "epic": "E32",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 13",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "The server implements the published sync contract with idempotent apply, deterministic conflict resolution and tenant isolation that holds under pooled connections and concurrent load.",
+      "context": "Offline-first behaviour is already promised by the Android plan, and the known failure mode for this design is a session variable leaking across a pooled connection, which would let one tenant read another's changes. That has to be tested by attempting it, not by asserting it.",
+      "scope": [
+        "Change feed endpoint with cursor and watermark handling",
+        "Apply endpoint that is idempotent on the client-generated identifier",
+        "Conflict resolution implemented exactly as the contract specifies, per entity",
+        "Tenant context established and reset around every pooled connection use",
+        "Poison batch handling so one bad change cannot block a device forever",
+        "Backpressure and pagination limits",
+        "Ledger-affecting apply operations use serializable transactions with bounded retry and jittered backoff on serialization conflict"
+      ],
+      "acceptance_criteria": [
+        "Applying the same batch twice produces exactly one ledger effect",
+        "Concurrent edits from two devices converge to the identical result, proven by a replay test",
+        "A sync request cannot observe another tenant's rows under concurrent pooled load, proven by an attack test",
+        "A batch containing one invalid change fails only that change and reports it, leaving the rest applied",
+        "A client offline across a schema change converges without data loss",
+        "Feed lag and apply failures are observable per tenant without exposing content",
+        "A forced serialization conflict retries within the published bound, produces one ledger effect and returns an explicit retryable failure after exhaustion"
+      ],
+      "contracts_schema": [
+        "Implements the published sync contract exactly; any divergence fails contract verification"
+      ],
+      "security_privacy": [
+        "Tenant context is set and cleared with the connection lifecycle and verified under load",
+        "Encrypted columns pass through the sync layer as opaque values",
+        "Sync endpoints require the same authentication and step-up rules as the equivalent direct writes"
+      ],
+      "observability": [
+        "Publishes feed lag, apply rate, conflict rate and poison batch count without record content",
+        "Publishes serialization conflict, retry, exhaustion and final-commit counts"
+      ],
+      "tests": [
+        "Idempotent apply test",
+        "Convergence replay test across two simulated devices",
+        "Cross-tenant attack test under pooled concurrency",
+        "Poison batch test",
+        "Schema evolution test with a stale client",
+        "Forced serialization-conflict concurrency test with exactly-one ledger effect"
+      ],
+      "rollout_rollback": [
+        "Shipped behind a flag, enabled per cohort; disabling the flag returns clients to direct writes",
+        "Rollback keeps already-applied changes valid because apply is idempotent"
+      ],
+      "non_goals": [
+        "Client behaviour, which is the Android ticket",
+        "Real-time collaborative editing"
+      ],
+      "dependencies": [
+        "T-SYN-01",
+        "T-SEC-01",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the sync module and its migrations. Coordinates with android only through the published contract version.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-SYN-03",
+      "title": "Reconcile the Android sync client against the server contract",
+      "repo": "android",
+      "epic": "E32",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 16",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "P0-critical"
+      ],
+      "outcome": "The Android offline queue speaks the published sync contract, resolves conflicts as specified, backs off correctly and never silently drops a captured transaction.",
+      "context": "The existing offline persistence ticket assumes a server that did not exist. Reconciling it now, against a published contract, avoids a rewrite later and protects the promise that offline capture never loses a transaction.",
+      "scope": [
+        "Queue reconciliation with the published cursor and apply semantics",
+        "Conflict handling that matches the contract per entity and surfaces user-visible conflicts",
+        "Exponential backoff, retry limits and poison record isolation",
+        "Durable queue that survives process death and device restart",
+        "Clear user-facing state for pending, failed and conflicted records",
+        "Explicit serialization boundary that carries the random source_event_id and idempotency key but excludes the device-local raw-message digest"
+      ],
+      "acceptance_criteria": [
+        "A transaction captured offline is never lost, including across process death, restart and application update",
+        "Applying the same queued change twice produces one server effect",
+        "A conflict is resolved as the contract specifies and, where the user must choose, the choice is presented rather than silently decided",
+        "A poison record is isolated after the retry limit and reported, without blocking the rest of the queue",
+        "Sync state is visible to the user in plain language",
+        "The queue is encrypted at rest with the same protection as the local database",
+        "A planted raw_hash or message_digest property cannot be serialized into a sync request, while source_event_id and the persisted idempotency key survive every retry"
+      ],
+      "contracts_schema": [
+        "Uses the generated client for the published sync contract version; no hand-written request construction"
+      ],
+      "security_privacy": [
+        "Queued payloads are encrypted at rest and are excluded from device backup",
+        "Sync failures are logged without record content"
+      ],
+      "observability": [
+        "Publishes queue depth, retry counts and conflict counts as privacy-safe local metrics"
+      ],
+      "tests": [
+        "Instrumented durability test across process death and restart",
+        "Duplicate apply test",
+        "Conflict presentation test",
+        "Poison record isolation test",
+        "Raw-message digest exclusion and source-event id retry-stability test"
+      ],
+      "rollout_rollback": [
+        "Behind the same flag as the server endpoint; disabling returns to direct writes with the queue draining first",
+        "Rollback drains the queue before disabling so nothing is stranded"
+      ],
+      "non_goals": [
+        "Server-side conflict rules, which the contract and server tickets own"
+      ],
+      "dependencies": [
+        "T-SYN-02",
+        "T-CON-02",
+        "T-SYN-04",
+        "android#5"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the queue, worker and reconciliation code. The contract version is pinned and upgraded deliberately.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

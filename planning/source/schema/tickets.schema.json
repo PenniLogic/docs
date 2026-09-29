@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic backlog v2 ticket file",
+  "description": "One area or epic group of new tickets. Every quality field is required: a ticket that cannot be picked up cold is not a ticket, so Outcome, Context, Scope, Acceptance criteria, Contracts and schema, Security and privacy, Observability, Tests, Rollout and rollback, Non-goals, Parallel boundary and Definition of Done are all mandatory.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "group", "epic_refs", "items"],
+  "properties": {
+    "kind": { "const": "tickets" },
+    "group": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "epic_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "enums.schema.json#/definitions/reference" }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/ticket" }
+    }
+  },
+  "definitions": {
+    "ticket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stable_id",
+        "title",
+        "repo",
+        "epic",
+        "kind",
+        "phase",
+        "sprint",
+        "component",
+        "priority",
+        "perspective",
+        "risk",
+        "status",
+        "estimate",
+        "labels",
+        "outcome",
+        "context",
+        "scope",
+        "acceptance_criteria",
+        "contracts_schema",
+        "security_privacy",
+        "observability",
+        "tests",
+        "rollout_rollback",
+        "non_goals",
+        "dependencies",
+        "parallel_boundary",
+        "definition_of_done"
+      ],
+      "properties": {
+        "stable_id": { "$ref": "enums.schema.json#/definitions/stable_id" },
+        "title": { "type": "string", "minLength": 10, "maxLength": 140, "pattern": "^[\\x20-\\x7E]+$" },
+        "repo": {
+          "$ref": "enums.schema.json#/definitions/repo",
+          "description": "The single repository that owns the change. Exactly one primary repo per ticket; cross-repo coordination is described in parallel_boundary, never by adding a second owner."
+        },
+        "epic": {
+          "$ref": "enums.schema.json#/definitions/reference",
+          "description": "Parent epic, either a new epic stable id or a live docs#N epic issue."
+        },
+        "kind": { "allOf": [{ "$ref": "enums.schema.json#/definitions/kind" }], "not": { "const": "Epic" } },
+        "phase": { "$ref": "enums.schema.json#/definitions/phase" },
+        "sprint": { "$ref": "enums.schema.json#/definitions/sprint" },
+        "component": { "$ref": "enums.schema.json#/definitions/component" },
+        "priority": { "$ref": "enums.schema.json#/definitions/priority" },
+        "perspective": { "$ref": "enums.schema.json#/definitions/perspective" },
+        "risk": { "$ref": "enums.schema.json#/definitions/risk" },
+        "status": { "$ref": "enums.schema.json#/definitions/status" },
+        "estimate": { "$ref": "enums.schema.json#/definitions/estimate" },
+        "capacity_pool": { "$ref": "enums.schema.json#/definitions/capacity_pool" },
+        "labels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "enums.schema.json#/definitions/label" }
+        },
+        "gate": {
+          "enum": ["release", "terminal"],
+          "description": "A release gate must reach a terminal gate through dependent tickets. A terminal gate is itself the final release decision for one deployable."
+        },
+        "outcome": { "type": "string", "minLength": 40, "pattern": "^[\\x20-\\x7E]+$" },
+        "context": { "type": "string", "minLength": 40, "pattern": "^[\\x20-\\x7E]+$" },
+        "scope": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "acceptance_criteria": {
+          "allOf": [{ "$ref": "enums.schema.json#/definitions/prose_list" }],
+          "minItems": 2
+        },
+        "contracts_schema": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "security_privacy": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "observability": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "tests": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "rollout_rollback": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "non_goals": { "$ref": "enums.schema.json#/definitions/prose_list" },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "enums.schema.json#/definitions/reference" }
+        },
+        "parallel_boundary": { "type": "string", "minLength": 40, "pattern": "^[\\x20-\\x7E]+$" },
+        "definition_of_done": { "$ref": "enums.schema.json#/definitions/prose_list" }
+      },
+      "allOf": [
+        {
+          "description": "Ready means nothing is in the way. A ticket with any declared dependency must not be Ready.",
+          "if": { "properties": { "status": { "const": "Ready" } }, "required": ["status"] },
+          "then": { "properties": { "dependencies": { "maxItems": 0 } } }
+        }
+      ]
+    }
+  }
+}

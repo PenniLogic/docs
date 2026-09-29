@@ -1,0 +1,344 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e27-compliance-floor",
+  "epic_refs": [
+    "E27"
+  ],
+  "items": [
+    {
+      "stable_id": "T-CMP-01",
+      "title": "Implement the consent ledger, purpose registry, data-principal rights and retention jobs",
+      "repo": "api",
+      "epic": "E27",
+      "kind": "Story",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 11",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "As a person using PenniLogic, I can see what I consented to, withdraw any of it, request access, correction or erasure, and have my data actually deleted on a schedule, so that the product is lawfully operable before the first beta user is onboarded.",
+      "context": "Consent, rights and retention are currently scheduled after the beta, which means real people would be onboarded before the obligations they trigger are implemented. The retention schedule also exists only as a document, and an unenforced schedule is not a schedule.",
+      "scope": [
+        "Purpose registry describing each processing purpose in plain language with a version",
+        "Consent ledger recording grant and withdrawal with timestamp, purpose and version, append only",
+        "Access, correction and erasure request endpoints with a defined service level and status tracking",
+        "Retention jobs per data class that delete or anonymise on schedule and record what they did",
+        "Propagation of correction and erasure to derived tables, caches, search indexes, vector or embedding stores and assistant conversation records",
+        "Grievance channel and named grievance officer, published with the contact route and the response clock",
+        "Response clock per request type, started at acknowledgement, with escalation when it is missed"
+      ],
+      "acceptance_criteria": [
+        "No processing path can run without a recorded, unexpired consent for its purpose, proven by a negative test",
+        "Withdrawing consent stops the corresponding processing immediately and the ledger records it",
+        "An access request returns a complete, machine-readable dataset within the published service level",
+        "A correction propagates to derived data and the propagation is verifiable",
+        "Any assistant conversation storage is separately consented, appears in the purpose and retention registries, contains no raw message content, and is included in export and erasure",
+        "An erasure request completes within the published service level and is verified by the erasure harness",
+        "Retention jobs are idempotent, observable, and a skipped run raises an alert",
+        "The consent ledger can be replayed to reconstruct the consent state at any past date",
+        "A grievance channel is published with a named officer, a contact route and a stated response clock, and the officer is a named role with a current holder rather than an unattributed mailbox",
+        "Every data-principal request and every grievance starts a response clock at acknowledgement, and the remaining time is visible to the person who raised it",
+        "Missing a response clock raises an escalation to a named owner and is recorded as a breach rather than absorbed",
+        "The response clock values come from the versioned, counsel-reviewed jurisdiction profile; when no current profile exists the system fails closed and states that no statutory clock is being asserted"
+      ],
+      "contracts_schema": [
+        "Consent, rights request and purpose schemas published in the contract and consumed by the clients",
+        "Implements the rights-request, status and consent shapes published by T-CON-09; the response clock is a contract field, not an internal one"
+      ],
+      "security_privacy": [
+        "The consent ledger is append only and its integrity is protected by the audit event service",
+        "Rights endpoints require step-up authentication so an account takeover cannot trigger an export or erasure",
+        "Requests are rate limited and abuse is recorded"
+      ],
+      "observability": [
+        "Publishes request counts by type, service level attainment and retention job outcomes without personal data"
+      ],
+      "tests": [
+        "Negative test proving processing without consent is refused",
+        "Consent replay test reconstructing a past state",
+        "Erasure propagation test across derived data, caches, vector stores and assistant conversation records",
+        "Retention job idempotency test",
+        "Step-up bypass attempt test",
+        "Response clock start, expiry and escalation test",
+        "Missing or expired jurisdiction profile fail-closed test"
+      ],
+      "rollout_rollback": [
+        "Shipped behind a flag in staging, enabled in production before any beta onboarding",
+        "Rollback disables new request intake but never disables the consent gate; the gate is fail-closed"
+      ],
+      "non_goals": [
+        "Client user interface, which is a separate Android ticket",
+        "Crypto-shredding mechanics, which belong to E19",
+        "Policy text, which belongs to the compliance pack ticket"
+      ],
+      "dependencies": [
+        "api#4",
+        "T-SEC-03",
+        "T-GOV-03",
+        "T-CON-09"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the consent, rights and retention modules and their migrations. Android and web consume the published contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-CMP-02",
+      "title": "Build pre-onboarding consent, the age gate and the permission dashboard on Android",
+      "repo": "android",
+      "epic": "E27",
+      "kind": "Story",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 14",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R1 SMS permission",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "As a new user, before I hand over anything, I see plainly what is collected and why, I choose each purpose separately, I confirm I am old enough, and I can see and revoke every permission in one place afterwards.",
+      "context": "Onboarding currently reaches data collection before consent exists, and there is no permission dashboard, no age gate and no revocation surface. This is the screen that earns the right to ask for message access later, so it has to be honest and it has to come first.",
+      "scope": [
+        "Pre-onboarding notice in plain language, purpose by purpose, before any collection",
+        "Granular per-purpose consent controls with no pre-ticked options",
+        "Age confirmation with a documented position on younger users",
+        "Versioned age-eligibility policy from T-CMP-04, with launch set to adult-only unless a separately reviewed parental-consent program is approved",
+        "Permission dashboard listing each granted permission, what it enables and a revoke control",
+        "Revocation and recovery flows, including what the application does after a permission is withdrawn",
+        "Consent and purpose surfaces built on the shapes published by T-CON-09, so the pre-onboarding consent screen and the permission dashboard read the same purpose registry the server enforces"
+      ],
+      "acceptance_criteria": [
+        "No data leaves the device before a consent decision is recorded for the relevant purpose",
+        "Each purpose can be refused independently and the application still functions in a reduced, clearly explained way",
+        "Declining age confirmation stops onboarding and stores no personal data",
+        "The dashboard reflects the real operating system permission state, not a cached copy",
+        "Revoking message access from the dashboard or from system settings puts the application in a recoverable state with a clear explanation rather than a crash or a silent failure",
+        "All consent screens are fully usable with a screen reader and at the largest text scale",
+        "Every purpose shown at pre-onboarding is a purpose identifier and version from the T-CON-09 registry; a locally invented purpose string fails a test",
+        "An under-age or unknown-eligibility result stops onboarding before profile creation, retains no entered age detail and provides an accessible explanation and support route"
+      ],
+      "contracts_schema": [
+        "Consumes the published consent and purpose contract; the copy is rendered from the versioned purpose registry"
+      ],
+      "security_privacy": [
+        "No analytics events fire before the analytics purpose is consented",
+        "The screen states truthfully what stays on the device and this is verified by the traffic inspection harness"
+      ],
+      "observability": [
+        "Consent decisions recorded as events carrying purpose and version only, never content"
+      ],
+      "tests": [
+        "Instrumented tests for accept, refuse and partial-consent paths",
+        "Permission revocation and recovery tests on the physical device",
+        "Accessibility traversal test",
+        "Traffic capture confirming no pre-consent egress",
+        "Under-age and unknown-eligibility no-profile and no-analytics tests"
+      ],
+      "rollout_rollback": [
+        "Ships as part of onboarding before any beta invitation is issued",
+        "Rollback removes the beta invitation rather than the consent gate"
+      ],
+      "non_goals": [
+        "Backend consent storage, which is the api ticket",
+        "Message permission onboarding specifics, which is an existing Android ticket"
+      ],
+      "dependencies": [
+        "T-CMP-01",
+        "T-CMP-04",
+        "T-AND-01",
+        "T-CON-09"
+      ],
+      "parallel_boundary": "Primary repo android. Owns onboarding, the dashboard and the consent screens. The purpose text comes from the published registry and is not written locally.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CMP-03",
+      "title": "Produce the third-party component inventory, payload scrubbing and the data safety declaration",
+      "repo": "android",
+      "epic": "E27",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 09",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R1 SMS permission",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "Every third-party component embedded in the application is inventoried and justified, error and analytics payloads are scrubbed at the source, and the published data safety declaration matches captured traffic rather than intent.",
+      "context": "The recommended set of embedded components has never been reconciled with the commitment that no third party can reach message-derived data, and the declaration would otherwise be written from the code's intention. An inaccurate declaration is itself a policy violation and puts the message permission at risk.",
+      "scope": [
+        "Inventory of every embedded component with its purpose, the data it can observe and a justification",
+        "Scrubbing hook on the error reporting path with an allowlist rather than a denylist",
+        "Push and messaging payload allowlist forbidding monetary values and message content",
+        "Declaration mapping each collected data type to a component, a purpose and a retention position",
+        "Re-check procedure so the declaration is revalidated on every release"
+      ],
+      "acceptance_criteria": [
+        "No embedded component can observe message-derived data, demonstrated by the traffic capture evidence",
+        "A planted monetary value in an error report is scrubbed before transmission",
+        "A push payload containing an amount fails the payload check",
+        "Every declared data type maps to an inventoried component and an approved purpose",
+        "Adding a new component without an inventory entry fails the pipeline",
+        "The declaration and the capture evidence are attached to the release record together"
+      ],
+      "contracts_schema": [
+        "Inventory and allowlist published as machine-readable files consumed by the traffic inspection harness"
+      ],
+      "security_privacy": [
+        "Scrubbing is fail-closed; if the hook throws, the report is dropped rather than sent raw",
+        "No component receives a user identifier that can be linked to financial records"
+      ],
+      "observability": [
+        "Publishes component count, scrub drop count and declaration drift per release"
+      ],
+      "tests": [
+        "Planted value scrubbing test",
+        "Push payload allowlist test",
+        "New component detection test",
+        "Declaration versus capture reconciliation check"
+      ],
+      "rollout_rollback": [
+        "Blocking for the first public release and for any release adding a component",
+        "Rollback is removing the newly added component, not relaxing the check"
+      ],
+      "non_goals": [
+        "Backend log scrubbing, which the platform ticket owns",
+        "Regulatory filings beyond the store declaration"
+      ],
+      "dependencies": [
+        "T-QA-09",
+        "infra#3"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the inventory, scrubbing hooks and declaration inputs. The docs repository holds only the published policy text.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-CMP-04",
+      "title": "Publish the compliance floor pack and rehearse the breach reporting drill",
+      "repo": "docs",
+      "epic": "E27",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 09",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Compliance",
+      "risk": "R15 Data lifecycle",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "compliance",
+        "P0-critical"
+      ],
+      "outcome": "The privacy policy, terms, disclaimers, processor agreements, point of contact and breach runbook are published and accurate before onboarding, and the reporting drill has actually been rehearsed against the clock.",
+      "context": "These obligations are currently scheduled after the beta, and the breach runbook exists as a plan rather than a rehearsed procedure. A six-hour reporting window cannot be met by a team reading a document for the first time during an incident.",
+      "scope": [
+        "Privacy policy and terms accurate to actual system behaviour, versioned and published",
+        "Advice-boundary disclaimer text defined once and referenced by every surface that needs it",
+        "Processor and sub-processor agreements including any model provider, with disclosure",
+        "Point of contact designated and the reporting runbook written with named roles",
+        "Tabletop rehearsal of the reporting drill against the required window, with gaps ticketed",
+        "Incident severity matrix and user notification templates",
+        "Automated reconciliation between the regulatory obligation matrix, the risk-to-ticket matrix and the board, run on a schedule",
+        "Versioned, counsel-reviewed jurisdiction profiles as the only source of a statutory value, each with a review date and an expiry",
+        "Written India retention opinion reconciling DPDP Rule 6 security records, CERT-In logs, storage limitation, crypto-shredding and restore-safe erasure by data class",
+        "Versioned age-eligibility policy stating adult-only launch scope and the separately approved controls required before any parental-consent path may exist"
+      ],
+      "acceptance_criteria": [
+        "The published policy matches the behaviour recorded by the traffic capture evidence",
+        "Every processor that receives personal data has a signed agreement before any data is sent",
+        "The drill was executed and the elapsed time to a complete report is recorded against the window",
+        "Gaps found in the drill are ticketed with owners rather than noted in prose",
+        "The disclaimer text is stored once and consumed by the clients rather than retyped",
+        "The on-call owner can state the trigger condition for reporting without consulting the document",
+        "The reconciliation check fails when an obligation in compliance/01-regulatory-landscape.md has no owning ticket, when a named risk in product/02-risk-register.md has no owning item, or when a matrix row names a ticket that does not exist",
+        "The check fails when a matrix row names a ticket whose status contradicts the matrix, so a closed obligation cannot point at an unstarted ticket",
+        "Statutory values - reporting windows, response clocks, retention periods, thresholds - are read from a versioned counsel-reviewed jurisdiction profile, and no such value is written inline in a ticket or a document",
+        "An absent or expired jurisdiction profile fails the check and the dependent behaviour fails closed rather than assuming a value",
+        "The India profile identifies each retained data class, legal basis, purpose, access role, retention start and end, post-erasure treatment and restore behavior; it cannot express indefinite retention",
+        "The check runs on a schedule and its result is visible without opening the board",
+        "The region stated in the pack is read from the committed residency policy T-PLT-01 enforces rather than copied into compliance prose",
+        "The published age policy fails closed for under-age or unknown eligibility, and family invitations and grants consume the same policy identifier"
+      ],
+      "contracts_schema": [
+        "Disclaimer and policy version identifiers published so clients can render and record the version shown",
+        "Jurisdiction profile published as machine-readable data: jurisdiction, obligation, value, source, counsel reviewer, review date, expiry",
+        "Retention profile entries include data class, legal basis, purpose, access policy, period anchor, expiry action, erasure treatment and restore barrier behavior",
+        "Age-eligibility policy published as machine-readable data with version, minimum eligibility rule and fail-closed outcome"
+      ],
+      "security_privacy": [
+        "The pack states exactly what is collected, where it is stored and which region holds it",
+        "Nothing in the pack claims a protection that is not implemented and tested"
+      ],
+      "observability": [
+        "Policy version and acceptance recorded per user without storing the policy text per user"
+      ],
+      "tests": [
+        "Reconciliation of the policy against captured traffic",
+        "Timed tabletop drill with a written outcome",
+        "Unowned-obligation failure test",
+        "Unowned-risk failure test",
+        "Dangling ticket reference failure test",
+        "Expired jurisdiction profile fail-closed test",
+        "Contradictory or missing DPDP/CERT-In retention and erasure profile failure tests"
+      ],
+      "rollout_rollback": [
+        "Published before any beta invitation; a policy change requires a version bump and re-acceptance where material"
+      ],
+      "non_goals": [
+        "Counsel review of expansion markets, which belongs to E20",
+        "Implementation of consent storage, which is the api ticket",
+        "Reaching a legal conclusion: the profiles record counsel's conclusions and this ticket never derives one"
+      ],
+      "dependencies": [
+        "T-PLT-01",
+        "T-PLT-03"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the published text and the runbook. Clients render the referenced versions and never author policy text locally.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and the options rejected recorded",
+        "Linked from every epic and ticket it unblocks",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Follow-up implementation tickets created or updated to reference it",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

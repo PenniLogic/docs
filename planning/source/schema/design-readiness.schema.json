@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic cross-platform D6 design readiness evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "schema_version", "gate_id", "evidence_version", "generated_at", "expires_at", "decision", "coverage_snapshot", "handoff_manifests", "platform_approvals", "checks", "findings", "exceptions", "approvals", "checksum"],
+  "properties": {
+    "kind": { "const": "design_readiness" },
+    "schema_version": { "const": 1 },
+    "gate_id": { "const": "T-DQA-12" },
+    "evidence_version": { "type": "string", "minLength": 4 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "decision": { "enum": ["pending", "pass", "fail"] },
+    "coverage_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_checksum", "personas", "journeys", "user_stories", "flows", "screens", "components", "diagrams", "frontend_tickets"],
+      "properties": {
+        "registry_checksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "personas": { "type": "integer", "minimum": 1 },
+        "journeys": { "type": "integer", "minimum": 1 },
+        "user_stories": { "type": "integer", "minimum": 1 },
+        "flows": { "type": "integer", "minimum": 1 },
+        "screens": { "type": "integer", "minimum": 1 },
+        "components": { "type": "integer", "minimum": 1 },
+        "diagrams": { "type": "integer", "minimum": 1 },
+        "frontend_tickets": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "handoff_manifests": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^HND-(AND|WEB|ADM)-[0-9]{3}@[A-Za-z0-9._-]+$" }
+    },
+    "platform_approvals": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "design_ticket", "artifact_version", "decision", "approver_role", "decided_at", "expires_at"],
+        "properties": {
+          "platform": { "enum": ["android", "web", "admin"] },
+          "design_ticket": { "$ref": "enums.schema.json#/definitions/reference" },
+          "artifact_version": { "type": "string", "minLength": 4 },
+          "decision": { "enum": ["approved", "rejected"] },
+          "approver_role": { "type": "string", "minLength": 3 },
+          "decided_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id", "owner_ticket", "artifact_version", "status", "executed_at", "expires_at", "evidence_uri"],
+        "properties": {
+          "check_id": { "type": "string", "minLength": 3 },
+          "owner_ticket": { "$ref": "enums.schema.json#/definitions/reference" },
+          "artifact_version": { "type": "string", "minLength": 4 },
+          "status": { "enum": ["pass", "fail"] },
+          "executed_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "evidence_uri": { "type": "string", "format": "uri" }
+        }
+      }
+    },
+    "findings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["critical_open", "high_open", "medium_open", "low_open", "retest_required"],
+      "properties": {
+        "critical_open": { "type": "integer", "const": 0 },
+        "high_open": { "type": "integer", "const": 0 },
+        "medium_open": { "type": "integer", "minimum": 0 },
+        "low_open": { "type": "integer", "minimum": 0 },
+        "retest_required": { "type": "integer", "const": 0 }
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["exception_id", "scope", "reason", "approver_roles", "expires_at", "prohibited_invariants_checked"],
+        "properties": {
+          "exception_id": { "type": "string", "minLength": 3 },
+          "scope": { "type": "string", "minLength": 10 },
+          "reason": { "type": "string", "minLength": 20 },
+          "approver_roles": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 3 } },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "prohibited_invariants_checked": { "type": "boolean", "const": true }
+        }
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "reviewer", "decision", "decided_at", "expires_at", "evidence_version"],
+        "properties": {
+          "role": { "enum": ["Chief Design Officer", "Design QA Lead"] },
+          "reviewer": { "type": "string", "minLength": 2 },
+          "decision": { "enum": ["approved", "rejected"] },
+          "decided_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "evidence_version": { "type": "string", "minLength": 4 }
+        }
+      }
+    },
+    "checksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

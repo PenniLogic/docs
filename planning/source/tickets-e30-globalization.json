@@ -1,0 +1,376 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e30-globalization",
+  "epic_refs": [
+    "E30"
+  ],
+  "items": [
+    {
+      "stable_id": "T-CON-05",
+      "title": "Expand the contract for multi-currency amounts, exchange groups and reporting currency",
+      "repo": "contracts",
+      "epic": "E30",
+      "kind": "Task",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "contracts",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "chore",
+        "P1-high"
+      ],
+      "outcome": "The published specification carries currency, exchange groups, quoted rates and reporting-currency derivation as first-class wire concepts, so every generated client speaks multi-currency identically instead of Android and the backend agreeing privately.",
+      "context": "Multi-currency currently appears only in the ledger ticket and an Android rendering ticket. Without a contract slice the web application and any future client would have to infer currency behaviour, and a cross-currency total could be produced by a client that was never told it is meaningless.",
+      "scope": [
+        "Currency code required on every amount component, with no default and no inference",
+        "Linked exchange group representation with quoted rate, rate source, rate instant and explicit fee",
+        "Reporting-currency request parameter and a derivation object on every converted figure",
+        "Explicit absence of any scalar cross-currency total in list, summary and report responses",
+        "Generated client guidance stating that formatting is a render-time concern and never a wire concern"
+      ],
+      "acceptance_criteria": [
+        "No response schema exposes a total that mixes currencies without a per-currency breakdown and a derivation object",
+        "Every converted figure carries the rate, the rate source, the rate instant and the fee that produced it",
+        "Generated Kotlin and TypeScript clients round-trip a multi-currency payload without loss, proven by a cross-language test",
+        "The TypeScript surface keeps the canonical decimal string as the public type; no bigint appears on any generated boundary",
+        "The additions are additive: an existing single-currency client compiles and behaves identically against the new specification",
+        "A contract test rejects any endpoint that accepts an amount without a currency code"
+      ],
+      "contracts_schema": [
+        "Currency, exchange group, quoted rate and reporting derivation components defined once and referenced everywhere"
+      ],
+      "security_privacy": [
+        "Rate sources are named in the contract so a disputed figure can be investigated without server access",
+        "No new personal data field is introduced by the multi-currency additions"
+      ],
+      "observability": [
+        "Specification change published with a version and a compatibility report for every generated client"
+      ],
+      "tests": [
+        "Cross-language round-trip test over multi-currency payloads",
+        "Contract test asserting no bare amount and no scalar cross-currency total exists",
+        "Backwards-compatibility test running the previous client against the new specification"
+      ],
+      "rollout_rollback": [
+        "Published as an additive specification version; clients adopt on their own schedule",
+        "Rollback is republishing the previous specification version, which remains compatible"
+      ],
+      "non_goals": [
+        "Ledger implementation, which T-GLO-01 owns",
+        "Rendering and locale formatting, which the client tickets own"
+      ],
+      "dependencies": [
+        "contracts#1",
+        "T-ADR-LEDGER-03",
+        "T-ADR-MONEY-01"
+      ],
+      "parallel_boundary": "Primary repo contracts. Owns the specification additions and the generated packages. The api and client repositories consume the published version.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GLO-01",
+      "title": "Implement the multi-currency ledger with clearing accounts, linked groups and quoted rates",
+      "repo": "api",
+      "epic": "E30",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Development",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "money-path",
+        "P1-high"
+      ],
+      "outcome": "As a user with money in more than one currency, I can hold accounts in each, record an exchange between them, and see the rate and the fee that were actually applied.",
+      "context": "The ledger deliberately reserved this structure and deferred the feature so the single-currency invariants stayed simple and enforceable. Implementing it later is only safe if the reserved structures are used as designed and no existing stored amount changes.",
+      "scope": [
+        "Per-currency clearing accounts activated as real accounts",
+        "Linked exchange groups representing a cross-currency movement as connected single-currency transactions",
+        "Quoted rate, rate source and explicit fee stored on every exchange",
+        "Reporting currency selection with the conversion derivation exposed",
+        "Migration that leaves every existing stored amount unchanged"
+      ],
+      "acceptance_criteria": [
+        "Each transaction remains single-currency; a cross-currency movement is a linked group whose entries sum to zero per currency, enforced by the database",
+        "Every converted figure traces to a stored rate, a rate source and a stated fee",
+        "The rate is stored at the time of the exchange and is never recomputed from a later rate",
+        "Existing single-currency users see identical stored amounts and derived balances after migration",
+        "Reporting in a selected currency exposes its derivation rather than presenting a bare converted number",
+        "All arithmetic agrees with the independent model, including rounding on conversion",
+        "No endpoint returns a scalar total that mixes currencies; every mixed view is a per-currency breakdown with a stated derivation"
+      ],
+      "contracts_schema": [
+        "Implements the multi-currency additions to the published ledger contract additively"
+      ],
+      "security_privacy": [
+        "Rate sources are recorded so a disputed figure can be investigated",
+        "No currency conversion is executed on the user's behalf; the application records what happened"
+      ],
+      "observability": [
+        "Publishes exchange group counts and per-currency constraint violation attempts"
+      ],
+      "tests": [
+        "Per-currency zero-sum constraint tests",
+        "Migration equivalence test on existing data",
+        "Rate provenance test",
+        "Independent model agreement on conversion rounding"
+      ],
+      "rollout_rollback": [
+        "Behind a flag; single-currency behaviour is unchanged with the flag off",
+        "Rollback disables multi-currency entry; existing groups remain readable and correct"
+      ],
+      "non_goals": [
+        "Executing conversion or holding balances, permanently",
+        "Remittance or investment products"
+      ],
+      "dependencies": [
+        "T-ADR-LEDGER-03",
+        "T-CON-05",
+        "api#2",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the multi-currency schema and exchange logic. Client rendering is a separate ticket.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-GLO-02",
+      "title": "Build the Android localization framework and INR-first money rendering",
+      "repo": "android",
+      "epic": "E30",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Sprint 13",
+      "component": "android",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "P2-medium"
+      ],
+      "outcome": "As a user, amounts, dates and numbers are shown the way my locale writes them, with the Indian rupee as the default presentation and the Indian digit grouping convention, and the application text can be translated without a code change.",
+      "context": "Rendering is currently unspecified, which is how a domestic currency ends up formatted with foreign grouping rules on the screen where someone reads their debt. Formatting must also stay strictly at the render boundary so no formatted string leaks into the domain layer. This is MVP work for a single-currency product and depends on nothing in E30: currency selection and multi-currency presentation are separated into T-GLO-04, which does depend on the server-side multi-currency work.",
+      "scope": [
+        "Localization framework with externalised strings and plural handling",
+        "Locale-aware number, date and currency formatting at the render boundary only",
+        "Domestic currency as the default presentation with the correct grouping convention",
+        "Layout resilience for longer translated strings and right-to-left readiness"
+      ],
+      "acceptance_criteria": [
+        "Every user-facing string is externalised; a hard-coded display string fails a build check",
+        "The domestic currency renders with the correct grouping convention, verified by snapshot tests",
+        "No formatted monetary string exists in the domain layer, enforced by a static check",
+        "Layouts remain readable with substantially longer translated strings and at the largest text scale",
+        "Screen readers announce amounts with their currency unambiguously"
+      ],
+      "contracts_schema": [
+        "Consumes the published money representation; formatting is derived from it and never parsed from a display string"
+      ],
+      "security_privacy": [
+        "Locale is a presentation setting and is not sent to any external service with financial data"
+      ],
+      "observability": [
+        "Records locale distribution as a coarse metric without user identifiers"
+      ],
+      "tests": [
+        "Formatting snapshot tests per supported locale",
+        "Hard-coded string build check",
+        "Domain layer formatting static check",
+        "Long-string layout test",
+        "Accessibility announcement test"
+      ],
+      "rollout_rollback": [
+        "Ships with the domestic locale enabled; additional locales are added behind a flag as translations land",
+        "Rollback returns to the domestic locale without affecting stored data"
+      ],
+      "non_goals": [
+        "Translation content itself, which is a separate content activity",
+        "Server-side conversion, which the ledger ticket owns",
+        "Currency selection and multi-currency presentation, which T-GLO-04 owns",
+        "The quality gate that verifies this rendering, which T-QA-08 owns"
+      ],
+      "dependencies": [
+        "T-AND-02"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the localization framework and rendering. Stored amounts are never touched.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GLO-03",
+      "title": "Render multi-currency balances, exchanges and reporting currency in the web application",
+      "repo": "web",
+      "epic": "E30",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "web",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "None",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "feature",
+        "P2-medium"
+      ],
+      "outcome": "As a user with money in more than one currency, the web application shows each balance in its own currency, shows an exchange as a linked pair with the rate and fee that were applied, and never presents a mixed-currency total as a single number.",
+      "context": "Multi-currency support was scoped to the ledger and to Android only, which would leave the web application silently wrong for the same user. The web slice makes the wire contract visible on the second client and keeps formatting at the render boundary.",
+      "scope": [
+        "Locale-aware money rendering at the render boundary only, driven by the published wire representation",
+        "Per-currency balance grouping with no scalar cross-currency total anywhere in the interface",
+        "Exchange presentation showing the linked pair, the quoted rate, the rate source and the explicit fee",
+        "Reporting-currency selector that shows the derivation behind every converted figure",
+        "Externalised strings, plural handling and layout resilience for longer translations and right-to-left readiness"
+      ],
+      "acceptance_criteria": [
+        "No screen displays a total that mixes currencies without a per-currency breakdown, verified by a component test over a mixed portfolio",
+        "Every converted figure exposes its rate, rate source, rate instant and fee on inspection",
+        "No formatted monetary string exists outside the render boundary, enforced by a static check",
+        "Currency selection changes presentation only and never changes a stored amount, proven by an end-to-end assertion on the request payload",
+        "Amounts are announced unambiguously with their currency by a screen reader and meet the stated accessibility conformance target",
+        "No bigint crosses a server component or JSON boundary; the canonical decimal string is parsed once at the render boundary"
+      ],
+      "contracts_schema": [
+        "Consumes the published multi-currency contract; the client parses no display string and infers no currency"
+      ],
+      "security_privacy": [
+        "Locale and reporting-currency choices are presentation settings and are not sent to any external service with financial data"
+      ],
+      "observability": [
+        "Reporting-currency selection and derivation inspection counts published without amounts"
+      ],
+      "tests": [
+        "Component tests over a mixed-currency portfolio asserting no scalar total",
+        "Static check for formatted money outside the render boundary and for bigint on any boundary",
+        "Accessibility test asserting currency is announced with the amount"
+      ],
+      "rollout_rollback": [
+        "Shipped behind the same flag as the multi-currency ledger; single-currency users see no change",
+        "Rollback hides the currency selector and falls back to domestic presentation with no stored data change"
+      ],
+      "non_goals": [
+        "Currency conversion execution, permanently",
+        "Translation content, which is a separate content activity"
+      ],
+      "dependencies": [
+        "T-GLO-01",
+        "T-CON-05",
+        "T-WEB-01"
+      ],
+      "parallel_boundary": "Primary repo web. Owns rendering, the selector and the localization wiring. Stored amounts and server derivation are untouched.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-GLO-04",
+      "title": "Add Android currency selection and multi-currency presentation",
+      "repo": "android",
+      "epic": "E30",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": [
+        "story",
+        "P2-medium"
+      ],
+      "outcome": "Once the server supports more than one currency, a user can choose a presentation currency and see multi-currency holdings rendered correctly, without any stored amount ever being changed.",
+      "context": "Currency selection was bundled with the Android localization framework, which made an MVP formatting task depend on the whole multi-currency server programme. Splitting it lets INR-first rendering ship in the numbered schedule while the multi-currency surface waits for the ledger and contract work it genuinely needs.",
+      "scope": [
+        "Presentation currency selection and its persistence",
+        "Multi-currency holdings presentation, including per-currency subtotals and the rule for a mixed-currency view",
+        "Explicit statement in the interface of which figures are converted and as at what rate and time",
+        "Rendering of a converted figure as derived rather than authoritative",
+        "States from the T-UX-01 taxonomy that apply when a rate is stale or unavailable"
+      ],
+      "acceptance_criteria": [
+        "Changing the presentation currency changes presentation only; a test asserts every stored amount and every ledger entry is unchanged",
+        "A view containing more than one currency shows per-currency subtotals and never adds different currencies into one number without a stated conversion",
+        "Every converted figure states the rate and the time it was taken, and is visually distinguishable from an unconverted figure",
+        "A stale or unavailable rate produces the stale state from the T-UX-01 taxonomy rather than a silently outdated number",
+        "Screen readers announce each amount with its currency unambiguously, including in a mixed-currency view"
+      ],
+      "contracts_schema": [
+        "Consumes the multi-currency and rate shapes published by T-CON-05 through the generated client; no rate is fetched or computed locally"
+      ],
+      "security_privacy": [
+        "Presentation currency is a user preference and carries no financial consequence; the ticket introduces no new data collection"
+      ],
+      "observability": [
+        "Presentation currency selections and stale-rate occurrences are counted, so an unusable rate source is visible"
+      ],
+      "tests": [
+        "Stored-amount immutability test on currency change",
+        "Mixed-currency subtotal test",
+        "Converted-figure labelling test",
+        "Stale-rate state test",
+        "Screen reader announcement test in a mixed-currency view"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag that stays off until the server-side multi-currency work is live",
+        "Rollback hides the selection surface and returns the client to INR-first presentation with no data change"
+      ],
+      "non_goals": [
+        "The localization framework and INR rendering, which T-GLO-02 owns",
+        "Server-side conversion, rate sourcing and ledger currency policy, which T-GLO-01 and T-ADR-LEDGER-03 own",
+        "Translation content"
+      ],
+      "dependencies": [
+        "T-GLO-01",
+        "T-CON-05",
+        "T-GLO-02",
+        "T-UX-01"
+      ],
+      "parallel_boundary": "Primary repo android. Owns the currency selection surface and multi-currency presentation only. Rates, conversion and stored amounts are server-owned and are never recomputed here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

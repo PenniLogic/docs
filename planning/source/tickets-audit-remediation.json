@@ -1,0 +1,1536 @@
+{
+  "kind": "tickets",
+  "group": "tickets-audit-remediation",
+  "epic_refs": ["docs#2", "docs#5", "docs#7", "docs#9", "docs#12", "docs#13", "docs#23", "docs#25", "E25", "E26"],
+  "items": [
+    {
+      "stable_id": "T-PRS-01",
+      "title": "Author the initial bank and wallet parser template library",
+      "repo": "android",
+      "epic": "docs#9",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 14",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["task", "ingestion", "P0-critical"],
+      "outcome": "A versioned template library covering the highest-volume Indian bank and wallet senders ships with the application, so the deterministic parser has actual rules to run rather than only an engine capable of running them.",
+      "context": "ADR-003 states the deterministic parser covers roughly 80 to 85 percent of Indian bank SMS formats, and that parser is the product wedge. The engine, the sender allowlist, the remote-update mechanism and the sanitized corpus each have an owning ticket. The templates themselves do not. An engine with no rules parses nothing, so the most valuable asset in the product currently has no author and no acceptance number.",
+      "scope": [
+        "Templates for the highest-volume Indian bank senders covering debit, credit, ATM withdrawal, reversal and failed-transaction message shapes",
+        "Templates for the major wallet and payment-application senders that emit transactional text",
+        "A template format that expresses sender, message shape, extracted fields and confidence, and is expressible as the remotely updatable configuration android#8 ships",
+        "Per-template provenance recording which real message shapes it was derived from, referencing the sanitized corpus rather than embedding raw text",
+        "Negative templates that deliberately match promotional, balance-enquiry and one-time-password messages so they are classified as non-transactional rather than left unmatched",
+        "A template versioning scheme allowing an individual template to be superseded without reissuing the library"
+      ],
+      "acceptance_criteria": [
+        "Every template in the library is exercised by at least one positive case and one negative case in the sanitized corpus",
+        "A promotional message from a genuine bank sender is classified as non-transactional by an explicit negative template rather than by failing to match",
+        "A balance-enquiry message never produces a transaction, verified by a named test",
+        "Each template declares the fields it extracts and the confidence it asserts, and a template that cannot assert an amount and a direction is rejected at load time",
+        "The library loads through the same remote configuration path android#8 defines, so a template change does not require an application release",
+        "A superseded template is retained and addressable by version so a parser regression can be attributed to a specific template change",
+        "No raw message text from a real user appears in the library or its provenance records"
+      ],
+      "contracts_schema": [
+        "Template configuration schema published as a versioned artifact that android#8 loads and T-PRS-02 measures against"
+      ],
+      "security_privacy": [
+        "Templates are derived from the sanitized corpus only; raw message text never enters the repository or the configuration artifact",
+        "A template is a matching rule and never carries a credential, endpoint or account identifier"
+      ],
+      "observability": [
+        "A per-template match count and a per-template rejection count, so a template that silently stops matching after a bank format change is visible rather than inferred from a drop in parsed transactions"
+      ],
+      "tests": [
+        "Positive and negative case per template against the sanitized corpus",
+        "Load-time validation test rejecting a template that extracts no amount or no direction",
+        "Regression test asserting a superseded template version remains addressable",
+        "Spoof-risk cases from the android#7 adversarial set run against the full library rather than the engine alone"
+      ],
+      "rollout_rollback": [
+        "The library ships enabled with the application and is thereafter updated through the remote configuration path; rollback is pinning the previously published library version, which the versioning scheme makes addressable"
+      ],
+      "non_goals": [
+        "The parser engine and the sender allowlist, which android#7 owns",
+        "The remote configuration delivery mechanism, which android#8 owns",
+        "The sanitized corpus and the compatibility matrix, which T-QA-12 owns",
+        "The published coverage target and its release gate, which T-PRS-02 owns",
+        "The on-device model fallback for unrecognised formats"
+      ],
+      "dependencies": ["android#7", "android#8", "T-QA-12"],
+      "parallel_boundary": "Primary repo android. Owns the template content and its format. The engine, the allowlist and the delivery mechanism are consumed unchanged from their own tickets, and the corpus is consumed from T-QA-12.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "A reviewer confirms every template traces to a sanitized corpus entry and that no raw user message text is present"
+      ]
+    },
+    {
+      "stable_id": "T-PRS-02",
+      "title": "Publish the parser coverage target and enforce it as a release gate",
+      "repo": "android",
+      "epic": "docs#9",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 15",
+      "component": "android",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "ingestion", "quality", "P0-critical"],
+      "gate": "release",
+      "outcome": "Parser coverage is a published number measured against the sanitized corpus on every release candidate, and a regression below the target fails the release rather than being discovered by users.",
+      "context": "ADR-003 asserts roughly 80 to 85 percent coverage of Indian bank SMS formats, but no ticket in the backlog states a coverage target, measures one, or blocks a release on one. An unmeasured claim in an accepted decision record is a liability: it is quoted in the Play declaration and in the value proposition while nothing verifies it. Coverage also decays silently as banks change formats, which is the whole of R6.",
+      "scope": [
+        "A published coverage definition stating exactly what is measured: share of corpus messages that produce a correct transaction, measured separately from share that produce no false transaction",
+        "Separate targets for true-positive coverage and for false-positive rate, because a parser that invents transactions is worse than one that misses them",
+        "Measurement executed automatically against the sanitized corpus on every release candidate",
+        "A release gate that fails when either number regresses beyond a stated tolerance against the previous release",
+        "A per-sender coverage breakdown so a decline is attributable to a specific institution rather than only visible in the aggregate",
+        "A recorded baseline captured when the template library first lands, so subsequent runs measure change rather than absolute virtue"
+      ],
+      "acceptance_criteria": [
+        "The coverage definition, both targets and the regression tolerance are published and reviewed before the first measurement is taken",
+        "A release candidate whose true-positive coverage falls below the target fails the gate",
+        "A release candidate whose false-positive rate rises above the target fails the gate, independently of true-positive coverage",
+        "The per-sender breakdown identifies which sender regressed, verified by deliberately disabling one template and confirming the report names it",
+        "The measurement runs without human intervention on every release candidate",
+        "The published figure quoted in ADR-003 is either confirmed by the first measurement or the record is corrected to the measured number"
+      ],
+      "contracts_schema": [
+        "Coverage report published in a machine-readable form that the release evidence gate consumes without re-running the measurement"
+      ],
+      "security_privacy": [
+        "Measurement runs against the sanitized corpus only and never against captured user messages",
+        "The coverage report carries no message text, only counts and identifiers"
+      ],
+      "observability": [
+        "Coverage and false-positive rate recorded per release with the template library version, so a regression can be attributed to a specific library change"
+      ],
+      "tests": [
+        "Gate test proving a deliberately degraded template library fails the release",
+        "Gate test proving an injected false positive fails the release independently of coverage",
+        "Attribution test confirming the per-sender report names a disabled template",
+        "Baseline reproducibility test asserting two runs over the same corpus and library produce the same numbers"
+      ],
+      "rollout_rollback": [
+        "Run the gate in report-only mode for one release to establish the baseline and surface existing drift, then make it blocking; rollback is returning to report-only, which is recorded rather than silent"
+      ],
+      "non_goals": [
+        "Authoring templates, which T-PRS-01 owns",
+        "Producing the sanitized corpus, which T-QA-12 owns",
+        "The operational response when coverage declines, which T-PRS-03 owns"
+      ],
+      "dependencies": ["T-PRS-01", "T-QA-12"],
+      "parallel_boundary": "Primary repo android. Owns the measurement, the published targets and the gate. The corpus and the templates are consumed from their own tickets and are not modified here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "ADR-003 either confirmed against the first measurement or corrected, and the correction merged before this ticket closes"
+      ]
+    },
+    {
+      "stable_id": "T-PRS-03",
+      "title": "Establish the parser template authoring runbook and format-change response",
+      "repo": "docs",
+      "epic": "docs#9",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 15",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Ops",
+      "risk": "R6 Parser rot",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": ["task", "ingestion", "chore"],
+      "outcome": "When a bank changes its message format, there is a named owner, a written procedure and a stated response time for shipping a corrected template, so parser decay is an operational task rather than an emergency.",
+      "context": "R6 Parser rot is carried by thirteen tickets, every one of which addresses the mechanism: remote updates, corpus, monitoring, allowlist maintenance. None addresses the operation. Banks change SMS formats without notice and the remote configuration path is only valuable if somebody is watching, is allowed to publish, and knows how quickly they are expected to act.",
+      "scope": [
+        "A written procedure from detection through template authoring, review, publication and verification",
+        "Named ownership for the parser template library and a stated escalation path when the owner is unavailable",
+        "A response time objective from detection to published correction, differentiated by how much transaction volume the affected sender represents",
+        "The detection inputs that open the procedure: the per-template match-count alert, the coverage gate and user reports arriving through support",
+        "The review requirement for a template change, given it ships without an application release and therefore bypasses store review",
+        "A quarterly review checking the sender allowlist and template library against current institution behaviour rather than waiting for a failure"
+      ],
+      "acceptance_criteria": [
+        "The procedure is executable by someone who did not write it, demonstrated by a rehearsal in which a second person ships a template change end to end",
+        "The response time objective is stated per volume tier and is measurable from the recorded detection and publication timestamps",
+        "Every detection input names the alert or report that triggers the procedure",
+        "A template change requires review by a person other than its author before publication, and the rehearsal confirms the control cannot be bypassed",
+        "The quarterly review has a scheduled owner and a recorded output, so a skipped review is visible"
+      ],
+      "contracts_schema": [
+        "The runbook references the template configuration schema and the coverage report format rather than restating them"
+      ],
+      "security_privacy": [
+        "The procedure forbids pasting a real user message into a ticket, a chat or a template, and names the sanitized corpus as the only permitted source of message shapes",
+        "Publication rights to the template configuration are held by a named group and the procedure states how a departure removes them"
+      ],
+      "observability": [
+        "Detection-to-publication elapsed time recorded per incident so the stated objective is measured rather than asserted"
+      ],
+      "tests": [
+        "Rehearsal in which a second person ships a template change end to end against a test configuration",
+        "Control test confirming a template change cannot be published without a second reviewer",
+        "Escalation test confirming the path resolves when the named owner is unavailable"
+      ],
+      "rollout_rollback": [
+        "The runbook is published and rehearsed once before the SMS capability reaches beta; it is corrected after each rehearsal and after each real incident rather than reviewed on a schedule alone"
+      ],
+      "non_goals": [
+        "The template library itself, which T-PRS-01 owns",
+        "The coverage measurement and its gate, which T-PRS-02 owns",
+        "The sender allowlist maintenance process, which android#7 already documents"
+      ],
+      "dependencies": ["T-PRS-01", "T-PRS-02"],
+      "parallel_boundary": "Primary repo docs. Owns the written procedure and the ownership record. The alerts it consumes are defined in T-PRS-01 and T-PRS-02 and are not redefined here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "The rehearsal has been performed and the runbook corrected from what it revealed"
+      ]
+    },
+    {
+      "stable_id": "T-CON-12",
+      "title": "Publish the shared error catalogue and problem detail contract",
+      "repo": "contracts",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 04",
+      "component": "contracts",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "contracts", "P0-critical"],
+      "outcome": "Every service returns errors in one published shape with stable machine-readable codes, so three clients handle failure identically and the client state taxonomy has a real contract to bind to.",
+      "context": "Two tickets in the entire backlog mention an error shape and one mentions an error code. Three clients and two backends will otherwise each invent their own error handling, retry semantics and user-facing copy. That directly undermines T-UX-01, which defines named states for permission-denied, quota-exceeded, offline and degraded but has nothing to map them onto. It also makes retry behaviour a per-client guess, which is dangerous on a money path where a wrongly retried write is a duplicate transaction.",
+      "scope": [
+        "A single problem detail representation used by every service, following RFC 9457",
+        "A stable code vocabulary, machine-readable and never localised, distinct from the human-readable message",
+        "Per-code classification stating whether the condition is retryable, and if so whether retrying requires a new idempotency key",
+        "Mapping from each code to the client state taxonomy that T-UX-01 publishes, so a client renders a known state rather than a raw message",
+        "Validation error representation that identifies the offending field without echoing a monetary value back in an error string",
+        "The quota-exceeded and entitlement-denied shapes, including whether the response states the limit and when it resets",
+        "Error shapes for the ai-service boundary so a provider failure is distinguishable from a refusal and from a quota exhaustion"
+      ],
+      "acceptance_criteria": [
+        "Every error response from every service validates against the published problem detail schema",
+        "Each code declares its retry classification, and a code that is retryable states whether the idempotency key must change",
+        "Every code maps to exactly one client state in the T-UX-01 taxonomy, and a code with no mapping fails contract validation",
+        "A validation error names the offending field and carries no monetary amount in its human-readable message",
+        "A quota-exceeded response is distinguishable from an authorization denial and from a provider outage by code alone, without parsing prose",
+        "Generated Kotlin, TypeScript and Python clients expose the code as a typed value rather than a string comparison",
+        "Adding a new code without a retry classification and a state mapping fails the contract build"
+      ],
+      "contracts_schema": [
+        "OpenAPI 3.1 problem detail component plus the code vocabulary published as a machine-readable enumeration that generated clients consume"
+      ],
+      "security_privacy": [
+        "No error message discloses whether an account exists, which resource was denied, or any balance or amount",
+        "Internal identifiers, stack detail and provider error text are never propagated to a client; a correlation identifier is returned instead"
+      ],
+      "observability": [
+        "Every problem detail carries a correlation identifier that appears in server logs, so a user-reported failure is traceable without asking the user to reproduce it"
+      ],
+      "tests": [
+        "Schema validation of every documented error example",
+        "Contract test asserting each service emits only codes present in the published vocabulary",
+        "Mapping completeness test failing when a code has no client state",
+        "Disclosure test asserting no error body contains an amount, a balance or an account existence signal",
+        "Generated client test asserting codes are typed in all three languages"
+      ],
+      "rollout_rollback": [
+        "Additive publication under the expand and contract protocol; services adopt the shape behind a version pin and the previous ad hoc shapes are removed only once every consumer has migrated"
+      ],
+      "non_goals": [
+        "The user-facing copy for each state, which T-UX-01 owns",
+        "Retry implementation in any client",
+        "Localisation of error messages, which E30 owns"
+      ],
+      "dependencies": ["contracts#1", "T-UX-01", "T-ADR-MONEY-01"],
+      "parallel_boundary": "Primary repo contracts. Owns the error representation and the code vocabulary. Services emit against the published version and clients consume the generated artifacts; neither redefines the shape.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-NWT-04",
+      "title": "Model manually entered holdings and asset classes feeding net worth",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "money-path", "P1-high"],
+      "outcome": "A user records what they own outside their bank accounts, such as mutual funds, provident fund balances, gold or property, and net worth reflects it, so the figure is recognisable as their actual net worth.",
+      "context": "Net worth is currently derived from the ledger alone, which means it counts bank balances and debts and nothing else. An Indian household's assets are substantially provident fund, mutual funds, gold and property. As specified, the net worth surface will look obviously wrong to its target user the first time they open it, which damages trust in every other number the product shows. This is a manual-entry asset register with no market data and no recommendation, so it stays outside SEBI investment adviser scope entirely.",
+      "scope": [
+        "A holding record carrying asset class, a user-supplied valuation, the currency and the date that valuation was accurate",
+        "Asset classes covering the common Indian cases including provident fund, public provident fund, national pension scheme, mutual funds, listed equity, gold, real estate, fixed deposits and a general other",
+        "Valuation history so net worth trend reflects revaluation rather than only new records",
+        "Representation of a holding as an asset account in the ledger, so net worth remains one derivation rather than two competing sums",
+        "An explicit staleness signal when a valuation has not been updated for a stated period",
+        "Exclusion of holdings from spending, budgeting and safe-to-spend derivations, which concern cash flow rather than stock of wealth"
+      ],
+      "acceptance_criteria": [
+        "A recorded holding changes net worth by exactly its valuation and changes no spending, budget or safe-to-spend figure",
+        "Revaluing a holding creates a new valuation record and never mutates the previous one, consistent with the append-only rule",
+        "Net worth trend distinguishes change caused by revaluation from change caused by cash movement, and the derivation inspector shows which",
+        "A holding valued in a currency other than the reporting currency is not silently collapsed into the total before the multi-currency engine exists",
+        "A valuation older than the stated staleness period is marked stale in the response rather than presented as current",
+        "No endpoint returns or accepts a market price, a projected return, or any product recommendation",
+        "Deleting a holding is a reversing entry and leaves the historical trend intact"
+      ],
+      "contracts_schema": [
+        "Holding and valuation shapes published in the income, budgeting and net worth contract, using the published money representation"
+      ],
+      "security_privacy": [
+        "Holdings are as sensitive as balances and fall inside the same encryption scope and row-level security decisions",
+        "Holdings are a separate shareable category in the sharing model, so a family grant over spending does not implicitly expose net worth composition"
+      ],
+      "observability": [
+        "Count of holdings whose valuation is stale, so an increasingly wrong net worth is visible before a user reports it"
+      ],
+      "tests": [
+        "Property test asserting net worth equals ledger-derived value plus holdings valuation for arbitrary combinations",
+        "Isolation test asserting a holding never affects safe-to-spend, budgets or spending reports",
+        "Append-only test asserting revaluation preserves prior records",
+        "Staleness test asserting the marker appears at the stated boundary",
+        "Advice-boundary test asserting no response carries a price, a return or a recommendation"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag; with the flag off net worth derives from the ledger exactly as it does today, so rollback is a flag change and no stored data is invalidated"
+      ],
+      "non_goals": [
+        "Any brokerage, depository or fund-house integration",
+        "Market pricing, automatic valuation or return calculation",
+        "Investment advice of any kind, which the advice boundary forbids",
+        "Multi-currency consolidation of holdings, which E30 owns",
+        "Capital gains and tax reporting"
+      ],
+      "dependencies": ["T-NWT-01", "T-ADR-LEDGER-03", "T-ADR-CAT-02"],
+      "parallel_boundary": "Primary repo api. Owns the holding model and its contribution to the net worth derivation. Client surfaces are owned by T-NWT-05 and the web net worth ticket, and the sharing category is registered with the sharing model rather than redefined here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "A reviewer confirms no surface introduced here crosses the advice boundary"
+      ]
+    },
+    {
+      "stable_id": "T-NWT-05",
+      "title": "Build Android holdings entry and net worth composition",
+      "repo": "android",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "P2-medium"],
+      "outcome": "A user adds and revalues what they own in a few taps, and the net worth screen shows composition by asset class rather than a single unexplained number.",
+      "context": "The server models holdings, but a net worth figure a user cannot decompose is a number they will not trust, particularly when it disagrees with their own mental arithmetic. Composition is also the honest presentation: it shows that the figure is only as good as the valuations the user supplied.",
+      "scope": [
+        "Holding entry and revaluation with asset class selection and a valuation date",
+        "Net worth composition by asset class with drill-down to the underlying holdings and accounts",
+        "A visible staleness marker on any holding whose valuation is older than the stated period, with a direct revaluation action",
+        "Offline entry through the existing mutation queue, consistent with the rest of manual entry",
+        "An empty state that explains what holdings are for and what happens if none are entered, per the T-UX-01 taxonomy"
+      ],
+      "acceptance_criteria": [
+        "Adding a holding takes no more taps than adding a manual transaction",
+        "Composition percentages sum to the displayed net worth and the drill-down reconciles exactly with the total",
+        "A stale valuation is visibly marked and offers revaluation without leaving the screen",
+        "Entry works offline and reconciles without duplication when connectivity returns",
+        "The screen never displays a price, a projected return, or any recommendation",
+        "Every non-happy path uses a named state from the published taxonomy"
+      ],
+      "contracts_schema": [
+        "Consumes the published holding and valuation shapes; introduces no client-side derivation of net worth"
+      ],
+      "security_privacy": [
+        "Holdings are concealed by privacy mode and by the application lock exactly as balances are",
+        "Screenshot protection applies to the composition screen because it discloses total wealth in one view"
+      ],
+      "observability": [
+        "Count of users who add a holding and then never revalue it, which distinguishes a feature that is used from one that is merely tried"
+      ],
+      "tests": [
+        "Instrumented entry and revaluation journey",
+        "Reconciliation test asserting composition sums to the displayed total",
+        "Offline entry and reconnection test asserting no duplicate holding",
+        "Accessibility pass covering the composition chart with a non-visual equivalent",
+        "Privacy mode test asserting holdings are concealed"
+      ],
+      "rollout_rollback": [
+        "Ships behind the same flag as the server capability; with the flag off the net worth screen renders exactly as it does today"
+      ],
+      "non_goals": [
+        "The holding model and the net worth derivation, which T-NWT-04 owns",
+        "The web surface, which the web net worth ticket owns",
+        "Any market data or automatic valuation"
+      ],
+      "dependencies": ["T-NWT-04", "T-NWT-02", "T-UX-01"],
+      "parallel_boundary": "Primary repo android. Owns the entry and composition surfaces. All figures come from the server derivation and are never recomputed on the client.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADR-BUREAU-11",
+      "title": "ADR: credit bureau score integration or explicit non-goal",
+      "repo": "docs",
+      "epic": "E26",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Future",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 3,
+      "labels": ["task", "adr", "P1-high"],
+      "outcome": "A merged record either commits to a credit bureau score integration with its named provider, consent basis and cost model, or records the refusal with reasoning strong enough that the question stops being reopened.",
+      "context": "Every mainstream Indian personal finance application surfaces a bureau score, and for a debt-first product it is the most natural progress metric available: paying down a card visibly moves it, which is exactly the feedback loop the retention thesis depends on. The backlog and the product specification contain no mention of it at all. Silence is the worst of the three possible positions, because it will be raised repeatedly by reviewers, users and any future investor, and each time it will be re-argued from scratch.",
+      "scope": [
+        "Whether a bureau score is in scope for the product at all, stated as a decision rather than an omission",
+        "If in scope, the provider, the consent basis under the data protection regime, the refresh cadence and the per-user cost",
+        "Whether a score is stored, cached or fetched on demand, and what that implies for the encryption scope decision",
+        "Whether score data may be shared through the family sharing model, and by default whether it is",
+        "The advice boundary implication: whether any narrative may be attached to a score movement, given a score explanation edges toward advice",
+        "If out of scope, the reasoning and the conditions that would reopen it"
+      ],
+      "acceptance_criteria": [
+        "The record states the decision, the options rejected and the reasoning for each",
+        "If integration is chosen, the provider, consent basis, refresh cadence and per-user cost are named, and the unit economics are checked against the published margin model",
+        "If declined, the record states what would have to change for the question to reopen, so a future reviewer can test whether it has",
+        "The record states whether a bureau score is a shareable category in the family model and what the default is",
+        "The record states what narrative, if any, may accompany a score change, and is reviewed against the advice boundary",
+        "The record is merged in its own file and the generated index is refreshed by the T-ADR-INDEX-10 generator rather than hand-edited"
+      ],
+      "contracts_schema": [
+        "The decision record is itself the contract input; it names the schema, wire and consent consequences it forces"
+      ],
+      "security_privacy": [
+        "A bureau score is regulated personal financial data; the record must state its retention period and whether it falls inside the crypto-shredding erasure path",
+        "The record must state whether the bureau is a data processor or an independent controller, because that changes the consent and transfer obligations"
+      ],
+      "observability": [
+        "If integration is chosen, the record names the per-user fetch cost metric required to keep the margin model honest"
+      ],
+      "tests": [
+        "Advice-boundary review of any permitted narrative, recorded as evidence",
+        "Unit-economics check against the published margin model if integration is chosen"
+      ],
+      "rollout_rollback": [
+        "Decision record only; if integration is chosen the implementation ships behind a default-off flag so the cost is opt-in until the economics are measured"
+      ],
+      "non_goals": [
+        "Implementing any integration, which would be separate tickets created by this record",
+        "Credit score improvement advice, which the advice boundary forbids",
+        "Lending, loan brokering or credit referral, which are permanently excluded"
+      ],
+      "dependencies": ["T-GOV-03", "T-ADR-CRYPTO-04"],
+      "parallel_boundary": "Primary repo docs. Produces the decision record only. Any implementation tickets it creates are written afterwards against the merged record.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and the options rejected recorded",
+        "The schema, enum, wire or interface consequences the record forces are published as a machine-readable artifact that dependent contract and implementation tickets consume directly, not restated as prose in each of them",
+        "Linked from every epic and ticket it unblocks, or recorded as blocking nothing if the decision is to decline",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Follow-up implementation tickets created or updated to reference it",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-RES-01",
+      "title": "Run the debt-first concept test before the debt experience is built",
+      "repo": "docs",
+      "epic": "docs#7",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 01",
+      "component": "docs",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "retention", "P0-critical"],
+      "outcome": "The debt-first positioning is tested against real people in the launch market before the debt experience is built, and the findings are recorded whether or not they support the thesis.",
+      "context": "The executive summary names retention as the one risk to watch above all others and says the wedge must be validated with real users before the expensive phases. Ten tickets carry R2 User retention and every one of them is instrumentation: funnels, cohorts, digests, dormancy. Instrumentation measures what happened after the product is built. Nothing in the plan tests the premise beforehand, which means the first evidence that the wedge does not land would arrive after the debt engine, the Android experience and the ingestion pipeline are all complete.",
+      "scope": [
+        "A concept test with participants drawn from the launch market who currently hold consumer debt",
+        "Comparison of the debt-first framing against a conventional expense-tracking framing, so the result is a preference rather than a courtesy",
+        "Willingness-to-pay probing against the published price points rather than an abstract question about value",
+        "Reaction to the SMS permission request stated plainly, because the wedge depends on a permission the participant must grant",
+        "A written finding recorded in the product record, including any result that contradicts the thesis",
+        "Explicit falsification criteria agreed before the sessions, so the result cannot be rationalised afterwards"
+      ],
+      "acceptance_criteria": [
+        "Falsification criteria are written and reviewed before the first session, not after",
+        "Participants hold consumer debt and are drawn from the launch market rather than from the team's network",
+        "The debt-first and expense-tracking framings are both shown, with presentation order varied between participants",
+        "The finding is recorded in the product record with participant count, method and limitations stated",
+        "A result that contradicts the debt-first thesis is recorded as prominently as a result that supports it",
+        "The finding names what, if anything, should change in the product specification, and those changes are raised as tickets or explicitly declined"
+      ],
+      "contracts_schema": [
+        "No contract surface; the output is a recorded finding referenced by the product specification"
+      ],
+      "security_privacy": [
+        "No participant financial data is collected, stored or transcribed; sessions concern reactions to concepts rather than the participant's own records",
+        "Recordings and notes are pseudonymised and retained only for the period stated in the research plan"
+      ],
+      "observability": [
+        "The falsification criteria and the outcome against them are recorded so the retention kill criterion can reference a prior position rather than an impression"
+      ],
+      "tests": [
+        "Peer review of the discussion guide for leading questions before the first session",
+        "Order-effect check confirming framing preference is not an artefact of presentation order"
+      ],
+      "rollout_rollback": [
+        "Research activity with no deployed artefact; if the finding contradicts the thesis the response is a product specification change raised as tickets, not a silent continuation"
+      ],
+      "non_goals": [
+        "Usability testing of built surfaces, which T-RES-02 owns",
+        "Quantitative market sizing",
+        "Any change to pricing, which remains a confirmed decision unless this finding explicitly reopens it"
+      ],
+      "dependencies": [],
+      "parallel_boundary": "Primary repo docs. Produces a recorded finding. It changes no code and blocks no repository, but the debt experience tickets should not close before it reports.",
+      "definition_of_done": [
+        "Finding merged and dated, with method, participant count and limitations stated",
+        "Falsification criteria and the outcome against them recorded",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Resulting product specification changes raised as tickets or explicitly declined in the record"
+      ]
+    },
+    {
+      "stable_id": "T-RES-02",
+      "title": "Run moderated usability on the Android onboarding and permission prototype",
+      "repo": "docs",
+      "epic": "docs#7",
+      "kind": "Task",
+      "phase": "P2 Automation",
+      "sprint": "Sprint 05",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R1 SMS permission",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Quality Assurance",
+      "labels": ["task", "retention", "P1-high"],
+      "outcome": "Real participants complete the interactive Android onboarding and SMS-permission prototype on a physical device, and comprehension, task success, grant intent and refusal reasons are recorded before frontend implementation or Play declaration work.",
+      "context": "The ingestion thesis depends on an unusually sensitive permission. Waiting for android#9 would make research post-implementation and turn usability findings into expensive rework. The D5 prototype must test the rationale, denial path and restricted-settings recovery before the Android handoff gate closes.",
+      "scope": [
+        "Moderated sessions on the physical test device using the D4 prototype from T-UXA-02, covering launch through a synthetic first transaction",
+        "Observation of the permission request specifically: what participants read, what they believe it grants, and what makes them refuse",
+        "Testing of the permission rationale wording, with at least two variants",
+        "Verification that the deny-everything path is genuinely usable, since the product promises it is",
+        "Recorded grant rate and stated refusal reasons",
+        "Findings fed into T-UXA-02, the CDO readiness gate, android#9 and store listing copy before implementation"
+      ],
+      "acceptance_criteria": [
+        "Sessions run on the physical device rather than an emulator, because the permission dialogue and the restricted-settings path differ",
+        "At least two rationale wordings are tested and the observed difference in grant rate is recorded, with the sample limitation stated plainly",
+        "Every refusal is recorded with the participant's stated reason rather than an inferred one",
+        "A participant who denies every permission completes onboarding and records a transaction manually, confirming the promise holds",
+        "Findings are recorded before the platform handoff or Play declaration and are referenced by T-UXA-02 and android#9",
+        "Participants are not coached toward granting, verified by peer review of the discussion guide"
+      ],
+      "contracts_schema": [
+        "No contract surface; the output is a recorded finding referenced by the permission onboarding ticket and the store listing"
+      ],
+      "security_privacy": [
+        "Sessions use a test device and synthetic messages; no participant's real messages are read, captured or transcribed",
+        "The device is wiped between participants and the wipe is recorded"
+      ],
+      "observability": [
+        "Observed grant rate recorded as the prior against which the instrumented production funnel is later compared, so a live number has something to be measured against"
+      ],
+      "tests": [
+        "Peer review of the discussion guide for coaching and leading questions",
+        "Deny-everything path completion observed rather than asserted",
+        "Device wipe verification between participants"
+      ],
+      "rollout_rollback": [
+        "Research activity with no deployed artefact; findings change the rationale wording and the store listing before the declaration is filed rather than after"
+      ],
+      "non_goals": [
+        "Concept validation of the positioning, which T-RES-01 owns",
+        "Automated accessibility and performance gating, which T-QA-08 owns",
+        "The Play declaration and Android implementation, which android#9 owns"
+      ],
+      "dependencies": ["T-QA-07", "T-UXA-02", "T-DSY-07"],
+      "parallel_boundary": "Primary repo docs. Independent UX Research runs the study against a prototype; Android implementation cannot begin until findings are dispositioned through T-DQA-12.",
+      "definition_of_done": [
+        "Finding merged and dated, with method, participant count and limitations stated",
+        "Observed grant rate and refusal reasons recorded",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Rationale wording and store listing changes raised as tickets or explicitly declined, before the declaration is filed"
+      ]
+    },
+    {
+      "stable_id": "T-DSY-01",
+      "title": "Publish shared design tokens, theming and the dark mode contract",
+      "repo": "docs",
+      "epic": "docs#12",
+      "kind": "Task",
+      "phase": "P0 Foundations",
+      "sprint": "Sprint 03",
+      "component": "docs",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 5,
+      "capacity_pool": "Product Design and UX",
+      "labels": ["task", "P1-high"],
+      "outcome": "Android, web and admin consume one published set of design tokens including a light and a dark theme, so the three surfaces agree on colour, type, spacing and state styling without coordinating by hand.",
+      "context": "Three client surfaces are planned across three repositories with no shared visual definition between them. Two tickets mention a design system incidentally and none mentions dark mode at all. Without a token source the surfaces will diverge, and the divergence will be discovered late, in the client quality gates, where it is expensive to fix. Dark mode is also an accessibility and comfort expectation rather than a preference, and retrofitting a theme after three applications have hardcoded colours is far more costly than defining it once.",
+      "scope": [
+        "A token set covering colour, typography, spacing, radius, elevation and motion, published in a form each platform can consume",
+        "Light and dark theme definitions over the same token names, so a surface switches theme without branching on it",
+        "Semantic tokens for the money-specific cases the product needs repeatedly: positive and negative amounts, debt, projected values and stale or unconfirmed data",
+        "Styling for every state in the T-UX-01 taxonomy, so empty, loading, error, offline, stale, permission-denied, quota-exceeded and degraded look the same on every surface",
+        "Contrast verification of every token pair in both themes against the published accessibility target",
+        "The distribution mechanism and the versioning rule, so a token change reaches three repositories predictably"
+      ],
+      "acceptance_criteria": [
+        "Every token resolves in both themes, and a token defined in one theme only fails the build",
+        "Every foreground and background pair used by the applications meets the published contrast target in both themes, verified automatically rather than by inspection",
+        "Each state in the T-UX-01 taxonomy has a defined visual treatment, and a state without one fails validation",
+        "Colour alone never distinguishes a positive from a negative amount, verified by a named test",
+        "The three client repositories consume the published version rather than copying values, verified by a check that fails on a hardcoded colour",
+        "A token change publishes a new version and consumers pin it, so an unintended change cannot arrive silently"
+      ],
+      "contracts_schema": [
+        "Token set published as a versioned machine-readable artifact consumed by the android, web and admin repositories"
+      ],
+      "security_privacy": [
+        "The stale and unconfirmed treatments must be visually distinct from confirmed values, because presenting an unverified amount as confirmed is a correctness and trust failure rather than a styling one"
+      ],
+      "observability": [
+        "A per-repository count of hardcoded colour and spacing values found by the consuming check, so drift away from the token set is visible"
+      ],
+      "tests": [
+        "Automated contrast verification across every token pair in both themes",
+        "Theme completeness test failing on a token defined in only one theme",
+        "State coverage test failing when a taxonomy state has no treatment",
+        "Colour-independence test asserting positive and negative amounts remain distinguishable without colour",
+        "Consumer check failing a hardcoded value in any client repository"
+      ],
+      "rollout_rollback": [
+        "Published before the client build tickets start so they consume it from the outset; the consuming check runs in warn-only mode for one release in any repository that already has hardcoded values, then becomes blocking"
+      ],
+      "non_goals": [
+        "Component implementations in any client, which each client repository owns",
+        "The state taxonomy and its copy rules, which T-UX-01 owns",
+        "Brand and marketing design outside the applications"
+      ],
+      "dependencies": ["T-UX-01", "T-UXR-07"],
+      "parallel_boundary": "Primary repo docs. Owns the token set, the themes and the state treatments. Each client repository implements components against the published version and proposes token changes through this repository rather than locally.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-TRU-05",
+      "title": "Build duress unlock and rapid conceal for coercive situations",
+      "repo": "android",
+      "epic": "docs#25",
+      "kind": "Story",
+      "phase": "P4 Network",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Security",
+      "risk": "R8 Sharing abuse",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "security", "P1-high"],
+      "outcome": "A user who is being watched or compelled can open the application into a reduced view, or conceal it immediately, without the coercing party being able to tell that either happened.",
+      "context": "The product specification devotes a section to intimate-partner financial abuse and correctly designs family sharing around it, with unilateral revocation, access transparency and a discreet exit. Family sharing even carries a coercive-control review. The trust controls stop short: application lock, privacy mode and safe exit all assume the user is alone when they use them. The threat model the product already accepts is a user being observed while holding the phone, and nothing addresses that moment. Revocation is not much use if opening the application to perform it is itself the dangerous act.",
+      "scope": [
+        "A duress credential distinct from the ordinary unlock that opens a reduced view",
+        "A definition of the reduced view: what it shows, what it conceals and how it avoids appearing to be a reduced view",
+        "A rapid conceal gesture that leaves the current screen immediately and does not restore it on return without full authentication",
+        "Behaviour under observation: no notification, no visible state change and no log entry the coercing party can reach that reveals duress was used",
+        "Interaction with the existing application lock, privacy mode and screenshot protection, so the controls compose rather than conflict",
+        "Discoverability that does not advertise: the feature must be findable by someone looking for it and not obvious to someone browsing settings on a shared device"
+      ],
+      "acceptance_criteria": [
+        "The duress credential opens the reduced view and never the full view, verified by a named test",
+        "The reduced view is internally consistent, showing no empty section, no obviously missing tab and no error suggesting that content is hidden",
+        "Using the duress credential produces no notification, no visible indicator and no entry in any log the device holder or a sharing counterparty can read",
+        "The conceal gesture leaves the screen within a stated time and requires full authentication to return",
+        "Setting up duress does not appear in any shared or family-visible surface",
+        "A coercive-control review is performed on the finished behaviour, in the same manner as the family sharing review, and its findings are addressed before merge",
+        "The reduced view still permits revocation of sharing grants, because that is the action a coerced user most needs"
+      ],
+      "contracts_schema": [
+        "No server contract change; duress is resolved entirely on the device so that no server-side signal exists to be subpoenaed, leaked or observed"
+      ],
+      "security_privacy": [
+        "The duress credential is stored and verified with the same protection as the ordinary credential, and neither can be used to enumerate the other",
+        "No server-side record distinguishes a duress unlock from an ordinary one, by design",
+        "Timing of duress and ordinary unlock must not be distinguishable by observation"
+      ],
+      "observability": [
+        "Aggregate, non-attributable count of devices with duress configured, so the feature's uptake is knowable without any signal that a specific user has enabled it"
+      ],
+      "tests": [
+        "Credential separation test asserting duress never opens the full view",
+        "Absence test asserting no notification, indicator or reachable log entry is produced",
+        "Timing test asserting duress and ordinary unlock are not distinguishable by response time",
+        "Conceal-and-return test asserting full authentication is required",
+        "Coercive-control review recorded as evidence",
+        "Revocation-from-reduced-view journey test"
+      ],
+      "rollout_rollback": [
+        "Ships enabled but unconfigured, so no behaviour changes until a user sets it up; rollback removes the setup path while leaving already-configured devices working, because withdrawing the feature from someone relying on it is itself a harm"
+      ],
+      "non_goals": [
+        "Application lock, privacy mode and screenshot protection, which the trust controls ticket owns",
+        "The family sharing safe exit and access transparency, which the sharing tickets own",
+        "Any server-side duress signalling, which is deliberately excluded"
+      ],
+      "dependencies": ["T-TRU-01", "T-FAM-04"],
+      "parallel_boundary": "Primary repo android. Owns the duress credential, the reduced view and the conceal gesture. It composes with the existing lock and privacy controls and introduces no server contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "The coercive-control review is complete and its findings addressed rather than noted"
+      ]
+    },
+    {
+      "stable_id": "T-MIG-02",
+      "title": "Import balances and history from competitor exports",
+      "repo": "api",
+      "epic": "docs#12",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "P2-medium"],
+      "outcome": "A user arriving from an existing tool uploads its export and lands on a populated application, so the first screen shows their own history rather than an empty state.",
+      "context": "The product record twice identifies portability as the acquisition lever: Monarch is described as having won Mint's users largely on it, and Splitwise's monetisation changes are called our opening. Neither observation has an owning ticket. An empty application is the highest-attrition moment in any finance product, and a user who has already spent a year categorising transactions elsewhere is precisely the motivated user worth capturing. The statement import pipeline already exists, so this is a mapping exercise rather than new machinery.",
+      "scope": [
+        "Import mappings for the export formats of the tools our users most plausibly arrive from, covering both expense tracking and split group history",
+        "Reuse of the existing statement import pipeline including its dry-run preview, rather than a parallel import path",
+        "Mapping of foreign categories onto our category model, with unmapped categories surfaced for user decision rather than silently defaulted",
+        "Split group import covering members, historical shares and outstanding balances, so a user arrives with their group intact",
+        "A dry-run preview stating exactly what will be created before anything is written",
+        "Idempotent re-import, so a user who uploads the same file twice does not double their history"
+      ],
+      "acceptance_criteria": [
+        "A supported export produces a populated account, transaction and category set that reconciles exactly with the source file totals",
+        "The dry-run preview states counts and totals before any write, and abandoning it writes nothing",
+        "Re-importing an identical file creates no duplicate, verified by a named test",
+        "An unmapped category is presented for a decision and never silently assigned to a default",
+        "An imported split group preserves member shares and outstanding balances such that the settlement position matches the source",
+        "Imported records are marked with their source so a later reconciliation can distinguish them from captured transactions",
+        "A malformed or partially corrupt file fails with a named error and writes nothing, rather than importing a partial history"
+      ],
+      "contracts_schema": [
+        "Reuses the shared statement import contract components; adds source identifiers for the supported external formats"
+      ],
+      "security_privacy": [
+        "An uploaded export is processed and discarded rather than retained, and the retention period is stated",
+        "An export may contain another person's name and payment detail through split history, so imported third-party identifiers are subject to the same protection and erasure path as first-party data"
+      ],
+      "observability": [
+        "Import success rate and failure reason by source format, so an upstream format change is visible rather than experienced as unexplained user drop-off"
+      ],
+      "tests": [
+        "Reconciliation test per supported format asserting totals match the source",
+        "Idempotency test asserting duplicate upload creates nothing",
+        "Partial-corruption test asserting all-or-nothing behaviour",
+        "Split balance fidelity test asserting settlement position is preserved",
+        "Unmapped category test asserting a decision is requested rather than defaulted"
+      ],
+      "rollout_rollback": [
+        "Each source format ships behind its own flag so a format whose upstream shape has changed can be disabled without withdrawing import entirely"
+      ],
+      "non_goals": [
+        "Direct integration with any competitor's API or account",
+        "Automated migration without user-initiated file upload",
+        "The statement import pipeline itself, which api#10 owns",
+        "Importing another tool's projections, budgets or derived figures, which we recompute rather than trust"
+      ],
+      "dependencies": ["api#10", "T-CON-10", "T-SPL-01"],
+      "parallel_boundary": "Primary repo api. Owns the format mappings and their validation. The import pipeline and its preview are consumed from api#10 unchanged, and client upload surfaces are owned by the existing android and web import tickets.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-EXP-01",
+      "title": "Build server-side experiment assignment and exposure logging",
+      "repo": "api",
+      "epic": "docs#7",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Development",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "retention", "P2-medium"],
+      "outcome": "A retention or onboarding change can be shipped to a defined share of users with exposure recorded, so its effect is measured rather than asserted.",
+      "context": "Retention is the risk the plan says to watch above all others, and the retention programme carries a kill criterion. A kill criterion needs a comparison, and there is currently no way to run one: feature flags are scoped to release rollout, and the analytics tickets measure a single population over time. Without assignment and exposure logging, every retention change is evaluated against a moving baseline, which is how teams conclude that whatever they shipped worked.",
+      "scope": [
+        "Deterministic assignment from a stable user identifier, so a user's variant does not change between sessions or devices",
+        "Exposure logging recorded when a variant is actually shown, not when it is assigned, because assignment without exposure biases the comparison",
+        "Mutually exclusive experiment groups where two experiments would otherwise interact",
+        "A holdout population excluded from experiments, so cumulative effect is measurable",
+        "Server-side evaluation so a client cannot self-assign, with the resolved variant delivered to the client",
+        "A stated minimum runtime and a rule against stopping early on a favourable result"
+      ],
+      "acceptance_criteria": [
+        "Assignment is deterministic and stable across sessions and devices for the same user, verified by a named test",
+        "Exposure is recorded at the point of display and never at the point of assignment",
+        "A client cannot influence its own assignment, verified by an attempt that fails",
+        "Experiments declared mutually exclusive never co-assign the same user",
+        "The experiment mechanism cannot read or write entitlement state, verified by an absence test",
+        "No experiment can be configured to vary a money path, a security control or a disclosure, enforced rather than documented",
+        "Stopping an experiment before its stated minimum runtime requires an explicit recorded override"
+      ],
+      "contracts_schema": [
+        "Variant resolution published in the contract as an opaque assignment; the contract never exposes the experiment's hypothesis or its other variants to a client"
+      ],
+      "security_privacy": [
+        "Experiment assignment is never an entitlement and must not gate a paid feature, which keeps it out of the revenue path by construction",
+        "Exposure records carry a pseudonymous identifier and fall inside the same retention and erasure path as other behavioural data",
+        "An experiment must not vary a consent prompt, a permission rationale or a risk disclosure"
+      ],
+      "observability": [
+        "Assignment balance per experiment, so a skewed split is detected before conclusions are drawn from it",
+        "Count of assignments without a corresponding exposure, which indicates a broken instrumentation path"
+      ],
+      "tests": [
+        "Determinism test across sessions and devices",
+        "Exposure-at-display test asserting assignment alone records nothing",
+        "Client self-assignment attempt that must fail",
+        "Mutual exclusion test",
+        "Absence test asserting no experiment can vary a money path, a security control or a disclosure",
+        "Entitlement isolation test"
+      ],
+      "rollout_rollback": [
+        "Ships with a single no-op experiment to prove the pipeline end to end before any real variant runs; rollback disables assignment and every user receives the control variant"
+      ],
+      "non_goals": [
+        "Release feature flags, which are a separate mechanism and remain so",
+        "Entitlement resolution, which is deliberately kept separate",
+        "Statistical analysis tooling, which consumes the exposure log rather than being built here",
+        "Client-side experimentation of any kind"
+      ],
+      "dependencies": ["T-RET-01", "T-ADR-ENT-09"],
+      "parallel_boundary": "Primary repo api. Owns assignment, exposure logging and the exclusion rules. Clients render the resolved variant and record exposure; they never assign.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "A reviewer confirms the money-path and disclosure exclusions are enforced in code rather than documented"
+      ]
+    },
+    {
+      "stable_id": "T-SYN-04",
+      "title": "Bind the Android local schema to the published contract",
+      "repo": "android",
+      "epic": "docs#2",
+      "kind": "Task",
+      "phase": "P1 Debt Engine",
+      "sprint": "Sprint 11",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Architecture",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "money-path", "P1-high"],
+      "outcome": "The on-device schema is verified against the published contract in CI, so a server-side field change cannot silently diverge from what the offline database stores.",
+      "context": "The Android application keeps a local database and an offline mutation queue, and it is the surface where a user spends most of their time and where transactions are captured. The contract governs the wire, and generated clients keep the wire honest, but nothing connects the local schema to either. A field that changes shape on the server therefore produces a client that compiles, syncs, and quietly stores or displays the wrong thing. On a money path that is the most expensive class of defect there is, because it is invisible until a number is wrong.",
+      "scope": [
+        "A verification step asserting every local entity field that corresponds to a contract field agrees on type, nullability and money representation",
+        "Round-trip verification from generated data transfer object to local entity and back, asserting no loss and no coercion",
+        "Explicit registration of local-only fields, so a field absent from the contract is a declared decision rather than drift",
+        "Failure of the Android build when the pinned contract version introduces a field the local schema does not account for",
+        "A local migration path exercised against the previous release's database, so a contract change does not corrupt an existing installation",
+        "Assertion that no money field is stored locally as a floating point value, matching the server-side ban",
+        "Machine-readable Room-field to OpenAPI-component and contract-version map, including every local-only field and queue envelope"
+      ],
+      "acceptance_criteria": [
+        "A deliberate type change in the pinned contract fails the Android build with a message naming the field",
+        "Round-trip conversion preserves value and precision for every money field, verified by a property test",
+        "A local-only field must be registered, and an unregistered mismatch fails the check",
+        "Local migration from the previous release's database succeeds with the data intact, verified against a real prior database rather than a fresh one",
+        "No local money column is a floating point type, enforced by the same class of check that bans it on the server",
+        "The check runs on every pull request rather than only at release",
+        "Type, nullability, money, provenance or unregistered-local-field divergence fails with the exact field and contract version",
+        "A prior-release database migrates, drains its old queue through the compatibility window and round-trips without coercion or loss"
+      ],
+      "contracts_schema": [
+        "Consumes the pinned contract version and its generated artifacts; introduces no contract change and defines no field of its own"
+      ],
+      "security_privacy": [
+        "The verification runs against schema definitions and synthetic fixtures only and never reads a real user database",
+        "Fields inside the encryption scope must be verified as encrypted at rest locally as well, so the check covers protection and not only shape"
+      ],
+      "observability": [
+        "Recorded contract version that the shipped application was verified against, so a field discrepancy reported in production can be attributed to a specific version pairing"
+      ],
+      "tests": [
+        "Deliberate contract type change asserted to fail the build",
+        "Property-based round-trip test over money and date fields",
+        "Migration test from the previous release database with data assertions",
+        "Floating-point ban test over the local schema",
+        "Unregistered local-only field test",
+        "Prior-release database and queued-mutation compatibility test"
+      ],
+      "rollout_rollback": [
+        "Runs in warn-only mode for one release to surface existing divergence, then becomes a required check; rollback is returning to warn-only, which is recorded rather than silent"
+      ],
+      "non_goals": [
+        "The sync protocol and its conflict rules, which the sync tickets own",
+        "The contract itself, which the contracts repository owns",
+        "Server-side schema verification, which the migration runner owns"
+      ],
+      "dependencies": ["T-SCA-AND-01", "T-SYN-01", "T-CON-15", "contracts#1", "T-ADR-MONEY-01"],
+      "parallel_boundary": "Primary repo android. Owns the verification of its own local schema against the pinned contract. It proposes no contract change; a genuine divergence is resolved in the contracts repository and consumed here.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-MND-01",
+      "title": "Detect autopay mandates and warn before a debit is likely to bounce",
+      "repo": "api",
+      "epic": "docs#23",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "ingestion", "P1-high"],
+      "outcome": "A user sees every recurring automatic debit they have authorised in one list with its next date and amount, and is warned before a debit is likely to fail for want of balance.",
+      "context": "Competitive research identified this as the largest India-specific opening available to us. Automatic debit volumes across the major banks have grown roughly threefold year on year, and a large share of attempts are declined for insufficient balance. Each failure costs the user a penalty and a manual retry. No application presents a consolidated view because each payment application shows only the mandates registered through itself, and no third party can query the central registry, so message-derived detection is currently the only route to a complete list. That is precisely the capability the ingestion pipeline already gives us, and the warning itself is arithmetic over the safe-to-spend and cash-flow forecast that already exist. Standalone products exist for this single problem, which is evidence of the pain and of the fact that it can be built without payment licences, since nothing here moves money.",
+      "scope": [
+        "A mandate record derived from registration, modification, debit and cancellation events observed by the existing ingestion pipeline",
+        "Next expected debit date and amount per mandate, inferred from observed cadence rather than asserted",
+        "A consolidated upcoming-debit calendar joining detected mandates with the known bill calendar",
+        "A sufficiency projection comparing the projected account balance on each debit date against the expected amount, using the existing cash-flow forecast",
+        "A warning raised far enough ahead of the debit date for the user to act, with the shortfall stated",
+        "Detection of a failed debit from its message and correlation back to the mandate, so a bounce is recorded rather than merely missed",
+        "A deep link that hands the user off to the application that owns the mandate when they want to cancel it"
+      ],
+      "acceptance_criteria": [
+        "A mandate registration observed through ingestion creates exactly one mandate record, and a subsequent debit for the same mandate updates it rather than creating a second",
+        "The next expected date and amount are derived from observed history and are marked as an inference, never presented as a commitment by the institution",
+        "A projected shortfall raises a warning stating the amount short and the date, and no warning is raised when the projected balance is sufficient",
+        "A detected failed debit is correlated to its mandate and is visible in that mandate's history",
+        "Cancellation hands off by deep link to the owning application, and the product never claims to have cancelled anything itself",
+        "A mandate with insufficient observed history to infer a cadence is listed as detected with an unknown schedule rather than given a guessed date",
+        "No endpoint accepts or stores raw message content, consistent with the on-device parsing rule"
+      ],
+      "contracts_schema": [
+        "Mandate, expected-debit and shortfall-warning shapes published in the income and budgeting contract, using the published money representation"
+      ],
+      "security_privacy": [
+        "Mandates disclose subscriptions, lenders and counterparties, so they are a distinct shareable category and are never included in a spending grant by default",
+        "Only structured mandate events cross the device boundary; the messages they were derived from do not"
+      ],
+      "observability": [
+        "Warning precision measured as the share of warnings followed by an actual failed debit, so a feature that cries wolf is visible rather than merely disliked",
+        "Count of mandates detected per user, which indicates whether detection coverage is plausible or silently incomplete"
+      ],
+      "tests": [
+        "Idempotency test asserting repeated debits for one mandate do not create duplicates",
+        "Cadence inference test across monthly, quarterly and irregular observed histories",
+        "Shortfall test asserting a warning appears only when the projection is genuinely short",
+        "Failed-debit correlation test",
+        "Absence test asserting no raw message content is accepted or stored",
+        "Inference-labelling test asserting predicted dates are never presented as confirmed"
+      ],
+      "rollout_rollback": [
+        "Detection ships first in a read-only list with no warnings, so inference quality is measurable before the product acts on it; warnings are enabled behind a separate flag once precision is acceptable, and rollback disables warnings while leaving the list"
+      ],
+      "non_goals": [
+        "Cancelling, pausing or modifying a mandate, which requires the owning application and is deliberately excluded",
+        "Any movement of money, which keeps this outside payment regulation",
+        "Querying a central mandate registry, which no third party may do",
+        "The recurring-subscription detection that api#19 owns, which this consumes rather than replaces"
+      ],
+      "dependencies": ["api#19", "T-INC-02", "T-CON-08"],
+      "parallel_boundary": "Primary repo api. Owns the mandate model, the inference and the warning. Detection events arrive from the existing ingestion pipeline unchanged, the projection is consumed from the cash-flow forecast, and client surfaces are separate tickets.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Warning precision measured against real detections before warnings are enabled by default"
+      ]
+    },
+    {
+      "stable_id": "T-DEBT-02",
+      "title": "Model Indian loan mechanics: prepayment choice, charges and tax-adjusted rate",
+      "repo": "api",
+      "epic": "docs#5",
+      "kind": "Story",
+      "phase": "P1 Debt Engine",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": ["story", "money-path", "P1-high"],
+      "outcome": "A user with an Indian home, education or vehicle loan sees what a part-prepayment actually does, whether reducing the instalment or the tenure serves them better, what it costs in charges, and what their loan really costs after the deductions it attracts.",
+      "context": "Competitive research found no personal finance application models these mechanics; only standalone single-purpose calculators exist, on lender and broker sites. Reduce-instalment versus reduce-tenure is among the most-asked questions by Indian borrowers and the two choices differ materially in total interest. Prepayment and foreclosure charges vary by loan type and by whether the rate is floating, and they can invert the answer. Deductions against home-loan interest and principal, and against education-loan interest, mean the effective rate of a loan can differ sharply from its nominal rate, so aggressive prepayment can destroy a deduction worth more than the interest saved. This is exactly the arithmetic the deterministic engine should own: it is a calculation on the user's own figures, it produces a provable number, and it sits outside investment adviser scope because it concerns debt rather than securities.",
+      "scope": [
+        "Part-prepayment modelling with an explicit choice between reducing the instalment and reducing the tenure, showing total interest and payoff date for each",
+        "Prepayment, foreclosure and part-payment charges as loan terms, including the case where a charge applies to a fixed-rate loan and not to a floating-rate one",
+        "Floating-rate reset modelling, where a rate change adjusts the tenure rather than the instalment by default",
+        "Tax-adjusted effective rate, derived from the deductions the user tells us they claim, with the deduction caps applied",
+        "A break-even output stating when prepaying beats retaining the deduction, with the assumptions listed",
+        "Comparison against the existing payoff strategies so a prepayment decision is visible in the portfolio projection rather than only in isolation"
+      ],
+      "acceptance_criteria": [
+        "Reduce-instalment and reduce-tenure outcomes are both shown for the same prepayment, with total interest and payoff date for each, and neither is presented as recommended",
+        "Applicable charges are included in every total, and a scenario whose charges exceed its interest saved is stated as such rather than shown as a saving",
+        "A floating-rate reset adjusts tenure by default and the instalment only where the loan terms say so",
+        "The tax-adjusted effective rate applies the stated caps and never assumes a deduction the user has not told us they claim",
+        "Every output lists the assumptions it rests on, and changing an assumption changes the number visibly rather than silently",
+        "No output names a lender, a product or a refinancing provider, and the advice-boundary disclaimer is attached",
+        "Every figure is reproducible from the recorded inputs, verified by the independent model in the money-path harness"
+      ],
+      "contracts_schema": [
+        "Prepayment scenario, charge schedule and tax-adjustment shapes added to the debt contract, using the published money representation and carrying their assumptions"
+      ],
+      "security_privacy": [
+        "Declared deductions reveal income and household composition, so they fall inside the encryption scope and are a distinct shareable category rather than part of a debt grant"
+      ],
+      "observability": [
+        "A computation identifier on every scenario response so a disputed number can be traced to its exact inputs and engine version"
+      ],
+      "tests": [
+        "Independent-model verification of prepayment outcomes under both reduction choices",
+        "Property test asserting charges are never omitted from a total",
+        "Boundary tests at each deduction cap",
+        "Negative-saving test asserting a charge-dominated scenario is reported as a loss",
+        "Floating-rate reset test asserting tenure adjusts by default",
+        "Advice-boundary test asserting no lender, product or recommendation appears",
+        "Reproducibility test asserting identical inputs produce identical outputs"
+      ],
+      "rollout_rollback": [
+        "Ships behind a flag with the tax adjustment separately flagged, because deduction rules change with the finance act and may need withdrawing independently of the prepayment modelling"
+      ],
+      "non_goals": [
+        "Refinance and consolidation scenarios, which the existing refinance ticket owns",
+        "Filing, computing or advising on tax, which is out of scope entirely; this uses deductions only to state an effective rate",
+        "Naming or recommending any lender or loan product",
+        "Automatically detecting the user's deductions, which they declare"
+      ],
+      "dependencies": ["api#12", "api#15", "T-CON-01", "T-ADR-LEDGER-03"],
+      "parallel_boundary": "Primary repo api. Owns the loan mechanics inside the debt engine. Contract shapes are published by the debt contract ticket and client surfaces are owned by the existing debt experience tickets.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "A reviewer confirms every output stays behind the advice boundary and that the deduction caps match the rules in force"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-07",
+      "title": "Build admin plan, feature and quota management with change recording",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P0 Critical",
+      "perspective": "Product",
+      "risk": "R12 Billing economics",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "billing", "P0-critical"],
+      "outcome": "As an operator, I create and edit plans, their prices, their feature entitlements and their AI quotas, and every change is confirmed and recorded with its before and after values.",
+      "context": "The brief asks for an administrator who can manage features and AI quota per plan on daily, monthly and total windows. This is the screen that delivers it. It is also the most revenue-sensitive surface in the console, because a mistyped quota changes gross margin directly and a mistyped price changes what every new subscriber pays. Confirmation and a complete change record are therefore controls rather than niceties.",
+      "scope": [
+        "Plan creation, editing and retirement, with the price per currency and per billing period",
+        "Feature entitlement assignment per plan, driven by the published entitlement vocabulary rather than free text",
+        "AI quota configuration per plan across the daily, monthly and total windows the entitlement record defines",
+        "A confirmation step naming exactly what changes, reusing the shell's confirmation primitive",
+        "Presentation of who is affected by a change and from when, distinguishing existing subscribers from new ones",
+        "Retirement of a plan without breaking subscribers already on it"
+      ],
+      "acceptance_criteria": [
+        "Every change is recorded with old and new values before it is applied, and the record is visible in the audit surface",
+        "A quota or price change states whether it affects existing subscribers, and the stated behaviour is what actually happens, verified end to end",
+        "An entitlement key not present in the published vocabulary cannot be assigned, so a typo cannot silently create a plan that grants nothing",
+        "Retiring a plan leaves existing subscribers unaffected and removes it from new purchase surfaces",
+        "A quota set to zero is distinguishable from a quota that is unset, and both behave as the entitlement record specifies",
+        "No screen here exposes an individual user's usage or financial records"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative contract for plans, entitlements and quotas; the entitlement vocabulary is consumed, never extended here"
+      ],
+      "security_privacy": [
+        "Price and quota changes are high-impact configuration and require the same recording and confirmation as a destructive action",
+        "The screen shows plan-level configuration only and has no route to per-user usage"
+      ],
+      "observability": [
+        "Count of plan and quota changes by operator and by plan, so an unusual pattern of configuration change is visible"
+      ],
+      "tests": [
+        "Recording-before-apply test",
+        "Existing-subscriber impact test for both price and quota changes",
+        "Entitlement vocabulary rejection test",
+        "Plan retirement test asserting existing subscribers are unaffected",
+        "Zero-versus-unset quota behaviour test"
+      ],
+      "rollout_rollback": [
+        "Mounts into the shell behind its own flag; rollback unmounts the screen and leaves plan configuration editable only through the administrative API, which retains its own controls"
+      ],
+      "non_goals": [
+        "Entitlement resolution and quota enforcement, which the api billing tickets own",
+        "Provider configuration and spend caps, which T-ADM-08 owns",
+        "The console shell and its primitives, which T-ADM-04 owns"
+      ],
+      "dependencies": ["T-ADM-04", "T-BIL-01", "T-ADR-ENT-09"],
+      "parallel_boundary": "Primary repo admin. Owns the plan, feature and quota screens. It mounts into the shell, reuses its confirmation and redaction primitives, and calls only the published administrative contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-08",
+      "title": "Build admin AI provider configuration and enforced spend caps",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P0 Critical",
+      "perspective": "Ops",
+      "risk": "R7 AI cost",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "P0-critical"],
+      "outcome": "As an operator, I configure AI providers, models and routing, and set global and per-user spend caps that actually stop traffic when exceeded rather than only raising an alert.",
+      "context": "AI inference is the only materially variable cost in the product, and the margin model depends on it being bounded. A cap that alerts but does not stop is not a cap; it is a notification that money is being lost. This screen is where the spend control becomes operable, and the acceptance criterion that matters is that exceeding a cap halts traffic, demonstrated by exceeding it rather than by reading configuration.",
+      "scope": [
+        "Provider and model registration with the approved region, retention and cost policy attached",
+        "Routing and failover order configuration within the bounds the AI egress record permits",
+        "A global spend cap and a per-user spend cap, each with the window they apply over",
+        "Behaviour on cap breach, stated per cap: halt, degrade to a cheaper model, or refuse with a named error",
+        "Current spend against each cap, refreshed frequently enough to be actionable",
+        "A kill switch that stops all provider traffic immediately, independent of the caps"
+      ],
+      "acceptance_criteria": [
+        "Exceeding a global cap halts traffic in a test environment, demonstrated by exceeding it rather than by inspecting configuration",
+        "Exceeding a per-user cap affects only that user and never degrades service for others",
+        "A provider or model outside the approved region and retention policy cannot be registered",
+        "The kill switch stops traffic within its published time and is reversible without redeployment",
+        "Cap breach behaviour is explicit per cap, and a cap with no stated behaviour cannot be saved",
+        "Displayed spend reconciles with the metering record, and a discrepancy beyond a stated tolerance is shown rather than hidden"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative contract for provider configuration and spend; never holds or displays a provider key"
+      ],
+      "security_privacy": [
+        "The console never displays, exports or accepts provider key material; keys are referenced by identifier only",
+        "A user's own key under the bring-your-own-key mode is never visible here, not even in masked form"
+      ],
+      "observability": [
+        "Time from cap breach to traffic halt, measured rather than assumed, because the gap between them is the money at risk"
+      ],
+      "tests": [
+        "Cap breach halt test performed by exceeding the cap",
+        "Per-user cap isolation test",
+        "Policy rejection test for a non-compliant provider or region",
+        "Kill switch activation and reversal test",
+        "Spend reconciliation test against the metering record",
+        "Absence test asserting no provider or user key material is reachable from the console"
+      ],
+      "rollout_rollback": [
+        "Mounts into the shell behind its own flag, with caps configured in a test environment and breached there before the screen is enabled in production; rollback unmounts the screen while leaving the caps themselves in force"
+      ],
+      "non_goals": [
+        "The AI gateway, routing implementation and metering, which the ai-service tickets own",
+        "Plan-level AI quotas, which T-ADM-07 owns",
+        "The console shell and its primitives, which T-ADM-04 owns"
+      ],
+      "dependencies": ["T-ADM-04", "T-AI-01", "T-ADR-AIEGRESS-08"],
+      "parallel_boundary": "Primary repo admin. Owns the provider and spend-cap screens. Enforcement lives in the ai-service and the administrative API; this surface configures and observes it and implements no enforcement of its own.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "A reviewer confirms the cap halt was demonstrated by breach rather than by configuration review"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-09",
+      "title": "Build admin support tooling for lookup, status, suspension and refund",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P1 High",
+      "perspective": "Ops",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "security", "P1-high"],
+      "outcome": "As an operator handling a support request, I can find the account, see its subscription and system status, suspend or restore it and issue a refund, without any route that lets me read the person's transactions.",
+      "context": "This is the screen where the administrative posture is most likely to erode, because every support request creates pressure to see just a little more. The design answer is that the extra visibility does not exist by default and is reachable only through the ticket-validated unmasking path, which is a separate control with its own approval and expiry. Everything routine must be doable without it.",
+      "scope": [
+        "Account lookup by the identifiers support actually receives, returning status rather than financial content",
+        "Subscription, entitlement and quota status for the account, sufficient to resolve the common billing question without unmasking anything",
+        "Suspension and restoration, both reversible and recorded",
+        "Refund issuance that is idempotent and reconciles against the provider record",
+        "The entry point into the ticket-validated unmasking flow, which is granted elsewhere and never self-approved here",
+        "Visibility of what the user themselves can see, so the operator can answer questions without seeing values"
+      ],
+      "acceptance_criteria": [
+        "Lookup returns account and subscription status and never a transaction, balance or amount",
+        "Refund is idempotent: repeating it produces one refund, verified by a named test",
+        "Refund reconciles with the provider record and a mismatch is surfaced rather than silently accepted",
+        "Suspension is reversible, recorded and takes effect within the published time",
+        "The unmasking entry point cannot be self-approved and requires a valid ticket reference, verified by an attempt that fails",
+        "The common billing questions are resolvable end to end without invoking unmasking at all, demonstrated by a scripted journey"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative contract, whose default representation is redacted; unmasking is a separate, granted call"
+      ],
+      "security_privacy": [
+        "Every lookup is recorded against the operator and the stated ticket, whether or not anything is unmasked",
+        "Redaction is the default from the contract inward, so a support screen cannot accidentally render an unmasked value"
+      ],
+      "observability": [
+        "Ratio of support actions that required unmasking, which should stay low; a rise indicates either an abuse pattern or a genuinely missing non-sensitive capability"
+      ],
+      "tests": [
+        "Absence test asserting no transaction or balance is returned by lookup",
+        "Refund idempotency test",
+        "Refund reconciliation mismatch test",
+        "Suspension reversal and timing test",
+        "Self-approval attempt that must fail",
+        "Scripted journey resolving the common billing questions without unmasking"
+      ],
+      "rollout_rollback": [
+        "Mounts into the shell behind its own flag and is released to the named operator group first; rollback unmounts the screen without affecting the administrative API or its records"
+      ],
+      "non_goals": [
+        "Redaction and unmasking mechanics, which T-ADM-03 owns",
+        "Just-in-time elevation and four-eyes approval, which T-ADM-05 owns",
+        "User-facing support intake, which T-SUP-01 owns",
+        "The console shell and its primitives, which T-ADM-04 owns"
+      ],
+      "dependencies": ["T-ADM-04", "T-SUP-01", "T-BIL-10"],
+      "parallel_boundary": "Primary repo admin. Owns the support screens. Redaction, unmasking and elevation are enforced by the api tickets and are consumed here rather than reimplemented.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-10",
+      "title": "Build admin aggregate analytics with enforced cohort minimums",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "security", "P1-high"],
+      "outcome": "As an operator, I read aggregate product and revenue analytics, and a cohort small enough to identify an individual does not render at all.",
+      "context": "Aggregate analytics is the legitimate reason an operator needs to see user data in any form, and it is also the easiest place to reconstruct an individual by filtering. A minimum cohort size is the control, and it has to be enforced where the numbers are produced rather than in the chart, because a determined operator will otherwise narrow the filter until one person remains.",
+      "scope": [
+        "Activation, retention, conversion and revenue aggregates over defined cohorts",
+        "A minimum cohort size enforced server-side, below which no figure is returned",
+        "Suppression that resists differencing, so a cohort cannot be reconstructed by subtracting two permitted queries",
+        "Export of aggregates with the same minimum applied to the exported figures",
+        "A clear statement in the surface when a result is suppressed and why, rather than an empty chart",
+        "No filter combination that resolves to an identifiable individual"
+      ],
+      "acceptance_criteria": [
+        "A cohort below the minimum returns no figure and says it was suppressed rather than rendering zero or blank",
+        "Narrowing filters until a cohort is small triggers suppression rather than a small number",
+        "Two permitted queries cannot be differenced to reveal a suppressed cohort, verified by a named test",
+        "Export applies the same minimum as the screen, verified by an export of a suppressed cohort",
+        "The minimum is enforced in the API and not only in the console, verified by calling the API directly",
+        "No analytics route accepts a user identifier as a filter"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative analytics contract, in which the cohort minimum is a property of the response rather than a client-side rule"
+      ],
+      "security_privacy": [
+        "Suppression is enforced server-side; the console cannot weaken it and a direct API call is subject to the same rule",
+        "Analytics never accepts a user identifier, so per-user analysis is structurally impossible rather than merely discouraged"
+      ],
+      "observability": [
+        "Count of suppressed queries by operator, since a pattern of repeatedly probing near the minimum is an abuse signal rather than a usage statistic"
+      ],
+      "tests": [
+        "Minimum cohort suppression test",
+        "Progressive filter narrowing test",
+        "Differencing attack test",
+        "Export suppression test",
+        "Direct API call test bypassing the console",
+        "Absence test asserting no user identifier filter is accepted"
+      ],
+      "rollout_rollback": [
+        "Mounts into the shell behind its own flag; the differencing test must be green before the screen is enabled for any operator, because the failure mode is silent re-identification"
+      ],
+      "non_goals": [
+        "Per-user financial browsing of any kind, which the administrative posture forbids entirely",
+        "The activation and retention instrumentation itself, which the retention tickets own",
+        "The console shell and its primitives, which T-ADM-04 owns"
+      ],
+      "dependencies": ["T-ADM-04", "T-ADM-01"],
+      "parallel_boundary": "Primary repo admin. Owns the analytics screens. The cohort minimum and its suppression are enforced by the administrative API, and this surface renders what the API permits rather than filtering after the fact.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-11",
+      "title": "Build the admin audit review and access monitoring surface",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P1 High",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["story", "security", "P1-high"],
+      "outcome": "As a reviewer, I can read the tamper-evident administrative audit record, verify its chain, and see who accessed what, so insider activity is reviewable rather than merely recorded.",
+      "context": "The audit chain, the redaction and unmasking controls and the elevation flow are all implemented on the API side, and each writes a record. None of that is a control until somebody reads it. This surface is what turns the audit stream from a compliance artefact into insider-risk monitoring, and it is also where the tamper-evidence claim gets exercised: a chain nobody verifies is a chain nobody would notice being broken.",
+      "scope": [
+        "Chronological review of administrative actions with the operator, the justification and the ticket reference",
+        "Chain verification exposed as an action, so tamper evidence is demonstrated rather than assumed",
+        "Access review over unmasking events, showing what was revealed, to whom, under which ticket and for how long",
+        "Filters that support review without permitting bulk extraction",
+        "Alert surfacing for the monitored patterns the api tickets define, such as repeated unmasking or self-approval attempts",
+        "Recertification support listing operators, their roles and the date each was last confirmed"
+      ],
+      "acceptance_criteria": [
+        "Chain verification detects a deliberately altered record in a test environment and reports which record broke it",
+        "An audit record cannot be edited or deleted from this surface, and no route exists that would permit it",
+        "Every unmasking event is visible with its ticket reference, its scope and its expiry",
+        "Bulk extraction is prevented: an export beyond the stated size requires the four-eyes path rather than being available here",
+        "Reading the audit record is itself recorded, so review activity is not an unmonitored blind spot",
+        "An operator cannot see or verify only their own actions filtered out, verified by an attempt that fails"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative audit contract; the chain verification result is returned by the API and never computed in the console"
+      ],
+      "security_privacy": [
+        "The surface is read-only over the audit stream by construction, with no mutation route present",
+        "Audit records may reference sensitive material by identifier but never contain the values themselves"
+      ],
+      "observability": [
+        "Chain verification runs and their outcomes, plus the age of the oldest unreviewed alert, so an unwatched queue is visible"
+      ],
+      "tests": [
+        "Tamper detection test with a deliberately altered record",
+        "Absence test proving no mutation route exists over audit records",
+        "Unmasking visibility test covering scope and expiry",
+        "Bulk export threshold test",
+        "Self-audit test asserting an operator cannot exclude their own actions",
+        "Read-is-recorded test"
+      ],
+      "rollout_rollback": [
+        "Mounts into the shell behind its own flag and is released to the reviewer group before the operator group; rollback unmounts the surface while the audit stream continues to be written"
+      ],
+      "non_goals": [
+        "The audit chain implementation and the write-once stream, which T-ADM-02 owns",
+        "Elevation and four-eyes approval mechanics, which T-ADM-05 owns",
+        "Operator lifecycle and recertification enforcement, which T-ADM-06 owns",
+        "The console shell and its primitives, which T-ADM-04 owns"
+      ],
+      "dependencies": ["T-ADM-04", "T-ADM-02", "T-ADM-05", "T-ADM-06"],
+      "parallel_boundary": "Primary repo admin. Owns the review and monitoring screens. The chain, its verification and the alert definitions live in the api tickets and are consumed here; this surface adds no enforcement and no mutation.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-12",
+      "title": "Build the operator red-team suite as a blocking console release gate",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": ["task", "security", "quality", "P0-critical"],
+      "gate": "release",
+      "outcome": "The malicious-operator scenarios are scripted end to end and run as a blocking gate, so the claim that the console cannot be abused is demonstrated on every release rather than asserted once at design time.",
+      "context": "The administrative posture is the product's answer to its largest insider risk, and every capability screen is built against it. A posture that is only reviewed by reading code decays the first time a screen is added under time pressure. Scripting the attacks and running them as a gate is what keeps the claim true after the people who designed it have moved on. This was originally bundled into the console ticket, which meant the proof shipped in the same change as the thing it was meant to check.",
+      "scope": [
+        "Scripted attempts to unmask without a valid ticket reference",
+        "Scripted attempts to self-approve an elevation or a bulk export",
+        "Scripted bulk scraping across every console route, including direct API calls that bypass the console",
+        "Scripted attempts to alter or delete an audit record",
+        "Scripted attempts to extract key material through any console surface",
+        "Scripted attempts to reconstruct an individual from aggregate analytics by narrowing and by differencing",
+        "A route-coverage check asserting every console route is exercised by at least one scenario, so a new screen cannot be added outside the suite"
+      ],
+      "acceptance_criteria": [
+        "Every scripted attempt fails and raises the alert the control specifies; a failure that is silent is treated as a suite failure",
+        "The suite is a required check and a red run blocks the console release",
+        "Route coverage is enforced: adding a console route without a covering scenario fails the check",
+        "The suite runs against the deployed console and the administrative API together, not against mocks",
+        "Each scenario names the control it exercises, so a failure identifies which control regressed rather than only that something broke",
+        "A deliberately weakened control in a test environment causes the suite to fail, proving the suite detects regression rather than always passing"
+      ],
+      "contracts_schema": [
+        "Exercises the published administrative contract as an attacker would, including calls the console itself never makes"
+      ],
+      "security_privacy": [
+        "The suite runs against synthetic operators and synthetic user data in an isolated environment and never against production records",
+        "Scenario definitions describe attacks and must not embed real credentials, ticket references or identifiers"
+      ],
+      "observability": [
+        "Suite result per run with per-scenario outcome, and the count of console routes not covered by any scenario"
+      ],
+      "tests": [
+        "The suite is itself the test; its meta-test is the deliberately weakened control that must cause a failure",
+        "Route coverage check",
+        "Alert assertion per scenario confirming the control alerted and did not merely refuse"
+      ],
+      "rollout_rollback": [
+        "Runs in report-only mode until every capability screen has mounted, then becomes blocking before any operator outside the named group gains access; rollback to report-only is recorded and time-boxed rather than silent"
+      ],
+      "non_goals": [
+        "Implementing the controls themselves, which the api tickets own",
+        "The operator journey, accessibility and performance gate, which T-QA-13 owns",
+        "The independent penetration test, which T-QA-10 owns"
+      ],
+      "dependencies": ["T-ADM-04", "T-ADM-07", "T-ADM-08", "T-ADM-09", "T-ADM-10", "T-ADM-11"],
+      "parallel_boundary": "Primary repo admin. Owns the attack scenarios and the coverage check. It changes no control and no screen; a scenario that fails is fixed in the ticket that owns the control.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "The suite has been proven to detect a deliberately weakened control before it is made blocking"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e07-retention",
+  "epic_refs": [
+    "docs#7"
+  ],
+  "items": [
+    {
+      "stable_id": "T-RET-01",
+      "title": "Build the retention programme: milestones, digests, dormancy and its kill criterion",
+      "repo": "android",
+      "epic": "docs#7",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "android",
+      "priority": "P1 High",
+      "perspective": "Product",
+      "risk": "R2 User retention",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "P1-high"
+      ],
+      "outcome": "Debt milestones, a weekly or monthly progress digest and a dormancy re-engagement path are delivered under consent-aware frequency caps, and the whole programme carries a written threshold at which it is switched off rather than tuned forever.",
+      "context": "Retention is the risk most likely to kill this product and the one with the least owned work. The debt-first wedge is the answer on paper; nothing implements the loop that makes a user come back. The danger in building it is the opposite failure: a nagging app that a user mutes and then uninstalls. That is why this ticket carries a kill criterion rather than only a set of messages - a retention programme with no threshold for stopping becomes permanent regardless of whether it works.",
+      "scope": [
+        "Debt milestone detection and celebration: first payment, a percentage retired, a debt closed, and the payoff date moving earlier",
+        "Weekly or monthly progress digest with the user's chosen cadence, including an off option",
+        "Frequency caps across all retention classes, evaluated together rather than per message",
+        "Consent awareness: a class the user has not enabled is never sent, and the digest cadence is a user choice rather than a default the user must discover",
+        "Dormancy detection and a bounded re-engagement sequence with a hard stop",
+        "In-app equivalents so the loop still works for a user who denied notification permission",
+        "A written kill and reconsider threshold: the metric, the measurement window, the value at which the programme is switched off, and who decides",
+        "Holdout group so the effect of the programme is measured rather than assumed"
+      ],
+      "acceptance_criteria": [
+        "Every retention message class is off unless the user has enabled it or the class is one the user chose a cadence for; no class defaults to on without a recorded choice",
+        "The combined frequency cap is enforced across classes, proven by a test that generates several eligible messages in one window and asserts only the capped number is sent",
+        "A dormancy sequence stops after the published number of attempts and never restarts without a new qualifying event, proven by a test",
+        "A user who denied notification permission still receives milestone and digest content in-app, so the loop is not conditional on a permission",
+        "The kill criterion is recorded as a numeric threshold on a named metric over a named window, with the owner who decides and the action taken if it is breached",
+        "A holdout group exists and the reported effect of the programme is the difference against it, not the absolute behaviour of messaged users",
+        "Unsubscribing from a retention class takes effect immediately and is never overridden by another class's schedule",
+        "No retention message contains a monetary amount, a merchant name or another user's identity, consistent with the T-NOT-01 payload allowlist"
+      ],
+      "contracts_schema": [
+        "Consumes the messaging preference and delivery contract from T-CON-11; retention defines message classes within that vocabulary and adds no delivery mechanism of its own"
+      ],
+      "security_privacy": [
+        "Retention content is derived on the device or from already-authorised server data; no new data collection is introduced to support it",
+        "The holdout assignment is stable and recorded, and is never used for any purpose other than measuring this programme"
+      ],
+      "observability": [
+        "Per-class send, open, mute and unsubscribe rates, plus the retention metric named in the kill criterion, are all recorded against the holdout",
+        "A rising mute or uninstall rate following a retention send raises an alert rather than waiting for the next review"
+      ],
+      "tests": [
+        "Combined frequency cap test across classes",
+        "Dormancy sequence hard-stop test",
+        "Permission-denied in-app equivalent test",
+        "Immediate unsubscribe test",
+        "Payload allowlist conformance test for every retention template",
+        "Holdout assignment stability test"
+      ],
+      "rollout_rollback": [
+        "One class at a time, starting with the milestone that follows a user action the user just took, measured against the holdout before the next class is enabled",
+        "Rollback is disabling a class, which takes effect at send time; the kill criterion makes switching the whole programme off a planned outcome rather than an admission of failure"
+      ],
+      "non_goals": [
+        "Delivery machinery, which T-NOT-01 and T-NOT-02 own",
+        "Gamification: streaks, points, badges and leaderboards are deliberately not part of this programme",
+        "Any message that is not triggered by the user's own financial activity or their chosen cadence"
+      ],
+      "dependencies": [
+        "T-NOT-01",
+        "T-NOT-02",
+        "T-CON-11",
+        "android#6",
+        "T-AND-02"
+      ],
+      "parallel_boundary": "Primary repo android. Owns milestone detection, digest composition, cadence and the in-app equivalents. Delivery, preferences and suppression belong to T-NOT-01; the funnel instrumentation it measures against belongs to android#6.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

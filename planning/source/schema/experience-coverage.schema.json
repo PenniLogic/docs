@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenniLogic experience coverage registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "schema_version", "description", "required_states", "component_states", "frontend_tickets", "personas", "journeys", "user_stories", "flows", "screens", "components", "diagrams"],
+  "properties": {
+    "kind": { "const": "experience_coverage" },
+    "schema_version": { "const": 1 },
+    "description": { "type": "string", "minLength": 40 },
+    "required_states": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    },
+    "component_states": {
+      "type": "array",
+      "minItems": 12,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    },
+    "frontend_tickets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "enums.schema.json#/definitions/reference" }
+    },
+    "personas": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/persona" } },
+    "journeys": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/journey" } },
+    "user_stories": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/user_story" } },
+    "flows": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/flow" } },
+    "screens": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/screen" } },
+    "components": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/component" } },
+    "diagrams": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/diagram" } }
+  },
+  "definitions": {
+    "id_list": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9-]+$" }
+    },
+    "platform": { "enum": ["shared", "android", "web", "admin"] },
+    "persona": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "jobs", "platforms", "owner_ticket"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^P[0-9]{2}$" },
+        "name": { "type": "string", "minLength": 5 },
+        "jobs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 10 } },
+        "platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/platform" } },
+        "owner_ticket": { "$ref": "enums.schema.json#/definitions/reference" }
+      }
+    },
+    "journey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "persona_ids", "flow_ids", "critical", "owner_ticket"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^J[0-9]{2}$" },
+        "name": { "type": "string", "minLength": 5 },
+        "persona_ids": { "$ref": "#/definitions/id_list" },
+        "flow_ids": { "$ref": "#/definitions/id_list" },
+        "critical": { "type": "boolean" },
+        "owner_ticket": { "$ref": "enums.schema.json#/definitions/reference" }
+      }
+    },
+    "user_story": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "platform", "as_a", "i_want", "so_that", "persona_ids", "journey_ids", "flow_id", "owner_ticket"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^US-(AND|WEB|ADM)-[0-9]{2}$" },
+        "platform": { "enum": ["android", "web", "admin"] },
+        "as_a": { "type": "string", "minLength": 10 },
+        "i_want": { "type": "string", "minLength": 10 },
+        "so_that": { "type": "string", "minLength": 10 },
+        "persona_ids": { "$ref": "#/definitions/id_list" },
+        "journey_ids": { "$ref": "#/definitions/id_list" },
+        "flow_id": { "type": "string", "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}$" },
+        "owner_ticket": { "$ref": "enums.schema.json#/definitions/reference" }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "platform", "name", "journey_ids", "screen_ids", "design_ticket", "implementation_tickets", "qa_ticket", "critical"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}$" },
+        "platform": { "enum": ["android", "web", "admin"] },
+        "name": { "type": "string", "minLength": 5 },
+        "journey_ids": { "$ref": "#/definitions/id_list" },
+        "screen_ids": { "$ref": "#/definitions/id_list" },
+        "design_ticket": { "$ref": "enums.schema.json#/definitions/reference" },
+        "implementation_tickets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "enums.schema.json#/definitions/reference" } },
+        "qa_ticket": { "$ref": "enums.schema.json#/definitions/reference" },
+        "critical": { "type": "boolean" }
+      }
+    },
+    "screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "platform", "name", "route", "flow_ids", "component_ids", "states", "design_ticket", "implementation_tickets", "qa_ticket"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^S-(AND|WEB|ADM)-[0-9]{3}$" },
+        "platform": { "enum": ["android", "web", "admin"] },
+        "name": { "type": "string", "minLength": 3 },
+        "route": { "type": "string", "minLength": 1 },
+        "surface_type": { "enum": ["page", "sheet", "dialog", "overlay", "system-handoff", "widget", "notification-landing"] },
+        "flow_ids": { "$ref": "#/definitions/id_list" },
+        "component_ids": { "$ref": "#/definitions/id_list" },
+        "states": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+$" } },
+        "design_ticket": { "$ref": "enums.schema.json#/definitions/reference" },
+        "implementation_tickets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "enums.schema.json#/definitions/reference" } },
+        "qa_ticket": { "$ref": "enums.schema.json#/definitions/reference" }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "platforms", "required_states", "design_ticket"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^C-[A-Z0-9-]+$" },
+        "name": { "type": "string", "minLength": 3 },
+        "platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/platform" } },
+        "required_states": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+$" } },
+        "foundational": { "type": "boolean" },
+        "design_ticket": { "$ref": "enums.schema.json#/definitions/reference" }
+      }
+    },
+    "diagram": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "name", "artifact_path", "owner_ticket"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^D[0-9]{2}$" },
+        "type": { "enum": ["context", "persona-map", "journey-map", "service-blueprint", "sitemap", "flow", "wireflow-index", "state", "component-map", "token-flow", "content-flow", "parity-matrix", "coverage-matrix", "handoff", "approval"] },
+        "name": { "type": "string", "minLength": 5 },
+        "artifact_path": { "type": "string", "minLength": 5 },
+        "owner_ticket": { "$ref": "enums.schema.json#/definitions/reference" }
+      }
+    }
+  }
+}

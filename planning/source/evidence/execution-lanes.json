@@ -1,0 +1,1691 @@
+{
+  "kind": "execution_lanes",
+  "schema_version": 1,
+  "description": "Feasible capacity-pool lane packing for every numbered PenniLogic implementation, design and QA ticket. Point offsets are planning-order units inside a sprint. Sprint 01 lanes are executable only after the unscheduled T-GOV-03 and infra#4 governance adoption closes.",
+  "points_per_lane": 20,
+  "items": [
+    {
+      "ref": "T-SCA-ADM-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 3,
+      "estimate": 3
+    },
+    {
+      "ref": "T-SCA-WEB-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 3,
+      "end": 8,
+      "estimate": 5
+    },
+    {
+      "ref": "T-GOV-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-GOV-02",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SCA-CON-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 10,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SCA-AND-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 10,
+      "end": 18,
+      "estimate": 8
+    },
+    {
+      "ref": "T-SCA-AIS-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 3,
+      "estimate": 3
+    },
+    {
+      "ref": "infra#2",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 3,
+      "end": 8,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SCA-API-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXR-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UX-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 5,
+      "end": 8,
+      "estimate": 3
+    },
+    {
+      "ref": "T-RES-01",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXR-02",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 5,
+      "end": 10,
+      "estimate": 5
+    },
+    {
+      "ref": "T-QA-07",
+      "sprint": "Sprint 01",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 3,
+      "estimate": 3
+    },
+    {
+      "ref": "docs#21",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-ADR-ADMIN-06",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 5,
+      "end": 10,
+      "estimate": 5
+    },
+    {
+      "ref": "infra#1",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 10,
+      "end": 18,
+      "estimate": 8
+    },
+    {
+      "ref": "T-SCA-INF-01",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-ADR-MONEY-01",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 8,
+      "end": 13,
+      "estimate": 5
+    },
+    {
+      "ref": "T-ADR-AIEGRESS-08",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-ADR-INDEX-10",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 3,
+      "estimate": 3
+    },
+    {
+      "ref": "T-ADR-AUTH-05",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 3,
+      "end": 11,
+      "estimate": 8
+    },
+    {
+      "ref": "T-ADR-CRYPTO-04",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 11,
+      "end": 19,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXR-03",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXR-08",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 8,
+      "end": 13,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXR-07",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CNT-01",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-QA-14",
+      "sprint": "Sprint 02",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 3,
+      "estimate": 3
+    },
+    {
+      "ref": "T-ADR-LEDGER-03",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-ADR-CAT-02",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 13,
+      "estimate": 5
+    },
+    {
+      "ref": "api#1",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "infra#3",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "contracts#1",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-MIG-01",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-GOV-04",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DSY-01",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-DSY-04",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CNT-02",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-DSY-02",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-DSY-06",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXR-04",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXR-05",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DSY-07",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DSY-05",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DSY-03",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Product Design and UX",
+      "lane": 6,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-QA-04",
+      "sprint": "Sprint 03",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CON-12",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-CON-07",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 5,
+      "end": 8,
+      "estimate": 3
+    },
+    {
+      "ref": "T-CON-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "api#2",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "api#3",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-PLT-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-UXR-06",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXW-09",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 8,
+      "end": 13,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXW-05",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXM-03",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 8,
+      "end": 13,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXA-12",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXA-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-05",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-02",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-HND-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-03",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXM-02",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Product Design and UX",
+      "lane": 6,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-QA-11",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-02",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Quality Assurance",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-01",
+      "sprint": "Sprint 04",
+      "capacity_pool": "Quality Assurance",
+      "lane": 3,
+      "start": 5,
+      "end": 10,
+      "estimate": 5
+    },
+    {
+      "ref": "T-CON-10",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 3,
+      "estimate": 3
+    },
+    {
+      "ref": "T-SEC-03",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 3,
+      "end": 11,
+      "estimate": 8
+    },
+    {
+      "ref": "api#4",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 11,
+      "end": 19,
+      "estimate": 8
+    },
+    {
+      "ref": "T-PLT-02",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-AND-07",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CON-15",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SEC-01",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-UXW-03",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-11",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 8,
+      "end": 13,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-10",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-09",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-05",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 5,
+      "end": 10,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-07",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 10,
+      "end": 18,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-15",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-04",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-04",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "T-UXM-08",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-13",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-06",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-08",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-06",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 6,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-04",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Product Design and UX",
+      "lane": 6,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-RES-02",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-DQA-09",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Quality Assurance",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-QA-01",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Quality Assurance",
+      "lane": 3,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-QA-02",
+      "sprint": "Sprint 05",
+      "capacity_pool": "Quality Assurance",
+      "lane": 4,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "api#5",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "api#11",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 5,
+      "end": 13,
+      "estimate": 8
+    },
+    {
+      "ref": "T-PLT-04",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "api#6",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-ADM-01",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-PLT-03",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-UXM-06",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-12",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-08",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXM-11",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-10",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-11",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-14",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-07",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 4,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-07",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-10",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 5,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXW-02",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 6,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-09",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Product Design and UX",
+      "lane": 6,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-06",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-03",
+      "sprint": "Sprint 06",
+      "capacity_pool": "Quality Assurance",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-ADR-ERASE-07",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "api#12",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-SYN-01",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CON-09",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "api#7",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-AUTH-01",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-UXA-16",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Product Design and UX",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-08",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-12",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-07",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Quality Assurance",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-04",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Quality Assurance",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-05",
+      "sprint": "Sprint 07",
+      "capacity_pool": "Quality Assurance",
+      "lane": 4,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "android#1",
+      "sprint": "Sprint 08",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "api#14",
+      "sprint": "Sprint 08",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "api#9",
+      "sprint": "Sprint 08",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SEC-04",
+      "sprint": "Sprint 08",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "api#13",
+      "sprint": "Sprint 08",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "android#2",
+      "sprint": "Sprint 08",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CMP-04",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "api#16",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "api#15",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-AND-02",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "android#3",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CMP-03",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-QA-09",
+      "sprint": "Sprint 09",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "android#6",
+      "sprint": "Sprint 10",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "api#10",
+      "sprint": "Sprint 10",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-AND-01",
+      "sprint": "Sprint 10",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-AUTH-02",
+      "sprint": "Sprint 10",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 13,
+      "end": 18,
+      "estimate": 5
+    },
+    {
+      "ref": "api#8",
+      "sprint": "Sprint 10",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SEC-02",
+      "sprint": "Sprint 10",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "android#4",
+      "sprint": "Sprint 11",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "android#5",
+      "sprint": "Sprint 11",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-SYN-04",
+      "sprint": "Sprint 11",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-CMP-01",
+      "sprint": "Sprint 11",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-SEC-06",
+      "sprint": "Sprint 11",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-CON-02",
+      "sprint": "Sprint 11",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-REL-01",
+      "sprint": "Sprint 12",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-AND-04",
+      "sprint": "Sprint 12",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "api#17",
+      "sprint": "Sprint 12",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-SEC-05",
+      "sprint": "Sprint 12",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-QA-12",
+      "sprint": "Sprint 12",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-ENV-01",
+      "sprint": "Sprint 13",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "api#18",
+      "sprint": "Sprint 13",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-CMP-05",
+      "sprint": "Sprint 13",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "T-SYN-02",
+      "sprint": "Sprint 13",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-GLO-02",
+      "sprint": "Sprint 13",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "android#7",
+      "sprint": "Sprint 13",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "docs#22",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "android#12",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-CMP-02",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-PRS-01",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "android#8",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "api#19",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-QA-03",
+      "sprint": "Sprint 14",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-ADM-02",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-PRS-03",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 11,
+      "estimate": 3
+    },
+    {
+      "ref": "T-ADM-13",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 11,
+      "end": 19,
+      "estimate": 8
+    },
+    {
+      "ref": "T-PRS-02",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "android#9",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-SEC-07",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 5,
+      "estimate": 5
+    },
+    {
+      "ref": "android#11",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 5,
+      "end": 18,
+      "estimate": 13
+    },
+    {
+      "ref": "T-QA-05",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 13,
+      "estimate": 13
+    },
+    {
+      "ref": "T-DQA-10",
+      "sprint": "Sprint 15",
+      "capacity_pool": "Quality Assurance",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-TRU-01",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-SYN-03",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Engineering",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-PLT-05",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-AND-03",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Engineering",
+      "lane": 2,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-TRU-02",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "android#10",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Engineering",
+      "lane": 3,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-QA-08",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    },
+    {
+      "ref": "T-REL-02",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Quality Assurance",
+      "lane": 1,
+      "start": 8,
+      "end": 16,
+      "estimate": 8
+    },
+    {
+      "ref": "T-DQA-11",
+      "sprint": "Sprint 16",
+      "capacity_pool": "Quality Assurance",
+      "lane": 2,
+      "start": 0,
+      "end": 8,
+      "estimate": 8
+    }
+  ]
+}

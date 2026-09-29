@@ -1,0 +1,571 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e13-admin",
+  "epic_refs": [
+    "docs#13"
+  ],
+  "items": [
+    {
+      "stable_id": "T-ADM-01",
+      "title": "Stand up the admin API boundary with its own identity domain and default-deny policy engine",
+      "repo": "api",
+      "epic": "docs#13",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Sprint 06",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "The administrative API is a separately deployed process on its own host with its own database role, reachable only over mutually authenticated, address-restricted transport, behind an identity domain that is not the customer one, with every route evaluated by a default-deny policy engine.",
+      "context": "Implemented literally, an administrative console makes every staff account a total-compromise vector over other people's salary and debt data. The boundary is what limits the blast radius, and it has to exist before any administrative feature does.",
+      "scope": [
+        "Separate deployable process and host with its own configuration and database role",
+        "Mutual transport authentication and an address allowlist enforced at the edge",
+        "Administrative identity domain separate from customer identity, with hardware-backed second factor required",
+        "Short session lifetime and a separate cookie domain",
+        "Policy evaluation on every route, default deny, including a ticket reference in the decision input",
+        "Administrative accounts structurally cannot be customer accounts"
+      ],
+      "acceptance_criteria": [
+        "A request without a valid client certificate or from a non-allowlisted address is rejected at the edge",
+        "The administrative database role cannot read customer tables that the policy does not permit, proven by a direct database test",
+        "A customer credential cannot authenticate to the administrative domain and the reverse is also true",
+        "A route added without a policy decision fails the coverage check and the build",
+        "Sessions expire within the published limit and expiry takes effect mid-session",
+        "Every policy decision, allow or deny, writes an audit event"
+      ],
+      "contracts_schema": [
+        "Implements the administrative contract published separately from the customer contract"
+      ],
+      "security_privacy": [
+        "The administrative process never receives raw data encryption keys",
+        "Policy input includes actor, action, resource, justification and ticket reference"
+      ],
+      "observability": [
+        "Publishes decision counts by outcome and by route, and alerts on a deny spike"
+      ],
+      "tests": [
+        "Edge rejection tests for certificate and address",
+        "Cross-domain credential tests",
+        "Policy coverage check with a planted uncovered route",
+        "Session expiry mid-session test"
+      ],
+      "rollout_rollback": [
+        "Deployed to an internal environment first with no production data; production enablement requires the audit chain to be live",
+        "Rollback removes the administrative host from the edge, which fully disables the surface"
+      ],
+      "non_goals": [
+        "Console user interface, which is a separate ticket",
+        "Feature-specific administrative capabilities"
+      ],
+      "dependencies": [
+        "T-ADR-ADMIN-06",
+        "T-SCA-API-01",
+        "T-CON-07"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the administrative module, its deployment manifest and policy definitions. The admin repository consumes the published administrative contract only.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-02",
+      "title": "Implement the tamper-evident administrative audit chain and write-once stream",
+      "repo": "api",
+      "epic": "docs#13",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Sprint 15",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Every administrative action is written to a hash-chained, append-only record and streamed to storage that administrators cannot delete from, with a verification job that fails loudly if the chain is broken.",
+      "context": "Administrative controls without an unfalsifiable record are decorative: the actions that matter most are exactly the ones a malicious operator would remove. The chain has to land before any unmasking, elevation or support tooling exists, or those actions happen unattributably.",
+      "scope": [
+        "Hash chaining where each record commits to the previous record and its content",
+        "Insert-only grants so no role can update or delete a record",
+        "Continuous streaming to write-once storage outside the administrative blast radius",
+        "Scheduled chain verification with alerting on a break",
+        "Recovery procedure for a legitimate chain discontinuity such as a restore"
+      ],
+      "acceptance_criteria": [
+        "An attempted update or delete fails at the database level",
+        "Modifying a stored record breaks verification and raises an alert within the published interval",
+        "The streamed copy is retained under an immutability policy and the administrative role cannot delete it",
+        "Verification runs on a schedule and its result is visible without running it manually",
+        "A restore-induced discontinuity is distinguishable from tampering and follows the documented procedure",
+        "Chain records contain no monetary values or unmasked personal data"
+      ],
+      "contracts_schema": [
+        "Extends the audit event schema with the chaining fields; consumers read the same shape"
+      ],
+      "security_privacy": [
+        "Immutability is enforced by storage policy, not only by application code",
+        "The verification job runs with credentials the administrative process does not hold"
+      ],
+      "observability": [
+        "Publishes verification result, chain length and last verified position"
+      ],
+      "tests": [
+        "Update and delete attempt tests",
+        "Tamper detection test with a modified record",
+        "Immutability policy test attempting deletion",
+        "Restore discontinuity handling test"
+      ],
+      "rollout_rollback": [
+        "Enabled before any administrative feature is exposed; the administrative surface stays disabled until verification is green",
+        "Rollback is not applicable; disabling the chain disables the administrative surface"
+      ],
+      "non_goals": [
+        "Behavioural monitoring, which is a separate ticket"
+      ],
+      "dependencies": [
+        "T-ADM-01",
+        "T-SEC-03",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the chain implementation and verification job. Storage immutability configuration is coordinated with infra but owned here as policy.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-03",
+      "title": "Implement server-side redaction and independently sourced unmask authorization",
+      "repo": "api",
+      "epic": "docs#13",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Financial fields are redacted server-side by default, and unmasking requires an independently sourced, eligible access basis plus a recorded purpose and distinct approval, with deny as the failure mode.",
+      "context": "A support ticket created by the operator who wants access is not independent authorization. Redaction and provenance-checked unmasking land together; elevation, bulk-export gating and monitoring remain separate controls with different failure modes and reviewers.",
+      "scope": [
+        "Server-side redaction so unmasked values never cross the wire by default",
+        "Unmask operation requiring an eligible user-originated support request, system-originated security incident or statutory request, plus recorded purpose and distinct approval",
+        "Immutable originator, source channel and provenance class on every access-basis record; operator-originated support records are never eligible",
+        "Deny-by-default behaviour when the ticket system is unreachable",
+        "Notification to the affected user when their detail-level records are accessed"
+      ],
+      "acceptance_criteria": [
+        "An administrative response contains only masked values unless an approved unmask applies, proven at the interface level",
+        "An unmask request with a closed, invalid, operator-originated, self-approved or unreachable access basis is denied; the failure mode is deny",
+        "The requesting operator cannot create or change the record that authorizes the read and cannot serve as its approver",
+        "The affected user is notified within the published window and the notification contains no operator identity where policy forbids it",
+        "Operators never receive raw data encryption keys; the redaction service is the only read path"
+      ],
+      "contracts_schema": [
+        "Implements the administrative contract in which masked representation is the default and unmask is a distinct operation"
+      ],
+      "security_privacy": [
+        "Purpose, provenance class, immutable source reference and distinct approver are mandatory policy inputs and are recorded in the chain",
+        "Operators never receive raw data encryption keys; the redaction service is the only read path"
+      ],
+      "observability": [
+        "Publishes unmask counts and denials per operator"
+      ],
+      "tests": [
+        "Interface-level redaction test",
+        "Ticket system unavailable deny test",
+        "Operator-created ticket, forged provenance and requester-as-approver denial tests",
+        "Notification delivery and retry test",
+        "Static and runtime assertion that no administrative path unwraps a key"
+      ],
+      "rollout_rollback": [
+        "Enabled only after the audit chain is verified green; redaction and unmask are individually flagged",
+        "Rollback tightens rather than loosens: disabling unmask leaves everything masked"
+      ],
+      "non_goals": [
+        "Elevation, bulk-export gating and access monitoring, which are their own ticket",
+        "Console user interface, which is a separate ticket",
+        "Customer-facing access transparency, which belongs to E16"
+      ],
+      "dependencies": [
+        "T-ADM-02",
+        "T-GOV-03",
+        "T-SUP-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the redaction service and unmask policy. Support, incident and statutory systems provide immutable provenance through narrow verification interfaces and are never read as free-form justification.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-05",
+      "title": "Implement just-in-time elevation, four-eyes bulk export and access monitoring",
+      "repo": "api",
+      "epic": "docs#13",
+      "kind": "Task",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Elevation is time-boxed and needs a distinct second approver, bulk export has no single-actor path, break-glass use is recorded and rotated, and unusual access patterns are blocked rather than merely logged.",
+      "context": "Elevation without a second approver is self-service and monitoring without blocking is a post-incident report. These controls share one failure mode - a single motivated operator - and are grouped so they are reviewed as one control set on top of the redaction boundary.",
+      "scope": [
+        "Just-in-time elevation with a maximum duration, automatic expiry and a distinct second approver",
+        "Bulk export gated behind a formal request with dual approval and full recording",
+        "Formal access-basis provenance that cannot be originated or rewritten by either approving operator",
+        "Break-glass account with vaulted credentials, dual presence, session recording and automatic rotation after use",
+        "Behavioural monitoring for bulk retrieval, out-of-scope access and unusual time or origin, with blocking rather than alerting alone",
+        "Administrative security notices to an affected user are enqueued through the T-NOT-01 outbox under the payload allowlist, so no administrative message can carry financial detail"
+      ],
+      "acceptance_criteria": [
+        "Self-approval of elevation is impossible and expiry revokes access mid-session",
+        "No single-actor bulk export path exists; an attempted bypass is blocked and alerted",
+        "A simulated malicious operator retrieving many records is blocked and an alert reaches the on-call owner",
+        "Break-glass use rotates the credential automatically and leaves a recording",
+        "The second approver is a distinct qualified reviewer under T-GOV-03; where none exists, elevation and bulk export stay disabled rather than degraded",
+        "The requestor, access-basis originator and second approver satisfy separation-of-duties policy; a conflict denies before any elevated session is issued"
+      ],
+      "contracts_schema": [
+        "Implements the administrative contract elevation and export request shapes, including the second-approver field"
+      ],
+      "security_privacy": [
+        "Elevation and export approvals are recorded in the audit chain with both actor identities",
+        "A blocked monitoring event stops the request rather than recording it after the fact"
+      ],
+      "observability": [
+        "Publishes elevation grants, denials, export requests and monitoring blocks per operator"
+      ],
+      "tests": [
+        "Self-approval and expiry tests",
+        "Dual-approval bulk export bypass attempt test",
+        "Operator-originated basis and separation-of-duties conflict tests",
+        "Simulated bulk scrape blocking test",
+        "Break-glass rotation and recording test"
+      ],
+      "rollout_rollback": [
+        "Each control is individually flagged so one can be tightened without redeploying the rest",
+        "Rollback tightens rather than loosens: disabling a control disables the feature it protects"
+      ],
+      "non_goals": [
+        "Redaction and unmasking, which are their own ticket",
+        "Console user interface, which is a separate ticket",
+        "Customer-facing access transparency, which belongs to E16",
+        "Notification delivery, scheduling, preferences and provider integration, which T-NOT-01 owns"
+      ],
+      "dependencies": [
+        "T-ADM-03",
+        "T-GOV-03",
+        "T-NOT-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns elevation, export gating, break-glass and monitoring. It builds on the redaction boundary rather than reimplementing it.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-04",
+      "title": "Build the admin console shell, operator session and default-deny navigation",
+      "repo": "admin",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P3 Reach",
+      "sprint": "Future",
+      "component": "admin",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "story",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "As an operator, I sign in to a console on its own authentication domain and see only the areas my role permits, with every screen defaulting to no access rather than to a financial browser.",
+      "context": "The console is where the administrative boundary becomes a product. If it presents a searchable financial browser, every control behind it is irrelevant. The shell decides that: it owns the operator session, the navigation, the redaction defaults and the absence of any per-user financial listing route. The capability screens are separate tickets that mount inside it, so each can be built, reviewed and shipped independently rather than arriving as one unreviewable change.",
+      "scope": [
+        "Operator sign-in on the separate authentication domain, with session lifetime, idle timeout and revocation",
+        "Navigation and route registration where a route absent from the operator's role is not rendered and not reachable",
+        "The shared redacted presentation primitive that every capability screen composes, so redaction is the default rather than a per-screen decision",
+        "The confirmation primitive that destructive and configuration actions reuse, recording before and after values through the administrative API",
+        "The structural absence of any route that lists an individual user's transactions or balances",
+        "The shell into which the plan, provider, support, analytics and audit screens mount"
+      ],
+      "acceptance_criteria": [
+        "An operator session is issued only by the administrative authentication domain and a customer session is rejected",
+        "A route absent from the operator's role is neither rendered in navigation nor reachable by direct address",
+        "No screen in the console lists an individual user's transactions or balances; the capability does not exist to be misused, verified by an absence test over the route table",
+        "Every monetary or personal field rendered through the shared primitive is redacted unless an unmasking grant is present",
+        "The confirmation primitive records old and new values through the administrative API before the change is applied, not after",
+        "Idle timeout and revocation end the session within the published time, verified rather than configured",
+        "The console never calls the customer API, verified by a network assertion in the end-to-end run"
+      ],
+      "contracts_schema": [
+        "Consumes the published administrative contract only; the console never calls the customer API"
+      ],
+      "security_privacy": [
+        "The console holds no credentials beyond the operator session and never sees key material",
+        "Redaction is a property of the shared primitive, so a new screen is redacted by default and un-redacting is an explicit, reviewable act"
+      ],
+      "observability": [
+        "Publishes operator action counts by type and session lifecycle events, which the capability screens extend rather than redefine"
+      ],
+      "tests": [
+        "Absence test proving no per-user financial listing route exists in the route table",
+        "Cross-domain test asserting a customer session cannot authenticate to the console",
+        "Role-based route reachability test including direct address",
+        "Redaction default test over the shared primitive",
+        "Confirmation ordering test asserting the record precedes the change",
+        "Network assertion that no request reaches the customer API"
+      ],
+      "rollout_rollback": [
+        "Released to a named operator group first; no capability screen mounts until the shell's absence and redaction tests are green",
+        "Rollback removes console access without affecting the administrative API or its records"
+      ],
+      "non_goals": [
+        "Administrative authorization mechanics, which the api tickets own",
+        "Plan, feature and quota management, which T-ADM-07 owns",
+        "Provider configuration and spend caps, which T-ADM-08 owns",
+        "Support tooling, which T-ADM-09 owns",
+        "Aggregate analytics, which T-ADM-10 owns",
+        "Audit review and the operator red-team suite, which T-ADM-11 and T-ADM-12 own"
+      ],
+      "dependencies": [
+        "T-SCA-ADM-01",
+        "T-ADM-03",
+        "T-ADM-05"
+      ],
+      "parallel_boundary": "Primary repo admin. Owns the shell, the operator session, the navigation contract and the shared redaction and confirmation primitives. The five capability tickets mount into it and extend its telemetry rather than redefining any of them. All enforcement lives behind the administrative API.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-SUP-01",
+      "title": "Build user support intake, status and the ticket-verification endpoint",
+      "repo": "api",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Ops",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "story",
+        "security",
+        "P1-high"
+      ],
+      "outcome": "A user can raise a support request, attach privacy-safe evidence, and track its status against a published response target, and an administrator can only unmask data for a request that this service confirms exists and is open for that user.",
+      "context": "Support is referenced by the admin console, the trust surfaces, the billing flows and the onboarding help links, and it exists nowhere. That is a security problem as much as a product gap: the four-eyes and unmasking controls in E13 are justified by an approved support request, and if support requests live in an unowned mailbox then the justification is unverifiable and the control is decoration. It is also where diagnostics arrive, which is exactly where raw financial data leaks if nobody defines what may be attached.",
+      "scope": [
+        "Support request creation, category, status transitions, threaded messages and resolution",
+        "Attachment intake with type and size limits, scanning, expiry, and a redaction rule for what may be attached",
+        "Diagnostic bundle collection that is opt-in per request and carries a declared, allowlisted field set",
+        "Vendor adapter so an external helpdesk can be adopted without changing the intake or the verification contract",
+        "Ticket-verification endpoint the admin console calls before any unmask or elevated read, returning existence, ownership and open state",
+        "Immutable request provenance: user-originated, system-originated incident or operator-originated, with source channel and originator recorded at creation",
+        "Eligibility response that excludes operator-originated records from unmask authorization regardless of category or later reassignment",
+        "Response-target policy per category, and the priority-support entitlement that changes it",
+        "Escalation and breach handling when a response target is missed"
+      ],
+      "acceptance_criteria": [
+        "A user can create a request, see its status and its response target, and add messages to it until it is resolved",
+        "An attachment outside the allowed types or above the size limit is refused, and every attachment expires at the declared time and is then unreadable",
+        "A diagnostic bundle contains only allowlisted fields, proven by a test with a planted monetary amount and a planted merchant name that both fail the check",
+        "The verification endpoint returns whether a ticket exists, whether it belongs to the named user, whether it is open, its immutable provenance class and whether that class is eligible, and returns no free-form content",
+        "An operator-created or operator-converted request is ineligible for unmasking even when open and assigned to another operator",
+        "An unmask attempt in the admin console with no verifiable open ticket for that user is refused, proven by an end-to-end test against the admin path",
+        "A verification result cannot be replayed to justify a second unmask outside the published window",
+        "The priority-support entitlement changes the response target and nothing else, and a user without it sees the standard target",
+        "Missing a response target raises an escalation that is visible without opening the helpdesk",
+        "Swapping the vendor adapter changes no intake shape and no verification behaviour, demonstrated with a second adapter in tests"
+      ],
+      "contracts_schema": [
+        "Implements the support request, status, thread and attachment shapes published by T-CON-11",
+        "Publishes the ticket-verification contract as its own narrow interface: existence, ownership, open state, immutable provenance class and eligibility, with no free-form content"
+      ],
+      "security_privacy": [
+        "The verification endpoint is a control surface: it is authenticated as the admin service, rate limited, fully audited, and returns no ticket content",
+        "Support staff read redacted data by default; unmasking is the E13 path and always requires an open verified ticket plus the four-eyes control",
+        "Attachments and diagnostics are covered by the erasure path, so a resolved request does not become a permanent copy of a user's data outside the erasure boundary",
+        "No support surface accepts or displays credentials, session tokens or recovery codes, and a message containing one is rejected rather than stored"
+      ],
+      "observability": [
+        "Open request count, age distribution, response-target breaches and unmask verifications are all recorded",
+        "An unusual rate of verification calls from the admin service raises an alert, because that is what a fishing expedition looks like"
+      ],
+      "tests": [
+        "Attachment type, size and expiry tests",
+        "Diagnostic allowlist test with planted financial fields",
+        "Verification endpoint contract test proving no ticket content is returned",
+        "End-to-end refusal test: unmask without an open verified ticket",
+        "Verification replay rejection test",
+        "Operator-originated request remains ineligible across reassignment, category change and reopen tests",
+        "Entitlement-driven response target test",
+        "Second vendor adapter swap test"
+      ],
+      "rollout_rollback": [
+        "Intake and status ship first with a single category, then verification is enabled and only afterwards does the admin console begin to require it",
+        "Rollback disables intake and leaves existing requests readable; the admin unmask path fails closed if verification is unavailable, which is the intended direction"
+      ],
+      "non_goals": [
+        "Admin console operator screens, which T-ADM-04 and the T-ADM-07 to T-ADM-11 capability tickets own",
+        "Client support surfaces, which T-SUP-02 and T-SUP-03 own",
+        "Building a helpdesk product: the vendor adapter exists so we do not"
+      ],
+      "dependencies": [
+        "T-CON-11",
+        "T-ADM-01",
+        "T-SEC-02",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns intake, status, attachments, the vendor adapter and the verification endpoint. The admin console consumes verification and never reads the support store directly; the clients consume the published contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-ADM-06",
+      "title": "Implement administrator joiner, mover and leaver lifecycle with recertification",
+      "repo": "api",
+      "epic": "docs#13",
+      "kind": "Story",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P1 High",
+      "perspective": "Security",
+      "risk": "R4 Insider risk",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "story",
+        "security",
+        "P1-high"
+      ],
+      "outcome": "Administrative access is granted, changed and removed through a defined lifecycle: a hardware factor is required to hold it, approver eligibility is enforced, a role change revokes what it should, access is recertified on a schedule, and offboarding produces evidence that every path is closed.",
+      "context": "E13 designs strong controls for what an administrator may do and says nothing about how someone becomes one, stops being one, or is periodically confirmed to still need it. Insider risk is not primarily about a malicious action inside a session; it is about an account that should have been closed three months ago still working. The four-eyes control also silently degrades if the second approver is someone who should no longer be eligible.",
+      "scope": [
+        "Joiner: request, approval, role assignment, hardware factor enrolment before first privileged action",
+        "Mover: role change that removes the permissions of the previous role rather than accumulating them",
+        "Leaver: offboarding that revokes sessions, tokens, database roles, break-glass credentials and console access, with evidence",
+        "Approver eligibility rules, so the second pair of eyes cannot be an ineligible or departed account",
+        "Periodic recertification of every administrative account and every standing permission, with automatic removal when it lapses",
+        "Break-glass account handling: how it is created, stored, used, rotated after use and reviewed",
+        "Separation of administrative identity from customer identity, enforced rather than assumed"
+      ],
+      "acceptance_criteria": [
+        "An administrative account cannot perform a privileged action before a hardware factor is enrolled, proven by a test",
+        "A role change removes the previous role's permissions in the same operation; a test asserts the old permission no longer resolves",
+        "Offboarding revokes sessions, refresh families, database role membership, console access and break-glass eligibility, and produces an evidence record naming each",
+        "An approval by an ineligible or offboarded account is refused, proven by a test that offboards the approver mid-flow",
+        "A permission that is not recertified within the published window is removed automatically, and the removal is audited",
+        "Break-glass use triggers an alert, is time-bounded, and forces a credential rotation afterwards, proven by a drill",
+        "An administrative identity cannot be the same principal as a customer identity, enforced at enrolment rather than by convention",
+        "Every lifecycle event is written to the administrative audit stream defined by T-ADR-ADMIN-06"
+      ],
+      "contracts_schema": [
+        "Publishes the administrative account lifecycle states and the recertification record as machine-readable data the console and the audit stream both read"
+      ],
+      "security_privacy": [
+        "Lifecycle actions are themselves privileged and subject to the same four-eyes control as the actions they grant",
+        "No lifecycle record contains customer data; it references accounts and permissions only",
+        "Offboarding evidence is retained under the administrative audit retention rule, not deleted with the account"
+      ],
+      "observability": [
+        "Count of administrative accounts, standing permissions, overdue recertifications and break-glass uses are all reported",
+        "An overdue recertification and any break-glass use raise alerts"
+      ],
+      "tests": [
+        "Hardware-factor precondition test",
+        "Role-change permission-removal test",
+        "Offboarding revocation and evidence test",
+        "Ineligible-approver refusal test",
+        "Recertification lapse auto-removal test",
+        "Break-glass drill with rotation verification"
+      ],
+      "rollout_rollback": [
+        "Applied to the existing administrative accounts before the console gains any unmask capability, so the lifecycle exists before the privilege does",
+        "Rollback would restore standing access, which is why the rollback position is documented as a temporary exception with an expiry rather than an open-ended revert"
+      ],
+      "non_goals": [
+        "Customer identity, authentication and recovery, which E03 owns",
+        "Console screens, which T-ADM-04 and the T-ADM-07 to T-ADM-11 capability tickets own",
+        "Hiring, contracting and human resources process"
+      ],
+      "dependencies": [
+        "T-ADM-01",
+        "T-ADM-02",
+        "T-ADR-ADMIN-06",
+        "T-GOV-03"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the administrative account lifecycle, approver eligibility and recertification. The console surfaces these states and the audit stream records them; neither reimplements the rules.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI, and their check names and the local commands that reproduce them are recorded for T-SCA-INF-01",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

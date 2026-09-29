@@ -1,0 +1,529 @@
+{
+  "schema_version": 2,
+  "generated_from": "proposed-comprehensive-backlog.json",
+  "description": "Durable planning source for the PenniLogic backlog expansion. Every file listed here is ASCII-only, LF, no BOM.",
+  "project": {
+    "org": "PenniLogic",
+    "number": 2,
+    "title": "PenniLogic Delivery",
+    "epic_repo": "docs",
+    "schema_file": "../project-schema.json"
+  },
+  "repos": [
+    "admin",
+    "ai-service",
+    "android",
+    "api",
+    "contracts",
+    "docs",
+    "infra",
+    "web"
+  ],
+  "enums": {
+    "Kind": [
+      "Epic",
+      "Story",
+      "Task",
+      "Spike",
+      "Bug",
+      "Chore"
+    ],
+    "Phase": [
+      "P0 Foundations",
+      "P1 Debt Engine",
+      "P2 Automation",
+      "P3 Reach",
+      "P4 Network",
+      "P5 Intelligence",
+      "P6 Moat"
+    ],
+    "Sprint": [
+      "Backlog",
+      "Sprint 01",
+      "Sprint 02",
+      "Sprint 03",
+      "Sprint 04",
+      "Sprint 05",
+      "Sprint 06",
+      "Sprint 07",
+      "Sprint 08",
+      "Sprint 09",
+      "Sprint 10",
+      "Sprint 11",
+      "Sprint 12",
+      "Sprint 13",
+      "Sprint 14",
+      "Sprint 15",
+      "Sprint 16",
+      "Sprint 17",
+      "Sprint 18",
+      "Future"
+    ],
+    "Component": [
+      "android",
+      "api",
+      "ai-service",
+      "web",
+      "admin",
+      "contracts",
+      "infra",
+      "docs",
+      "cross-cutting"
+    ],
+    "Priority": [
+      "P0 Critical",
+      "P1 High",
+      "P2 Medium",
+      "P3 Low"
+    ],
+    "Perspective": [
+      "Product",
+      "Architecture",
+      "Development",
+      "Test",
+      "QA",
+      "Security",
+      "Compliance",
+      "Ops"
+    ],
+    "Risk": [
+      "R1 SMS permission",
+      "R2 User retention",
+      "R3 Breach",
+      "R4 Insider risk",
+      "R5 Scope",
+      "R6 Parser rot",
+      "R7 AI cost",
+      "R8 Sharing abuse",
+      "R9 Advice boundary",
+      "R10 Wrong numbers",
+      "R11 Prompt injection",
+      "R12 Billing economics",
+      "R13 Split conversion",
+      "R14 Key-person",
+      "R15 Data lifecycle",
+      "None"
+    ],
+    "Status": [
+      "Backlog",
+      "Ready",
+      "In Progress",
+      "In Review",
+      "In Test",
+      "Blocked",
+      "Done"
+    ],
+    "Estimate": [
+      3,
+      5,
+      8,
+      13
+    ]
+  },
+  "sprint_order": {
+    "Backlog": 0,
+    "Sprint 01": 1,
+    "Sprint 02": 2,
+    "Sprint 03": 3,
+    "Sprint 04": 4,
+    "Sprint 05": 5,
+    "Sprint 06": 6,
+    "Sprint 07": 7,
+    "Sprint 08": 8,
+    "Sprint 09": 9,
+    "Sprint 10": 10,
+    "Sprint 11": 11,
+    "Sprint 12": 12,
+    "Sprint 13": 13,
+    "Sprint 14": 14,
+    "Sprint 15": 15,
+    "Sprint 16": 16,
+    "Sprint 17": 17,
+    "Sprint 18": 18,
+    "Future": 99
+  },
+  "sprint_calendar": {
+    "first_sprint_start": "2026-09-07",
+    "sprint_length_days": 14,
+    "working_span_days": 11,
+    "sprint_count": 18,
+    "undated_sprints": [
+      "Backlog",
+      "Future"
+    ]
+  },
+  "forecast": {
+    "first_indicative_window": 19,
+    "description": "Investor and owner forecast only, never a sprint commitment. Numbered-sprint tickets keep their execution dates. Ready work is forecast into the first window. Future work is placed after Sprint 18 by dependency order, phase floor and separate Engineering, Product Design and UX, and Quality Assurance lane pools. Re-run after every backlog change; measured velocity replaces these assumptions once delivery starts.",
+    "confidence_options": [
+      "Completed",
+      "Ready",
+      "Planned",
+      "Indicative"
+    ],
+    "phase_floor": {
+      "P0 Foundations": 19,
+      "P1 Debt Engine": 19,
+      "P2 Automation": 19,
+      "P3 Reach": 20,
+      "P4 Network": 23,
+      "P5 Intelligence": 26,
+      "P6 Moat": 29
+    }
+  },
+  "experience": {
+    "coverage_file": "evidence/experience-coverage.json",
+    "schema_file": "schema/experience-coverage.schema.json",
+    "handoff_schema_file": "schema/handoff-manifest.schema.json",
+    "readiness_schema_file": "schema/design-readiness.schema.json",
+    "readiness_gate": "T-DQA-12",
+    "platforms": ["android", "web", "admin"],
+    "client_repositories": ["android", "web", "admin"],
+    "non_frontend_ticket_exclusions": [
+      { "ref": "T-QA-13", "rationale": "Admin release-quality gate and test automation; it verifies frontend work but does not render a user interface." },
+      { "ref": "T-SCA-ADM-01", "rationale": "Admin repository and CI scaffold with no product surface or interaction behavior." },
+      { "ref": "android#6", "rationale": "Telemetry instrumentation for activation and retention; no user-facing Android surface." },
+      { "ref": "android#7", "rationale": "On-device parser implementation with no independently rendered Android surface." },
+      { "ref": "android#8", "rationale": "Parser rule distribution and update mechanism with no independently rendered Android surface." },
+      { "ref": "T-AND-07", "rationale": "Android API 36 platform behavior baseline and compatibility work, not a product screen." },
+      { "ref": "T-CMP-03", "rationale": "Android compliance inventory, payload scrubbing and declaration evidence, not a product screen." },
+      { "ref": "T-PRS-01", "rationale": "Parser-template authoring and corpus logic with no independently rendered Android surface." },
+      { "ref": "T-PRS-02", "rationale": "Parser coverage measurement and release gate, not a product screen or interaction." },
+      { "ref": "T-QA-07", "rationale": "Physical Android test-device procurement and provisioning, not frontend implementation." },
+      { "ref": "T-QA-08", "rationale": "Android journey, accessibility and performance test gate; it verifies rather than renders UI." },
+      { "ref": "T-QA-09", "rationale": "Android privacy traffic-inspection automation with no product surface." },
+      { "ref": "T-QA-12", "rationale": "Sanitized parser corpus and compatibility-matrix evidence, not frontend implementation." },
+      { "ref": "T-REL-01", "rationale": "Play signing, bundle, track and staged-rollout pipeline with no product surface." },
+      { "ref": "T-SCA-AND-01", "rationale": "Android repository and CI scaffold with no product surface or interaction behavior." },
+      { "ref": "T-SEC-05", "rationale": "Android keystore, integrity and transport hardening with no independently rendered surface." },
+      { "ref": "T-SYN-03", "rationale": "Android sync reconciliation and conflict engine, not an independently rendered surface." },
+      { "ref": "T-SYN-04", "rationale": "Android local-schema and contract binding with no product surface." },
+      { "ref": "T-QA-06", "rationale": "Customer-web end-to-end, accessibility and performance gate; it verifies rather than renders UI." },
+      { "ref": "T-SCA-WEB-01", "rationale": "Customer-web repository and CI scaffold with no product surface or interaction behavior." }
+    ]
+  },
+  "marker_format": "<!-- plan-id: ID -->",
+  "counts": {
+    "epics": 15,
+    "tickets": 274,
+    "patches": 61,
+    "existing_items": 61
+  },
+  "project_metadata": {
+    "readme_file": "project-readme.md",
+    "short_description_template": "Delivery board for PenniLogic: {epics} epics, {tickets} implementation tickets, one durable planning source at planning-automation/backlog-v2 in PenniLogic/docs.",
+    "description": "Durable Project 2 metadata. sync-backlog-v2.ps1 compares the live short description and README against these values and updates them idempotently under -Apply. The short description is derived from the manifest counts and the offline snapshot at run time, so it can never carry a stale hardcoded count.",
+    "epic_kind_field": "Kind",
+    "epic_kind_value": "Epic"
+  },
+  "files": [
+    {
+      "path": "epics.json",
+      "kind": "epics",
+      "count": 15
+    },
+    {
+      "path": "tickets-e01-foundations.json",
+      "kind": "tickets",
+      "count": 10
+    },
+    {
+      "path": "tickets-e31-governance.json",
+      "kind": "tickets",
+      "count": 5
+    },
+    {
+      "path": "tickets-e26-architecture-gates.json",
+      "kind": "tickets",
+      "count": 10
+    },
+    {
+      "path": "tickets-e24-platform.json",
+      "kind": "tickets",
+      "count": 6
+    },
+    {
+      "path": "tickets-e25-quality.json",
+      "kind": "tickets",
+      "count": 16
+    },
+    {
+      "path": "tickets-e27-compliance-floor.json",
+      "kind": "tickets",
+      "count": 4
+    },
+    {
+      "path": "tickets-e32-sync.json",
+      "kind": "tickets",
+      "count": 3
+    },
+    {
+      "path": "tickets-e02-contracts.json",
+      "kind": "tickets",
+      "count": 10
+    },
+    {
+      "path": "tickets-e07-retention.json",
+      "kind": "tickets",
+      "count": 1
+    },
+    {
+      "path": "tickets-e03-identity.json",
+      "kind": "tickets",
+      "count": 2
+    },
+    {
+      "path": "tickets-e05-debt-engine.json",
+      "kind": "tickets",
+      "count": 1
+    },
+    {
+      "path": "tickets-e06-debt-experience.json",
+      "kind": "tickets",
+      "count": 5
+    },
+    {
+      "path": "tickets-e12-web.json",
+      "kind": "tickets",
+      "count": 4
+    },
+    {
+      "path": "tickets-e13-admin.json",
+      "kind": "tickets",
+      "count": 7
+    },
+    {
+      "path": "tickets-e14-billing.json",
+      "kind": "tickets",
+      "count": 10
+    },
+    {
+      "path": "tickets-e15-e16-groups.json",
+      "kind": "tickets",
+      "count": 8
+    },
+    {
+      "path": "tickets-e17-ai-harness.json",
+      "kind": "tickets",
+      "count": 7
+    },
+    {
+      "path": "tickets-e18-ai-product.json",
+      "kind": "tickets",
+      "count": 5
+    },
+    {
+      "path": "tickets-e19-security.json",
+      "kind": "tickets",
+      "count": 6
+    },
+    {
+      "path": "tickets-e20-compliance-readiness.json",
+      "kind": "tickets",
+      "count": 1
+    },
+    {
+      "path": "tickets-e21-e22-income-goals.json",
+      "kind": "tickets",
+      "count": 11
+    },
+    {
+      "path": "tickets-e23-trust-controls.json",
+      "kind": "tickets",
+      "count": 5
+    },
+    {
+      "path": "tickets-e28-advanced-ingestion.json",
+      "kind": "tickets",
+      "count": 3
+    },
+    {
+      "path": "tickets-e29-account-aggregator.json",
+      "kind": "tickets",
+      "count": 2
+    },
+    {
+      "path": "tickets-e30-globalization.json",
+      "kind": "tickets",
+      "count": 5
+    },
+    {
+      "path": "tickets-audit-remediation.json",
+      "kind": "tickets",
+      "count": 22
+    },
+    {
+      "path": "tickets-assurance-remediation.json",
+      "kind": "tickets",
+      "count": 13
+    },
+    {
+      "path": "tickets-assurance-iteration-2.json",
+      "kind": "tickets",
+      "count": 17
+    },
+    {
+      "path": "tickets-e33-experience-strategy.json",
+      "kind": "tickets",
+      "count": 8
+    },
+    {
+      "path": "tickets-e34-design-system.json",
+      "kind": "tickets",
+      "count": 9
+    },
+    {
+      "path": "tickets-e35-android-design.json",
+      "kind": "tickets",
+      "count": 16
+    },
+    {
+      "path": "tickets-e36-web-design.json",
+      "kind": "tickets",
+      "count": 12
+    },
+    {
+      "path": "tickets-e37-admin-design.json",
+      "kind": "tickets",
+      "count": 11
+    },
+    {
+      "path": "tickets-e38-design-qa.json",
+      "kind": "tickets",
+      "count": 12
+    },
+    {
+      "path": "tickets-experience-implementation-gaps.json",
+      "kind": "tickets",
+      "count": 7
+    },
+    {
+      "path": "patches-existing-tickets.json",
+      "kind": "patches",
+      "count": 61
+    },
+    {
+      "path": "existing-items.json",
+      "kind": "existing_items",
+      "count": 61
+    }
+  ],
+  "governance_corrections": [
+    "T-GOV-03 is dependency-free and In Progress outside the numbered plan while agent profiles, generated policy and rulesets are adopted. T-EXT-01 is Done: the organisation was upgraded to GitHub Team on 2026-09-02, and active rulesets, required review and a required status check were proven on a temporary private-repository pull request before the fixture was removed.",
+    "T-GOV-03 is mechanically compatible with one GitHub collaborator and fully agentic delivery: GitHub requires a pull request plus the strict policy check, while that check requires head-SHA-bound attestations from separate qualified reviewer-agent sessions. GitHub account identity is not misrepresented as reviewer independence.",
+    "T-GOV-03 and infra#4 own the baseline policy workflow and `PenniLogic governed main` ruleset. T-SCA-INF-01 depends on every scaffold and later extends required checks with real stack build, test and lint contexts; it cannot replace or weaken the baseline policy check.",
+    "The six first-wave scaffolds, T-GOV-01, T-GOV-02 and infra#2 now depend on T-GOV-03, so no implementation pull request precedes the agent-review policy it must satisfy. T-GOV-03 and infra#4 alone use the narrow initial adoption exception.",
+    "T-GOV-04 turns rules four to six of the parallel delivery protocol into required checks: contract-first pull request metadata, one in-flight migration through a registry and lock, reversible or compensating migration evidence, linked issue and native dependency validation, and early draft pull request visibility.",
+    "Every architecture ADR ticket depends on T-GOV-03 and is Backlog, not Ready.",
+    "All 61 pre-v2 items carry a strict patch with an explicit set_fields.sprint and set_fields.status. infra#4 is In Progress as governance adoption, infra#2 is Backlog behind T-GOV-03, and every other pre-v2 ticket and all 23 pre-v2 epics are Backlog.",
+    "T-AI-01 depends on the published quota contract T-CON-03 rather than on the billing implementation T-BIL-02, and docs#17 follows. Production enablement of paid traffic stays gated; gateway development runs against the contract and its mock.",
+    "The five most oversized cross-lane tickets are decomposed with their totals preserved: T-CON-04 into T-CON-04, T-CON-06 and T-CON-07; T-ADM-03 into T-ADM-03 and T-ADM-05; T-AI-05 into T-AI-05 and T-AI-06; T-SPL-01 into T-SPL-01 and T-SPL-03; T-BIL-05 into T-BIL-05 and T-BIL-06.",
+    "E26 is Backlog and depends on T-GOV-03. E31, T-GOV-03 and infra#4 are In Progress; no epic is Ready, and T-QA-07 is the only independently Ready implementation item.",
+    "R12 Billing economics, R13 Split conversion and R14 Key-person close the risk-coverage gaps: billing unit economics, split-to-paid conversion, and reviewer and governance concentration each now have a named owner on the board.",
+    "All 38 pre-v2 implementation tickets now receive Outcome, Scope, Contracts and schema, Security and privacy, Observability, Tests, Rollout and rollback, Non-goals, Parallel boundary and ticket-specific Definition of Done content through strict patches.",
+    "T-QA-07 owns only dependency-free physical-device procurement and is Ready in the dedicated Quality Assurance pool in Sprint 01; T-QA-12 owns the sanitized corpus and wider compatibility matrix after the device and test strategy land.",
+    "Missing owners were added for refinance modelling, net worth, web parity across income, goals, groups, AI and billing, key rotation, billing unwind and cross-channel convergence, provider failover, natural-language draft entry and supply-chain verification.",
+    "Contract and service boundaries now cover safe API conventions, service-to-service workload identity, delegated user context and the accepted money-wire decision without contradictory legacy text.",
+    "T-EXT-01 records the resolved GitHub plan blocker: the organisation moved from GitHub Free to Team on 2026-09-02, the before-state HTTP 403 responses and after-state enforcement proof are recorded, all temporary fixtures were removed, and all eight product repositories remained private.",
+    "T-ADR-INDEX-10 splits adr/README.md into one file per decision and generates the index, and reserves ADR-015 to ADR-023 for the nine E26 gate tickets, so nine worktrees never edit the same index lines. Every gate ticket owns exactly one reserved file.",
+    "T-ADR-ENT-09 is the ninth gate. It supersedes the conflicting entitlement sketches in architecture/01-domain-model.md section 5 and architecture/03-stack-and-monetization.md section 8, and T-CON-03, T-BIL-01, T-BIL-02 and T-AI-01 all depend on it.",
+    "T-MIG-01 owns the migration runner, the T-GOV-04 registry integration and reversal evidence, and lands in Sprint 03 ahead of the ledger schema in api#2. T-ENV-01 keeps seed and demonstration data only and moves to Sprint 13.",
+    "T-CON-10 publishes the shared statement-import components and T-CON-09 publishes the export, consent, rights and transparency contract, so api#10, api#18, the compliance floor and the client trust surfaces stop inventing private shapes.",
+    "Sprint 02 rebalance keeps T-ADR-ADMIN-06 before T-SEC-03 freezes its event schema and leaves T-ADR-ERASE-07 in Sprint 07. T-QA-07 is explicitly scheduled in the Sprint 01 Quality Assurance pool so prototype and Android compatibility work never depends on an undated device.",
+    "Independent review means a qualified custom reviewer agent in a separate session, never the developer's self-review or an in-session reviewer subagent. Because the organisation has one GitHub user, rulesets do not require an impossible second-account approval; the required policy check validates structured reviewer-agent attestations against the current head SHA and dismisses stale evidence. Risk classes route core, QA, contract, money, security, accessibility, reliability and release reviews. This provides process separation, not cryptographic human-identity separation, and that limitation is explicit.",
+    "Roadmap dates: an epic's Start and Due are derived from its children - minimum child Start to maximum child Due - inside the same rollup loop that already enumerates them, and are cleared when no child is dated. The epic's own Sprint is a label for where it begins, not its span, and is no longer written as a date. Tickets and epics are dated in separate passes so no epic is written twice.",
+    "roadmap_partial_span records every epic that owns both dated and Future children. Its Roadmap bar shows the currently scheduled tranche only, which is legitimate and easy to misread, so the validator fails on an epic that is partial and unlisted and on a listed epic that is no longer partial.",
+    "board-views.json is the durable view specification. Current Sprint filters on ticket windows overlapping the next fourteen days with '-kind:Epic start:<=@today+14d due:>=@today', Ready Queue on 'status:Ready -kind:Epic' and Epic Rollups on 'kind:Epic', so all three stay correct without an edit when a sprint rolls over or an item becomes startable. setup-views.ps1 is its sole writer; sync owns execution dates and rollups, and setup-forecast-roadmap.ps1 owns forecast fields.",
+    "refresh-project-title-cache.ps1 targets every issue-backed item whose cached Title differs from the issue title, in every repository. The previous docs#1 to docs#20 filter was the stale set on the day it was written and silently hid every later drift while reporting the board as clean.",
+    "Legacy section aliases are canonicalised in one place: the sync alias table maps 'Technical notes' to 'Contracts and schema' and 'Test notes' to 'Tests'. Pre-v2 issue bodies keep the heading they already have, because renaming a live heading breaks anchors and every earlier plan-patch hash, so the alias table is the canonicalisation and a cold agent is told so rather than concluding the content is missing.",
+    "Paths inside this repository are written without a docs/ prefix. This repository is PenniLogic/docs, so 'docs/planning-automation' only resolves from a sibling checkout and is wrong from a worktree of this repository.",
+    "The declarative JSON schemas are executed offline for every manifest entry. ticket_size and roadmap_partial_span are required schema properties, native tickets cannot carry unknown keys, and every source-level release gate must reach a terminal gate through the dependency graph.",
+    "Raw-derived message digests remain device-local and are excluded from API, sync and export schemas. The server transaction dedupe key is a separate keyed fingerprint over canonical structured fields, and fuzzy duplicate matches are reversible links rather than destructive merges.",
+    "T-ADR-ADMIN-06 is scheduled in Sprint 02 before T-SEC-03 freezes the append-only audit event schema. T-QA-07 remains Ready in Sprint 01, where the Quality Assurance lane proof reserves its three points before prototype or Android release evidence depends on it.",
+    "Thirteen assurance tickets add constrained-device adaptation, cash reconciliation, consumer refunds, salary-market provenance, assistant history lifecycle, notification preferences, credit-card cycles, recurring-charge management, sinking funds and the persisted-embedding decision without assigning speculative post-MVP dates.",
+    "The Project README renders all mutable counts and points from the source, and Review, Test and Blocked queues make independent-review and verification handoffs operationally visible.",
+    "A strict patch cannot list a replace_text old value in an add list, because the sync would otherwise replace the value and append the superseded bullet again.",
+    "The experience coverage registry is the single source for frontend design prerequisites. Every mapped Android, web and admin implementation ticket derives T-DQA-12 plus its exact platform design dependencies, and validation fails on missing screens, flows, components, QA owners or native dependency projection.",
+    "Capacity is modeled in three independent pools: Engineering, Product Design and UX, and Quality Assurance. The pooled lane proof places the CDO design-readiness gate in Sprint 07, the first frontend work in Sprint 08 and private beta in Sprint 16, leaving Sprints 17 and 18 as explicit contingency."
+  ],
+  "ticket_size": {
+    "split_threshold": 13,
+    "description": "13 is the largest value the estimate vocabulary allows, so it is an open-ended bucket rather than a measurement: a 13 means 13 or more. A ticket that large usually bundles several independently mergeable deliverables, which contradicts the one-ticket-one-branch rule in the delivery protocol. The rule is therefore not that 13 is forbidden, but that neither a native nor a legacy ticket may still be at the threshold when its sprint starts. Work in Future may sit at the threshold, because splitting undated work is speculative; scheduling it into a numbered sprint is the moment the split becomes due. Every entry below is debt with a date, and validate-backlog-v2.ps1 fails when an entry passes its date, when a threshold ticket in a numbered sprint has no entry, or when an entry plans to split after its own sprint has already begun. Every split must update dependencies, estimates, reviewer load and the execution-lane proof before it is complete.",
+    "unsplit_allowlist": [
+      { "stable_id": "T-PLT-01", "sprint": "Sprint 04", "split_by": "2026-10-19", "reason": "Environment and residency policy, deploy pipelines, database-extension policy and rehearsed rollback are separable deliverables; rollback rehearsal in particular can stand alone" },
+      { "stable_id": "T-PLT-03", "sprint": "Sprint 06", "split_by": "2026-11-02", "reason": "Observability, service level objectives, alerting, on-call and log retention are five deliverables with different reviewers" },
+      { "stable_id": "T-QA-01", "sprint": "Sprint 05", "split_by": "2026-11-02", "reason": "Property, mutation, idempotency and independent-model verification are four harnesses that land independently" },
+      { "stable_id": "T-AND-01", "sprint": "Sprint 10", "split_by": "2026-11-16", "reason": "Authentication, session handling and onboarding are separable, and onboarding is the surface user research will change" },
+      { "stable_id": "T-SEC-04", "sprint": "Sprint 08", "split_by": "2026-11-16", "reason": "Rate limiting, lockout, takeover detection and step-up authentication are four controls with independent tests" },
+      { "stable_id": "T-AND-02", "sprint": "Sprint 09", "split_by": "2026-12-14", "reason": "Manual entry, account management and category management are three surfaces" },
+      { "stable_id": "T-SEC-01", "sprint": "Sprint 05", "split_by": "2026-10-19", "reason": "Envelope encryption, blind index and row-level security are coupled by one design but land as separate changes" },
+      { "stable_id": "T-CMP-01", "sprint": "Sprint 11", "split_by": "2026-12-28", "reason": "Consent ledger, purpose registry, data-principal rights and retention jobs are four deliverables under one record" },
+      { "stable_id": "T-SEC-02", "sprint": "Sprint 10", "split_by": "2027-01-11", "reason": "The erasure path and its verification harness are separable, and the harness should be reviewable before the path is trusted" },
+      { "stable_id": "T-SEC-05", "sprint": "Sprint 12", "split_by": "2027-01-11", "reason": "Keystore storage, integrity verification and pinned transport are three hardening changes" },
+      { "stable_id": "T-SYN-02", "sprint": "Sprint 13", "split_by": "2027-01-11", "reason": "Sync endpoints, tenancy isolation and pooler safety are separable, and tenancy isolation carries its own attack tests" },
+      { "stable_id": "T-QA-03", "sprint": "Sprint 14", "split_by": "2027-02-08", "reason": "Tenancy, object-authorization and authentication attack suites are three suites with different owners" },
+      { "stable_id": "T-ADM-01", "sprint": "Sprint 06", "split_by": "2026-11-02", "reason": "Administrative identity, policy enforcement and boundary routing are separable security-reviewed changes" },
+      { "stable_id": "T-QA-05", "sprint": "Sprint 15", "split_by": "2027-03-08", "reason": "Load, stress, soak, chaos and disaster-recovery rehearsals are independent suites with distinct evidence" },
+      { "stable_id": "api#2", "sprint": "Sprint 04", "split_by": "2026-09-25", "reason": "Ledger schema and migration can land separately from deferred balance constraints, row-level policy wiring and invariant verification. The original 2026-09-21 deadline was missed because setup delayed delivery before any sprint started; the coordinator proposed this finite reschedule to 2026-09-25 under the owner's standing delivery direction, with no fresh specific-date owner approval recorded. It remains before ledger implementation and Sprint 04, and decomposition is not yet complete" },
+      { "stable_id": "api#12", "sprint": "Sprint 07", "split_by": "2026-11-16", "reason": "Amortisation calculation, never-payoff behavior and reference-vector verification are independently reviewable money-path changes" },
+      { "stable_id": "api#17", "sprint": "Sprint 12", "split_by": "2027-01-25", "reason": "Source registry and pipeline stages can land separately from dashboards, confidence policy and compatibility fixtures" },
+      { "stable_id": "api#18", "sprint": "Sprint 13", "split_by": "2027-02-08", "reason": "Match and precedence engine, audit records, reversible unmerge and shadow rollout are separate deliverables" },
+      { "stable_id": "android#7", "sprint": "Sprint 13", "split_by": "2027-02-08", "reason": "Parser engine, signed rule consumption, golden corpus and spoof/privacy hardening require separate focused reviews" },
+      { "stable_id": "android#11", "sprint": "Sprint 15", "split_by": "2027-03-08", "reason": "Inbox workflow, dedup conflict resolution, rule rollback and offline convergence are separable journeys" },
+      { "stable_id": "android#12", "sprint": "Sprint 14", "split_by": "2027-03-08", "reason": "Listener boundary, structured-extras parser, capture health and cross-channel integration are separable changes" },
+      { "stable_id": "android#9", "sprint": "Sprint 15", "split_by": "2027-03-22", "reason": "Permission onboarding, denial recovery, declaration evidence and store-submission workflow are independently reviewable" }
+    ]
+  },
+  "capacity": {
+    "points_per_lane_per_sprint": 20,
+    "execution_lanes_file": "evidence/execution-lanes.json",
+    "pools": {
+      "Engineering": {
+        "lanes": 3,
+        "points_per_lane_per_sprint": 20,
+        "review_points_per_sprint_max": 20,
+        "review_effort_divisor": 4,
+        "review_effort_minimum": 1
+      },
+      "Product Design and UX": {
+        "lanes": 6,
+        "points_per_lane_per_sprint": 20,
+        "review_points_per_sprint_max": 40,
+        "review_effort_divisor": 4,
+        "review_effort_minimum": 1
+      },
+      "Quality Assurance": {
+        "lanes": 4,
+        "points_per_lane_per_sprint": 20,
+        "review_points_per_sprint_max": 40,
+        "review_effort_divisor": 4,
+        "review_effort_minimum": 1
+      }
+    },
+    "description": "Planning capacity, not a forecast. Engineering has three lanes, Product Design and UX has six, and independent Quality Assurance has four, each at 20 points per sprint with separate review caps. Each ticket reserves max(1, ceiling(estimate / 4)) review points in its pool. Capacity arithmetic assumes reviewers are independent and qualified; T-GOV-03 and design governance enforce qualification, scope, expiry and author conflict. The validator enforces pool load, lane overlap, dependency timing and review load. Sprints 17 and 18 remain explicit contingency after the Sprint 16 private-beta gate."
+  },
+  "roadmap_partial_span": {
+    "description": "An epic's Roadmap bar is the span of its dated children - the minimum child Start to the maximum child Due - and never the epic's own Sprint, which is a label for where the epic begins rather than how long it lasts. An epic that owns both dated and Future children therefore shows only its currently scheduled tranche. That is legitimate and it is also easy to misread as the whole epic, so every such epic is listed here and validate-backlog-v2.ps1 fails on one that is not. The allowlist is the difference between a partial bar that was chosen and one that happened.",
+    "bar_means": "currently scheduled tranche, not the whole epic",
+    "undated_epic_behaviour": "an epic with no dated child has Start and Due cleared, so no bar is drawn at all",
+    "legacy_dated_epics": [
+      "docs#4",
+      "docs#5"
+    ],
+    "allowed": [
+      "E24",
+      "E25",
+      "E26",
+      "E30",
+      "E31",
+      "docs#2",
+      "docs#13",
+      "docs#12",
+      "docs#4",
+      "docs#5",
+      "docs#25",
+      "docs#6",
+      "docs#7"
+    ]
+  }
+}

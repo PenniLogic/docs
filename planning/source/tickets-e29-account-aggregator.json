@@ -1,0 +1,153 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e29-account-aggregator",
+  "epic_refs": [
+    "E29"
+  ],
+  "items": [
+    {
+      "stable_id": "T-AAG-01",
+      "title": "Produce the account aggregator readiness assessment and consent artefact design",
+      "repo": "docs",
+      "epic": "E29",
+      "kind": "Task",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "docs",
+      "priority": "P2 Medium",
+      "perspective": "Compliance",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "compliance",
+        "P2-medium"
+      ],
+      "outcome": "A dated assessment states whether to pursue aggregator connectivity, what role and obligations it entails, what it costs, how consent artefacts map onto the existing consent ledger, and the criteria under which the work is abandoned.",
+      "context": "Aggregator connectivity is currently a deferred assumption with no owner, which is the state most likely to produce an expensive surprise later. Writing the assessment converts it into a decision that can be made, revisited or dropped deliberately.",
+      "scope": [
+        "Role and obligation analysis for participation, including the licensing position",
+        "Cost model covering integration, ongoing fees and operational burden",
+        "Consent artefact model mapped onto the existing consent ledger and purpose registry",
+        "Data minimisation, retention and purpose limitation position for fetched data",
+        "Named abandon criteria and a review date",
+        "Comparison against continuing with deterministic capture alone"
+      ],
+      "acceptance_criteria": [
+        "The assessment states pursue or defer with a date and a named owner",
+        "Consent artefacts map onto the existing ledger without a parallel consent system",
+        "The retention position for fetched data is stated and is consistent with the existing schedule",
+        "Abandon criteria are specific enough to be evaluated without reopening the analysis",
+        "The cost model is dated and its sources are cited rather than assumed",
+        "The assessment states what capability is lost by deferring"
+      ],
+      "contracts_schema": [
+        "Defines the consent artefact fields the implementation ticket must carry"
+      ],
+      "security_privacy": [
+        "States what data would be received, from whom, and under what basis",
+        "States that the arrangement never involves holding or moving funds"
+      ],
+      "observability": [
+        "Names the metrics that would show whether the integration is worth its cost"
+      ],
+      "tests": [
+        "Review against the existing consent ledger design to confirm no parallel system is needed"
+      ],
+      "rollout_rollback": [
+        "Adopted on merge; the review date is tracked and the decision is revisited rather than assumed"
+      ],
+      "non_goals": [
+        "Implementation, which is the separate api ticket"
+      ],
+      "dependencies": [
+        "T-CMR-01"
+      ],
+      "parallel_boundary": "Primary repo docs. Owns the assessment. The implementation ticket may not start until this is accepted.",
+      "definition_of_done": [
+        "Document merged and dated, with the option chosen and the options rejected recorded",
+        "Linked from every epic and ticket it unblocks",
+        "Reviewed through a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Follow-up implementation tickets created or updated to reference it",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AAG-02",
+      "title": "Implement aggregator consent, fetch and mapping behind a default-off kill switch",
+      "repo": "api",
+      "epic": "E29",
+      "kind": "Task",
+      "phase": "P6 Moat",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P2 Medium",
+      "perspective": "Development",
+      "risk": "R5 Scope",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "compliance",
+        "P2-medium"
+      ],
+      "outcome": "Aggregator consent, data fetch, mapping into the ledger and revocation are implemented as an inert capability that does nothing until a deliberate, audited configuration change enables it.",
+      "context": "Building this behind a kill switch means the option can be exercised quickly if the assessment says pursue, without the risk of a half-finished integration touching real data in the meantime. It also forces the consent and retention semantics to be correct before anything is fetched.",
+      "scope": [
+        "Consent request, artefact storage and expiry aligned with the existing consent ledger",
+        "Fetch scheduling with the minimum data scope the consent permits",
+        "Mapping of fetched records onto accounts and the ledger through the existing precedence rules",
+        "Revocation that stops fetching and removes derived records within the published window",
+        "Default-off kill switch whose state is audited",
+        "Retention and expiry of aggregator-sourced records tied to the consent artefact"
+      ],
+      "acceptance_criteria": [
+        "With the switch off, no aggregator code path executes and no outbound call is made, proven by a test",
+        "Enabling the switch is an audited configuration change, not a code deploy",
+        "Fetched records carry their consent artefact identifier and expire with the consent",
+        "Revoking consent stops fetching immediately and removes derived records within the published window",
+        "Fetched records deduplicate against existing sources through the shared precedence rules",
+        "No data is fetched beyond the scope the consent artefact permits, enforced in code rather than by configuration"
+      ],
+      "contracts_schema": [
+        "Implements the aggregator additions to the published ingestion contract as an additive registration"
+      ],
+      "security_privacy": [
+        "Aggregator credentials and artefacts are stored encrypted and are never logged",
+        "Fetched data is subject to the same encryption and retention rules as all other financial data"
+      ],
+      "observability": [
+        "Publishes fetch counts, consent expiry events and revocation outcomes without content"
+      ],
+      "tests": [
+        "Kill switch off path test proving no execution",
+        "Consent expiry test",
+        "Revocation removal test",
+        "Scope enforcement test",
+        "Deduplication test against existing sources"
+      ],
+      "rollout_rollback": [
+        "Default off; enabling is per cohort and reversible without a deploy",
+        "Rollback flips the switch off and stops fetching; already mapped records remain valid"
+      ],
+      "non_goals": [
+        "Any funds movement",
+        "Replacing deterministic message capture"
+      ],
+      "dependencies": [
+        "T-AAG-01",
+        "api#17",
+        "T-SEC-01"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the connector, consent handling and mapping. Client surfaces are deliberately out of scope until the assessment says pursue.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    }
+  ]
+}

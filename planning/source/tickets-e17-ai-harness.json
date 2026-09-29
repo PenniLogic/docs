@@ -1,0 +1,596 @@
+{
+  "kind": "tickets",
+  "group": "tickets-e17-ai-harness",
+  "epic_refs": [
+    "docs#17"
+  ],
+  "items": [
+    {
+      "stable_id": "T-AI-01",
+      "title": "Deploy the AI gateway with virtual keys, encrypted key storage and the metering bridge",
+      "repo": "ai-service",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R7 AI cost",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "A gateway runs inside the private network, provisions a per-user virtual key bound to that user's entitlement, stores any user-supplied provider key under envelope encryption that never appears in a log, and consumes the quota primitive rather than counting for itself.",
+      "context": "All model traffic routes through the backend by decision, so the gateway is the single choke point for cost, audit and isolation. Key material is the highest-value secret in the system and the documented failure mode is that it ends up in a trace or a log rather than in an attacker's hands directly The gateway depends on the published quota contract rather than on the billing implementation: the contract is the freeze point, so gateway development proceeds against the contract and a mock while production enablement stays gated on real metering.",
+      "scope": [
+        "Gateway deployed on the chosen runtime, reachable only from within the private network",
+        "Per-user virtual key carrying the plan budget, model allowlist and rate limits",
+        "Key updates on plan change and revocation on downgrade",
+        "Envelope-encrypted storage of user-supplied provider keys with memory clearing after use",
+        "Redaction guarantees so no key appears in any log, trace or error",
+        "Reserve, stream and reconcile bridge to the published quota primitive",
+        "Namespacing so one user's context cannot reach another's",
+        "Authenticated workload identity and delegated user context on every gateway call",
+        "User-initiated provider-key replacement and revocation with no plaintext recovery path",
+        "Fresh phishing-resistant step-up assertion for every key add or replacement, with immediate revocation requiring no cooling delay",
+        "Pending activation and cancellation for a change made after recovery, on an untrusted device or under a takeover signal, with a twenty-four-hour cooling period and verified-channel notification",
+        "Automatic suspension of every stored user-provider credential when account recovery or credential reset completes",
+        "Consumes the generated Python client from the contracts pipeline rather than a hand-written HTTP shim"
+      ],
+      "acceptance_criteria": [
+        "The gateway is unreachable from the public internet, proven by an external connection attempt",
+        "A user's virtual key reflects their entitlement and changes within the published time on a plan change",
+        "No key material appears in logs, traces or error output, proven by a log scan test with a planted key",
+        "Streamed consumption reconciles exactly against the reservation and a failed reconciliation never charges the user",
+        "A cross-user context bleed attempt fails; cache and session keys are namespaced by user",
+        "Every key decryption is audited",
+        "An unauthenticated workload, wrong audience or forged delegated subject is rejected before provider routing",
+        "Replacing or revoking a provider key invalidates cached material within the published time and leaves no old key usable",
+        "A stale or absent step-up assertion cannot add or replace a provider key, and the refusal reveals no key state",
+        "A high-risk key change remains unusable for twenty-four hours, is visible as pending, can be cancelled from the notification link and never becomes active after account recovery suspends it",
+        "Account recovery suspends existing provider keys before a recovered session can invoke a model; re-enrollment requires a new step-up",
+        "The gateway calls the api only through the generated Python client, and a hand-written request path to a contracted endpoint fails review",
+        "Every monetary value the gateway handles is the Decimal-backed Python money wrapper defined by T-ADR-MONEY-01; a float amount fails a test"
+      ],
+      "contracts_schema": [
+        "Consumes the published quota contract; the gateway holds no authoritative counter",
+        "Depends on the published Python client and its contract verification, so a contract change reaches the ai-service as a regeneration rather than a manual edit"
+      ],
+      "security_privacy": [
+        "User-supplied keys are encrypted with per-user keys and are never returned by any endpoint",
+        "The gateway makes no outbound call to a destination outside the configured allowlist",
+        "Gateway credentials are short lived, audience bound and rotated independently of user provider keys"
+      ],
+      "observability": [
+        "Publishes request counts, reconciliation mismatches and key decryption events without content",
+        "Publishes rejected workload identity, delegated-subject failure and provider-key revocation counts without key material"
+      ],
+      "tests": [
+        "External reachability test",
+        "Log scan test with a planted key",
+        "Streaming reconciliation exactness test",
+        "Cross-user context bleed attempts",
+        "Plan change propagation test",
+        "Forged and wrong-audience service identity tests",
+        "Provider-key replacement, cache invalidation and revocation tests",
+        "Step-up freshness, recovery suspension, cooling-off and verified-notification tests"
+      ],
+      "rollout_rollback": [
+        "Deployed disabled; enabling requires the egress policy to be in place and verified",
+        "Rollback disables the gateway, which disables all model features cleanly"
+      ],
+      "non_goals": [
+        "Custom endpoint support, which is a separate ticket",
+        "Product features, which belong to E18",
+        "Production enablement of paid traffic, which stays gated on the billing implementation; development and test run against the published quota contract and its mock"
+      ],
+      "dependencies": [
+        "T-SCA-AIS-01",
+        "T-ADR-AIEGRESS-08",
+        "T-AUTH-01",
+        "T-SEC-04",
+        "T-SEC-01",
+        "T-GOV-03",
+        "T-CON-03",
+        "T-ADR-ENT-09",
+        "T-SCA-CON-01",
+        "T-QA-02"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns the gateway configuration, key storage and metering bridge. It consumes the frozen quota contract and its mock, so it never waits on the billing implementation.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    },
+    {
+      "stable_id": "T-AI-02",
+      "title": "Enforce egress policy denying private, loopback, link-local and metadata destinations",
+      "repo": "infra",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "infra",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "At the network layer, the AI workload cannot reach private ranges, loopback, link-local addresses or the runtime metadata endpoint, so an application-layer validation bypass still fails.",
+      "context": "The research assumed a network policy primitive from a container orchestrator that is not the chosen runtime, which left the network layer of the defence unimplemented. Application-layer validation alone has a long history of being bypassed through redirection and name resolution tricks.",
+      "scope": [
+        "Egress restriction implemented with the primitives available on the chosen runtime",
+        "Denied destination classes covering private ranges, loopback, link-local, carrier-grade address space and the equivalents in the newer address family",
+        "Explicit denial of the runtime metadata endpoint",
+        "Two distinct destination classes: code-managed provider destinations held in the allowlist as code, and runtime custom destinations that a user or operator registers and that are validated and pinned before first use",
+        "Verification executed from inside the running workload rather than from a build machine",
+        "Registration, validation and pinning path for a runtime custom destination, including who may register one, what is validated at registration, and how the resolved address is pinned"
+      ],
+      "acceptance_criteria": [
+        "A connection attempt from inside the workload to the metadata endpoint fails at the network layer",
+        "Attempts to reach private, loopback, link-local and carrier-grade addresses all fail from inside the workload",
+        "The same attempts fail for the newer address family, not only the older one",
+        "A destination outside the provider allowlist is refused",
+        "Adding a destination requires a code change and review rather than a console action",
+        "The verification runs on a schedule so a drifted rule is detected",
+        "Egress policy is re-evaluated on every redirect hop and a redirect to a private, loopback, link-local or metadata destination is denied",
+        "The resolved address is pinned for the life of the request, and a rebinding attempt between validation and connection is denied and alerted",
+        "IPv4-mapped IPv6 addresses and alternate textual encodings of denied addresses are normalised before comparison and denied",
+        "The container credential endpoint at 169.254.170.2 and the instance metadata service are denied explicitly, proven by a test that attempts both",
+        "The policy distinguishes code-managed provider destinations from runtime registered destinations, and each class states its own approval path",
+        "A code-managed provider destination can only be added by a code change and review; a console or runtime addition to that class is refused",
+        "A runtime custom destination is refused until it passes registration validation, which rejects private, loopback, link-local, carrier-grade and metadata addresses in every textual encoding and in both address families",
+        "A validated runtime destination is pinned: the address resolved at registration is the address used, and a later change of resolution is denied and alerted rather than followed",
+        "A runtime destination can be revoked, and revocation takes effect on in-flight configuration within the published bound",
+        "The two classes are separately reported, so an operator can see how many runtime destinations exist without reading the code allowlist"
+      ],
+      "contracts_schema": [
+        "Publishes the allowlist as a machine-readable artifact referenced by the application-layer validator"
+      ],
+      "security_privacy": [
+        "This is the second layer; the application-layer validator is the first and neither is sufficient alone",
+        "Rule changes are audited and alert on modification",
+        "A runtime custom destination is never trusted because a user supplied it; it is validated, pinned and revocable, and it can never widen the code-managed provider allowlist"
+      ],
+      "observability": [
+        "Publishes denied connection counts by destination class"
+      ],
+      "tests": [
+        "In-workload connection attempts per denied class",
+        "Address family coverage test",
+        "Scheduled drift verification",
+        "Registration rejection test per denied address class for a runtime custom destination",
+        "Pinning test proving a post-registration resolution change is denied and alerted",
+        "Test proving a runtime destination cannot be promoted into the code-managed provider class at runtime"
+      ],
+      "rollout_rollback": [
+        "Applied before the gateway is enabled; the gateway stays disabled until verification is green",
+        "Rollback tightens rather than loosens; removing the policy disables the workload"
+      ],
+      "non_goals": [
+        "Application-layer address validation, which is a separate ticket"
+      ],
+      "dependencies": [
+        "T-PLT-01",
+        "T-ADR-AIEGRESS-08"
+      ],
+      "parallel_boundary": "Primary repo infra. Owns the network rules and verification job. The ai-service repository consumes the published allowlist.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AI-03",
+      "title": "Implement custom endpoint validation and the adversarial request-forgery suite",
+      "repo": "ai-service",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R3 Breach",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "A user-supplied provider address is registered once, validated, resolved and pinned, never accepted in a request body, and an adversarial suite that actually attempts the known bypasses proves the defence works before the mode is exposed at all.",
+      "context": "A user-supplied base address is a server-side request forgery primitive by construction. Assertions that the validator rejects a bad address prove very little; only tests that attempt name-resolution rebinding, redirection and alternate address encodings show whether the defence holds.",
+      "scope": [
+        "Register-once flow with validation at registration rather than per request",
+        "Transport restricted to secure connections only",
+        "Resolution at registration with the resolved address pinned for subsequent use",
+        "Rejection of any attempt to supply an address in a request body",
+        "Re-validation on a schedule and on registration change",
+        "Fresh phishing-resistant step-up for registration or destination change",
+        "Risk-triggered twenty-four-hour pending activation with verified-channel notification and user cancellation",
+        "Immediate disablement on account recovery, credential reset or endpoint-integrity failure",
+        "Adversarial suite that attempts, rather than asserts, each known bypass"
+      ],
+      "acceptance_criteria": [
+        "Registering an address that resolves into a denied range is refused with a clear reason",
+        "The suite attempts the metadata endpoint, private ranges, loopback, carrier-grade space and the newer address family, and every attempt is blocked",
+        "A name-resolution rebinding attempt is blocked because the resolved address is pinned",
+        "A redirect to a denied destination is not followed",
+        "Supplying an address in a request body is rejected by the contract itself",
+        "The mode remains behind a kill switch until every suite case passes, and the switch state is auditable",
+        "A stale or absent step-up cannot register or change an endpoint; after recovery or on an untrusted device the endpoint remains pending for twenty-four hours and the user can cancel from a verified-channel notification",
+        "Account recovery, credential reset, failed re-validation or a pinned-address change disables the endpoint before another request can route"
+      ],
+      "contracts_schema": [
+        "The contract has no field capable of carrying a per-request base address; registration is a separate operation"
+      ],
+      "security_privacy": [
+        "Registration and every use are audited with the resolved address",
+        "A validation failure denies rather than falling back to a default provider"
+      ],
+      "observability": [
+        "Publishes registration attempts, validation failures and blocked destination counts"
+      ],
+      "tests": [
+        "Adversarial suite attempting each bypass class",
+        "Rebinding attempt test",
+        "Redirect following test",
+        "Contract test proving no body field can carry an address",
+        "Step-up freshness, cooling-off, notification cancellation and recovery-revocation tests"
+      ],
+      "rollout_rollback": [
+        "The mode stays disabled behind a kill switch until the suite is green, then enabled per cohort",
+        "Rollback flips the kill switch, which takes effect without a deploy"
+      ],
+      "non_goals": [
+        "Network-layer egress denial, which is the infra ticket",
+        "The decision on whether a client-direct mode exists, which is settled by the decision record"
+      ],
+      "dependencies": [
+        "T-AI-01",
+        "T-AI-02",
+        "T-AUTH-01",
+        "T-SEC-04"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns the validator, registration flow and adversarial suite.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AI-04",
+      "title": "Build the deterministic tool layer that owns all AI-facing arithmetic",
+      "repo": "api",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "api",
+      "priority": "P0 Critical",
+      "perspective": "Development",
+      "risk": "R10 Wrong numbers",
+      "status": "Backlog",
+      "estimate": 13,
+      "labels": [
+        "task",
+        "money-path",
+        "P0-critical"
+      ],
+      "outcome": "Every figure the assistant can mention comes from a deterministic, per-user-scoped tool implemented in the backend, so the model narrates numbers rather than producing them.",
+      "context": "A confidently wrong figure destroys trust permanently, and the only structural defence is to make the model incapable of producing one. Scoping must live inside the tool rather than in the prompt, because a prompt is attacker-influenced input and a query filter is not.",
+      "scope": [
+        "Tool set covering transaction queries, balances, debt schedules, goal simulation and budget status",
+        "Per-user scoping enforced inside each tool implementation, never taken from the model input",
+        "Deterministic results verified against the independent model harness",
+        "Structured results carrying the values and their provenance identifiers",
+        "Explicit refusal shape when a tool cannot answer, rather than a partial result",
+        "Workload authentication and delegated-subject verification before any deterministic tool is dispatched"
+      ],
+      "acceptance_criteria": [
+        "Every tool enforces the caller's user scope internally and ignores any scope supplied in its arguments, proven by an attempted cross-user call",
+        "Tool results agree with the independent model across the full case matrix",
+        "A tool that cannot answer returns an explicit refusal rather than an empty or approximate result",
+        "Results are reproducible: the same inputs produce the same values and provenance identifiers",
+        "No tool performs a write; the tool layer is read-only",
+        "Every tool call is audited with the tool name and scope, without arguments containing personal data",
+        "A forged, expired, replayed or widened delegated subject is rejected before a ledger query executes",
+        "Tool payloads carry money as the canonical decimal string with its currency and are parsed into the Decimal-backed Python wrapper, never as a float"
+      ],
+      "contracts_schema": [
+        "Implements the published tool contract in which the user scope is a required, server-derived parameter"
+      ],
+      "security_privacy": [
+        "Tools are the isolation boundary for the AI subsystem; a compromised model cannot widen its own scope",
+        "Tool output carries no counterparty text beyond the stated policy",
+        "Tool implementations receive a verified internal subject object rather than a user identifier from model or request arguments"
+      ],
+      "observability": [
+        "Publishes tool call counts, refusal counts and latency per tool"
+      ],
+      "tests": [
+        "Cross-user scope attempt tests per tool",
+        "Independent model agreement tests",
+        "Determinism tests",
+        "Read-only assertion test",
+        "Forged, expired, replayed and widened delegated-subject rejection tests per tool group"
+      ],
+      "rollout_rollback": [
+        "Shipped before any model feature; the assistant cannot be enabled without it",
+        "Rollback disables the tool endpoints, which disables the assistant"
+      ],
+      "non_goals": [
+        "Prompt construction and model routing, which the ai-service tickets own"
+      ],
+      "dependencies": [
+        "api#13",
+        "T-CON-06"
+      ],
+      "parallel_boundary": "Primary repo api. Owns the tool implementations. The ai-service repository calls them through the published contract and implements no arithmetic of its own.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AI-05",
+      "title": "Implement the tool dispatcher, injection defences and data minimisation",
+      "repo": "ai-service",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P0 Critical",
+      "perspective": "Security",
+      "risk": "R11 Prompt injection",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "Only allowlisted tools can be invoked, ingested text is treated as hostile data rather than instructions, and identifying details are minimised before any external call without altering the figures an answer cites.",
+      "context": "Merchant names and transaction notes are attacker-controlled input that arrives from outside and ends up near a model, which is the textbook injection path. This ticket is the runtime boundary; the evaluation and spend gates that police its output are a separate ticket with a different failure mode.",
+      "scope": [
+        "Allowlist dispatcher rejecting any unknown tool name, with no dynamic registration",
+        "Ingested content passed only as data, never inside instructions, with encoding that prevents instruction confusion",
+        "Screening for suspected injection with a defined response and an abuse counter",
+        "Minimisation of identifying details before any external call, without altering the figures that answers cite",
+        "Trace redaction so no key or raw counterparty string is retained beyond policy",
+        "No persisted embedding of user-derived transaction, merchant, memo or assistant text until T-ADR-EMBED-12 is accepted and its storage and erasure controls are implemented"
+      ],
+      "acceptance_criteria": [
+        "An unknown tool name is rejected and recorded rather than attempted",
+        "A hostile merchant name cannot induce a tool call the user did not ask for, proven by an adversarial corpus",
+        "No ingested text appears inside the instruction portion of any request, proven by an outbound payload inspection test",
+        "Minimisation never rounds or alters an amount that an answer will cite, proven by a fidelity test",
+        "Traces contain no key material and no raw counterparty strings beyond policy",
+        "A schema and migration gate rejects pgvector, another vector extension or a user-derived embedding column while T-ADR-EMBED-12 remains open"
+      ],
+      "contracts_schema": [
+        "Consumes the published tool contract; the dispatcher cannot call anything absent from it"
+      ],
+      "security_privacy": [
+        "Injection screening results are recorded without storing the hostile content verbatim in an unbounded way",
+        "Data minimisation is applied before egress, not after logging"
+      ],
+      "observability": [
+        "Publishes injection suspicion counts, dispatcher rejections and minimisation coverage"
+      ],
+      "tests": [
+        "Unknown tool rejection test",
+        "Adversarial injection corpus in continuous integration",
+        "Outbound payload inspection test",
+        "Numeric fidelity zero-tolerance test on the minimisation path"
+      ],
+      "rollout_rollback": [
+        "Dispatcher and defences ship together; the gateway cannot be enabled without them",
+        "Rollback lowers the routing tier rather than removing the injection defences"
+      ],
+      "non_goals": [
+        "Evaluation gating and spend controls, which are their own ticket",
+        "Product features, which belong to E18",
+        "Quota accounting, which the billing ticket owns",
+        "Persisted transaction or conversation embeddings, which require T-ADR-EMBED-12 and a separately reviewed implementation ticket"
+      ],
+      "dependencies": [
+        "T-AI-01",
+        "T-AI-04"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns the dispatcher, the injection defences and the minimisation path.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AI-06",
+      "title": "Gate AI merges on the evaluation suite, numeric fidelity and spend controls",
+      "repo": "ai-service",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P0 Critical",
+      "perspective": "QA",
+      "risk": "R7 AI cost",
+      "status": "Backlog",
+      "estimate": 5,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "An evaluation suite blocks merges on accuracy or numeric-fidelity regression, and cost anomalies trip a kill switch that stops traffic rather than sending an email.",
+      "context": "Cost is the structural risk the runtime boundary does not address: without a hard stop, a single loop can consume a month of margin overnight. Evaluation is the other: a model change that quietly degrades categorisation is invisible until users report it.",
+      "scope": [
+        "Evaluation suite covering categorisation accuracy, adversarial cases and numeric fidelity, blocking merges",
+        "Numeric fidelity cases treated as zero tolerance rather than as a scored metric",
+        "Cost anomaly detection with per-user throttling and a global kill switch that stops traffic",
+        "Published baseline so a regression is measured against a recorded number rather than an impression",
+        "Governed evaluation corpus with a named owner, recorded provenance per case and a change process",
+        "Provider model and version pinning, with an evaluation rerun forced by any version change",
+        "Harmful-answer incident path: report, containment, correction and its relationship to the kill switch and the on-call rota"
+      ],
+      "acceptance_criteria": [
+        "The evaluation suite fails a merge when accuracy drops below the threshold or any numeric fidelity case fails",
+        "Exceeding the global spend cap stops traffic rather than only alerting, verified in a test environment",
+        "Per-user throttling engages before the global cap and is recorded",
+        "The baseline is published and a change to it is a reviewed change rather than a silent one",
+        "The evaluation suite fails a merge when task accuracy falls below 95 percent on the governed corpus",
+        "The governed corpus contains at least 1000 synthetic cases with recorded provenance, plus at least 50 adversarial cases, and a case with no recorded provenance is invalid",
+        "The corpus has a named owner, and adding, changing or removing a case is a reviewed change rather than an edit",
+        "Every provider model is pinned to an explicit version, and an unpinned model reference fails the build",
+        "Changing a pinned model version forces a full evaluation rerun before that version can serve traffic, proven by a test that changes a version and asserts the gate",
+        "A harmful answer has a defined path: it can be reported from the product, it is contained by disabling the affected capability or tripping the kill switch, a correction is issued, and the on-call rota is named as the responder",
+        "A reported harmful answer is added to the adversarial case set as part of its correction, so the same failure cannot silently return"
+      ],
+      "contracts_schema": [
+        "Evaluation results and spend counters are published in a documented shape that the release checklist reads"
+      ],
+      "security_privacy": [
+        "Evaluation fixtures are synthetic; no production content is used as an evaluation case",
+        "Spend counters carry no request content",
+        "The governed corpus is synthetic; no real user content enters it, and a reported harmful answer is de-identified before it becomes a case",
+        "The kill switch is reachable by the on-call responder without a deployment"
+      ],
+      "observability": [
+        "Publishes evaluation scores, spend against cap, throttle activations and kill switch events",
+        "Harmful-answer reports, containment actions and corrections are counted and dated, so a rising rate is visible before it is anecdotal"
+      ],
+      "tests": [
+        "Evaluation gate test with a planted accuracy regression",
+        "Numeric fidelity zero-tolerance test",
+        "Spend cap enforcement test",
+        "Throttle activation test",
+        "Accuracy floor enforcement test at the 95 percent boundary",
+        "Corpus size and provenance validation test",
+        "Unpinned model reference build failure test",
+        "Version-change forces rerun test",
+        "Harmful-answer containment drill exercising the kill switch and the on-call path"
+      ],
+      "rollout_rollback": [
+        "Evaluation gate introduced as reporting for one release to establish the baseline, then blocking",
+        "Rollback returns the gate to reporting; the spend kill switch is never rolled back"
+      ],
+      "non_goals": [
+        "Dispatcher and injection defences, which are their own ticket",
+        "Product features, which belong to E18"
+      ],
+      "dependencies": [
+        "T-AI-05"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns the evaluation suite, its baseline and the spend controls.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges"
+      ]
+    },
+    {
+      "stable_id": "T-AI-07",
+      "title": "Implement bounded provider routing, failover and circuit breakers for the AI gateway",
+      "repo": "ai-service",
+      "epic": "docs#17",
+      "kind": "Task",
+      "phase": "P5 Intelligence",
+      "sprint": "Future",
+      "component": "ai-service",
+      "priority": "P0 Critical",
+      "perspective": "Architecture",
+      "risk": "R7 AI cost",
+      "status": "Backlog",
+      "estimate": 8,
+      "labels": [
+        "task",
+        "security",
+        "P0-critical"
+      ],
+      "outcome": "The gateway routes only across an allowlisted set of provider, region and model combinations approved for zero data retention, trips a circuit breaker on sustained provider failure, retries and fails over while consuming exactly the quota that was reserved, and returns an explicit all-providers-unavailable state rather than a generic error or a silent retry loop.",
+      "context": "T-AI-01 built the gateway, its virtual keys and the metering bridge, and T-AI-06 gates merges on evaluation and spend, but neither defines what happens when a provider is slow, down or outside its permitted region. An uncontrolled retry can double-count reserved quota or route a request to a destination the egress policy never approved.",
+      "scope": [
+        "Provider routing bounded to an allowlist of provider, region and model combinations approved for zero data retention",
+        "Circuit breaker per provider that opens on sustained failure and half-opens after a cooldown",
+        "Retry and failover logic that consumes exactly one reservation's worth of quota regardless of how many providers are attempted",
+        "Explicit all-providers-unavailable response distinct from a single-provider failure",
+        "Routing decision recorded for every request for audit"
+      ],
+      "acceptance_criteria": [
+        "A request never reaches a provider, region or model outside the allowlist, proven by an attempted disallowed route",
+        "An open circuit stops new requests to a failing provider until its cooldown elapses",
+        "A failover across three simulated provider failures still consumes only one reservation's worth of quota",
+        "When every allowlisted provider is unavailable, the caller receives the explicit all-providers-unavailable state rather than a generic error or an unbounded retry loop",
+        "Every routing decision is recorded with the provider chosen and its outcome"
+      ],
+      "contracts_schema": [
+        "Consumes the published quota contract for exactly-once reservation semantics; the routing table itself is internal gateway configuration, not part of the public contract"
+      ],
+      "security_privacy": [
+        "The allowlist is the sole source of truth for permitted destinations, and a change to it is reviewed as a security change",
+        "Circuit breaker and routing telemetry carries no request content"
+      ],
+      "observability": [
+        "Publishes routing decisions by provider and outcome, circuit breaker state transitions, quota-exact retry counts and all-providers-unavailable occurrences"
+      ],
+      "tests": [
+        "Disallowed-route rejection test",
+        "Circuit breaker open and cooldown test",
+        "Quota-exact failover test across simulated multi-provider failure",
+        "All-providers-unavailable explicit-state test"
+      ],
+      "rollout_rollback": [
+        "Enabled behind a flag with a single provider first; additional providers and failover are added one at a time",
+        "Rollback pins routing to the last known-good single provider and disables failover rather than removing the gateway"
+      ],
+      "non_goals": [
+        "The gateway's key storage and metering bridge, which T-AI-01 owns",
+        "Evaluation gating and spend controls, which T-AI-06 owns"
+      ],
+      "dependencies": [
+        "T-AI-01",
+        "T-AI-06",
+        "T-BIL-02"
+      ],
+      "parallel_boundary": "Primary repo ai-service. Owns the routing table, circuit breakers and failover logic. Quota reservation itself remains owned by the api repository's published contract.",
+      "definition_of_done": [
+        "Merged only after a current-head core-reviewer attestation from a separate qualified reviewer-agent session",
+        "Every acceptance criterion demonstrated by a named automated test or attached evidence",
+        "Tests listed in this ticket run in CI and are required by branch protection",
+        "Observability, rollout and rollback notes recorded on the ticket before merge",
+        "Declared dependencies mirrored as native GitHub blockedBy edges",
+        "Independent second-reviewer approval obtained under T-GOV-03; where no second reviewer exists yet, an external independent review is a hard blocker and this ticket cannot merge"
+      ]
+    }
+  ]
+}
