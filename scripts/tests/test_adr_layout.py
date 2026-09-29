@@ -822,15 +822,19 @@ class GitIntegrationTests(ScratchCase):
         self.assertTrue(adr.render(self.root, ticket))
         self.commit(f"land {number}")
 
-    def test_independent_tickets_merge_cleanly_in_both_orders(self):
+    def squash(self, branch):
+        self.git("merge", "-q", "--squash", branch)
+        self.git("commit", "-q", "-m", f"squash {branch}")
+
+    def test_independent_tickets_squash_merge_cleanly_in_both_orders(self):
         self.land("money", "ADR-015", MONEY)
         self.land("cat", "ADR-016", CAT)
         self.git("checkout", "-q", "money")
-        self.git("merge", "-q", "--no-edit", "cat")
+        self.squash("cat")
         self.assertEqual(adr.check_layout(self.root)["published"], 2)
         merged = self.read("README.md")
         self.git("checkout", "-q", "cat")
-        self.git("merge", "-q", "--no-edit", "money")
+        self.squash("money")
         self.assertEqual(self.read("README.md"), merged)
         self.assertEqual(adr.check_layout(self.root)["published"], 2)
         self.assertEqual(self.git("status", "--porcelain", "--", "adr").stdout, "")
@@ -839,7 +843,7 @@ class GitIntegrationTests(ScratchCase):
         self.land("money", "ADR-015", MONEY, supersedes="ADR-004")
         self.land("cat", "ADR-016", CAT, supersedes="ADR-004")
         self.git("checkout", "-q", "money")
-        result = self.git("merge", "--no-edit", "cat", check=False)
+        result = self.git("merge", "--squash", "cat", check=False)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("UU adr/README.md", self.git("status", "--porcelain").stdout)
         self.git("checkout", "-q", "--theirs", "adr/README.md")
