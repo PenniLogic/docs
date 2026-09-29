@@ -1,5 +1,6 @@
 """Validate carried-forward decision and backlog inventories without claiming delivery."""
 
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -7,6 +8,14 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_check(name):
+    """Load a sibling check module by path so this script works from any working directory."""
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def validate_backlog(value):
@@ -45,10 +54,14 @@ def main():
         validate_backlog(json.loads((ROOT / "planning/backlog.json").read_text(encoding="utf-8")))
         for path in (ROOT / "planning/source").rglob("*.json"):
             json.loads(path.read_text(encoding="utf-8"))
+        taxonomy = load_check("check_client_states").validate_taxonomy(ROOT)
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(f"Documentation check failed: {error}", file=sys.stderr)
         return 1
-    print(f"Docs inventory valid: {len(adopted)} carried-forward ADRs, {len(ids)} pending reservations.")
+    print(
+        f"Docs inventory valid: {len(adopted)} carried-forward ADRs, {len(ids)} pending reservations, "
+        f"client state taxonomy {taxonomy['taxonomy_version']} with {taxonomy['states']} states."
+    )
     return 0
 
 
