@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E04",
+  "title": "Ledger and transactions",
+  "issue": "PenniLogic/docs#5",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

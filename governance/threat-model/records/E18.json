@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E18",
+  "title": "AI product features",
+  "issue": "PenniLogic/docs#19",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

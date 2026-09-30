@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E38",
+  "title": "Experience validation and design quality assurance",
+  "issue": "PenniLogic/docs#63",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

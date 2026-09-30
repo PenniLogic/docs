@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E22",
+  "title": "Goal planning",
+  "issue": "PenniLogic/docs#25",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}
