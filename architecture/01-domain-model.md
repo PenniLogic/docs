@@ -194,15 +194,18 @@ a stable ordering) and make it visible. Money must never be created or destroyed
 
 ## 5. Plans, entitlements, and AI quota
 
-> **Superseded by ADR-023 (`T-ADR-ENT-09`).** The sketch in this section and the SQL sketch in
-> [`03-stack-and-monetization.md` §8](03-stack-and-monetization.md#8-entitlements--feature-flags)
-> disagree about what a plan identifies, what a quota counts and where usage lives. Both are
-> research-era reasoning, not implementation authority. `T-ADR-ENT-09` decides plan and feature
-> identity, the request and token quota dimensions, the per-plan model allowlist and unlisted-model
-> refusal, BYOK quota treatment, event-sourced usage versus a materialized counter, and the reset
-> boundary and its time zone. It names which of these two sketches it supersedes. `T-CON-03`,
-> `T-BIL-01`, `T-BIL-02` and `T-AI-01` all depend on that record. Read what follows as the argument
-> that produced the question, not as the schema to build.
+> **Superseded by [ADR-023](../adr/ADR-023.md) (`T-ADR-ENT-09`, accepted 2026-09-30).** This section
+> is research history, not implementation authority. ADR-023 §1 names this section and
+> [`03-stack-and-monetization.md` §8](03-stack-and-monetization.md#8-entitlements--feature-flags) as
+> the two sketches it supersedes in full, and states which rules below remain binding (server-side
+> checks, own-key usage metered but not charged against the token allowance, a defined and displayed
+> reset semantic, reserve-then-reconcile for streamed consumption, no data loss on a plan change) and
+> which are discarded (the mutable `plans` row, plan-scoped `max_requests`/`max_tokens`/
+> `allowed_models[]`, `cost_micros` and `byok(bool)` on usage events). Read ADR-023 for plan
+> versions, feature keys, the `requests` and `tokens` dimensions, the model allowlist and
+> `model_not_in_plan`, BYOK treatment, the event-sourced ledger and the reset boundary. `T-CON-03`,
+> `T-BIL-01`, `T-BIL-02` and `T-AI-01` consume that record, not this section. What follows is the
+> argument that produced the question, not the schema to build.
 
 The brief requires admin-configurable per-plan features and AI quotas. This should be **first-class
 data we own**, not an external feature-flag vendor — entitlements are billing-critical, must be
