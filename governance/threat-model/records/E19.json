@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E19",
+  "title": "Security hardening",
+  "issue": "PenniLogic/docs#20",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

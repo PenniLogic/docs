@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "epic": "E34",
+  "title": "Cross-platform design system, content and handoff",
+  "issue": "PenniLogic/docs#59",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": [
+    {
+      "date": "2026-09-30",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Design system, content and handoff under PenniLogic/docs#59: governed design libraries and the contribution model (docs#78); typography, iconography, illustration and the financial visual language (docs#79); navigation, action, form and validation components (docs#80); money, data display, collection and visualisation components (docs#81); feedback, overlay, trust, consent and security components (docs#82); adaptive layout, themes, motion, haptics and reduced motion (docs#83); glossary, voice and regulated content (docs#84); localisation, pseudo-localisation and bidirectional readiness (docs#85); the design-to-code handoff and conformance contract (docs#86). The threat surface is the design-to-code supply chain (token packages, component specifications, code-mapping and icon or illustration assets consumed by the Android, web and admin builds), the semantics the components fix for money, consent and security states, and untrusted text rendered through the system.",
+      "tickets_in_scope": [
+        "PenniLogic/docs#78",
+        "PenniLogic/docs#79",
+        "PenniLogic/docs#80",
+        "PenniLogic/docs#81",
+        "PenniLogic/docs#82",
+        "PenniLogic/docs#83",
+        "PenniLogic/docs#84",
+        "PenniLogic/docs#85",
+        "PenniLogic/docs#86"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#1-threat-model-stride (T-14 overlay, T-15 clipboard)",
+        "architecture/02-security-architecture.md#5-android-hardening",
+        "product/08-experience-design-and-sdlc-plan.md (sections 5, 10, 11 and 12)",
+        "product/client-state-taxonomy.md",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-4, O-6)",
+        "PenniLogic/docs#59 (epic body: scope, exit criteria)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Research quotes, participant screenshots and realistic sample financial data embedded in design files, component examples and prototypes",
+          "subjects": [
+            "research_participants",
+            "users"
+          ],
+          "purpose_ref": "Design of the component system under the participant rules PenniLogic/docs#65 fixes (E33-F01); sample data in components must be synthetic, a rule PenniLogic/docs#81 owns for money components",
+          "retention": "Quotes follow the study retention schedule (E33-F01); synthetic sample data has no subject and is retained with the library",
+          "erasure_path": "Withdrawal removes quotes and screenshots from design files (E33-F02); library releases that carried them are re-published without them",
+          "children": "Not subjects: participants are adults by the screener (E33-F03); personas are not children",
+          "processors": [
+            "Design-file tooling and its library publishing service (docs#78, E34-F06)",
+            "Translation vendors receiving string bundles, which must contain no personal data (docs#85)"
+          ]
+        },
+        {
+          "data_class": "Consent interaction records the consent components emit: purpose, choice, consent text version and timestamp, and the withdrawal path",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Consent ledger and purpose registry (compliance O-1, api#24) through the consent components PenniLogic/docs#82 specifies (E34-F05)",
+          "retention": "Consent records retained for the period the compliance floor fixes for proof of consent (O-1, O-4)",
+          "erasure_path": "Withdrawal is itself recorded; the ledger row survives erasure as a pseudonymised proof of the choice, per api#24",
+          "children": "The pre-onboarding consent component enforces the age gate before any other consent is offered (O-6, android#17)",
+          "processors": []
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "The system renders untrusted text next to money: merchant and payee names, notes and imported descriptions. Unicode bidirectional controls and look-alike characters inside such a string can reorder or mask the amount, currency or direction the user sees, which is display spoofing of a financial value. Bidirectional readiness (docs#85) is where the rendering contract for untrusted text belongs.",
+          "evidence": [],
+          "findings": [
+            "E34-F02"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Token packages, component specifications, code mappings, icon or illustration assets and translation bundles are build inputs to three products. An altered token package changes every screen; an SVG asset with script or external references is an injection vector when inlined on the web; a translated string with markup or reordered placeholders injects HTML or misplaces an amount, and translations usually come from a third-party vendor. Unreviewed library changes propagate the same way (E34-F06). Money components that compute anything client-side are a second tampering surface because a displayed total can disagree with the ledger.",
+          "evidence": [
+            "PenniLogic/infra#31: software-supply-chain verification can cover published design packages"
+          ],
+          "findings": [
+            "E34-F01",
+            "E34-F03"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Consent components are where a data-principal's choice becomes evidence. An ambiguous, pre-ticked or unequal accept-versus-decline design produces consent that can be disputed, and the compliance floor's consent ledger (versioned purposes and withdrawal) can only record what the component actually captured. The component contract must fix the record it produces; the statutory test itself is counsel's to state, not this model's.",
+          "evidence": [
+            "compliance/01-regulatory-landscape.md obligation O-1: consent ledger and purpose registry with versioned purposes and withdrawal (T-CMP-01, E27)",
+            "compliance/01-regulatory-landscape.md obligation O-6: pre-onboarding consent, age gate and permission dashboard (T-CMP-02, E27)"
+          ],
+          "findings": [
+            "E34-F05"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Two channels. Design files may carry participant quotes and real screenshots from E33's research, so library and file sharing defaults (docs#78) decide who can read them. And the components themselves define whether an amount is visible on a lock screen, in the app switcher, in a widget, under an overlay or on the shared clipboard (baseline T-15): privacy-mode, screen-protection and clipboard states must exist in the system so android#30 and android#58 implement a specified state.",
+          "evidence": [],
+          "findings": [
+            "E34-F06",
+            "E34-F07"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "not_applicable",
+          "analysis": "No service or budget is exposed by a design system. Motion and haptic patterns that could harm users are an accessibility concern that docs#83 owns through reduced-motion behaviour.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "not_applicable",
+          "analysis": "The design system makes no authorisation decisions; the authorisation-aware operator sitemap is E37's (docs#115) and the server-driven entitlement and grant states are raised under entitlement tampering (E34-F04).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "Billing and plan screens are designed in E35 and E36 (docs#98, docs#111) and reviewed in those epics' refreshes; the component-level rule that plan and entitlement states are server-driven is E34-F04.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "finding",
+          "analysis": "The trust and security component family (docs#82) fixes how entitlement-denied, quota-exceeded, permission-denied and revoked-grant states look and behave. If a component offers a client-side unlock, dismiss or retry that changes what is shown without a server decision, every product inherits a client-side entitlement path. The shared client state taxonomy already names these states; the components must bind them to server state.",
+          "evidence": [
+            "product/client-state-taxonomy.md: permission_denied and quota_exceeded states with plan, device and sharing causes"
+          ],
+          "findings": [
+            "E34-F04"
+          ]
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "not_applicable",
+          "analysis": "No AI gateway, key or model is part of a design system. Assistant surfaces are designed in docs#97 and docs#110 (E35, E36).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "not_applicable",
+          "analysis": "Nothing in this epic runs a server or issues requests.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "not_applicable",
+          "analysis": "No model is in scope. Safe rendering of assistant output (text only, never markup or auto-followed links) is a rule for the assistant surface designs in docs#97 and docs#110 and the assistant builds in web#15 and android#26, and is recorded for E35, E36, E12 and E06 to review.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "Split and settlement experiences are designed in docs#95 and docs#109 (E35, E36). The money-rendering rule in E34-F03 (server-provided minor units, no client arithmetic) is the component-level protection they will inherit.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "The operator component family (four-eyes approval, elevation, break-glass) can make self-approval possible by affordance alone: an approve control shown to the requester, or an approval that does not display who approved. The component contract must remove that affordance so E37's flows (docs#116) and E38's validation (docs#131) start from a safe primitive.",
+          "evidence": [],
+          "findings": [
+            "E34-F08"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E34-F01",
+          "category": "tampering",
+          "severity": "high",
+          "title": "Design-to-code artifacts and translation bundles are unverified build inputs to three products",
+          "attack_path": "A token package, component specification, code mapping, SVG asset or translation bundle is altered before or after publication; the Android, web and admin builds consume it at a floating version, changing every screen, inlining an SVG that carries script or an external reference, or shipping a translated string whose markup injects HTML on the web or whose reordered placeholders put an amount beside the wrong currency indicator; translations typically arrive from a third-party vendor.",
+          "recommended_control": "Publish artifacts only from a reviewed library release, versioned and checksummed or signed; consumers pin the version; SVG icons and illustrations are sanitised (no script, foreignObject or external references) before publication; translation bundles are validated for placeholder count and order, markup is escaped or forbidden, vendor deliveries are reviewed and pinned like any other build input (docs#85); the conformance contract states these as requirements infra#31 can verify.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#86",
+          "resolution": null
+        },
+        {
+          "id": "E34-F02",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "Untrusted text can reorder or mask amounts through bidirectional and look-alike characters",
+          "attack_path": "A merchant or payee name containing bidirectional control characters or confusable glyphs is rendered next to an amount; the user sees a different value, currency or direction than the ledger holds, or a spoofed payee.",
+          "recommended_control": "For every text slot that shows untrusted text, the rendering contract requires bidirectional isolation of the untrusted run, stripping or escaping of control characters, and a fixed position and direction for amount, currency and direction indicators; pseudo-localisation tests include crafted names.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#85",
+          "resolution": null
+        },
+        {
+          "id": "E34-F03",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "Money components must render server-provided minor units and never compute",
+          "attack_path": "A money, total or chart component sums, rounds or converts client-side; a displayed figure disagrees with the ledger, and a client-side bug or manipulation shows a balance the server never produced.",
+          "recommended_control": "Components accept integer minor units with currency from the server and render only; totals, remainders, conversions and derivations are server values with a derivation reference; money and status never rely on colour alone and every chart has a text or table equivalent.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#81",
+          "resolution": null
+        },
+        {
+          "id": "E34-F04",
+          "category": "entitlement_tampering",
+          "severity": "medium",
+          "title": "Trust and security component states must be bound to server state with no client-side unlock",
+          "attack_path": "An entitlement-denied, quota-exceeded or revoked-grant component offers a dismiss, retry or unlock that changes what is displayed without a server decision; products inherit a client-side path around entitlement and sharing.",
+          "recommended_control": "The component family takes these states from server responses only, exposes no control that alters access locally, and routes the single recovery action of the client state taxonomy to the server-side path (plan change, permission request, grant request).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#82",
+          "resolution": null
+        },
+        {
+          "id": "E34-F05",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Consent components must produce unambiguous, equal-effort choices and a record",
+          "attack_path": "A consent component pre-selects acceptance, hides decline, bundles purposes or omits which text version was shown; the resulting consent is disputable and the product cannot prove what the user agreed to.",
+          "recommended_control": "Granular per-purpose choices with accept and decline of equal prominence and effort, no pre-selection, the consent text version and timestamp emitted as part of the interaction record, and withdrawal reachable from the same component; the dark-pattern red team (docs#133) validates the result.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#82",
+          "resolution": null
+        },
+        {
+          "id": "E34-F06",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Library and file sharing defaults are unspecified and unreviewed publishes propagate",
+          "attack_path": "A design file holding participant quotes or real screenshots is shared by public link, or a library change is published without review and reaches every consuming file and, through handoff, every product.",
+          "recommended_control": "No public-link sharing for files that may carry research material; contributor access reviewed; library changes flow through a branch, a review and a versioned publish; publish rights limited to named maintainers.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#78",
+          "resolution": null
+        },
+        {
+          "id": "E34-F07",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Privacy-mode, screen-protection and clipboard states are missing from the component system",
+          "attack_path": "Amounts and balances appear on the lock screen, in the app switcher, in a widget or under a hostile overlay because no component defines a masked variant or a protected-confirmation state; a copy affordance on an amount or account reference leaves the value on the shared clipboard where another app reads it (baseline T-15); each product invents its own behaviour or none.",
+          "recommended_control": "Define masked variants for every money and balance component, an app-wide privacy-mode theme, states for switcher, widget and notification previews, a protected-confirmation pattern for sensitive actions that the Android hardening (touch filtering under overlays, secure flag) can implement, and a clipboard rule for money and account components: no copy affordance on account references, copied amounts marked sensitive and cleared after a short timer.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#83",
+          "resolution": null
+        },
+        {
+          "id": "E34-F08",
+          "category": "administrative_identity_compromise",
+          "severity": "low",
+          "title": "Operator approval components must not afford self-approval",
+          "attack_path": "The requester of an elevation, unmask or bulk export sees an approve control, or an approval is shown without the approver's identity; a single operator completes a four-eyes action alone.",
+          "recommended_control": "Approval components hide the approve control from the requesting identity, always display requester and approver, show time-box remaining, and give break-glass a distinct, recorded state; E37 flows and E38 validation build on the primitive.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#82",
+          "resolution": null
+        }
+      ]
+    }
+  ]
+}
