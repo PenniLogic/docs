@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E06",
+  "title": "Debt experience (Android)",
+  "issue": "PenniLogic/docs#7",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

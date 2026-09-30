@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E27",
+  "title": "Launch-blocking compliance floor",
+  "issue": "PenniLogic/docs#30",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}
