@@ -462,15 +462,20 @@ Based on industry reports (FICCI, RedSeer 2025):
 
 ## 8. Entitlements & Feature Flags
 
-> **Superseded by ADR-023 (`T-ADR-ENT-09`).** The `Entitlement Data Model` SQL below and the sketch in
-> [`01-domain-model.md` §5](01-domain-model.md#5-plans-entitlements-and-ai-quota) disagree: this one
-> materializes usage into `user_entitlements.quota_used` and counts a single per-feature quota, the
-> other counts `max_requests` and `max_tokens` separately and carries `allowed_models[]` on the plan.
-> Two schemas cannot both be enforced. `T-ADR-ENT-09` decides plan and feature identity, the request
-> and token quota dimensions, the per-plan model allowlist and unlisted-model refusal, BYOK quota
-> treatment, event-sourced usage versus a materialized counter, and the reset boundary and its time
-> zone. Until that record is accepted, treat the SQL below as research-era reasoning rather than
-> implementation authority.
+> **Superseded by [ADR-023](../adr/ADR-023.md) (`T-ADR-ENT-09`, accepted 2026-09-30).** The
+> `Entitlement Data Model` SQL, the enforcement pseudocode and the monthly reset job below are
+> research history, not implementation authority. ADR-023 §1 names this section and
+> [`01-domain-model.md` §5](01-domain-model.md#5-plans-entitlements-and-ai-quota) as the two sketches
+> it supersedes in full and discards everything this section's schema decided: `plans.price_inr`
+> integer columns (prices take the ADR-015 `Money` form), `feature_type` windows (the window is on
+> the quota grant), `quota_value` with `null = unlimited` (no unlimited sentinel exists; an absent
+> grant denies and `0` is exhausted), `byok_api_key_ref` on the subscription (the subscription never
+> references a key), `user_entitlements.quota_used` as the enforced counter (the append-only usage
+> ledger is the source of truth and the counter is a verified projection), the single-dimension
+> `quota_events.delta` (requests and tokens are separate dimensions), increment-then-append
+> enforcement (reserve, commit, release) and the `UPDATE … SET quota_used = 0` reset cron (periods
+> open lazily in the user's zone). The "Core Argument" and the vendor comparison remain valid
+> research. `T-CON-03`, `T-BIL-01`, `T-BIL-02` and `T-AI-01` consume ADR-023, not this section.
 
 ### The Core Argument: In-House Entitlements
 
