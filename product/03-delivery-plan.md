@@ -214,8 +214,13 @@ after seeing the numbers.
       `python scripts/check_threat_model.py --epic <epic>`: recorded in
       `governance/threat-model/records/<epic>.json` before the epic's first ticket starts, within the
       published 12-week cadence and against the current category list, with every finding closed or
-      handed to a named ticket (`T-QA-14`; see `governance/threat-model/README.md`). An epic whose
-      refresh is stale, missing or blocked by an unowned finding has no Ready tickets.
+      handed to a named ticket; and the ticket is listed in that refresh's `tickets_in_scope`
+      (`python scripts/check_threat_model.py --ticket PenniLogic/<repo>#N`), or, where it introduces
+      a new data class, trust boundary, external party, AI capability, sharing path or money flow, a
+      `scope_changed` refresh dated after the ticket's scope was fixed lists it (`T-QA-14`; see
+      `governance/threat-model/README.md`). A stale refresh or an invalid record blocks Ready for
+      every ticket in the epic, as does a finding without an owner; the test-evidence items in
+      `governance/test-strategy.md` section 14 apply in addition to this list.
 
 ### Definition of Done (a ticket may be closed)
 - [ ] Acceptance criteria demonstrably met

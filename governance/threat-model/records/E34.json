@@ -33,7 +33,36 @@
         "architecture/02-security-architecture.md#5-android-hardening",
         "product/08-experience-design-and-sdlc-plan.md (sections 5, 10, 11 and 12)",
         "product/client-state-taxonomy.md",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-4, O-6)",
         "PenniLogic/docs#59 (epic body: scope, exit criteria)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Research quotes, participant screenshots and realistic sample financial data embedded in design files, component examples and prototypes",
+          "subjects": [
+            "research_participants",
+            "users"
+          ],
+          "purpose_ref": "Design of the component system under the participant rules PenniLogic/docs#65 fixes (E33-F01); sample data in components must be synthetic, a rule PenniLogic/docs#81 owns for money components",
+          "retention": "Quotes follow the study retention schedule (E33-F01); synthetic sample data has no subject and is retained with the library",
+          "erasure_path": "Withdrawal removes quotes and screenshots from design files (E33-F02); library releases that carried them are re-published without them",
+          "children": "Not subjects: participants are adults by the screener (E33-F03); personas are not children",
+          "processors": [
+            "Design-file tooling and its library publishing service (docs#78, E34-F06)",
+            "Translation vendors receiving string bundles, which must contain no personal data (docs#85)"
+          ]
+        },
+        {
+          "data_class": "Consent interaction records the consent components emit: purpose, choice, consent text version and timestamp, and the withdrawal path",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Consent ledger and purpose registry (compliance O-1, api#24) through the consent components PenniLogic/docs#82 specifies (E34-F05)",
+          "retention": "Consent records retained for the period the compliance floor fixes for proof of consent (O-1, O-4)",
+          "erasure_path": "Withdrawal is itself recorded; the ledger row survives erasure as a pseudonymised proof of the choice, per api#24",
+          "children": "The pre-onboarding consent component enforces the age gate before any other consent is offered (O-6, android#17)",
+          "processors": []
+        }
       ],
       "categories": [
         {
@@ -48,7 +77,7 @@
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "Token packages, component specifications, code mappings and icon or illustration assets are build inputs to three products. An altered token package changes every screen; an SVG asset with script or external references is an injection vector when inlined on the web. Unreviewed library changes propagate the same way (E34-F06). Money components that compute anything client-side are a second tampering surface because a displayed total can disagree with the ledger.",
+          "analysis": "Token packages, component specifications, code mappings, icon or illustration assets and translation bundles are build inputs to three products. An altered token package changes every screen; an SVG asset with script or external references is an injection vector when inlined on the web; a translated string with markup or reordered placeholders injects HTML or misplaces an amount, and translations usually come from a third-party vendor. Unreviewed library changes propagate the same way (E34-F06). Money components that compute anything client-side are a second tampering surface because a displayed total can disagree with the ledger.",
           "evidence": [
             "PenniLogic/infra#31: software-supply-chain verification can cover published design packages"
           ],
@@ -72,7 +101,7 @@
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Two channels. Design files may carry participant quotes and real screenshots from E33's research, so library and file sharing defaults (docs#78) decide who can read them. And the components themselves define whether an amount is visible on a lock screen, in the app switcher, in a widget or under an overlay: privacy-mode and screen-protection states must exist in the system so android#30 and android#58 implement a specified state.",
+          "analysis": "Two channels. Design files may carry participant quotes and real screenshots from E33's research, so library and file sharing defaults (docs#78) decide who can read them. And the components themselves define whether an amount is visible on a lock screen, in the app switcher, in a widget, under an overlay or on the shared clipboard (baseline T-15): privacy-mode, screen-protection and clipboard states must exist in the system so android#30 and android#58 implement a specified state.",
           "evidence": [],
           "findings": [
             "E34-F06",
@@ -154,9 +183,9 @@
           "id": "E34-F01",
           "category": "tampering",
           "severity": "high",
-          "title": "Design-to-code artifacts are unverified build inputs to three products",
-          "attack_path": "A token package, component specification, code mapping or SVG asset is altered before or after publication; the Android, web and admin builds consume it at a floating version, changing every screen or inlining an SVG that carries script or an external reference.",
-          "recommended_control": "Publish artifacts only from a reviewed library release, versioned and checksummed or signed; consumers pin the version; SVG icons and illustrations are sanitised (no script, foreignObject or external references) before publication; the conformance contract states these as requirements infra#31 can verify.",
+          "title": "Design-to-code artifacts and translation bundles are unverified build inputs to three products",
+          "attack_path": "A token package, component specification, code mapping, SVG asset or translation bundle is altered before or after publication; the Android, web and admin builds consume it at a floating version, changing every screen, inlining an SVG that carries script or an external reference, or shipping a translated string whose markup injects HTML on the web or whose reordered placeholders put an amount beside the wrong currency indicator; translations typically arrive from a third-party vendor.",
+          "recommended_control": "Publish artifacts only from a reviewed library release, versioned and checksummed or signed; consumers pin the version; SVG icons and illustrations are sanitised (no script, foreignObject or external references) before publication; translation bundles are validated for placeholder count and order, markup is escaped or forbidden, vendor deliveries are reviewed and pinned like any other build input (docs#85); the conformance contract states these as requirements infra#31 can verify.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#86",
           "resolution": null
@@ -220,9 +249,9 @@
           "id": "E34-F07",
           "category": "information_disclosure",
           "severity": "medium",
-          "title": "Privacy-mode and screen-protection states are missing from the component system",
-          "attack_path": "Amounts and balances appear on the lock screen, in the app switcher, in a widget or under a hostile overlay because no component defines a masked variant or a protected-confirmation state; each product invents its own or none.",
-          "recommended_control": "Define masked variants for every money and balance component, an app-wide privacy-mode theme, states for switcher, widget and notification previews, and a protected-confirmation pattern for sensitive actions that the Android hardening (touch filtering under overlays, secure flag) can implement.",
+          "title": "Privacy-mode, screen-protection and clipboard states are missing from the component system",
+          "attack_path": "Amounts and balances appear on the lock screen, in the app switcher, in a widget or under a hostile overlay because no component defines a masked variant or a protected-confirmation state; a copy affordance on an amount or account reference leaves the value on the shared clipboard where another app reads it (baseline T-15); each product invents its own behaviour or none.",
+          "recommended_control": "Define masked variants for every money and balance component, an app-wide privacy-mode theme, states for switcher, widget and notification previews, a protected-confirmation pattern for sensitive actions that the Android hardening (touch filtering under overlays, secure flag) can implement, and a clipboard rule for money and account components: no copy affordance on account references, copied amounts marked sensitive and cleared after a short timer.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#83",
           "resolution": null

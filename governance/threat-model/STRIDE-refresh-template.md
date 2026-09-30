@@ -10,32 +10,69 @@ the Definition of Ready item and the record schema.
 
 1. Confirm the epic identifier (`E01` to `E38`) and its public issue (`PenniLogic/docs#N`).
 2. Read the epic body, every child ticket, the baseline model in
-   `architecture/02-security-architecture.md` section 1 and any accepted decision record the epic
-   depends on. List them in `sources`.
+   `architecture/02-security-architecture.md` section 1, the compliance obligations table in
+   `compliance/01-regulatory-landscape.md` and any accepted decision record the epic depends on. List
+   them in `sources`.
 3. Note the trigger: `definition_of_ready` for a first refresh, otherwise the trigger from
    `categories.json` that forced it.
 4. Record who performs the refresh: the accountable GitHub owner, the session identifier and the
    agent role. In this organisation the owner is always the same account; the session is what
    distinguishes one refresh from another.
+5. **Data subjects and flows.** Inventory every class of personal data the epic introduces or touches
+   as a `data_flows` entry before you review the categories: what the data is (`data_class`), whose it
+   is (`subjects`: users, household members, counterparties, research participants, operators,
+   contributors), the purpose-registry entry, consent record or decision that permits it, or the
+   ticket that will create one (`purpose_ref`, compliance O-1), the retention period and its source
+   (`retention`, O-4), how erasure reaches it including derived and multi-subject copies
+   (`erasure_path`, O-2, O-4, O-13), how the flow is conditioned on the age gate or why children
+   cannot be subjects (`children`, O-6), and every processor or cross-border destination it reaches
+   (`processors`, O-7). The checker rejects a refresh whose `information_disclosure` review is
+   anything but `not_applicable` while `data_flows` is empty; a research study, an analytics event,
+   a push notification, a support ticket and a public issue comment are all flows.
 
 ## Rules the checker enforces
 
 - Every category in `categories.json` at the current `model_version` is reviewed. A refresh that
   reviews fewer categories is invalid, not partially credited.
-- Each category carries a disposition and an analysis:
-  `controlled` (a named control exists; `evidence` required), `accepted` (the risk is knowingly
-  accepted; cite the accepting decision in `evidence`), `finding` (action needed; at least one
-  finding listed), or `not_applicable` (the analysis says why, and which later epic or ticket first
-  introduces the surface).
-- Every finding names its category, severity, attack path and recommended control, and is either
-  `handed_off` to an existing public ticket (`PenniLogic/<repo>#N`, never an epic and never a
-  historical PenniLogic-old number), `closed` with a resolution, or `open`. An open finding is
-  unowned and blocks Definition of Ready for the epic until a ticket exists. Do not invent a ticket
-  to make a finding disappear; leave it open and ask the coordinator.
+- Each category carries a disposition and an analysis of at least 40 characters that says something
+  checkable:
+  `controlled` (a control **exists today**; `evidence` required and each item must name a public
+  ticket, a decision record, a repository path or a test; a control that a ticket will build is not a
+  control, it is a `finding` handed to that ticket), `accepted` (the risk is knowingly accepted; cite
+  the accepting decision in `evidence`), `finding` (action needed; at least one finding listed), or
+  `not_applicable` (the analysis says why, and which later epic or ticket first introduces the
+  surface).
+- Every finding names its category, severity, an attack path and a recommended control of at least
+  40 characters each, and is either `handed_off` to an existing public ticket (`PenniLogic/<repo>#N`,
+  never an epic and never a historical PenniLogic-old number), `closed` with a resolution of at least
+  40 characters that names a public ticket, a decision record, a repository path or a test, or
+  `open`. An open finding is unowned and blocks Definition of Ready for the epic until a ticket
+  exists. Do not invent a ticket to make a finding disappear; leave it open and ask the coordinator.
+- A `definition_of_ready` refresh names at least one ticket in `tickets_in_scope`; no string anywhere
+  in the refresh may be blank.
 - A refresh is dated with a calendar date and stays current for 12 weeks; the categories
   reviewed are those of the `model_version` you name.
-- The record contains attack paths and controls only: no credential, no live endpoint (the checker
-  rejects any URL; cite repository paths and issue identifiers), no customer or participant data.
+- The record contains attack paths and controls only: no credential, no live endpoint, no customer
+  or participant data. The checker rejects URLs, `host:port` and IPv4 endpoints, `www.` hostnames
+  and common key shapes anywhere in a record; cite repository paths and issue identifiers instead.
+
+## PenniLogic-specific prompts every refresh answers
+
+The test strategy (`governance/test-strategy.md` section 14) requires the refresh to cover three
+things explicitly, not only application-layer risks. Answer them inside the categories named:
+
+- **The ingestion boundary** (`information_disclosure`, `tampering`): where does captured message,
+  notification, statement or receipt content stop and structured data begin? What crosses that
+  boundary, in which direction, and what proves nothing else does?
+- **Raw content never leaves the device** (`information_disclosure`): which code paths could carry a
+  raw SMS, notification or statement string off the device (logs, analytics, crash reports, prompts,
+  sync, support attachments), and which test or traffic capture proves they do not (compliance O-8)?
+- **The parser-config signing chain** (`tampering`, `spoofing`): who signs remotely updatable parser
+  rules and templates, how the device verifies them, how a key is rotated or revoked, and what a
+  device does with an unsigned or downgraded configuration?
+
+An epic that touches none of these says so under the category with a reason, exactly as for
+`not_applicable`.
 
 ## Per-category prompts and required evidence
 
@@ -65,8 +102,8 @@ decision record, a public ticket identifier, a test name or a check in this repo
 
 ### `repudiation` — Repudiation (R) · owner: security review, supporting compliance review
 
-- Which actions must be attributable later: operator views and exports, approvals, consents,
-  waivers, deployments, assignments, refreshes like this one?
+- Which actions must be attributable later: operator views and exports, approvals, consents and
+  their versions, opt-outs, waivers, deployments, assignments, refreshes like this one?
 - Is the trail append-only, time-synchronised, retained as long as the obligation requires, and
   attributed to a session or account rather than a shared identity?
 - Where a single account performs many roles, is the procedural separation written down?
@@ -75,11 +112,19 @@ decision record, a public ticket identifier, a test name or a check in this repo
 ### `information_disclosure` — Information disclosure (I) · owner: privacy review, supporting security review
 
 - Which data classes does the epic touch: raw messages, financial values, identity, keys, research
-  participant material, secrets, analytics events, screenshots, captured traffic?
-- Where could each leak: logs, fixtures, prompts, analytics payloads, notifications, previews,
-  public repositories, third-party tools, small-cohort dashboards, error messages?
+  participant material, secrets, analytics events, screenshots, captured traffic? Every class is a
+  `data_flows` entry with its subjects, purpose, retention, erasure path, age-gate conditioning and
+  processors (see "Before you start", step 5).
+- Where could each leak: logs, fixtures, prompts, analytics payloads, notifications and their
+  previews, push or e-mail providers, public repositories, third-party tools, small-cohort
+  dashboards, error messages, the clipboard?
+- Who else is a subject besides the account holder: household members and counterparties inside a
+  user's records, research participants, operators, contributors? Can a child be one, and what stops
+  it (compliance O-6)?
 - What minimises, encrypts, redacts, coarsens or scrubs it, and is that a test rather than a review?
-- Evidence: the data-class inventory; the scrubbing or allowlist gate; the encryption or access rule.
+  Does erasure reach every copy, including derived values, multi-subject records and processors?
+- Evidence: the data-class inventory; the purpose-registry or consent record, or the ticket that
+  will create it; the scrubbing or allowlist gate; the encryption or access rule.
 
 ### `denial_of_service` — Denial of service (D) · owner: reliability review, supporting security review
 
@@ -174,7 +219,12 @@ prose; `schema.json` is the schema the checker uses. Then run:
 ```text
 python scripts/check_threat_model.py
 python scripts/check_threat_model.py --epic <epic>
+python scripts/check_threat_model.py --ticket PenniLogic/<repo>#N
 ```
 
 The first command must pass. The second passes only when the epic is `current`; `blocked` means an
-open finding needs a ticket, which is a correct result to report, not something to hide.
+open finding needs a ticket, which is a correct result to report, not something to hide. The third is
+the per-ticket gate: it passes only when the ticket is listed in `tickets_in_scope` of the epic's
+latest refresh and that refresh is current, so a ticket added to an epic after its refresh, or one
+that introduces a new data class, trust boundary, external party, AI capability, sharing path or
+money flow, needs a `scope_changed` refresh that lists it before it is Ready.

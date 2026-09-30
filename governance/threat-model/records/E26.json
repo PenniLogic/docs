@@ -16,7 +16,7 @@
         "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
         "role": "pennilogic-developer"
       },
-      "scope": "The architecture decision gates under PenniLogic/docs#29: money wire format, time and idempotency (docs#35), the category model (docs#36), ledger currency, foreign exchange and debt-balance derivation (docs#37), encryption scope, searchable fields and row-level security (docs#38), authentication, passkeys, provider, relying-party identifier and recovery (docs#39), the administrative boundary, database role and audit stream (docs#40), shared-data erasure and cross-user key access (docs#41), AI egress, runtime platform and Mode C custom endpoints (docs#42), the entitlement and quota model (docs#47), credit bureau integration (docs#52) and persisted embeddings (docs#56), plus the per-decision file layout with its generated index (docs#70, validated by docs#141). The threat surface is twofold: the decisions fix the controls every later epic inherits, so a decision that stays silent on a threat propagates that silence into implementation; and the decision process itself (acceptance by one account, supersession in place, a generated index) can be tampered with or repudiated. Each finding below states what a record must decide; none implements anything.",
+      "scope": "The architecture decision gates under PenniLogic/docs#29: money wire format, time and idempotency (docs#35), the category model (docs#36), ledger currency, foreign exchange and debt-balance derivation (docs#37), encryption scope, searchable fields and row-level security (docs#38), authentication, passkeys, provider, relying-party identifier and recovery (docs#39), the administrative boundary, database role and audit stream (docs#40), shared-data erasure and cross-user key access (docs#41), AI egress, runtime platform and Mode C custom endpoints (docs#42), the entitlement and quota model (docs#47), credit bureau integration (docs#52) and persisted embeddings (docs#56), plus the per-decision file layout with its generated index (docs#70, validator delivered by docs#141 and its follow-ups in docs#146). The threat surface is twofold: the decisions fix the controls every later epic inherits, so a decision that stays silent on a threat propagates that silence into implementation; and the decision process itself (acceptance by one account, supersession in place, a generated index) can be tampered with or repudiated. Each finding below states what a record must decide; none implements anything. The decision records themselves hold no personal data; the data flows listed are the ones the records decide the rules for.",
       "tickets_in_scope": [
         "PenniLogic/docs#35",
         "PenniLogic/docs#36",
@@ -30,7 +30,8 @@
         "PenniLogic/docs#52",
         "PenniLogic/docs#56",
         "PenniLogic/docs#70",
-        "PenniLogic/docs#141"
+        "PenniLogic/docs#141",
+        "PenniLogic/docs#146"
       ],
       "sources": [
         "architecture/02-security-architecture.md (sections 1 to 8, ownership table)",
@@ -38,7 +39,66 @@
         "architecture/03-stack-and-monetization.md (sections 8 and 9: entitlements, anti-abuse)",
         "ai/01-ai-harness-research.md (sections 4, 5 and 7: BYOK, custom endpoints, quota, safety)",
         "product/04-execution-readiness-review.md (second hardening pass)",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-2, O-4, O-6, O-13, O-14, O-24)",
         "PenniLogic/docs#29 (epic body: scope, exit criteria)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Encrypted financial records (transactions, debts, balances, blind-index fields) and the per-user keys that protect them, whose scope, searchable fields and row-level security ADR-018 decides",
+          "subjects": [
+            "users",
+            "counterparties",
+            "household_members"
+          ],
+          "purpose_ref": "Core product purpose recorded in the consent ledger and purpose registry (compliance O-1, api#24); the encryption scope decision is docs#38",
+          "retention": "Decided per data class by ADR-018 and the compliance floor (O-4); the record must cite the source of every period rather than inherit one",
+          "erasure_path": "Crypto-shredding of the per-user key (O-13, api#38) with the multi-subject rules ADR-021 (docs#41) decides (E26-F17)",
+          "children": "Not subjects: the product is restricted to adults by the age gate (O-6, android#17); ADR-019 (docs#39) must not admit an account without it",
+          "processors": [
+            "Cloud key-management service holding the key-encryption keys (docs#38 decides custody)"
+          ]
+        },
+        {
+          "data_class": "Shared and split records readable by more than one data subject under a grant, and the cross-user key path a grantee uses",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties"
+          ],
+          "purpose_ref": "Sharing purpose recorded per grant in the consent ledger (O-1) with the access log visible to the subject (O-17, api#35); the mechanism decision is docs#41",
+          "retention": "Counterparty evidence of a debt or shared goal survives a participant's erasure with identifiers removed, for the period ADR-021 sources (E26-F17)",
+          "erasure_path": "Per-subject crypto-shredding plus identifier removal in multi-subject records, verified by the harness ADR-021 names (api#38, api#49)",
+          "children": "Not subjects: adults only per the age gate (O-6); a household member added to a group is a user who passed it",
+          "processors": []
+        },
+        {
+          "data_class": "Minimised transaction descriptors and user questions sent to AI providers, and any user-supplied provider key or custom endpoint, whose egress ADR-022 decides",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "AI features purpose with disclosure and refusal boundary (O-24, ai-service#7, android#26); egress and runtime decision is docs#42",
+          "retention": "Zero-data-retention or no-training provider terms as ADR-022 requires; server-side request logs per the floor's periods (O-4)",
+          "erasure_path": "Provider retention terms plus first-party log retention; persisted embeddings only if docs#56 permits them with an erasure path (E26-F05)",
+          "children": "Not subjects: adults only per the age gate (O-6); no AI feature reaches an account below it",
+          "processors": [
+            "AI model providers behind the gateway, under data-processing agreements ADR-022 requires (compliance O-7 register)",
+            "User-chosen custom endpoints in Mode C, backend-routed only"
+          ]
+        },
+        {
+          "data_class": "Operator identities, sessions and the administrative audit stream that records every view, unmask and export, whose boundary ADR-020 decides",
+          "subjects": [
+            "operators",
+            "users"
+          ],
+          "purpose_ref": "Administrative access lifecycle and audit obligations (O-22, O-29) implemented by api#27, api#59 and infra#32; the boundary decision is docs#40",
+          "retention": "Audit rows retained for the period the compliance floor cites (O-9 log retention); the record must state the source",
+          "erasure_path": "Audit rows are append-only and outlive a user's erasure with the subject pseudonymised, as ADR-020 must state; operator records follow the leaver process (api#59)",
+          "children": "Not subjects: operators are adults under contract; user subjects are adults per the age gate (O-6)",
+          "processors": [
+            "Write-once log destination outside the console's control (docs#40 decides)"
+          ]
+        }
       ],
       "categories": [
         {
@@ -53,13 +113,15 @@
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "Two records decide integrity. ADR-015 (docs#35) fixes the money wire format, time conventions and idempotency, which is what makes a replayed or altered request detectable. The decision process is the other surface: an accepted record is the authority every downstream ticket implements, so an edit to an accepted record that is not a dated supersession is tampering with the plan, and the layout validator (docs#141) is the place to refuse it.",
+          "analysis": "Three records decide integrity. ADR-015 (docs#35) fixes the money wire format, time conventions and idempotency, which is what makes a replayed or altered request detectable, and the share remainder rule. ADR-017 (docs#37) settles that no stored debt balance is authoritative and that corrections are explicit ledger adjustments rather than in-place edits, the derived-balance and append-only rules baseline T-12 and constraint C-4 rely on. ADR-016 (docs#36) requires category split allocations to sum exactly to the transaction amount with a stated remainder rule, a second remainder rule beside ADR-015's that must be the same rule or defer to it (E26-F10). The decision process is the other surface: an accepted record is the authority every downstream ticket implements, so an edit to an accepted record that is not a dated supersession is tampering with the plan, and the layout validator follow-up (docs#146) is the place to refuse it.",
           "evidence": [
-            "PenniLogic/docs#70 (closed): per-decision files and a generated index so records never edit the same lines"
+            "PenniLogic/docs#70 (closed): per-decision files and a generated index so records never edit the same lines",
+            "PenniLogic/docs#37: no stored debt balance is authoritative; corrections are explicit ledger adjustments"
           ],
           "findings": [
             "E26-F02",
-            "E26-F16"
+            "E26-F16",
+            "E26-F18"
           ]
         },
         {
@@ -74,14 +136,15 @@
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Four records decide disclosure controls. ADR-018 (docs#38) fixes encryption scope, the blind index, forced row-level security and the grant-mediated cross-user read predicate; the readiness review already demands that every bypass be forbidden by name. ADR-021 (docs#41) fixes shared-data erasure. docs#56 decides whether user-derived embeddings persist at all, and if they do, how inversion and membership inference are prevented and how erasure reaches them. docs#52 decides whether bureau data enters the system and what is retained.",
+          "analysis": "Four records decide disclosure controls. ADR-018 (docs#38) fixes encryption scope, the blind index, forced row-level security and the grant-mediated cross-user read predicate; the readiness review already demands that every bypass be forbidden by name. ADR-021 (docs#41) fixes shared-data erasure and cross-user key access: what a counterparty keeps when a participant is erased (with the erased subject's identifiers removed), what a revoked grantee can still decrypt (nothing), and which retention obligation applies to a record with more than one data subject (E26-F17, raised under split manipulation and cross-listed here). docs#56 decides whether user-derived embeddings persist at all, and if they do, how inversion and membership inference are prevented and how erasure reaches them. docs#52 decides whether bureau data enters the system and what is retained.",
           "evidence": [
             "product/04-execution-readiness-review.md: T-ADR-CRYPTO-04 decides the grant-mediated read predicate under forced RLS and forbids every bypass by name"
           ],
           "findings": [
             "E26-F04",
             "E26-F05",
-            "E26-F06"
+            "E26-F06",
+            "E26-F17"
           ]
         },
         {
@@ -96,10 +159,11 @@
         {
           "id": "elevation_of_privilege",
           "disposition": "finding",
-          "analysis": "ADR-020 (docs#40) decides the administrative database role, process and host separation and the policy boundary; ADR-018 (docs#38) decides forced row-level security and the low-privilege application role (E26-F04). Superuser connections that silently bypass row-level security (T-04) and cloud-account compromise reaching keys (T-11) are the baseline threats these records answer.",
+          "analysis": "ADR-020 (docs#40) decides the administrative database role, process and host separation and the policy boundary; ADR-018 (docs#38) decides forced row-level security and the low-privilege application role (E26-F04); ADR-021 (docs#41) decides whether a removed or revoked grantee retains any ability to decrypt another user's data, which is a privilege that must end with the grant (E26-F17). Superuser connections that silently bypass row-level security (T-04), cloud-account compromise reaching keys (T-11) and a partner reading the other's finances after the relationship ends (T-06) are the baseline threats these records answer.",
           "evidence": [],
           "findings": [
-            "E26-F11"
+            "E26-F11",
+            "E26-F17"
           ]
         },
         {
@@ -160,10 +224,11 @@
         {
           "id": "split_manipulation",
           "disposition": "finding",
-          "analysis": "No record covers splits directly, and none needs to, provided ADR-015 (docs#35) fixes the deterministic remainder-allocation rule for dividing an integer minor-unit amount across shares. Without it api#33, the clients and the independent model in api#22 each pick a rounding rule and the disagreement is exploitable.",
+          "analysis": "Two records decide the split ledger's integrity. ADR-015 (docs#35) must fix the deterministic remainder-allocation rule for dividing an integer minor-unit amount across shares, and ADR-016 (docs#36) must not introduce a second rule for category allocations; without one rule api#33, the clients and the independent model in api#22 each pick a rounding and the disagreement is exploitable (E26-F10). ADR-021 (docs#41) must decide what happens to a split balance and a shared goal when one participant is erased: under per-user key crypto-shredding the rows that member encrypted become unreadable to the creditor, so erasure could be used to destroy a counterparty's evidence of a debt, while keeping the erased subject's identifiers indefinitely is the inverse failure; and a removed or revoked grantee must be able to decrypt nothing afterwards (E26-F17).",
           "evidence": [],
           "findings": [
-            "E26-F10"
+            "E26-F10",
+            "E26-F17"
           ]
         },
         {
@@ -284,7 +349,7 @@
           "severity": "medium",
           "title": "ADR-015 must fix the deterministic remainder-allocation rule for shares",
           "attack_path": "The split ledger, the clients and the independent verification model each round remainders differently; a member exploits the disagreement to shift paise on every split, or disputes a settlement that two implementations compute differently.",
-          "recommended_control": "The record states one deterministic rule for allocating an integer minor-unit remainder across shares (order, tie-break and currency minor-unit handling) that api#33, contracts#8 and api#22 all implement and test.",
+          "recommended_control": "The record states one deterministic rule for allocating an integer minor-unit remainder across shares (order, tie-break and currency minor-unit handling) that api#33, contracts#8 and api#22 all implement and test, and states that ADR-016's category-allocation remainder rule (docs#36) is the same rule or defers to it, so no second rounding rule exists anywhere in the system.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#35",
           "resolution": null
@@ -350,9 +415,31 @@
           "severity": "medium",
           "title": "The layout validator must refuse an undated edit to an accepted decision record",
           "attack_path": "An accepted record is edited in place to change the chosen option without a supersession; downstream tickets implement different versions of the same decision and the index does not reveal it.",
-          "recommended_control": "The validator requires status, acceptance date, deciding session and the proving tests on every accepted record, and fails a change to an accepted record that is not a dated supersession pointing at the new record.",
+          "recommended_control": "The validator (delivered by docs#141, follow-ups in docs#146) requires status, acceptance date, deciding session and the proving tests on every accepted record, and fails a change to an accepted record that is not a dated supersession pointing at the new record.",
           "status": "handed_off",
-          "owner_ticket": "PenniLogic/docs#141",
+          "owner_ticket": "PenniLogic/docs#146",
+          "resolution": null
+        },
+        {
+          "id": "E26-F17",
+          "category": "split_manipulation",
+          "severity": "high",
+          "title": "ADR-021 must decide erasure of a split or shared participant, what a counterparty keeps and what a revoked grantee can decrypt",
+          "attack_path": "A debtor in a split group exercises erasure; crypto-shredding that member's key makes the rows they encrypted unreadable to the creditor, so erasure destroys the evidence of a debt. Inversely, counterparties keep the erased subject's identifiers indefinitely, an erasure failure across multi-subject records. A removed or revoked grantee retains a decryptable copy of a former partner's finances.",
+          "recommended_control": "The record decides that erasure of one participant preserves every counterparty's evidence of the debt or shared goal with the erased subject's identifiers removed; that a removed or revoked grantee can decrypt nothing afterwards (T-06); which retention obligation applies to a record with more than one data subject and its source (compliance O-4, O-13); and names the harness that proves each, which api#35, api#38 and api#49 implement and test.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#41",
+          "resolution": null
+        },
+        {
+          "id": "E26-F18",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "ADR-017 must make stored debt balances non-authoritative and corrections append-only",
+          "attack_path": "A stored debt balance is treated as authoritative and edited in place, or a correction mutates a posted entry; the balance disagrees with the liability account's entries, the append-only ledger (constraint C-4, baseline T-12) no longer explains the number the user sees, and a lender-statement discrepancy is resolved by overwriting history.",
+          "recommended_control": "The record states that no stored debt balance is authoritative, that balances derive from liability account entries, that lender statements are timestamped reconciliation snapshots, and that every correction is an explicit ledger adjustment that never mutates a posted entry, with the database constraint and the test that prove it, so api#11, api#12 and api#22 implement one rule.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#37",
           "resolution": null
         }
       ]

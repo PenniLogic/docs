@@ -16,19 +16,75 @@
         "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
         "role": "pennilogic-developer"
       },
-      "scope": "Retention measurement and programme under PenniLogic/docs#8: the activation funnel and week-one and week-four cohorts (android#7), the retention programme with milestones, digests, dormancy re-engagement and its kill criterion (android#38), server-side experiment assignment and exposure logging (api#63), the debt-first concept test (docs#53, Sprint 01) and moderated usability of the onboarding and permission prototype (docs#54). The threat surface is the analytics pipeline (event payloads, pseudonymous identifiers, opt-out, the dashboard the team reads), experiment assignment and exposure integrity, retention messaging that surfaces debt status outside the app, and the participants of the two studies. The epic's own exit criteria already forbid financial values in any analytics payload; this refresh records the controls that make that provable and the gaps around them.",
+      "scope": "Retention measurement and programme under PenniLogic/docs#8: the activation funnel and week-one and week-four cohorts (android#7), the retention programme with milestones, digests, dormancy re-engagement and its kill criterion (android#38), server-side experiment assignment and exposure logging (api#63), the analytics ingestion endpoint, pipeline and team dashboard (api#82, created on 2026-09-30 from finding E07-F05 and reconciled into this refresh the same day), the debt-first concept test (docs#53, Sprint 01) and moderated usability of the onboarding and permission prototype (docs#54). The threat surface is the analytics pipeline (event payloads, pseudonymous identifiers, opt-out, retention and erasure of events and exposure rows, the dashboard the team reads), experiment assignment and exposure integrity, retention messaging that surfaces debt status outside the app and transits the push provider, the age gate every flow must respect, and the participants of the two studies. The epic's own exit criteria already forbid financial values in any analytics payload; this refresh records the controls that make that provable and the gaps around them.",
       "tickets_in_scope": [
         "PenniLogic/android#7",
         "PenniLogic/android#38",
         "PenniLogic/api#63",
+        "PenniLogic/api#82",
         "PenniLogic/docs#53",
         "PenniLogic/docs#54"
       ],
       "sources": [
         "architecture/02-security-architecture.md#8-privacy-engineering (pseudonymised analytics identifiers)",
         "architecture/03-stack-and-monetization.md#16-notifications--analytics",
+        "compliance/01-regulatory-landscape.md (obligations O-1 consent and purpose registry, O-4 retention and erasure, O-6 age gate, O-7 processor inventory, O-16 analytics opt-out; children's data row)",
         "product/02-risk-register.md (R2 retention, privacy leakage through analytics)",
+        "PenniLogic/api#82 (ingestion endpoint: allowlist validation, rate limits, deduplication, append-only store with retention and an erasure-tied deletion path, cohort minimums)",
         "PenniLogic/docs#8 (epic body: scope, out of scope, exit criteria, key risks)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Product analytics events: allowlisted event names with coarsened derived debt values, keyed with a pseudonymous identifier (keyed hash of the user identifier under a server-held pepper), plus device and app metadata",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Purpose entry 'product analytics and retention measurement' to be registered in the consent ledger and purpose registry (compliance O-1, api#24) with the web and Android opt-out surfaces (O-16, web#20, android#31); registration is part of android#7's allowlist work (E07-F01)",
+          "retention": "The published retention period api#82 must fix for the append-only event store; the pepper's rotation and retirement follow the key-rotation rules (O-14, api#53)",
+          "erasure_path": "The erasure job api#82 owns deletes a subject's events by pseudonymous identifier when an erasure request arrives (O-2, O-4); opted-out identities produce no stored events (E07-F03)",
+          "children": "No event is accepted for an account that has not passed the age gate (O-6, android#17); the product is restricted to adults, and behavioural monitoring of a child is never performed (E07-F07)",
+          "processors": []
+        },
+        {
+          "data_class": "Experiment assignment and exposure rows: pseudonymous identifier, treatment, server timestamp",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "The same analytics purpose entry (O-1), which must name experimentation explicitly; assignment and exposure are owned by api#63 (E07-F03, E07-F04)",
+          "retention": "Append-only for the experiment's life plus the retention period api#82 publishes for the store; no update or delete path outside the erasure job (E07-F04)",
+          "erasure_path": "The same erasure job reaches exposure rows by pseudonymous identifier; opt-out stops new rows immediately (E07-F03)",
+          "children": "No assignment or exposure for an account below the age gate (E07-F07)",
+          "processors": []
+        },
+        {
+          "data_class": "Retention messages: milestone, progress-digest and dormancy nudge content and the device push tokens or e-mail addresses they are sent to",
+          "subjects": [
+            "users",
+            "household_members"
+          ],
+          "purpose_ref": "Retention programme purpose (O-1) with per-channel preferences the user controls (android#38, web#21); content allowlist excludes financial values and debt words outside the unlocked app (E07-F02)",
+          "retention": "Message content is not stored after delivery beyond the delivery log's retention (api#56); push tokens live for the device's registration (android#41)",
+          "erasure_path": "Erasure revokes push tokens and removes the delivery log entries for the subject; a household member who sees a preview is protected by the content allowlist, not by a record",
+          "children": "No retention message is sent to an account below the age gate (E07-F07)",
+          "processors": [
+            "Push notification provider (a processor under the component and SDK inventory, O-7, android#18); receives token and allowlisted message text only",
+            "Transactional e-mail provider for digests where the user chose e-mail (api#56); receives address and allowlisted text only"
+          ]
+        },
+        {
+          "data_class": "Concept-test and usability participant material: recordings, notes, prototype interactions and personal debt disclosures",
+          "subjects": [
+            "research_participants",
+            "household_members"
+          ],
+          "purpose_ref": "Study-specific versioned consent under the research evidence system PenniLogic/docs#65 (E07-F06, E33-F01, E33-F02)",
+          "retention": "The study retention schedule docs#65 fixes",
+          "erasure_path": "Withdrawal removes material and derivatives (E33-F02)",
+          "children": "Excluded by the screener: adults only (E33-F03)",
+          "processors": [
+            "Research repository and recruitment tools named by docs#65"
+          ]
+        }
       ],
       "categories": [
         {
@@ -45,7 +101,7 @@
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "The retention signal decides whether the product continues, so the integrity of events, assignments and cohorts is the asset. Two gaps: assignment and exposure must be server-side and append-only rather than client-reported (E07-F04), and event ingestion, the pipeline and the dashboard the team reads had no owning ticket for schema validation, rate limits and deduplication when this refresh was performed, so forged or inflated events from a rooted device or a script would be counted (E07-F05, since handed to api#82).",
+          "analysis": "The retention signal decides whether the product continues, so the integrity of events, assignments and cohorts is the asset. Two gaps: assignment and exposure must be server-side and written only by the server, with no update or delete path outside the erasure job (E07-F04), and event ingestion, the pipeline and the dashboard the team reads had no owning ticket for schema validation, rate limits and deduplication when this refresh was first performed, so forged or inflated events from a rooted device or a script would be counted (E07-F05, since handed to api#82 and reconciled with its body).",
           "evidence": [],
           "findings": [
             "E07-F04",
@@ -55,9 +111,10 @@
         {
           "id": "repudiation",
           "disposition": "finding",
-          "analysis": "Opt-out must be provable and effective: a user who opted out and later sees their behaviour in a cohort has a valid dispute. The control is a server-side record in the consent ledger that assignment and exposure logging consult, not a client flag alone (E07-F03).",
+          "analysis": "Opt-out must be provable and effective: a user who opted out and later sees their behaviour in a cohort has a valid dispute, and the product must be able to show which purpose entry and consent version governed analytics and experimentation at the time. The control is a server-side record in the consent ledger (compliance O-1, api#24) that ingestion, assignment and exposure logging consult, not a client flag alone (E07-F03).",
           "evidence": [
-            "PenniLogic/api#24: consent ledger, purpose registry and data-principal rights"
+            "PenniLogic/api#24: consent ledger, purpose registry and data-principal rights",
+            "compliance/01-regulatory-landscape.md obligation O-16: analytics opt-out surface"
           ],
           "findings": [
             "E07-F03"
@@ -66,15 +123,17 @@
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Three channels leak debt status. Event payloads: the exit criterion forbids financial values, but derived values such as payoff horizon, debt count or milestone are quasi-financial and need coarsening, and the allowlist needs a test rather than a code review (E07-F01). Retention messages: a digest or dormancy nudge puts a balance or a debt-free date on a lock screen, an email preview or a widget where a household member reads it (E07-F02). Study participants: the concept test and usability sessions gather personal financial disclosures under the research evidence system (E07-F06). Dashboards over small cohorts are part of the pipeline finding (E07-F05).",
+          "analysis": "Events and exposure rows are pseudonymous personal data: the server holds the pepper and can re-identify, so they need a published retention period and an erasure path, not only an allowlist (E07-F03, E07-F05). Four channels leak debt status. Event payloads: the exit criterion forbids financial values, but derived values such as payoff horizon, debt count or milestone are quasi-financial and need coarsening, and the allowlist needs a test rather than a code review (E07-F01). Retention messages: a digest or dormancy nudge puts a balance or a debt-free date on a lock screen, an e-mail preview or a widget where a household member reads it, and every message transits the push or e-mail provider, a processor that must appear in the component and SDK inventory (O-7) and receive allowlisted text only (E07-F02). Children: the compliance record restricts the product to adults and behavioural monitoring of a child is prohibited, yet nothing conditions instrumentation, assignment or messaging on the age gate (E07-F07). Study participants: the concept test and usability sessions gather personal financial disclosures under the research evidence system, including household co-participants (E07-F06). Dashboards over small cohorts are part of the pipeline finding (E07-F05).",
           "evidence": [
             "PenniLogic/docs#8 exit criteria: zero financial values in any analytics payload, verified by inspecting captured events",
-            "PenniLogic/android#16: automated privacy traffic inspection on every release candidate (E25)"
+            "PenniLogic/android#16: automated privacy traffic inspection on every release candidate (E25)",
+            "compliance/01-regulatory-landscape.md obligations O-4 (retention and crypto-erasure), O-6 (age gate), O-7 (processor and SDK inventory)"
           ],
           "findings": [
             "E07-F01",
             "E07-F02",
-            "E07-F06"
+            "E07-F06",
+            "E07-F07"
           ]
         },
         {
@@ -160,8 +219,8 @@
           "category": "information_disclosure",
           "severity": "high",
           "title": "Digests, milestones and dormancy nudges can expose debt status outside the app",
-          "attack_path": "A progress digest, milestone or re-engagement message shows a balance, a debt-free date or the word debt on a lock screen, in an email subject or preview, or in a widget, where a family member, colleague or abuser reads it.",
-          "recommended_control": "Message content chosen server-side from an allowlist with no financial values or debt words in any surface shown outside the unlocked app; privacy mode honoured; user-controlled channel and content preferences; the retention programme's kill criterion measured without exposing the value that triggered the message.",
+          "attack_path": "A progress digest, milestone or re-engagement message shows a balance, a debt-free date or the word debt on a lock screen, in an e-mail subject or preview, or in a widget, where a family member, colleague or abuser reads it; the same text transits the push or e-mail provider, so a processor outside the component and SDK inventory receives debt status.",
+          "recommended_control": "Message content chosen server-side from an allowlist with no financial values or debt words in any surface shown outside the unlocked app; privacy mode honoured; user-controlled channel and content preferences; the push and e-mail providers recorded as processors in the component and SDK inventory (compliance O-7, android#18) and sent token or address plus allowlisted text only; the retention programme's kill criterion measured without exposing the value that triggered the message.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/android#38",
           "resolution": null
@@ -170,9 +229,9 @@
           "id": "E07-F03",
           "category": "repudiation",
           "severity": "medium",
-          "title": "Analytics opt-out must be recorded and enforced server-side",
-          "attack_path": "A user opts out on one device; the flag lives only in that client, a second device or a reinstall keeps reporting, and exposure logging continues on the server, so the user's dispute is valid and the product cannot show when opt-out took effect.",
-          "recommended_control": "Opt-out written to the consent ledger with a timestamp; assignment and exposure logging consult it on every request and stop; clients treat the server state as authoritative; a test proves an opted-out identity produces no exposure rows.",
+          "title": "Analytics opt-out, purpose and consent version must be recorded and enforced server-side, with a retention period and an erasure path for events and exposure rows",
+          "attack_path": "A user opts out on one device; the flag lives only in that client, a second device or a reinstall keeps reporting, and exposure logging continues on the server, so the user's dispute is valid and the product cannot show when opt-out took effect, which purpose entry and consent version governed the processing, or that an erasure request reached the pseudonymous rows the server can still re-identify.",
+          "recommended_control": "Opt-out written to the consent ledger with a timestamp under a registered purpose entry for analytics and experimentation that names its consent version (O-1); ingestion, assignment and exposure logging consult it on every request and stop; clients treat the server state as authoritative; a published retention period for events and exposure rows and an erasure job that deletes a subject's rows by pseudonymous identifier (O-2, O-4), shared with api#82; tests prove an opted-out identity produces no rows and an erased identity has none left.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/api#63",
           "resolution": null
@@ -181,9 +240,9 @@
           "id": "E07-F04",
           "category": "tampering",
           "severity": "medium",
-          "title": "Experiment assignment and exposure must be server-side and append-only",
-          "attack_path": "A client reports its own treatment or posts exposure events for a treatment it never saw; a rooted device or script shifts cohort behaviour and the holdout comparison that drives the kill decision.",
-          "recommended_control": "Deterministic server-side assignment returned to the client, exposure rows written by the server with its own timestamp, no client-supplied assignment or exposure accepted, and rows never updated or deleted.",
+          "title": "Experiment assignment and exposure must be server-side, with no write path but the server's and no delete path but the erasure job",
+          "attack_path": "A client reports its own treatment or posts exposure events for a treatment it never saw; a rooted device or script shifts cohort behaviour and the holdout comparison that drives the kill decision; or an operator edits or drops rows to change the result.",
+          "recommended_control": "Deterministic server-side assignment returned to the client, exposure rows written by the server with its own timestamp, no client-supplied assignment or exposure accepted, no update path, and no delete path outside the erasure job that api#82 and E07-F03 define, so integrity for the experiment's life and erasure for the data subject are both satisfied.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/api#63",
           "resolution": null
@@ -194,7 +253,7 @@
           "severity": "high",
           "title": "Event ingestion, the pipeline and the team dashboard had no owning ticket",
           "attack_path": "Forged, replayed or flooded events from a rooted device or a script are accepted without schema validation, per-device rate limits or deduplication; the retention signal that decides whether the debt-first wedge continues is corrupted, ingestion cost rises, and a dashboard over a small cohort re-identifies users.",
-          "recommended_control": "An owning ticket for the ingestion endpoint and pipeline: schema validation against the E07-F01 allowlist, per-identity rate limits and deduplication, append-only storage with retention, a dashboard with cohort minimums and a named access list, and no third-party analytics SDK on the client.",
+          "recommended_control": "An owning ticket for the ingestion endpoint and pipeline: schema validation against the E07-F01 allowlist, per-identity rate limits and deduplication, an append-only store with a published retention period and a deletion path tied to erasure requests (no update or delete outside the erasure job), acceptance conditioned on the server-side opt-out state and the age gate, a dashboard with cohort minimums and a named access list, and no third-party analytics SDK on the client.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/api#82",
           "resolution": null
@@ -204,10 +263,21 @@
           "category": "information_disclosure",
           "severity": "medium",
           "title": "Concept-test and usability participants fall under the research evidence system",
-          "attack_path": "Recordings and notes from the debt-first concept test or the onboarding usability sessions, which include personal debt disclosures, are stored or quoted outside the participant-data rules because the studies sit in this epic rather than in E33.",
-          "recommended_control": "Both studies run under the participant evidence system: classification, storage and access list, consent and withdrawal records, pseudonymised quotes, retention and erasure, and no raw artifact in a repository, issue or prompt (the same controls as E33-F01 and E33-F02).",
+          "attack_path": "Recordings and notes from the debt-first concept test or the onboarding usability sessions, which include personal debt disclosures, are stored or quoted outside the participant-data rules because the studies sit in this epic rather than in E33; both members of a household are recruited through one channel or cross-referenced in the notes, so one learns the other's participation; a minor is interviewed about household debt.",
+          "recommended_control": "Both studies run under the participant evidence system: classification, storage and access list, consent and withdrawal records, pseudonymised quotes, retention and erasure, no raw artifact in a repository, issue or prompt, separate recruitment channels and sessions for household members with no cross-reference in the evidence system, and an age screen excluding anyone under 18 (the same controls as E33-F01, E33-F02 and E33-F03).",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#65",
+          "resolution": null
+        },
+        {
+          "id": "E07-F07",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Instrumentation, experiment assignment and retention messaging are not conditioned on the age gate",
+          "attack_path": "An account that has not passed, or has failed, the pre-onboarding age gate still emits analytics events, is assigned to an experiment and receives digests and dormancy nudges; the product performs behavioural monitoring of a child, which the compliance record's adults-only position and the children's-data obligation forbid.",
+          "recommended_control": "Every event, assignment, exposure row and retention message is gated server-side on an age-gate-passed state recorded with the consent ledger entry (O-6, android#17); the ingestion endpoint (api#82) refuses events for an identity without it, and the assignment service (api#63), the messaging outbox (api#56) and the retention programme (android#38) apply the same state; a test proves an account below the gate produces no event, no exposure row and no message.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#82",
           "resolution": null
         }
       ]

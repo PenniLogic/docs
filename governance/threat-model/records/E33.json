@@ -30,15 +30,56 @@
       "sources": [
         "architecture/02-security-architecture.md#8-privacy-engineering",
         "product/08-experience-design-and-sdlc-plan.md",
-        "compliance/01-regulatory-landscape.md (obligations O-1, O-5 and O-6: consent ledger, rights-request contract, pre-onboarding consent)",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-5 and O-6: consent ledger, rights-request contract, pre-onboarding consent; children's data row)",
         "governance/DELIVERY.md",
         "PenniLogic/docs#58 (epic body: scope, out of scope, exit criteria)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Research participant material: recordings, transcripts, notes, screenshots of real banking apps, screener answers, contact details, consent records and incentive payment records from interviews about debt and income",
+          "subjects": [
+            "research_participants",
+            "household_members"
+          ],
+          "purpose_ref": "Study-specific versioned consent text per participant under the research ethics and evidence system PenniLogic/docs#65 will create (E33-F01, E33-F02); no product purpose entry applies because the product does not exist yet",
+          "retention": "The study retention schedule docs#65 fixes, per artifact class; raw recordings shortest, pseudonymised synthesis longest",
+          "erasure_path": "Withdrawal removes the participant's material and its derivatives from the repository and the design files (E33-F02); incentive records kept as required for payment accounting with identifiers minimised",
+          "children": "Excluded by the screener: no participant under 18, matching the compliance record's adults-only position (E33-F03)",
+          "processors": [
+            "Research repository and recruitment tools named by docs#65, with their administrators under E33-F06",
+            "Design-file tooling that may hold quotes and screenshots (docs#78)"
+          ]
+        },
+        {
+          "data_class": "Design decision log and registry: approvals attributed to sessions and roles, stable identifiers for personas, journeys, flows, screens and components",
+          "subjects": [
+            "contributors"
+          ],
+          "purpose_ref": "Design governance and traceability (PenniLogic/docs#64, PenniLogic/docs#75); public delivery under governance/DELIVERY.md",
+          "retention": "Indefinite as part of the public repository and design history",
+          "erasure_path": "Not applicable to public decision history; contributors are the owner and AI sessions",
+          "children": "Not subjects",
+          "processors": [
+            "GitHub (repository and Project)"
+          ]
+        },
+        {
+          "data_class": "UX outcome metric definitions and the events later epics will instrument from them",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Analytics purpose to be registered in the consent ledger (compliance O-1, api#24) with opt-out (O-16); definitions owned by PenniLogic/docs#77 (E33-F04) and instrumented under E07",
+          "retention": "Inherits the event retention E07 publishes (api#82); no financial value is ever a metric input",
+          "erasure_path": "Inherits E07's erasure job for events and exposure rows (E07-F03, E07-F05)",
+          "children": "No metric is computed for an account below the age gate (O-6), inherited from E07's control",
+          "processors": []
+        }
       ],
       "categories": [
         {
           "id": "spoofing",
           "disposition": "finding",
-          "analysis": "Recruitment is the spoofing surface. Participants are approached about their debts; an attacker impersonating the study can phish them for bank details or one-time codes, and fraudulent or duplicate participants can game incentives and poison the evidence. Outreach must be verifiable and screening must exist.",
+          "analysis": "Recruitment is the spoofing surface. Participants are approached about their debts; an attacker impersonating the study can phish them for bank details or one-time codes, and fraudulent or duplicate participants can game incentives and poison the evidence. Two further screening failures belong here: a minor passing as an adult (the compliance record restricts the product to adults, O-6, and children's data needs verifiable parental consent) and a second member of an already-recruited household joining through the same channel, which in coercive-control research exposes one partner's participation to the other. Outreach must be verifiable and screening must exist (E33-F03).",
           "evidence": [],
           "findings": [
             "E33-F03"
@@ -70,7 +111,7 @@
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Participant material is personal financial data of the same class the product protects, held before the product exists in tools with their own sharing defaults, and quoted into personas, journeys, tickets and prompts. This is the epic's highest risk. The metric definitions (docs#77) are the other channel: an outcome metric defined over amounts or merchants becomes a payload later epics faithfully instrument.",
+          "analysis": "Participant material is personal financial data of the same class the product protects, held before the product exists in tools with their own sharing defaults, and quoted into personas, journeys, tickets and prompts. This is the epic's highest risk (E33-F01). Household co-participants are a disclosure channel of their own: recruiting or interviewing both members of a household, or cross-referencing them in the evidence system, can reveal one partner's participation or disclosures to the other, which in coercive-control research is the harm the study exists to prevent; docs#65's own scope names independent household and safe-exit recruitment. The metric definitions (docs#77) are the other channel: an outcome metric defined over amounts or merchants becomes a payload later epics faithfully instrument (E33-F04).",
           "evidence": [],
           "findings": [
             "E33-F01",
@@ -86,13 +127,14 @@
         },
         {
           "id": "elevation_of_privilege",
-          "disposition": "controlled",
-          "analysis": "Decision rights are the privilege model of this epic: who may approve a direction, a sitemap or a persona. docs#64 fixes the RACI and review queues, and, as everywhere in this organisation, approvals are recorded by separate sessions under one account rather than by distinct humans, which governance/DELIVERY.md states openly. Tool-level administrative access is reviewed under administrative identity compromise.",
+          "disposition": "finding",
+          "analysis": "Decision rights are the privilege model of this epic: who may approve a direction, a sitemap or a persona, and who may change the registry. docs#64 will fix the RACI, review queues and approval expiry, and, as everywhere in this organisation, approvals are recorded by separate sessions under one account rather than by distinct humans, which governance/DELIVERY.md states openly. Until docs#64 lands nothing distinguishes an approval by the designated role from an approval by any session, so the control is owned but not present (E33-F07). Tool-level administrative access is reviewed under administrative identity compromise.",
           "evidence": [
-            "PenniLogic/docs#64: Chief Design Officer governance, RACI and review queues",
             "governance/DELIVERY.md: one owner with several AI sessions is procedural separation"
           ],
-          "findings": []
+          "findings": [
+            "E33-F07"
+          ]
         },
         {
           "id": "billing_forgery",
@@ -152,8 +194,8 @@
           "category": "information_disclosure",
           "severity": "critical",
           "title": "Participant recordings, transcripts, screenshots and financial disclosures have no handling rules",
-          "attack_path": "A recording or transcript of a debt interview, or a screenshot of a participant's real banking app, is stored in a tool with public-link sharing, quoted verbatim into a persona or a public issue, pasted into an AI tool, or kept indefinitely after the study.",
-          "recommended_control": "Classify participant material as personal financial data; fix the storage location and region, a named access list, a retention and erasure schedule, pseudonymised quotes only in personas, journeys and tickets, and an explicit rule that no raw participant artifact enters a public repository, the Project, an issue or a model prompt.",
+          "attack_path": "A recording or transcript of a debt interview, or a screenshot of a participant's real banking app, is stored in a tool with public-link sharing, quoted verbatim into a persona or a public issue, pasted into an AI tool, or kept indefinitely after the study; or two members of one household are recruited or interviewed together and the evidence system cross-references them, so one partner learns the other's participation or disclosures.",
+          "recommended_control": "Classify participant material as personal financial data; fix the storage location and region, a named access list, a retention and erasure schedule, pseudonymised quotes only in personas, journeys and tickets, and an explicit rule that no raw participant artifact enters a public repository, the Project, an issue or a model prompt; recruit and interview household members through separate channels and sessions, never cross-reference household participants in the evidence system, and treat safe-exit participants as a protected cohort.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#65",
           "resolution": null
@@ -173,9 +215,9 @@
           "id": "E33-F03",
           "category": "spoofing",
           "severity": "medium",
-          "title": "Recruitment outreach can be impersonated and participants can be faked",
-          "attack_path": "An attacker poses as the study and asks participants for bank credentials or one-time codes; separately, duplicate or fraudulent participants collect incentives and skew the evidence.",
-          "recommended_control": "Outreach only from a verifiable official channel with a published statement that the study never asks for credentials, codes or account numbers; a screener with identity and duplicate checks proportionate to the incentive; a fraud-flag path in the repository.",
+          "title": "Recruitment outreach can be impersonated and participants can be faked, under age or from an already-recruited household",
+          "attack_path": "An attacker poses as the study and asks participants for bank credentials or one-time codes; duplicate or fraudulent participants collect incentives and skew the evidence; a minor is interviewed about household debt without verifiable parental consent; a second member of a recruited household enters through the same channel and learns of the first's participation.",
+          "recommended_control": "Outreach only from a verifiable official channel with a published statement that the study never asks for credentials, codes or account numbers; a screener with identity and duplicate checks proportionate to the incentive, an age check that excludes anyone under 18 (the compliance record's position, O-6), and a household check that routes a second member to a separate channel or excludes them; a fraud-flag path in the repository.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#65",
           "resolution": null
@@ -211,6 +253,17 @@
           "recommended_control": "Named administrators with a second factor, least-privilege roles for contributors, an offboarding step tied to the decision log, and a periodic access review recorded in the evidence system.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#65",
+          "resolution": null
+        },
+        {
+          "id": "E33-F07",
+          "category": "elevation_of_privilege",
+          "severity": "medium",
+          "title": "Design decision rights are not yet fixed, so any session can record an approval",
+          "attack_path": "A direction, sitemap, persona or registry change is approved by a session that is not the designated role, or an expired approval is treated as current; downstream design and implementation build on a decision nobody with the right to make it made.",
+          "recommended_control": "Publish the RACI and review queues naming the role that approves each artifact class, record every approval with role, session, reviewed artifact version and expiry in the decision log, and reject an approval whose recorded role does not hold the right or whose expiry has passed, in the same procedural manner governance/DELIVERY.md uses for code review.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#64",
           "resolution": null
         }
       ]

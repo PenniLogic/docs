@@ -12,7 +12,9 @@ human reading prose.
 
     python scripts/check_threat_model.py                     validate everything and print the summary
     python scripts/check_threat_model.py --epic E01          exit 1 unless E01 has a current refresh
-    python scripts/check_threat_model.py --today 2027-01-15  evaluate against another date
+    python scripts/check_threat_model.py --ticket PenniLogic/api#82
+                                                             exit 1 unless a current refresh lists that ticket
+    python scripts/check_threat_model.py --today 2027-01-15  evaluate against another date (tests and what-if only)
     python scripts/check_threat_model.py --json              machine-readable summary on stdout
 """
 
@@ -48,7 +50,33 @@ FUTURE_TOLERANCE = datetime.timedelta(days=1)
 
 EPIC_ID = re.compile(r"^E[0-9]{2}$")
 EPIC_TITLE = re.compile(r"^\[EPIC\] (E[0-9]{2}) - (.+)$")
-URL = re.compile(r"[a-z][a-z0-9+.-]*://", re.IGNORECASE)
+PUBLIC_ISSUE = re.compile(r"^PenniLogic/(?:\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*$")
+# A reference the checker can point at: a public issue, a decision record, a repository path with an
+# extension, or a test name. Every evidence item and every closing resolution must contain one, so a
+# category cannot be "controlled" by the word "x" and a finding cannot be closed by a full stop.
+REFERENCE = re.compile(
+    r"PenniLogic/(?:\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*"
+    r"|\bADR-[0-9]{3}\b"
+    r"|(?<![\w/])[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+\.[A-Za-z]{2,5}\b"
+    r"|\btest_[a-z0-9_]+\b"
+)
+# The shortest analysis, scope, attack path, control or resolution that can say something checkable.
+MIN_TEXT = 40
+# A record names attack paths and controls by repository path and issue identifier. Anything that looks
+# like a live endpoint or a credential does not belong, whatever the field. check_repository.py covers
+# GitHub token shapes for committed files; these cover the shapes it does not.
+FORBIDDEN = (
+    ("URL", re.compile(r"[a-z][a-z0-9+.-]*://|\bmailto:", re.IGNORECASE)),
+    ("host:port endpoint", re.compile(r"\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+:[0-9]{2,5}\b")),
+    ("IPv4 literal", re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")),
+    ("www hostname", re.compile(r"\bwww\.[A-Za-z0-9-]+\.")),
+    ("AWS access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
+    ("provider secret key", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}")),
+    ("Slack token", re.compile(r"\bxox[baprs]-")),
+    ("Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}")),
+    ("GitHub token", re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}|\bgithub_pat_")),
+    ("private key", re.compile(r"-----BEGIN")),
+)
 
 ANNOTATIONS = {"$schema", "$id", "title", "description", "examples", "default", "definitions"}
 SUPPORTED = {
@@ -203,9 +231,26 @@ def required_categories(model, model_version):
     }
 
 
+def blank_strings(value, path="$"):
+    """Yield the path of every string in value that is empty once stripped."""
+    if isinstance(value, str):
+        if not value.strip():
+            yield path
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            yield from blank_strings(item, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            yield from blank_strings(item, f"{path}[{index}]")
+
+
+def too_short(value):
+    return len(value.strip()) < MIN_TEXT
+
+
 def check_refresh(refresh, epic, model, today, epic_issues):
     """Return the list of rule violations in one refresh (an empty list means it is valid)."""
-    problems = []
+    problems = [f"{path} is blank" for path in blank_strings(refresh, "refresh")]
     date = parse_date(refresh["date"], f"{epic} refresh date")
     if date > today + FUTURE_TOLERANCE:
         problems.append(f"refresh {refresh['date']} is dated after the checking clock {today}")
@@ -213,6 +258,10 @@ def check_refresh(refresh, epic, model, today, epic_issues):
         problems.append(f"unknown refresh trigger {refresh['trigger']!r}")
     if refresh["performed_by"]["accountable"] not in model["accountable_owners"]:
         problems.append(f"performer {refresh['performed_by']['accountable']!r} is not an accountable owner")
+    if too_short(refresh["scope"]):
+        problems.append(f"scope is shorter than {MIN_TEXT} characters")
+    if refresh["trigger"] == "definition_of_ready" and not refresh["tickets_in_scope"]:
+        problems.append("a definition_of_ready refresh names no ticket in scope")
     try:
         required = required_categories(model, refresh["model_version"])
     except ValueError as error:
@@ -240,6 +289,8 @@ def check_refresh(refresh, epic, model, today, epic_issues):
             problems.append(f"{label} does not belong to {epic}")
         if finding["category"] not in required:
             problems.append(f"{label} names an unreviewed category {finding['category']!r}")
+        if too_short(finding["attack_path"]) or too_short(finding["recommended_control"]):
+            problems.append(f"{label} attack path or recommended control is shorter than {MIN_TEXT} characters")
         if finding["status"] == "handed_off":
             if finding["owner_ticket"] is None:
                 problems.append(f"{label} is handed off but names no owner ticket")
@@ -250,6 +301,11 @@ def check_refresh(refresh, epic, model, today, epic_issues):
         elif finding["status"] == "closed":
             if finding["resolution"] is None:
                 problems.append(f"{label} is closed without a resolution")
+            elif too_short(finding["resolution"]) or not REFERENCE.search(finding["resolution"]):
+                problems.append(
+                    f"{label} is closed without a checkable resolution: at least {MIN_TEXT} characters "
+                    "naming a public ticket, a decision record, a repository path or a test"
+                )
             if finding["owner_ticket"] is not None:
                 problems.append(f"{label} is closed but also names an owner ticket")
         else:
@@ -258,10 +314,16 @@ def check_refresh(refresh, epic, model, today, epic_issues):
 
     for review in refresh["categories"]:
         label = f"category {review['id']!r}"
-        if not review["analysis"].strip():
-            problems.append(f"{label} has no analysis")
+        if too_short(review["analysis"]):
+            problems.append(f"{label} analysis is shorter than {MIN_TEXT} characters")
         if review["disposition"] in {"controlled", "accepted"} and not review["evidence"]:
             problems.append(f"{label} is {review['disposition']} without evidence")
+        for item in review["evidence"]:
+            if not REFERENCE.search(item):
+                problems.append(
+                    f"{label} evidence {item[:40]!r} names no public ticket, decision record, "
+                    "repository path or test"
+                )
         if review["disposition"] == "finding" and not review["findings"]:
             problems.append(f"{label} is a finding disposition without findings")
         if review["disposition"] != "finding" and review["findings"]:
@@ -273,6 +335,13 @@ def check_refresh(refresh, epic, model, today, epic_issues):
         primary = next((r for r in refresh["categories"] if r["id"] == finding["category"]), None)
         if primary is None or finding["id"] not in primary["findings"]:
             problems.append(f"finding {finding['id']} is not listed by its category {finding['category']!r}")
+
+    disclosure = next((r for r in refresh["categories"] if r["id"] == "information_disclosure"), None)
+    if disclosure is not None and disclosure["disposition"] != "not_applicable" and not refresh["data_flows"]:
+        problems.append(
+            "information_disclosure is reviewed as "
+            f"{disclosure['disposition']!r} but data_flows is empty; inventory every personal-data class"
+        )
     return problems
 
 
@@ -284,10 +353,14 @@ def check_record(record, epic, model, today, epic_issues):
         problems.append(f"record owner {record['owner']['accountable']!r} is not an accountable owner")
     if record["issue"] is None and not record.get("note", "").strip():
         problems.append("record has no public epic issue and no note explaining why")
-    # A record names attack paths and controls by repository path and issue identifier. A URL is
-    # either a live endpoint or an external reference the checker cannot vouch for; neither belongs.
-    if URL.search(json.dumps(record)):
-        problems.append("record contains a URL; reference repository paths and public issue identifiers instead")
+    serialized = json.dumps(record)
+    for label, pattern in FORBIDDEN:
+        match = pattern.search(serialized)
+        if match:
+            problems.append(
+                f"record contains a {label} ({match.group(0)[:24]!r}); reference repository paths "
+                "and public issue identifiers instead"
+            )
     previous = None
     for index, refresh in enumerate(record["refreshes"]):
         date = parse_date(refresh["date"], f"{epic} refresh {index}")
@@ -305,12 +378,19 @@ def evaluate_epic(record, epic, model, today, problems):
         "epic": epic, "title": record.get("title"), "issue": record.get("issue"),
         # A record too broken to name its owner still has one: the model's accountable owner.
         "owner": owner or model["accountable_owners"][0],
-        "status": None, "reasons": [], "latest_refresh": None, "next_refresh_due": None,
-        "findings": 0, "unowned_findings": [],
+        "status": None, "reasons": [], "latest_refresh": None, "latest_trigger": None,
+        "next_refresh_due": None, "tickets_in_scope": [], "findings": 0, "unowned_findings": [],
     }
     if problems:
         result["status"] = "invalid"
         result["reasons"] = list(problems)
+        # Keep the ticket list when the shape allows, so the --ticket gate reports the invalidity
+        # rather than claiming the ticket was never considered.
+        refreshes = record.get("refreshes")
+        if isinstance(refreshes, list) and refreshes and isinstance(refreshes[-1], dict):
+            tickets = refreshes[-1].get("tickets_in_scope")
+            if isinstance(tickets, list):
+                result["tickets_in_scope"] = [t for t in tickets if isinstance(t, str)]
         return result
     if not record["refreshes"]:
         result["status"] = "not_refreshed"
@@ -320,7 +400,9 @@ def evaluate_epic(record, epic, model, today, problems):
     date = datetime.date.fromisoformat(latest["date"])
     due = date + datetime.timedelta(weeks=model["cadence_weeks"])
     result["latest_refresh"] = latest["date"]
+    result["latest_trigger"] = latest["trigger"]
     result["next_refresh_due"] = due.isoformat()
+    result["tickets_in_scope"] = list(latest["tickets_in_scope"])
     result["findings"] = len(latest["findings"])
     result["unowned_findings"] = [f["id"] for f in latest["findings"] if f["status"] == "open"]
     reasons = []
@@ -377,6 +459,13 @@ def check_documents(model, root):
     for trigger in model["refresh_triggers"]:
         if f"`{trigger['id']}`" not in readme:
             raise ValueError(f"README does not publish the refresh trigger {trigger['id']!r}")
+    # The test strategy's Definition of Ready requires these three PenniLogic-specific prompts.
+    for prompt in ("ingestion boundary", "never leaves the device", "parser-config signing chain"):
+        if prompt not in template:
+            raise ValueError(f"Template does not carry the required prompt {prompt!r}")
+    for flag in ("--epic", "--ticket"):
+        if flag not in readme:
+            raise ValueError(f"README does not document the {flag} gate")
 
 
 def run(root=ROOT, today=None):
@@ -456,10 +545,51 @@ def format_summary(summary):
     return "\n".join(lines)
 
 
+def gate(summary, epic=None, ticket=None):
+    """Apply the Definition of Ready gate; return (exit code, message)."""
+    evaluation = None
+    if ticket is not None:
+        if not PUBLIC_ISSUE.match(ticket):
+            return 1, f"Threat-model check failed: {ticket!r} is not a public issue identifier (PenniLogic/<repo>#N)"
+        listing = [e for e in summary["epics"] if ticket in e["tickets_in_scope"]]
+        if epic is not None:
+            listing = [e for e in listing if e["epic"] == epic]
+        if not listing:
+            where = f"the latest refresh of {epic}" if epic else "any epic's latest refresh"
+            return 1, (
+                f"Definition of Ready not met for {ticket}: it is not in tickets_in_scope of {where}. "
+                "Record or extend a refresh that considers this ticket (a scope_changed refresh if it "
+                "adds a data class, trust boundary, external party, AI capability, sharing path or money flow)."
+            )
+        evaluation = listing[0]
+    elif epic is not None:
+        evaluation = next((e for e in summary["epics"] if e["epic"] == epic), None)
+        if evaluation is None:
+            return 1, f"Threat-model check failed: unknown epic {epic}"
+    if evaluation["status"] != "current":
+        return 1, (
+            f"Definition of Ready not met for {evaluation['epic']}: {evaluation['status']} "
+            f"({'; '.join(evaluation['reasons'])}). Owner who must record the refresh: {evaluation['owner']}."
+        )
+    scope = f" {ticket} is in scope of the latest ({evaluation['latest_trigger']}) refresh." if ticket else ""
+    return 0, (
+        f"{evaluation['epic']} current: refreshed {evaluation['latest_refresh']}, next refresh due "
+        f"{evaluation['next_refresh_due']}, {evaluation['findings']} finding(s) all owned or closed.{scope}"
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--epic", help="exit 1 unless this epic has a current refresh (the Definition of Ready gate)")
-    parser.add_argument("--today", help="evaluate staleness against this ISO date instead of the system clock")
+    parser.add_argument(
+        "--ticket", metavar="PenniLogic/<repo>#N",
+        help="exit 1 unless this ticket is in tickets_in_scope of a current refresh (with --epic: of that epic)",
+    )
+    parser.add_argument(
+        "--today",
+        help="evaluate staleness against this ISO date instead of the system clock; for tests and what-if runs "
+             "only, never for a gate",
+    )
     parser.add_argument("--json", action="store_true", help="print the machine-readable summary")
     args = parser.parse_args(argv)
     try:
@@ -468,28 +598,18 @@ def main(argv=None):
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(f"Threat-model check failed: {error}", file=sys.stderr)
         return 1
+    gated = args.epic is not None or args.ticket is not None
     if args.json:
         print(json.dumps(summary, indent=2))
-    elif not args.epic:
+    elif not gated:
         print(format_summary(summary))
-    if args.epic:
-        evaluation = next((e for e in summary["epics"] if e["epic"] == args.epic), None)
-        if evaluation is None:
-            print(f"Threat-model check failed: unknown epic {args.epic}", file=sys.stderr)
-            return 1
-        if evaluation["status"] != "current":
-            print(
-                f"Definition of Ready not met for {args.epic}: {evaluation['status']} "
-                f"({'; '.join(evaluation['reasons'])}). Owner who must record the refresh: {evaluation['owner']}.",
-                file=sys.stderr,
-            )
-            return 1
-        if not args.json:
-            print(
-                f"{args.epic} current: refreshed {evaluation['latest_refresh']}, "
-                f"next refresh due {evaluation['next_refresh_due']}, {evaluation['findings']} finding(s) all owned or closed."
-            )
-        return 0
+    if gated:
+        code, message = gate(summary, args.epic, args.ticket)
+        if code:
+            print(message, file=sys.stderr)
+        elif not args.json:
+            print(message)
+        return code
     return 1 if summary["counts"]["invalid"] else 0
 
 

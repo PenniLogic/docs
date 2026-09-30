@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/PenniLogic/docs/governance/threat-model/schema.json",
   "title": "PenniLogic threat-model refresh data",
-  "description": "Definitions for governance/threat-model/categories.json (definition 'model') and governance/threat-model/records/<epic>.json (definition 'record'). Validated by scripts/check_threat_model.py with a strict draft-07 subset: any keyword that validator does not implement is an error, so nothing passes silently. Rules that need more than one property (evidence for a controlled category, an owner ticket for a handed-off finding, category completeness, staleness) are enforced by the script, not by this schema.",
+  "description": "Definitions for governance/threat-model/categories.json (definition 'model') and governance/threat-model/records/<epic>.json (definition 'record'). Validated by scripts/check_threat_model.py with a strict draft-07 subset: any keyword that validator does not implement is an error, so nothing passes silently. Rules that need more than one property (evidence for a controlled category, an owner ticket for a handed-off finding, a reference inside every evidence item and resolution, minimum analysis length, data flows when personal data is in scope, category completeness, staleness, forbidden endpoint and key shapes) are enforced by the script, not by this schema.",
   "definitions": {
     "epic_id": {
       "type": "string",
@@ -349,6 +349,66 @@
         }
       }
     },
+    "data_subject": {
+      "description": "Who the personal data is about. Users are account holders; household members and counterparties are other people whose data a user's records contain; contributors are the owner, AI sessions and anyone writing in the public repositories.",
+      "enum": [
+        "users",
+        "household_members",
+        "counterparties",
+        "research_participants",
+        "operators",
+        "contributors"
+      ]
+    },
+    "data_flow": {
+      "description": "One personal-data class the epic introduces or touches, with the facts a data-protection review asks for. Required (at least one) whenever the refresh's information_disclosure review is not not_applicable.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_class",
+        "subjects",
+        "purpose_ref",
+        "retention",
+        "erasure_path",
+        "children",
+        "processors"
+      ],
+      "properties": {
+        "data_class": {
+          "$ref": "#/definitions/text"
+        },
+        "subjects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/data_subject"
+          }
+        },
+        "purpose_ref": {
+          "description": "The purpose-registry entry, consent record or published decision that permits the flow, or the public ticket that will create it.",
+          "$ref": "#/definitions/text"
+        },
+        "retention": {
+          "$ref": "#/definitions/text"
+        },
+        "erasure_path": {
+          "$ref": "#/definitions/text"
+        },
+        "children": {
+          "description": "How the flow is conditioned on the age gate, or why children cannot be subjects.",
+          "$ref": "#/definitions/text"
+        },
+        "processors": {
+          "description": "Third parties, processors or cross-border destinations the data reaches; empty when it stays first-party.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        }
+      }
+    },
     "refresh": {
       "type": "object",
       "additionalProperties": false,
@@ -360,6 +420,7 @@
         "scope",
         "tickets_in_scope",
         "sources",
+        "data_flows",
         "categories",
         "findings"
       ],
@@ -393,6 +454,12 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/definitions/text"
+          }
+        },
+        "data_flows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/data_flow"
           }
         },
         "categories": {

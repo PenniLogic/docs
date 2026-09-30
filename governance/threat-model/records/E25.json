@@ -39,15 +39,58 @@
         "architecture/02-security-architecture.md#1-threat-model-stride",
         "product/04-execution-readiness-review.md (verification surface and gate table)",
         "product/03-delivery-plan.md#6-non-functional-gates",
+        "compliance/01-regulatory-landscape.md (obligations O-8, O-27, O-28)",
         "governance/DELIVERY.md",
         "PenniLogic/docs#28 (epic body: goal, scope, exit criteria)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Sanitized parser corpus derived from real bank and wallet messages, and the compatibility matrix built from it",
+          "subjects": [
+            "users",
+            "contributors"
+          ],
+          "purpose_ref": "Parser regression testing; publication rules and redaction gate owned by PenniLogic/android#35 (E25-F02); raw seeds never enter a repository (governance/DELIVERY.md)",
+          "retention": "Published entries indefinitely in the repository; raw seed messages kept outside the repository only as long as the redaction gate needs them",
+          "erasure_path": "A contributor may withdraw a seed; the derived entry is regenerated from templates or removed, and the redaction gate re-run",
+          "children": "Not subjects: seeds come from adult contributors' own devices with consent",
+          "processors": []
+        },
+        {
+          "data_class": "Release-candidate traffic captures and physical-device contents used for privacy inspection and instrumented journeys",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Privacy traffic inspection evidence (compliance O-8, PenniLogic/android#16) on synthetic accounts only (E25-F06, E25-F11)",
+          "retention": "Captures kept with the release evidence for the evidence retention period the release checklist publishes (docs#23), under an access list",
+          "erasure_path": "Synthetic accounts only, so no data subject can request erasure; captures are deleted at the end of the evidence retention period and the device is wiped before transfer",
+          "children": "Not subjects: synthetic accounts",
+          "processors": []
+        },
+        {
+          "data_class": "Penetration-test and red-team findings reports, scanner outputs and attack-suite fixtures",
+          "subjects": [
+            "operators",
+            "contributors"
+          ],
+          "purpose_ref": "Independent security testing before public launch (PenniLogic/docs#43, compliance O-28); synthetic tenants only (E25-F08)",
+          "retention": "Reports retained for the period docs#43 fixes with an encrypted channel and a named access list (E25-F07); retest evidence attached to the launch gate",
+          "erasure_path": "Report retention limit and vendor account revocation at the end of the engagement",
+          "children": "Not subjects",
+          "processors": [
+            "External penetration-test vendor under the scope contract docs#43 defines"
+          ]
+        }
       ],
       "categories": [
         {
           "id": "spoofing",
           "disposition": "finding",
-          "analysis": "Test doubles are identities: sandbox provider keys, mock authentication, test-mode webhook signing secrets and allowlisted test hosts. The classic failure is a bypass that ships: a build flag or configuration that accepts the test identity in a production build. Nothing in the current gates proves that a release candidate contains no such bypass.",
-          "evidence": [],
+          "analysis": "Test doubles are identities: sandbox provider keys, mock authentication, test-mode webhook signing secrets and allowlisted test hosts. The classic failure is a bypass that ships: a build flag or configuration that accepts the test identity in a production build; nothing in the current gates proves that a release candidate contains no such bypass (E25-F12). The release identity itself is a dependency this epic does not own: the signed-provenance gate infra#31 verifies and the evidence gates docs#49 and docs#50 consume are defeated by construction if the Android upload key leaks, because the attacker's build is validly signed. Upload-key custody, rotation and recovery are owned by android#37 in E24; E24's Definition of Ready refresh must review that control, and this record names the dependency so it is not invisible to either epic.",
+          "evidence": [
+            "PenniLogic/android#37: Play App Signing enrolment, upload-key custody, rotation and recorded recovery path (E24)",
+            "PenniLogic/infra#31: signed mobile-binary provenance verification depends on that custody"
+          ],
           "findings": [
             "E25-F12"
           ]
@@ -105,13 +148,12 @@
         },
         {
           "id": "billing_forgery",
-          "disposition": "controlled",
-          "analysis": "The quality epic's contribution against billing forgery is the harness that proves idempotency and adversarial retry on every money path (api#22) and the adversarial replay suite that E14 owns for the subscription lifecycle (api#48). This refresh does not verify those tickets; it records that the control is owned and must exist before E14 passes its own Definition of Ready.",
-          "evidence": [
-            "PenniLogic/api#22: money-path harness with idempotency and adversarial retry",
-            "PenniLogic/api#48: subscription lifecycle, reconciliation and adversarial replay suite (E14)"
-          ],
-          "findings": []
+          "disposition": "finding",
+          "analysis": "The quality epic's contribution against billing forgery is the harness that proves idempotency and adversarial retry on every money path (api#22); the adversarial replay suite for the subscription lifecycle itself is E14's (api#48). Neither exists yet, so this is a hand-off, not a control: the money-path harness ticket does not currently name billing events (purchase, renewal, refund, chargeback, provider webhook replay) among its idempotency and adversarial-retry scenarios, and a harness that proves ledger idempotency while the billing paths are tested elsewhere or nowhere leaves the forgery surface uncovered until E14 (E25-F13).",
+          "evidence": [],
+          "findings": [
+            "E25-F13"
+          ]
         },
         {
           "id": "entitlement_tampering",
@@ -124,13 +166,12 @@
         },
         {
           "id": "ai_service_compromise",
-          "disposition": "controlled",
-          "analysis": "The AI evaluation gate runs real provider calls in continuous integration; without pinned budgets and recorded fixtures it is a spend path and a key-exposure path. ai-service#7 owns the evaluation suite together with spend controls, and admin#5 owns enforced provider spend caps. Load and chaos suites must stub the gateway (see E25-F03).",
-          "evidence": [
-            "PenniLogic/ai-service#7: evaluation suite, numeric fidelity and spend controls as merge gates",
-            "PenniLogic/admin#5: enforced AI provider spend caps"
-          ],
-          "findings": []
+          "disposition": "finding",
+          "analysis": "The AI evaluation gate runs real provider calls in continuous integration; without pinned budgets, recorded fixtures and key isolation it is a spend path and a key-exposure path, and the load and chaos suites must stub the gateway (E25-F03). ai-service#7 owns the evaluation suite together with spend controls and admin#5 owns enforced provider spend caps, but neither exists yet, so the gate's own safety is a finding handed to the ticket that will build it rather than a control this refresh can cite (E25-F14).",
+          "evidence": [],
+          "findings": [
+            "E25-F14"
+          ]
         },
         {
           "id": "request_forgery",
@@ -157,13 +198,12 @@
         },
         {
           "id": "split_manipulation",
-          "disposition": "controlled",
-          "analysis": "Split arithmetic (share types, deterministic remainder, settlement) is money arithmetic and falls under the independent-model comparison and property harness that api#22 builds; api#33 supplies the split ledger the harness will check. No additional quality control is needed beyond keeping split scenarios inside api#22's scope when api#33 lands.",
-          "evidence": [
-            "PenniLogic/api#22: property, mutation and independent-model gates for money paths",
-            "PenniLogic/api#33: split ledger with deterministic remainder (E15)"
-          ],
-          "findings": []
+          "disposition": "finding",
+          "analysis": "Split arithmetic (share types, deterministic remainder, settlement) is money arithmetic and belongs under the independent-model comparison and property harness that api#22 builds; api#33 will supply the split ledger the harness checks. The harness ticket does not yet name split scenarios, and the remainder rule they must agree on is still an open decision (E26-F10), so a harness could pass on single-party ledger paths while the multi-party paths where members can shift paise are never compared against the independent model (E25-F15).",
+          "evidence": [],
+          "findings": [
+            "E25-F15"
+          ]
         },
         {
           "id": "administrative_identity_compromise",
@@ -309,6 +349,39 @@
           "recommended_control": "The release checklist requires each platform gate to emit a no-test-bypass artifact: release builds compiled without test flags, configuration free of sandbox credentials and test hosts, and a probe proving the test identity is rejected by the candidate.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        },
+        {
+          "id": "E25-F13",
+          "category": "billing_forgery",
+          "severity": "medium",
+          "title": "The money-path harness does not name billing events among its idempotency and replay scenarios",
+          "attack_path": "The harness proves ledger writes are idempotent while purchase, renewal, refund, chargeback and provider-webhook replays are exercised nowhere until E14; a replayed webhook or receipt that grants entitlement twice, or a refund that leaves entitlement in place, ships past the quality gates.",
+          "recommended_control": "Name billing events (purchase, renewal, refund, chargeback, promotional eligibility, webhook replay and out-of-order delivery) as required idempotency and adversarial-retry scenarios of the harness, asserting a server-side verification before any entitlement or balance change, and require api#48 to reuse the harness rather than a private suite.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#22",
+          "resolution": null
+        },
+        {
+          "id": "E25-F14",
+          "category": "ai_service_compromise",
+          "severity": "medium",
+          "title": "The AI evaluation gate is itself a spend and key-exposure path",
+          "attack_path": "The evaluation suite calls live providers from continuous integration; a runaway matrix, a retry loop or a fork pull request that triggers it spends against the platform key, and a key exposed to the job is exfiltrated through logs or a compromised action.",
+          "recommended_control": "The gate runs recorded fixtures by default and live calls only on a protected branch with a pinned per-run budget, a hard spend cap enforced by the gateway (admin#5), a key scoped to the evaluation project and rotated, no key on fork pull requests, and the spend and cap published with every run.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#7",
+          "resolution": null
+        },
+        {
+          "id": "E25-F15",
+          "category": "split_manipulation",
+          "severity": "medium",
+          "title": "Split and settlement scenarios are missing from the independent-model harness",
+          "attack_path": "The harness compares single-party ledger paths against the independent model while share allocation, remainder distribution, settlement recording and member removal are never compared; two implementations disagree by a paise per split and a member exploits or disputes the difference.",
+          "recommended_control": "Add split scenarios to the property and independent-model harness once the remainder rule is decided (E26-F10): share types, remainder allocation order and tie-break, settlement and reversal, member addition and removal, each asserting equality with the independent model to the minor unit.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#22",
           "resolution": null
         }
       ]
