@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "strategy_version": "1.1.0",
+  "strategy_version": "1.1.1",
   "source_issue": {
     "reference": "PenniLogic/docs#22",
     "identity": "PenniLogic-old/docs#21"
@@ -96,11 +96,15 @@
       "id": "mutation_testing",
       "name": "Mutation testing on money paths",
       "layer": "Money-path packages",
-      "approach": "Mutation score measured per package and compared with the mutation floor published for that package in this file; every money-path package has one",
+      "approach": "Mutation score measured per package by the gate in the repository that owns the package (the api harness for api packages, the Android gate for android.ledger and android.parsers) and compared with the mutation floor published for that package in this file; every money-path package has one",
       "owners": [
         {
           "reference": "PenniLogic/api#22",
           "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/android#65",
+          "identity": "T-QA-01-AND"
         }
       ],
       "evidence": "Per-package mutation score published on every run against its floor; a score below the floor fails the build"
@@ -991,17 +995,7 @@
     "unlisted_package_rule": "A package present in a repository build but absent from this inventory fails that repository's harness; a package listed here without a line, branch or (on money paths) mutation number fails this check. Neither case is an exemption.",
     "renaming_rule": "Renaming, adding or removing a package is a pull request to this file with Core and QA review; the harness never infers a floor for an unknown name.",
     "mutation_enforcement_rule": "Every repository that carries a money-path package must have a mutation_testing owner in that repository; a repository without one is recorded here as an enforcement gap with its packages, a reason and a resolution, and its floors stand as requirements that no harness is yet chartered to enforce.",
-    "mutation_enforcement_gaps": [
-      {
-        "repository": "PenniLogic/android",
-        "packages": [
-          "android.ledger",
-          "android.parsers"
-        ],
-        "reason": "The only mutation_testing owner, PenniLogic/api#22 (T-QA-01), keeps its harness and gate configuration in api by its parallel boundary; no PenniLogic/android issue scopes mutation testing, and PenniLogic/android#15 (T-QA-08) covers instrumented journeys, accessibility, performance, internationalization and client state coverage only.",
-        "resolution": "An Android money-path mutation owner is requested from the coordinator as a new issue or a scope change agreed with the T-QA-08 owner. Until it exists the Definition of Done item mutation_floor_met cannot be evidenced for these two packages and this gap entry must remain; the check fails if the entry is removed without an owner or kept after one exists."
-      }
-    ]
+    "mutation_enforcement_gaps": []
   },
   "packages": [
     {
@@ -2016,7 +2010,7 @@
     "No harness, gate, coverage, mutation, accessibility, load or device result is claimed by this file; every number is a requirement its owning issue must meet, and the check proves ownership and shape, not execution",
     "Delivery-protocol enforcement in CI (contract-first metadata, migration lock, dependency validation) has no migrated owning issue in the public inventory and is therefore not asserted as a category until one exists",
     "No emulator lane exists in PenniLogic/android CI at publication: the emulator lanes are provisionable on GitHub-hosted runners and become gates only when PenniLogic/android#15 (T-QA-08) wires them; until then any lane evidence is produced locally and attached to the pull request",
-    "Android money-path mutation enforcement for android.ledger and android.parsers has no owning issue; the floors are published requirements and the gap is recorded in floor_policy.mutation_enforcement_gaps until an owner exists",
+    "The Android money-path mutation gate for android.ledger and android.parsers is owned by PenniLogic/android#65 (T-QA-01-AND), which is blocked by the api harness and the Android ledger work; no mutation run on any package is claimed until the owning gates exist",
     "The ai-service integration job has no owning issue; integration_tests is scoped to api and no ai-service integration gate is asserted"
   ]
 }

@@ -3,20 +3,20 @@
   "organization": "PenniLogic",
   "organization_id": 335295566,
   "operator": "basiltt",
-  "snapshot_at": "2026-09-29T23:25:38Z",
+  "snapshot_at": "2026-09-30T01:07:38Z",
   "refresh_command": "python scripts/check_test_strategy.py --refresh-inventory",
   "note": "Offline snapshot of the public issue inventory for the test strategy reconciliation; identity comes from the plan-id marker and the original-specification source each issue body carries, never from titles. Refresh at each review-cadence trigger.",
-  "issue_count": 403,
-  "open_count": 348,
-  "closed_count": 55,
+  "issue_count": 408,
+  "open_count": 345,
+  "closed_count": 63,
   "repositories": {
     "PenniLogic/.github": {
       "id": 1394134381,
-      "issue_count": 2
+      "issue_count": 3
     },
     "PenniLogic/docs": {
       "id": 1394134442,
-      "issue_count": 138
+      "issue_count": 139
     },
     "PenniLogic/contracts": {
       "id": 1394134505,
@@ -24,7 +24,7 @@
     },
     "PenniLogic/api": {
       "id": 1394134582,
-      "issue_count": 80
+      "issue_count": 81
     },
     "PenniLogic/ai-service": {
       "id": 1394134652,
@@ -32,7 +32,7 @@
     },
     "PenniLogic/android": {
       "id": 1394134737,
-      "issue_count": 62
+      "issue_count": 63
     },
     "PenniLogic/web": {
       "id": 1394134850,
@@ -44,7 +44,7 @@
     },
     "PenniLogic/infra": {
       "id": 1394135059,
-      "issue_count": 37
+      "issue_count": 38
     }
   },
   "issues": [
@@ -53,8 +53,8 @@
       "repository": "PenniLogic/.github",
       "number": 1,
       "title": "[T-GOV-AGENT-CAP-01] Align Developer and Producer capabilities with native duties",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "completed",
       "source": "PenniLogic-old/.github-private#9",
       "plan_id": "T-GOV-AGENT-CAP-01"
     },
@@ -67,6 +67,16 @@
       "state_reason": "completed",
       "source": "PenniLogic-old/.github-private#15",
       "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/.github#4",
+      "repository": "PenniLogic/.github",
+      "number": 4,
+      "title": "Treat non-owner issue and pull-request comments as untrusted data in the shared agent profiles and repository instructions",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-GOV-STRIDE-E01-F03"
     },
     {
       "reference": "PenniLogic/docs#1",
@@ -773,8 +783,8 @@
       "repository": "PenniLogic/docs",
       "number": 72,
       "title": "Document the GraphQL silent-truncation trap and audit the live planning scripts",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "completed",
       "source": "PenniLogic-old/docs#176",
       "plan_id": null
     },
@@ -1443,10 +1453,20 @@
       "repository": "PenniLogic/docs",
       "number": 141,
       "title": "Restore the ADR layout generator and validator (validate_adr_layout.py) per adr/LAYOUT.md",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": null,
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#146",
+      "repository": "PenniLogic/docs",
+      "number": 146,
+      "title": "ADR layout validator follow-ups: LAYOUT.md validation exercises and accepted-record integrity rules",
       "state": "open",
       "state_reason": null,
       "source": null,
-      "plan_id": null
+      "plan_id": "T-ADR-INDEX-10-FOLLOWUP-01"
     },
     {
       "reference": "PenniLogic/contracts#1",
@@ -1663,8 +1683,8 @@
       "repository": "PenniLogic/contracts",
       "number": 22,
       "title": "[T-LEAN-C-CONTRACTS] Activate the reviewed lean development baseline",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "not_planned",
       "source": "PenniLogic-old/contracts#34",
       "plan_id": null
     },
@@ -2433,8 +2453,8 @@
       "repository": "PenniLogic/api",
       "number": 74,
       "title": "[T-LEAN-V-API] Install the admitted lean-compatible validator",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "not_planned",
       "source": "PenniLogic-old/api#92",
       "plan_id": null
     },
@@ -2497,6 +2517,16 @@
       "state_reason": "completed",
       "source": "PenniLogic-old/api#94",
       "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#82",
+      "repository": "PenniLogic/api",
+      "number": 82,
+      "title": "Own the analytics event ingestion endpoint, pipeline and team dashboard with schema validation, rate limits and cohort minimums",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-RET-INGEST-01"
     },
     {
       "reference": "PenniLogic/ai-service#1",
@@ -2593,8 +2623,8 @@
       "repository": "PenniLogic/ai-service",
       "number": 10,
       "title": "[T-GOV-AI-CI-M1-01] Admit the first AI CI protecting manifest",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "not_planned",
       "source": "PenniLogic-old/ai-service#25",
       "plan_id": "T-GOV-AI-CI-M1-01"
     },
@@ -3257,6 +3287,16 @@
       "state_reason": "completed",
       "source": "PenniLogic-old/android#73",
       "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#65",
+      "repository": "PenniLogic/android",
+      "number": 65,
+      "title": "Adopt the money-path mutation-testing gate for the Android ledger and parser packages",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-QA-01-AND"
     },
     {
       "reference": "PenniLogic/web#1",
@@ -4043,8 +4083,8 @@
       "repository": "PenniLogic/infra",
       "number": 35,
       "title": "[T-GOV-EXEC-WIN-01] Fix trusted Windows command dispatch without escaping Python environments",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "not_planned",
       "source": "PenniLogic-old/infra#42",
       "plan_id": "T-GOV-EXEC-WIN-01"
     },
@@ -4053,8 +4093,8 @@
       "repository": "PenniLogic/infra",
       "number": 36,
       "title": "[T-GOV-RUN-WEB-01] Provision the pinned Web runtime in existing trusted CI jobs",
-      "state": "open",
-      "state_reason": null,
+      "state": "closed",
+      "state_reason": "not_planned",
       "source": "PenniLogic-old/infra#43",
       "plan_id": "T-GOV-RUN-WEB-01"
     },
@@ -4077,6 +4117,16 @@
       "state_reason": null,
       "source": null,
       "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#43",
+      "repository": "PenniLogic/infra",
+      "number": 43,
+      "title": "Publish and verify the owner-account and credential hardening baseline for the single administrative identity",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-GOV-STRIDE-E01-F04"
     }
   ]
 }

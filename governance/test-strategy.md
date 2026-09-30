@@ -1,6 +1,6 @@
 # Test strategy
 
-> **Version 1.1.0.** Published by [PenniLogic/docs#22](https://github.com/PenniLogic/docs/issues/22)
+> **Version 1.1.1.** Published by [PenniLogic/docs#22](https://github.com/PenniLogic/docs/issues/22)
 > (source specification PenniLogic-old/docs#21). The machine-readable strategy is
 > `governance/test-strategy.json`, validated against `governance/test-strategy.schema.json` and reconciled
 > against the issue inventory snapshot `planning/issue-inventory.json` and the client state taxonomy
@@ -145,7 +145,7 @@ replay and sharing-grant default deny, each with its own owning issue.
 | `unit_tests` | All repositories | Deterministic unit tests on every change, run by the native CI job of each repository; no network, no wall clock and no unseeded randomness | PenniLogic/api#75 (T-SCA-API-01), PenniLogic/contracts#2 (T-SCA-CON-01), PenniLogic/ai-service#1 (T-SCA-AIS-01), PenniLogic/android#1 (T-SCA-AND-01), PenniLogic/web#1 (T-SCA-WEB-01), PenniLogic/admin#1 (T-SCA-ADM-01), PenniLogic/infra#24 (T-SCA-INF-01), PenniLogic/infra#22 (PenniLogic-old/infra#1) | The repository's native CI check on the pull request head; per-package line and branch coverage compared with the floors in this file on every run |
 | `domain_ledger_property` | Domain/ledger | Property-based tests over shared generators; the zero-sum invariant, non-negativity where required, rounding and period-boundary rules are machine-checked on generated cases | PenniLogic/api#22 (T-QA-01), PenniLogic/api#3 (PenniLogic-old/api#3) | Property suite in the api pull request gate; a planted rounding error fails the build and names the falsifying case |
 | `debt_maths_independent_model` | Debt maths | Every debt, budgeting and allocation result is compared with a second, independently written implementation across the full case matrix, in addition to mutation testing of the production packages | PenniLogic/api#22 (T-QA-01), PenniLogic/api#16 (PenniLogic-old/api#16) | Oracle comparison report per run; any disagreement fails the api build and names the case |
-| `mutation_testing` | Money-path packages | Mutation score measured per package and compared with the mutation floor published for that package in this file; every money-path package has one | PenniLogic/api#22 (T-QA-01) | Per-package mutation score published on every run against its floor; a score below the floor fails the build |
+| `mutation_testing` | Money-path packages | Mutation score measured per package by the gate in the repository that owns the package (the api harness for api packages, the Android gate for android.ledger and android.parsers) and compared with the mutation floor published for that package in this file; every money-path package has one | PenniLogic/api#22 (T-QA-01), PenniLogic/android#65 (T-QA-01-AND) | Per-package mutation score published on every run against its floor; a score below the floor fails the build |
 | `parser_golden_corpus` | Parsers | Golden-corpus regression: every newly observed bank or wallet format becomes a permanent synthetic, structurally faithful case; the corpus is privacy-scanned, versioned and published with coverage by issuer | PenniLogic/android#35 (T-QA-12), PenniLogic/android#46 (T-PRS-01), PenniLogic/android#47 (T-PRS-02) | Full-corpus run on every parser change with coverage by issuer and rule version published; a regression or a planted identifier in the corpus fails the merge |
 | `api_contract` | API | Provider verification that the running service satisfies the published OpenAPI specification, with additive-versus-breaking classification of every change | PenniLogic/contracts#3 (T-QA-02), PenniLogic/api#3 (PenniLogic-old/api#3) | Provider verification on the api pull request against the published contract artifact; a removed field fails unless the expand-and-contract protocol was followed |
 | `contract_provider_consumer` | Contracts | Consumer verification of the generated Kotlin, TypeScript and Python clients against the published artifact, with a compatibility report naming each consumer and its verified contract version | PenniLogic/contracts#3 (T-QA-02) | Compatibility report per contract version naming every consumer; a drifting consumer fails its own pipeline |
@@ -187,7 +187,7 @@ replay and sharing-grant default deny, each with its own owning issue.
 - No harness, gate, coverage, mutation, accessibility, load or device result is claimed by this file; every number is a requirement its owning issue must meet, and the check proves ownership and shape, not execution
 - Delivery-protocol enforcement in CI (contract-first metadata, migration lock, dependency validation) has no migrated owning issue in the public inventory and is therefore not asserted as a category until one exists
 - No emulator lane exists in PenniLogic/android CI at publication: the emulator lanes are provisionable on GitHub-hosted runners and become gates only when PenniLogic/android#15 (T-QA-08) wires them; until then any lane evidence is produced locally and attached to the pull request
-- Android money-path mutation enforcement for android.ledger and android.parsers has no owning issue; the floors are published requirements and the gap is recorded in floor_policy.mutation_enforcement_gaps until an owner exists
+- The Android money-path mutation gate for android.ledger and android.parsers is owned by PenniLogic/android#65 (T-QA-01-AND), which is blocked by the api harness and the Android ledger work; no mutation run on any package is claimed until the owning gates exist
 - The ai-service integration job has no owning issue; integration_tests is scoped to api and no ai-service integration gate is asserted
 <!-- rendered:not_asserted:end -->
 
@@ -300,19 +300,21 @@ with review, before the harness will accept it.
 
 ### 7.1 Mutation enforcement ownership per repository
 
-A mutation floor is only a gate where a harness in that repository is chartered to read it. The
+A mutation floor is only a gate where a harness in that repository is chartered to read it. The api
 `mutation_testing` owner keeps its harness and gate configuration in `PenniLogic/api`; other
-repositories consume the published invariant list and implement their own tests. So the check requires
-that **every repository carrying a money-path package has a `mutation_testing` owner in that repository,
-or an explicit enforcement-gap record** naming the packages, the reason and the resolution. A gap is an
-honest statement that a published number has no executable owner yet, not an exemption: the floors
-stand, the Definition of Done item `mutation_floor_met` cannot be evidenced for those packages until an
-owner exists, and the check fails if the record is removed without an owner or kept after one appears.
+repositories consume the published invariant list and implement their own tests, so `PenniLogic/android#65`
+(T-QA-01-AND) owns the Android gate for `android.ledger` and `android.parsers` and reads the floors
+published here rather than restating them. The check requires that **every repository carrying a
+money-path package has a `mutation_testing` owner in that repository, or an explicit enforcement-gap
+record** naming the packages, the reason and the resolution. A gap is an honest statement that a published
+number has no executable owner yet, not an exemption: the floors stand, the Definition of Done item
+`mutation_floor_met` cannot be evidenced for those packages until an owner exists, and the check fails if a
+record is removed without an owner or kept after one appears. No gap is recorded at this version; the
+Android owner is itself blocked by the api harness and the Android ledger work, and no mutation run is
+claimed for any package until the owning gates exist.
 
 <!-- rendered:mutation_enforcement_gaps:begin -->
-| Repository | Money-path packages without an enforcement owner | Reason | Resolution |
-|---|---|---|---|
-| PenniLogic/android | `android.ledger`, `android.parsers` | The only mutation_testing owner, PenniLogic/api#22 (T-QA-01), keeps its harness and gate configuration in api by its parallel boundary; no PenniLogic/android issue scopes mutation testing, and PenniLogic/android#15 (T-QA-08) covers instrumented journeys, accessibility, performance, internationalization and client state coverage only. | An Android money-path mutation owner is requested from the coordinator as a new issue or a scope change agreed with the T-QA-08 owner. Until it exists the Definition of Done item mutation_floor_met cannot be evidenced for these two packages and this gap entry must remain; the check fails if the entry is removed without an owner or kept after one exists. |
+Every repository that carries a money-path package has a mutation-testing owner in that repository.
 <!-- rendered:mutation_enforcement_gaps:end -->
 
 ## 8. Flaky-test policy: quarantine and fix, never silently retry into green
@@ -641,9 +643,9 @@ data cannot drift apart.
   provisionable, and the gate that runs them is `PenniLogic/android#15` (section 11).
 - The physical mid-range Android device with an Indian SIM is a requirement, not an asset:
   `PenniLogic/android#14` is blocked on owner input for the device and SIM budget.
-- The mutation floors for `android.ledger` and `android.parsers` have no executable owner in
-  `PenniLogic/android`; the gap is recorded in section 7.1 and an owner is requested from the
-  coordinator. Until one exists, `mutation_floor_met` cannot be evidenced for those packages.
+- The mutation floors for `android.ledger` and `android.parsers` are owned by `PenniLogic/android#65`
+  (T-QA-01-AND), which is blocked by the api harness and the Android ledger work; the Android gate does
+  not exist yet and no mutation run is claimed (section 7.1).
 - The ai-service integration job has no owning issue; `integration_tests` is scoped to api.
 - The package inventory is the planned layout; it is corrected by reviewed pull requests as the
   repositories grow, never inferred by a harness.

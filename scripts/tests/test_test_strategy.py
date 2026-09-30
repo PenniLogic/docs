@@ -302,13 +302,16 @@ class AcceptanceCriteriaTests(unittest.TestCase):
         self.assertTrue(any("scrubbed of money values" in rule for rule in STRATEGY["test_data_policy"]["rules"]))
         self.assertIn("fail-closed", CATEGORIES["log_redaction_gate"]["approach"])
 
-    def test_mutation_enforcement_gap_is_recorded_for_android(self):
-        """F1: the android money-path floors have no owner; the gap is explicit and rendered."""
-        gaps = STRATEGY["floor_policy"]["mutation_enforcement_gaps"]
-        self.assertEqual([gap["repository"] for gap in gaps], ["PenniLogic/android"])
-        self.assertEqual(sorted(gaps[0]["packages"]), ["android.ledger", "android.parsers"])
+    def test_mutation_enforcement_has_an_owner_in_every_money_path_repository(self):
+        """F1: android#65 (T-QA-01-AND) owns the Android gate, so no enforcement gap is recorded."""
+        self.assertEqual(STRATEGY["floor_policy"]["mutation_enforcement_gaps"], [])
+        owners = {owner["identity"]: owner["reference"] for owner in CATEGORIES["mutation_testing"]["owners"]}
+        self.assertEqual(owners, {"T-QA-01": "PenniLogic/api#22", "T-QA-01-AND": "PenniLogic/android#65"})
+        money_repositories = {item["repository"] for item in STRATEGY["packages"] if item["money_path"]}
+        owner_repositories = {reference.rsplit("#", 1)[0] for reference in owners.values()}
+        self.assertEqual(money_repositories, owner_repositories)
         self.assertIn("### 7.1 Mutation enforcement ownership per repository", DOCUMENT)
-        self.assertIn("mutation_floor_met", " ".join(STRATEGY["not_asserted"]) + gaps[0]["resolution"])
+        self.assertIn("PenniLogic/android#65", DOCUMENT)
 
     def test_definitions_cross_reference_the_canonical_delivery_plan(self):
         """Q3."""
@@ -448,9 +451,23 @@ class PlantedDefectTests(unittest.TestCase):
     def test_money_path_floor_without_mutation_owner_or_gap_fails(self):
         """F1: a floor in a repository with no mutation owner needs an explicit gap record."""
         data = strategy()
-        data["floor_policy"]["mutation_enforcement_gaps"] = []
+        item = category(data, "mutation_testing")
+        item["owners"] = [owner for owner in item["owners"] if owner["identity"] != "T-QA-01-AND"]
         with self.assertRaisesRegex(ValueError, "PenniLogic/android has no mutation_testing owner and no recorded enforcement gap"):
             check(data)
+
+    def test_recorded_gap_without_owner_passes_and_is_rendered(self):
+        data = strategy()
+        item = category(data, "mutation_testing")
+        item["owners"] = [owner for owner in item["owners"] if owner["identity"] != "T-QA-01-AND"]
+        data["floor_policy"]["mutation_enforcement_gaps"] = [{
+            "repository": "PenniLogic/android", "packages": ["android.ledger", "android.parsers"],
+            "reason": "planted", "resolution": "planted",
+        }]
+        blocks = module.render_document_blocks(data)
+        self.assertIn("| PenniLogic/android | `android.ledger`, `android.parsers` | planted | planted |", blocks["mutation_enforcement_gaps"])
+        with self.assertRaisesRegex(ValueError, "does not carry the categories block"):
+            check(data)  # only the document differs; the gap itself is accepted
 
     def test_money_path_package_in_new_repository_without_owner_fails(self):
         data = strategy()
@@ -465,14 +482,19 @@ class PlantedDefectTests(unittest.TestCase):
     def test_stale_mutation_enforcement_gap_fails(self):
         data = strategy()
         data["floor_policy"]["mutation_enforcement_gaps"].append({
-            "repository": "PenniLogic/api", "packages": ["api.ledger"], "reason": "planted", "resolution": "planted",
+            "repository": "PenniLogic/android", "packages": ["android.ledger", "android.parsers"],
+            "reason": "planted", "resolution": "planted",
         })
         with self.assertRaisesRegex(ValueError, "stale: a mutation_testing owner exists there"):
             check(data)
 
     def test_mutation_enforcement_gap_must_list_exactly_its_packages(self):
         data = strategy()
-        data["floor_policy"]["mutation_enforcement_gaps"][0]["packages"] = ["android.ledger"]
+        item = category(data, "mutation_testing")
+        item["owners"] = [owner for owner in item["owners"] if owner["identity"] != "T-QA-01-AND"]
+        data["floor_policy"]["mutation_enforcement_gaps"] = [{
+            "repository": "PenniLogic/android", "packages": ["android.ledger"], "reason": "planted", "resolution": "planted",
+        }]
         with self.assertRaisesRegex(ValueError, "must list exactly its money-path packages"):
             check(data)
 
