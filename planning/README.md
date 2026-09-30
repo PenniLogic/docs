@@ -137,7 +137,7 @@ against the rules above:
 
 | Rule | What the scripts do | Evidence |
 |---|---|---|
-| 1 | `snapshot_project.py` pages `items(first: 100, after: $after)` with `totalCount` and `pageInfo { hasNextPage endCursor }` until `hasNextPage` is false, then writes `total_count` and `fetched` side by side. `publish_issues.py` reuses the same query to re-drain the Project in its `verify` phase. | Pre-publication snapshot: `total_count` 349, `fetched` 349 (all 349 unarchived drafts). Post-publication read-back: 352 items, all issues. The equality is recorded, not yet asserted. |
+| 1 | `snapshot_project.py` pages `items(first: 100, after: $after)` with `totalCount` and `pageInfo { hasNextPage endCursor }` until `hasNextPage` is false, then writes `total_count` and `fetched` side by side. `publish_issues.py` reuses the same query to re-drain the Project in its `verify` phase but keeps only the nodes. | Pre-publication snapshot: `total_count` 349, `fetched` 349 (all 349 unarchived drafts); the equality is recorded, not yet asserted. Post-publication read-back: 352 items, all issues; the `verify` re-drain requests `totalCount` but records only the fetched count (`project_items_total`), so this read does not yet show both numbers. |
 | 2 | Not implemented. Neither the `fieldValues(first: 50)` read inside `items` nor the `fields(first: 60)` read requests `totalCount`; both rely on measured headroom (next section). | See [Known headroom](#known-headroom-rule-2-not-yet-enforced). |
 | 3 | `publish_issues.py` builds its draft map from the before snapshot in its constructor, requires a source-identity line in every draft, rejects two drafts for one source identity, and raises `Expected 349 active drafts, found N` otherwise, so no phase (preflight, convert, create, update, project, link or verify) starts against a different population. Every phase first verifies the operating login, user id and organization id; before each conversion it re-reads the live item, checks it still belongs to the expected Project with the same content id, title and complete original body, and after conversion checks the created issue landed in the expected repository by numeric id with identical title and body. | Receipt methods: 349 `converted_draft`, 51 `created_direct`; 400 included records, 400 live issues with source identity. |
 | 4 | Offline tests (`test_publish_issues.py`) run the body transformation for every draft against a synthetic mapping with no GitHub calls, including the idempotence check that transforming an already-transformed body changes nothing. `verify` re-lists every issue with REST paging, checks each included record has exactly one live issue whose body still contains the complete original specification, re-reads every expected parent and blocked-by edge, checks the migrated graph is acyclic, re-drains the Project and diffs the field values of every converted item against the before snapshot, then writes `publication-receipt.json` and `project-items-after.json`. | 306/306 parent edges and 1497/1497 blocked-by edges verified, no cycles, 0 problems. Field diff: 343 of 349 converted items identical; the 6 differences were the six Sprint 01 items whose `Status` had been deliberately moved from `Backlog` to `In Progress` between the snapshots, each reported with its before and after values rather than hidden. |
@@ -155,9 +155,10 @@ snapshots, not from a live query:
 | `fields(first: 60)` on the Project | 60 | 29 fields defined. | 31 spare; a single unpaged read with no `totalCount`. |
 
 `subIssues` inside `issues` is not read by these scripts; parent and blocked-by
-edges are read through the paged REST endpoints. Adding the `totalCount` guard to
-both nested reads is the outstanding change if the scripts are ever committed to
-this repository (a separate decision; see docs#72).
+edges are read through the paged REST endpoints. The outstanding changes if the
+scripts are ever committed to this repository (a separate decision; see docs#72)
+are to add the `totalCount` guard to both nested reads and to record `totalCount`
+beside `fetched` in the `verify` re-drain.
 
 ## Before running any planning writer
 
