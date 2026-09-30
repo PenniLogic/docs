@@ -3,7 +3,6 @@
 import importlib.util
 import json
 from pathlib import Path
-import re
 import sys
 
 
@@ -41,16 +40,7 @@ def validate_backlog(value):
 
 def main():
     try:
-        reservations = json.loads((ROOT / "adr/reservations.json").read_text(encoding="utf-8"))
-        ids = [entry["number"] for entry in reservations["items"]]
-        if len(ids) != len(set(ids)):
-            raise ValueError("Duplicate ADR reservation")
-        for number in ids:
-            if not re.fullmatch(r"ADR-\d{3}", number):
-                raise ValueError("Invalid ADR reservation identifier")
-        adopted = sorted(path.stem for path in (ROOT / "adr").glob("ADR-*.md"))
-        if not adopted or set(adopted).intersection(ids):
-            raise ValueError("Published ADRs overlap pending reservations")
+        layout = load_check("validate_adr_layout").check_layout(ROOT)
         validate_backlog(json.loads((ROOT / "planning/backlog.json").read_text(encoding="utf-8")))
         for path in (ROOT / "planning/source").rglob("*.json"):
             json.loads(path.read_text(encoding="utf-8"))
@@ -59,7 +49,8 @@ def main():
         print(f"Documentation check failed: {error}", file=sys.stderr)
         return 1
     print(
-        f"Docs inventory valid: {len(adopted)} carried-forward ADRs, {len(ids)} pending reservations, "
+        f"Docs inventory valid: {layout['legacy']} carried-forward ADRs, {layout['published']} published "
+        f"reserved records, {layout['pending']} pending reservations, "
         f"client state taxonomy {taxonomy['taxonomy_version']} with {taxonomy['states']} states."
     )
     return 0
