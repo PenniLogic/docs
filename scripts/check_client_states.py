@@ -4,7 +4,9 @@ The taxonomy (T-UX-01) is published as data in product/client-state-taxonomy.jso
 Schema in product/client-state-taxonomy.schema.json and prose in product/client-state-taxonomy.md.
 This module validates the data against the schema with a strict draft-07 subset (any keyword it
 does not implement is an error, so nothing passes silently), enforces the rules the acceptance
-criteria state, and checks that the document names everything the data publishes.
+criteria state, and checks that the document names everything the data publishes: states, causes,
+conditions, the reason identifiers published under client-determined conditions, the content
+renderings that carry canonical copy naming no person, placeholders and the version history.
 """
 
 import json
@@ -40,6 +42,24 @@ REQUIRED_EXAMPLES = {
 REQUIRED_ASSERTIONS = ("client_state_coverage", "taxonomy_first")
 # The only region states whose presence in a supplementary region makes the host surface degraded.
 DEGRADED_PRODUCERS = ("error", "offline")
+# The first version published on main (PenniLogic/docs#138, 6eb4da65); every later change bumps.
+FIRST_PUBLISHED_VERSION = "1.0.0"
+# Reason identifiers published under client-determined conditions, byte-identical to the client
+# that implements them (PenniLogic/android#57, docs/platform/capture-health-identifiers.json at
+# android main ff15e94e). Removing or moving one is a major change, so the validator pins them.
+REQUIRED_REASONS = {
+    "capture_paused_by_platform": (
+        "force_stopped", "private_space_paused", "standby_bucket_restricted", "background_restricted",
+    ),
+    "capture_blocked_by_setting": (
+        "listener_access_not_granted", "restricted_setting_locked", "capture_permission_not_granted",
+    ),
+}
+REASON_TEXT_FIELDS = (
+    "id", "description", "clears_when", "limitation", "privacy", "recovery_destination", "published_by",
+)
+REASON_SECTION = "Reason identifiers"
+RENDERING_SECTION = "Content renderings"
 
 PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
 # An HTTP-style status or a SCREAMING_SNAKE token would be an invented code; T-CON-12 owns codes.
@@ -150,6 +170,15 @@ def canonical_strings(state):
     action = state["recovery_action"]
     yield action["label"]
     yield from action.get("label_by_cause", {}).values()
+    yield from action.get("label_by_variant", {}).values()
+
+
+def action_labels(action):
+    return [
+        action["label"],
+        *action.get("label_by_cause", {}).values(),
+        *action.get("label_by_variant", {}).values(),
+    ]
 
 
 def forbidden_term(text, terms):
@@ -180,7 +209,7 @@ def _check_states(data, states):
         if state["signal"] != data["signals"]["prefix"] + state_id:
             raise ValueError(f"State {state_id}: signal must be {data['signals']['prefix']}{state_id}")
         action = state["recovery_action"]
-        for label in [action["label"], *action.get("label_by_cause", {}).values()]:
+        for label in action_labels(action):
             if SEVERAL_ACTIONS.search(label):
                 raise ValueError(f"State {state_id}: recovery action label must offer exactly one action")
         for text in canonical_strings(state):
@@ -194,6 +223,9 @@ def _check_states(data, states):
         for key in action.get("label_by_cause", {}):
             if key not in causes:
                 raise ValueError(f"State {state_id}: label_by_cause names unknown cause {key!r}")
+        for key in action.get("label_by_variant", {}):
+            if key not in state["copy"].get("variants", {}):
+                raise ValueError(f"State {state_id}: label_by_variant names unknown variant {key!r}")
     if set(data["precedence"]) != set(states) or len(data["precedence"]) != len(states):
         raise ValueError("Precedence must list every state exactly once")
     denied = states["permission_denied"]
@@ -277,6 +309,50 @@ def _check_contract_conditions(data, states):
                     f"Contract condition {condition['id']}: names a code-like token "
                     f"{token.group(0)!r}; codes belong to T-CON-12"
                 )
+    return _check_reasons(conditions, states)
+
+
+def _check_reasons(conditions, states):
+    """Reason identifiers under client-determined conditions; return {reason_id: condition_id}."""
+    reserved = set(states) | set(conditions)
+    for state in states.values():
+        reserved |= {cause["id"] for cause in state.get("causes", [])}
+    placement = {}
+    for condition in conditions.values():
+        reasons = condition.get("reasons", [])
+        if reasons and condition["contract_level"] is not False:
+            raise ValueError(
+                f"Contract condition {condition['id']}: reasons are published only for "
+                "client-determined conditions; T-CON-12 owns the shapes of contract-level conditions"
+            )
+        for reason in reasons:
+            if reason["id"] in placement:
+                raise ValueError(f"Duplicate reason identifier {reason['id']!r}")
+            if reason["id"] in reserved:
+                raise ValueError(
+                    f"Reason identifier {reason['id']!r} collides with a state, condition or cause identifier"
+                )
+            for field in REASON_TEXT_FIELDS:
+                token = CODE_LIKE.search(reason.get(field, ""))
+                if token:
+                    raise ValueError(
+                        f"Reason {reason['id']}: names a code-like token {token.group(0)!r}; "
+                        "codes belong to T-CON-12 and platform constants to the client"
+                    )
+            placement[reason["id"]] = condition["id"]
+    # Published reasons stay where the implementing client asserts them until a major bump.
+    for condition_id, reason_ids in REQUIRED_REASONS.items():
+        if condition_id not in conditions:
+            raise ValueError(f"Missing condition {condition_id} that carries published reason identifiers")
+        for reason_id in reason_ids:
+            if reason_id not in placement:
+                raise ValueError(f"Missing published reason identifier {reason_id} under {condition_id}")
+            if placement[reason_id] != condition_id:
+                raise ValueError(
+                    f"Reason {reason_id} is published under {placement[reason_id]}; "
+                    f"the published identifier belongs under {condition_id}"
+                )
+    return placement
 
 
 def _template(text):
@@ -291,24 +367,38 @@ def _instantiates(rendered, canonical):
 
 
 def _check_rendered_copy(example, state):
-    """A worked example renders the state's canonical copy, never a paraphrase."""
+    """A worked example renders the state's canonical copy, never a paraphrase.
+
+    When the example names a cause, only that cause's copy variant and action label qualify, so a
+    device example cannot pass by rendering the plan variant or the plan label.
+    """
     rendered = example["copy_rendered"]
     copy = state["copy"]
-    templates = [(copy["headline"], copy["body"])]
-    templates += [(variant["headline"], variant["body"]) for variant in copy.get("variants", {}).values()]
+    action = state["recovery_action"]
+    cause = example.get("cause")
+    variants = copy.get("variants", {})
+    by_cause = action.get("label_by_cause", {})
+    bound = f" for cause {cause!r}" if cause is not None and (cause in variants or cause in by_cause) else ""
+    if cause is not None and cause in variants:
+        templates = [(variants[cause]["headline"], variants[cause]["body"])]
+    else:
+        templates = [(copy["headline"], copy["body"])]
+        templates += [(variant["headline"], variant["body"]) for variant in variants.values()]
     if not any(
         _instantiates(rendered["headline"], headline) and _instantiates(rendered["body"], body)
         for headline, body in templates
     ):
         raise ValueError(
             f"Worked example {example['id']}: rendered copy is not an instantiation "
-            f"of the canonical copy of {state['id']}"
+            f"of the canonical copy of {state['id']}{bound}"
         )
-    action = state["recovery_action"]
-    labels = [action["label"], *action.get("label_by_cause", {}).values()]
+    if cause is not None and cause in by_cause:
+        labels = [by_cause[cause], *action.get("label_by_variant", {}).values()]
+    else:
+        labels = action_labels(action)
     if not any(_instantiates(rendered["action"], label) for label in labels):
         raise ValueError(
-            f"Worked example {example['id']}: rendered action is not the recovery action of {state['id']}"
+            f"Worked example {example['id']}: rendered action is not the recovery action of {state['id']}{bound}"
         )
 
 
@@ -363,23 +453,130 @@ def _check_adoption(data, states):
         raise ValueError("Illustrative registration names an unknown client")
 
 
+def _check_content_renderings(data, states):
+    """Ordinary content-state renderings carry one canonical string that can name no person."""
+    renderings = _unique_ids(data.get("content_renderings", []), "content rendering")
+    for rendering in renderings.values():
+        if rendering["id"] in states:
+            raise ValueError(f"Content rendering {rendering['id']} collides with a state identifier")
+        label = rendering["copy"]["label"]
+        if PLACEHOLDER.search(label):
+            raise ValueError(f"Content rendering {rendering['id']} copy must not contain placeholders")
+        term = forbidden_term(label, data["forbidden_terms"])
+        if term:
+            raise ValueError(f"Content rendering {rendering['id']}: forbidden term {term!r} in canonical copy")
+    return renderings
+
+
+def _version_tuple(version):
+    return tuple(int(part) for part in version.split("."))
+
+
+def _check_versions(data):
+    """version_history starts at the first published version, ends at the current one and adds up."""
+    history = data.get("version_history")
+    if history is None:
+        return
+    versions = [entry["version"] for entry in history]
+    if versions[0] != FIRST_PUBLISHED_VERSION or history[0]["bump"] != "initial":
+        raise ValueError(
+            f"version_history must start with the first published version {FIRST_PUBLISHED_VERSION} "
+            "recorded as the initial entry"
+        )
+    if versions[-1] != data["taxonomy_version"]:
+        raise ValueError("version_history must end with the current taxonomy_version")
+    for previous, entry in zip(history, history[1:]):
+        before = _version_tuple(previous["version"])
+        expected = {
+            "major": (before[0] + 1, 0, 0),
+            "minor": (before[0], before[1] + 1, 0),
+            "patch": (before[0], before[1], before[2] + 1),
+        }
+        if _version_tuple(entry["version"]) != expected.get(entry["bump"]):
+            raise ValueError(
+                f"version_history: {entry['version']} is not a {entry['bump']} bump from {previous['version']}"
+            )
+
+
+def _section(document, heading):
+    """Text of the `### n.m <heading>` section up to the next heading of level one to three."""
+    match = re.search(r"^### \d+\.\d+ " + re.escape(heading) + r"\s*$", document, re.MULTILINE)
+    if match is None:
+        raise ValueError(f"Document has no section headed ### n.m {heading}")
+    rest = document[match.end():]
+    following = re.search(r"^#{1,3} ", rest, re.MULTILINE)
+    return rest[: following.start()] if following else rest
+
+
 def _state_sections(document, states):
     """Slice the document into each state's own `### 3.n \\`<id>\\`` section."""
     headings = list(re.finditer(r"^### 3\.\d+ `([a-z][a-z0-9_]*)`\s*$", document, re.MULTILINE))
     sections = {}
     for index, heading in enumerate(headings):
+        state_id = heading.group(1)
+        if state_id in sections:
+            # A second section for the same state could carry the canonical copy while the first
+            # paraphrases it, so the duplicate itself is the error.
+            raise ValueError(f"Document has a duplicate section for state {state_id}")
         end = headings[index + 1].start() if index + 1 < len(headings) else len(document)
         following = re.search(r"^## ", document[heading.end():end], re.MULTILINE)
         if following:
             end = heading.end() + following.start()
-        sections[heading.group(1)] = document[heading.start():end]
+        sections[state_id] = document[heading.start():end]
     for state_id in states:
         if state_id not in sections:
             raise ValueError(f"Document has no section headed ### 3.n `{state_id}`")
     return sections
 
 
-def _check_document(data, document, states):
+def _check_reason_table(document, placement):
+    """The document's reason table lists exactly the published reasons under the same conditions."""
+    if not placement:
+        return
+    section = _section(document, REASON_SECTION)
+    rows = re.findall(r"^\|\s*`([a-z][a-z0-9_]*)`\s*\|\s*`([a-z][a-z0-9_]*)`\s*\|", section, re.MULTILINE)
+    listed = {}
+    for reason_id, condition_id in rows:
+        if reason_id in listed:
+            raise ValueError(f"Document lists reason `{reason_id}` twice")
+        listed[reason_id] = condition_id
+    for reason_id, condition_id in placement.items():
+        if reason_id not in listed:
+            raise ValueError(f"Document does not list reason `{reason_id}` in the reason identifier table")
+        if listed[reason_id] != condition_id:
+            raise ValueError(
+                f"Document places reason `{reason_id}` under `{listed[reason_id]}` "
+                f"but the data file publishes it under `{condition_id}`"
+            )
+    for reason_id in listed:
+        if reason_id not in placement:
+            raise ValueError(f"Document lists reason `{reason_id}` that the data file does not publish")
+
+
+def _check_rendering_section(document, renderings):
+    """The document's rendering table lists exactly the published renderings with their copy verbatim."""
+    if not renderings:
+        return
+    section = _section(document, RENDERING_SECTION)
+    listed = re.findall(r"^\|\s*`([a-z][a-z0-9_]*)`\s*\|", section, re.MULTILINE)
+    if len(listed) != len(set(listed)):
+        raise ValueError("Document lists a content rendering twice")
+    for rendering_id in renderings:
+        if rendering_id not in listed:
+            raise ValueError(f"Document does not list content rendering `{rendering_id}`")
+    for rendering_id in listed:
+        if rendering_id not in renderings:
+            raise ValueError(f"Document lists content rendering `{rendering_id}` that the data file does not publish")
+    plain = re.sub(r"\s+", " ", section.replace("`", ""))
+    for rendering in renderings.values():
+        label = rendering["copy"]["label"]
+        if label not in plain:
+            raise ValueError(
+                f"Section n.m {RENDERING_SECTION} does not carry the canonical copy {label!r} verbatim"
+            )
+
+
+def _check_document(data, document, states, placement, renderings):
     # Each state's own section must carry its canonical copy verbatim, so a paraphrase in the
     # state's definition cannot hide behind another mention elsewhere in the document. The
     # document hard-wraps prose and wraps placeholders in code spans; neither changes wording.
@@ -391,6 +588,8 @@ def _check_document(data, document, states):
                 raise ValueError(
                     f"Section 3.n `{state_id}` does not carry the canonical copy {text!r} verbatim"
                 )
+    _check_reason_table(document, placement)
+    _check_rendering_section(document, renderings)
     mentions = [(f"`{state_id}`", f"state `{state_id}`") for state_id in states]
     mentions += [
         (f"`{state['recovery_action']['id']}`", f"recovery action `{state['recovery_action']['id']}`")
@@ -400,9 +599,14 @@ def _check_document(data, document, states):
     mentions += [(item["title"], f"worked example {item['title']!r}") for item in data["worked_examples"]]
     mentions += [(f"`{item['id']}`", f"contract condition `{item['id']}`") for item in data["contract_conditions"]]
     mentions += [(f"`{item['id']}`", f"copy rule `{item['id']}`") for item in data["copy_rules"]]
+    mentions += [(f"`{{{item['id']}}}`", f"placeholder `{{{item['id']}}}`") for item in data["placeholders"]]
     mentions += [
         (f"`{item['id']}`", f"coverage assertion `{item['id']}`")
         for item in data["adoption"]["coverage_assertions"]
+    ]
+    mentions += [
+        (entry["version"], f"version history entry {entry['version']}")
+        for entry in data.get("version_history", [])
     ]
     mentions += [
         (data["taxonomy_version"], f"taxonomy version {data['taxonomy_version']}"),
@@ -422,14 +626,18 @@ def check_taxonomy(data, document):
     states = _unique_ids(data["states"], "state")
     _check_states(data, states)
     _check_distinctions(data, states)
-    _check_contract_conditions(data, states)
+    placement = _check_contract_conditions(data, states)
     _check_worked_examples(data, states)
     _check_adoption(data, states)
-    _check_document(data, document, states)
+    renderings = _check_content_renderings(data, states)
+    _check_versions(data)
+    _check_document(data, document, states, placement, renderings)
     return {
         "taxonomy_version": data["taxonomy_version"],
         "states": len(states),
         "contract_conditions": len(data["contract_conditions"]),
+        "reasons": len(placement),
+        "content_renderings": len(renderings),
         "worked_examples": len(data["worked_examples"]),
     }
 
@@ -452,6 +660,7 @@ def main():
     print(
         f"Client state taxonomy {summary['taxonomy_version']} valid: {summary['states']} states, "
         f"{summary['contract_conditions']} conceptual contract conditions, "
+        f"{summary['reasons']} reason identifiers, {summary['content_renderings']} content renderings, "
         f"{summary['worked_examples']} worked examples; no client coverage implied."
     )
     return 0

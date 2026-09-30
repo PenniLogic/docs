@@ -1,8 +1,10 @@
 # Client state and copy taxonomy
 
-> **Status: published vocabulary, version 1.0.0.** Source ticket `T-UX-01`,
+> **Status: published vocabulary, version 1.1.0.** Source ticket `T-UX-01`,
 > [PenniLogic/docs#1](https://github.com/PenniLogic/docs/issues/1) (migrated from
-> PenniLogic-old/docs#52). The machine-readable data is
+> PenniLogic-old/docs#52); this version is the first post-publication revision,
+> [PenniLogic/docs#139](https://github.com/PenniLogic/docs/issues/139) (section 13.3). The
+> machine-readable data is
 > [`product/client-state-taxonomy.json`](client-state-taxonomy.json), its schema is
 > [`product/client-state-taxonomy.schema.json`](client-state-taxonomy.schema.json), and both are
 > validated by `python scripts/check_client_states.py` and `scripts/tests/test_client_states.py`.
@@ -28,7 +30,7 @@ identifiers, never a display string.
 | Identifier | Lowercase `snake_case` value that clients and tests assert, for example `permission_denied`. Stable across versions; renaming is a major change. |
 | Name | The hyphenated human name used in tickets, for example permission-denied. |
 | Scope | Where the state may be rendered: a whole **surface**, a **region** of it, or the outcome of one **action**. At most one surface-scope state is shown at a time; region and action states coexist with the surface's content. |
-| Data display | Whether the data the state concerns may still be shown: `none` (nothing to show), `hidden` (exists but must not be shown), `shown` (unchanged) or `shown_marked` (shown, with one text marker per region that is programmatically associated with the figures it qualifies and announced once; at most a short per-figure flag). |
+| Data display | Whether the data the state concerns may still be shown: `none` (nothing to show), `hidden` (exists but must not be shown), `shown` (unchanged) or `shown_marked` (shown, with one text marker per region that is programmatically associated with the group of figures it qualifies — a region-level accessible name or description, never a per-figure association — and announced once; at most a short per-figure flag). |
 | Auto-resolves | Whether the state clears without the user acting once its condition ends. |
 | Composes to degraded | Whether a *supplementary* region in this state makes its host surface `degraded` (section 4). True only for `error` and `offline`; a denial or an exhausted quota renders alone. |
 | Recovery action | The single action offered. Its identifier is stable; its label is canonical copy. |
@@ -111,10 +113,16 @@ identifiers, never a display string.
   key so it cannot duplicate a ledger entry; whether a failure is retryable comes from the retry
   classification `T-CON-12` publishes. For a validation rejection the action is the form's submit
   control: focus is already on the rejected field with its guidance, and the action submits the
-  *edited* input, never the rejected input unchanged, so the single action actually recovers.
+  *edited* input, never the rejected input unchanged, so the single action actually recovers. That
+  control keeps its registered label — the data file records it as `label_by_variant` with the
+  value `{submit_label}`, registered per surface — and is not relabelled "Try again" while the
+  validation error is shown; a form that says "Save" keeps saying "Save", and the
+  `client_state_coverage` assertion checks the registered label for this variant (E34 renders the
+  control; the vocabulary fixes only which label the gate asserts).
 - **Copy.** Headline "Couldn't `{attempt}`". Body "Try again in a moment." Validation variant, when
   the service identified a rejected field: same headline, body `{field_guidance}`, rendered at action
-  scope with focus on the rejected field and the body exposed as that field's error text.
+  scope with focus on the rejected field, the body exposed as that field's error text and the submit
+  control under its registered label `{submit_label}` as the recovery action.
 - **Signal** `client_state.error`.
 
 ### 3.4 `offline`
@@ -155,14 +163,16 @@ identifiers, never a display string.
 - **Must show.** The data exactly as last received, money in the integer minor units and currency
   the service sent and never recomputed on the client; **one** canonical marker per stale region
   carrying the time of the last successful refresh, placed at the head of the region and
-  programmatically associated with every figure it qualifies, as text and not colour alone, with at
-  most a short per-figure flag on long lists and never a repeated marker; the single recovery
-  action; the offline marker (the `offline` headline) beside the region's stale marker when the
-  platform reports no connectivity, without leaving this state; for shared data, display only while
-  the offline lease bound published by `T-CON-04` has not elapsed, after which the cached shared
-  data leaves the view and the region follows the `permission_denied` rendering for a previously
-  granted shared region (section 3.6); a visual treatment distinct from confirmed values (`T-DSY-01`
-  owns the treatment; the marker text is the minimum).
+  programmatically associated with the group of figures it qualifies — a region-level accessible
+  name or description, never a per-figure association, which would re-announce the marker after
+  every figure — as text and not colour alone, with at most a short per-figure flag on long lists
+  and never a repeated marker; the single recovery action; the offline marker (the `offline`
+  headline) beside the region's stale marker when the platform reports no connectivity, without
+  leaving this state; for shared data, display only while the offline lease bound published by
+  `T-CON-04` has not elapsed, after which the cached shared data leaves the view and the region
+  follows the `permission_denied` rendering for a previously granted shared region (section 3.6); a
+  visual treatment distinct from confirmed values (`T-DSY-01` owns the treatment; the marker text is
+  the minimum).
 - **Must not show.** A stale region without its marker; a marker repeated after every figure, which
   makes a long stale list unusable with a screen reader; a money-committing action (settle, pay,
   transfer, confirm) pre-filled from stale figures without a successful refresh first, and if that
@@ -208,12 +218,15 @@ identifiers, never a display string.
   discloses nothing about the other person's decisions or data.
 - **Previously granted shared region, now refused or past its lease bound.** The region leaves the
   view together with its cached data, and the viewer's own sharing overview no longer lists it. The
-  sharing copy is rendered only when the viewer navigates to the item explicitly (a link, bookmark
-  or notification), never as a persistent card standing where the figure was. The change from a
-  visible figure to nothing is the inherent signal of unilateral revocation that ADR-005 accepts as
-  the price of the data subject's control; the taxonomy adds no durable artefact to it, and the
-  acceptance criterion that a denial must not reveal whether data exists behind it is met down to
-  this inherent-signal floor and no further.
+  sharing copy is rendered only when the viewer navigates to the item explicitly (a link, a
+  bookmark or a notification issued while the grant was active), never as a persistent card
+  standing where the figure was. No notification is issued for an item the viewer can no longer
+  access — the notification and sharing tickets (`T-NOT-01`, `T-CON-04`) own that rule — so explicit
+  navigation never means a post-revocation notification. The change from a visible figure to
+  nothing is the inherent signal of unilateral revocation that ADR-005 accepts as the price of the
+  data subject's control; the taxonomy adds no durable artefact to it, and the acceptance criterion
+  that a denial must not reveal whether data exists behind it is met down to this inherent-signal
+  floor and no further.
 - **Must not show.** Anything in the copy or the layout that reveals whether data exists behind the
   denial (counts, totals, hidden-item hints, names, or a persistent denial card standing where a
   shared figure used to be); a blocked surface, hidden unaffected features, or repeated prompts (a
@@ -249,8 +262,9 @@ identifiers, never a display string.
 - **Triggering condition.** The service refuses a metered request because the plan's request or
   token allowance for the window is used, or because a short-window rate limit was reached; both
   are stated by the service and never estimated by the client. Applies to server-metered
-  capabilities such as AI questions. Usage through a user's own provider key is metered but not
-  charged against plan quota and does not produce this state.
+  capabilities such as AI questions. Usage through a user's own provider key is metered; its tokens
+  are never charged against plan quota and never produce this state, while the plan's request
+  allowance still applies and can (ADR-023 sections 6 and 9).
 - **Scope:** region, action. **Data display:** `shown`. **Auto-resolves:** yes, when the service
   stops refusing. **Composes to degraded:** no; this state already names what still works and
   offers one action, and a surface-level re-check would generate the refused requests this state
@@ -258,7 +272,8 @@ identifiers, never a display string.
 - **Must show.** What is still available, stated positively (previously produced results and every
   capability outside the metered one); the limit reached in the plain terms the service stated (a
   count and its window, never a monetary amount); when the allowance resets, only when the service
-  stated it; the single recovery action; metered controls disabled but visible, exposing the
+  stated it — an allowance that never resets, or one that is zero, states no reset and the sentence
+  is omitted; the single recovery action; metered controls disabled but visible, exposing the
   disabled state and the headline as its reason to assistive technology.
 - **Must not show.** Anything the quota does not cover hidden or disabled, including the history of
   what was produced; a reason the service did not give, a counter it did not send, or a reset time
@@ -396,11 +411,19 @@ another person's name, provider or vendor name, or raw message content.
 | `{permission}` | client platform copy | SMS access |
 | `{last_updated}` | client cache metadata, locale-formatted | 2 hours ago |
 | `{limit}` | service response only | 5 AI questions |
-| `{resets_at}` | service response only; its sentence is omitted when absent | 1 October |
-| `{still_available}` | surface registration; a plural noun phrase so the canonical sentence reads correctly | Saved answers and everything outside AI |
+| `{resets_at}` | service response only; its sentence is omitted when absent, as for an allowance that never resets or one that is zero (ADR-023) | 1 October |
+| `{still_available}` | surface registration (`still_available`); a plural noun phrase so the canonical sentence reads correctly | Saved answers and everything outside AI |
 | `{primary_action}` | surface registration | Add a transaction |
 | `{what_appears_here}` | surface registration | Transactions you record, capture or import will appear here. |
 | `{field_guidance}` | component copy (design system), under these rules | Enter an amount above zero. |
+| `{submit_label}` | surface registration (`submit_label`); the registered label of the form's submit control, which the validation variant of `error` keeps as its recovery action label | Save |
+
+The `{capability}` value of the Android automatic-capture surface is "Automatic capture", and its
+`{permission}` values are the user-facing names of the permissions and restricted settings the
+`T-AND-07` restricted-settings matrix marks as used by capture ("notification access", "SMS
+access"), never the platform's identifier strings, which belong only on the signal attribute
+`permission` (section 10); both confirmed for `T-AND-07`
+([PenniLogic/android#57](https://github.com/PenniLogic/android/issues/57)).
 
 **Forbidden terms.** The validator rejects canonical copy containing, as whole words, any of the
 terms listed under `forbidden_terms` in the data file: apology and blame words (oops, sorry,
@@ -423,8 +446,10 @@ cause-asserting word because, and the exclamation mark.
   headline as its accessible context.
 - Non-blocking notices (`degraded`, `stale`, the offline marker) never move focus away from the
   user's task.
-- A stale region has one marker, programmatically associated with the figures it qualifies and
-  announced once; a marker is never repeated after every figure.
+- A stale region has one marker, programmatically associated with the group of figures it
+  qualifies — a region-level accessible name or description, never a per-figure association such
+  as a description reference on each figure, which would re-announce the marker after every figure
+  — and announced once; a marker is never repeated after every figure.
 - Controls disabled by a state (`quota_exceeded`) stay visible and expose the disabled state and its
   reason.
 - Canonical copy remains readable at two hundred percent text scale; headlines wrap rather than
@@ -451,12 +476,12 @@ repository are PenniLogic-old identities; stable ticket identifiers are used her
 | `device_permission_not_granted` | `permission_denied` | `device` | no | client platform layer; `T-AND-07` restricted-settings matrix |
 | `role_capability_denied` — administrative capability outside the operator's role, or the operator attempting to act as second approver of their own action (an action awaiting another approver is a happy-path decision state, not this condition) | `permission_denied` | `role` | yes | `T-CON-12` within the administrative contract |
 | `quota_exhausted` — request or token allowance for the window used | `quota_exceeded` | — | yes | `T-CON-12`; model in ADR-023 (`T-ADR-ENT-09`) |
-| `rate_limited` — short-window limit reached within quota; the shape must state the limit, its window and when it lifts so the `rate_limited` copy variant stays truthful | `quota_exceeded` | — | yes | `T-CON-12` |
+| `rate_limited` — short-window limit reached within quota; the shape should state the limit, its window and when it lifts so the `rate_limited` copy variant stays truthful, and whether it states a reset is `T-CON-12`'s decision: the reset sentence is omitted when absent | `quota_exceeded` | — | yes | `T-CON-12` |
 | `dependency_unavailable` — AI provider, rate source or similar dependency unavailable; bound at the request's scope, and the host surface composes to `degraded` when its purpose remains achievable and the failed region is supplementary | `error` | — | yes | `T-CON-12`, distinguishing it from a refusal and from quota exhaustion |
 | `request_failed` — failure, unusable response or timeout while connected | `error` | — | yes | `T-CON-12`, with retry classification |
 | `validation_rejected` — field-level rejection naming the field without a monetary value | `error` (validation variant, action scope) | — | yes | `T-CON-12` |
-| `capture_paused_by_platform` — force-stop, standby bucket or private-space pause | `degraded` | — | no | `T-AND-07` |
-| `capture_blocked_by_setting` — permission or restricted setting blocks capture | `permission_denied` | `device` | no | `T-AND-07` |
+| `capture_paused_by_platform` — force-stop, restricted standby bucket, background restriction or private-space pause; its reason identifiers are in section 9.1 | `degraded` | — | no | `T-AND-07` |
+| `capture_blocked_by_setting` — permission or restricted setting blocks capture; its reason identifiers are in section 9.1 | `permission_denied` | `device` | no | `T-AND-07` |
 | `resource_pressure` — low storage or memory pauses optional cache growth | `degraded` until `T-AND-06` adds identifiers here first | — | no | `T-AND-06` |
 
 **Conditions that are not taxonomy states.** A locally queued write awaiting sync is the pending
@@ -467,17 +492,76 @@ by code. Sign-in, session expiry, step-up and recovery are authentication states
 `T-AUTH-01`. Success, destructive confirmation, cooling-off, undo and recovery-flow states are
 decision or happy-path states owned by the design-system components (E34). The states PRODUCT.md
 calls "offline or degraded" and "denied" are `offline`/`degraded` and `permission_denied` here.
+The erasure residue ADR-021 leaves in a counterparty's records is rendered in the ordinary content
+state with the canonical copy of section 9.2, never as `permission_denied`.
+
+### 9.1 Reason identifiers
+
+A reason identifier refines one client-determined condition (contract-level `no`) for
+observability and testing: it says why the condition holds on that client. It never adds a state,
+a cause or a second recovery action, never selects different canonical copy, and at most changes
+the destination of the condition's single recovery action. Reasons are published here before any
+client asserts them (section 13), byte-identical to the client's implementation and unique across
+all conditions; contract-level conditions carry no reasons here because `T-CON-12` owns their
+shapes. A reason is not a signal attribute: the taxonomy signal keeps exactly the attributes of
+section 10, and a client that records a reason does so in its own diagnostic event under the same
+privacy rules. The validator pins the published reasons to their conditions, checks the table
+below against the data file in both directions, and rejects code-like tokens in reason text.
+
+The seven identifiers below were published in version 1.1.0 for `T-AND-07`
+([PenniLogic/android#57](https://github.com/PenniLogic/android/issues/57), source of record
+`docs/platform/capture-health-identifiers.json` at android main `ff15e94e`), byte-identical to
+the identifiers in that source of record, so code, document and data name the same things. Their
+detection detail (which platform interfaces are read) stays in the client's own document; the
+taxonomy records the meaning, the honest limitations and when each clears. Publishing them here
+claims no client behaviour: the client's own tests are its evidence.
+
+| Reason | Condition | Client | Meaning | Clears when |
+| --- | --- | --- | --- | --- |
+| `force_stopped` | `capture_paused_by_platform` | android | The user force-stopped the app; receivers, scheduled jobs and pending intents stay off until the user opens the app again (on Android 15 and later pending intents are also cancelled). Limitation: on Android 11 to 14 a force-stop cannot be told apart from a swipe away from Recents with public platform interfaces and is not reported; the pause is shown only when the platform can say so or when the profile the app ran in was stopped. | Capture health is restored: the capture components are registered again and a health probe succeeds; a process start alone never clears it. |
+| `private_space_paused` | `capture_paused_by_platform` | android | The private space holding the app was locked, which stops every app inside it; a clone profile is classified the same way. Privacy: this records a concealment choice, kept on the device as a per-device state record and a local log event only, counted in aggregate at most, never joined to an account identifier, not exported, and erased with the capture-health record on sign-out or erasure. | Capture health is restored after the space is unlocked. |
+| `standby_bucket_restricted` | `capture_paused_by_platform` | android | The platform placed the app in the restricted standby bucket, so scheduled jobs run about once a day and the capture pipeline cannot keep up. | Capture health is restored, the same path as `force_stopped`; while the bucket stays restricted the reason is refreshed at each start. |
+| `background_restricted` | `capture_paused_by_platform` | android | The user applied a background restriction to the app in system settings; background work is not run. | Capture health is restored, the same path as `force_stopped`; while the restriction stays the reason is refreshed at each start. |
+| `listener_access_not_granted` | `capture_blocked_by_setting` | android | Notification access is not granted for the capture listener and the install source is not locked, so the platform's normal settings page enables it. | The user grants notification access. |
+| `restricted_setting_locked` | `capture_blocked_by_setting` | android | The restricted-settings matrix says this install source is locked on this platform level and the setting is not granted. The rendered copy is the canonical `device` copy of `permission_denied`, unchanged; the reason changes only the destination of the single `review_access` action to the app's App info page, where the platform offers to allow restricted settings. Step-by-step unlock guidance stays tester documentation, not product copy; copy that guides the unlock is added here first, as a device-cause variant or a placeholder, and this version adds none. | The user unlocks restricted settings for the app and grants the setting, or the build is reinstalled from an unlocked source. |
+| `capture_permission_not_granted` | `capture_blocked_by_setting` | android | A runtime permission automatic capture needs (SMS) is not granted; reading the permission state requests nothing and shows no prompt. | The user grants the permission. |
+
+### 9.2 Content renderings
+
+ADR-021 ([PenniLogic/docs#41](https://github.com/PenniLogic/docs/issues/41), section 6.2) leaves
+residue in a counterparty's own records when an account is erased: an unclaimable seat in a split
+group, a redacted description or note, a pseudonymised viewer in a transparency log, and a
+joint-goal or household total that is no longer complete. These are ordinary content states, not
+`permission_denied` and not any other taxonomy state, and this version adds no state identifier
+for them. What they need is one canonical string each, so every client shows the same words where
+a person's name, authored text or complete figure used to be. The copy names no person, states no
+cause and carries no placeholder, so no name can appear; it follows every copy rule of section 7
+and does not embellish what the service states (the erased states on the wire are themselves the
+disclosure ADR-021 accepts). A rendering that qualifies a figure is a text marker associated with
+the group of figures it qualifies and announced once, as for `stale`. New copy of this kind is
+added to the data file first (section 13).
+
+| Rendering | Where it renders | Copy |
+| --- | --- | --- |
+| `erased_member_placeholder` | Where the name of a split-group member whose account was erased would appear; the seat's shares, payments and settlements survive as the counterparties' own record | "Former member" |
+| `redacted_description` | Where a split-expense description authored by an erased account would appear; the expense's money, date and seats remain | "Description no longer available" |
+| `redacted_note` | Where a settlement note authored by an erased account would appear; the settlement's money, seats and instant remain | "Note no longer available" |
+| `pseudonymised_viewer` | Where the viewer's name would appear in a transparency-log entry recording that a since-erased account viewed the reader's shared data; category, level and instant remain | "Former viewer" |
+| `partial_total` | As a text marker beside a joint-goal total or household aggregate whose value dropped because a contributor's rows were erased; the surviving contributions are shown | "Partial total" |
 
 ## 10. Observability
 
 Each identifier names its own signal, `client_state.<identifier>`, recorded once when the state is
 entered and once more when its recovery action is taken, so the frequency of each non-happy path
 is measured rather than guessed. Attributes: `client`, `surface_id`, `scope`, `cause` (for
-`permission_denied`), `permission` (for the `device` cause, the platform's permission name),
-`recovery_action_taken` and `taxonomy_version`. Signals carry no amount, balance, price or count of
-hidden items; no identifier of the denied resource, grant or account; no other person's identity or
-decision; no message content and no device identifier. They are counted and never joined to
-financial content.
+`permission_denied`), `permission` (for the `device` cause, the permission or restricted-setting
+name as the platform names it — its identifier, not the user-facing name the `{permission}`
+placeholder renders), `recovery_action_taken` and `taxonomy_version`. A reason identifier
+(section 9.1) is not a signal attribute: the signal keeps exactly these attributes, and a client
+that records a condition or reason does so in its own diagnostic event under the same rules.
+Signals carry no amount, balance, price or count of hidden items; no identifier of the denied
+resource, grant or account; no other person's identity or decision; no message content and no
+device identifier. They are counted and never joined to financial content.
 
 ## 11. Worked examples
 
@@ -539,8 +623,10 @@ allowance of five questions for the month and the date it resets.
   surface is `degraded` with "AI explanations isn't available right now"; the two conditions are
   distinguishable by the service's shape, not by prose. Short-window rate limit instead of the
   period's allowance: the `rate_limited` variant "You've reached the limit of 3 AI questions for
-  now" with the lift time the service stated. Own provider key in use: metered but not charged
-  against plan quota, so this state does not appear.
+  now" with the lift time the service stated. Own provider key in use: its tokens are metered but
+  never charged against plan quota and never produce this state; the plan's request allowance still
+  applies, and its exhaustion produces this state with the request limit the service stated
+  (ADR-023).
 - **Privacy and money.** The question text is never included in the state or the signal; usage
   counts stay with the service. No amount appears in the state; the limit is a count of questions.
 - **Signal.** `client_state.quota_exceeded` with `client=web`, `surface_id=example_ai_explanations`,
@@ -569,13 +655,14 @@ the figure from a refresh two hours earlier and the platform reports no connecti
   current figure replaces the old one. Refresh fails while connected: figure and marker stay, the
   offline marker is removed, no cause is invented. Offline lease bound elapses without confirmation:
   the client denies on its own, the cached figure and the region leave the view, and the viewer's
-  own sharing overview no longer lists the item; no copy is rendered unless the viewer navigates to
-  the item explicitly, in which case the sharing-cause copy "You don't have access to this right
-  now" with the action "See what's shared with you" appears. Grant revoked by the partner and the
-  client reconnects: the service refuses and the rendering is identical to the elapsed lease — the
-  region leaves the view and the sharing-cause copy appears only on explicit navigation. The copy is
-  the same as for a grant that never existed; the taxonomy does not claim that the change itself is
-  invisible.
+  own sharing overview no longer lists the item; the drop is local — the grant may still be active
+  server-side, and the item returns on the next confirmed refresh, so the drop is not a revocation
+  signal; no copy is rendered unless the viewer navigates to the item explicitly, in which case the
+  sharing-cause copy "You don't have access to this right now" with the action "See what's shared
+  with you" appears. Grant revoked by the partner and the client reconnects: the service refuses
+  and the rendering is identical to the elapsed lease — the region leaves the view and the
+  sharing-cause copy appears only on explicit navigation. The copy is the same as for a grant that
+  never existed; the taxonomy does not claim that the change itself is invisible.
 - **Privacy and money.** The sharing-cause copy is identical for a revoked grant, an expired grant,
   a never-granted view and an elapsed lease, so the copy itself discloses nothing about the
   partner's decision. **Honest residual:** a figure that was visible and is then absent is the
@@ -587,10 +674,13 @@ the figure from a refresh two hours earlier and the platform reports no connecti
   this is why the region leaves the view rather than standing as a denial notice. The acceptance
   criterion that a denial must not reveal whether data exists behind it is met down to this
   inherent-signal floor and no further. The recovery action after denial opens the viewer's own
-  sharing overview and never notifies or asks the partner. The cached figure is the service's
-  deterministic result in integer minor units with currency; the client formats it and never
-  recalculates, projects or nets it. A money-committing action against a stale figure requires a
-  successful refresh first.
+  sharing overview and never notifies or asks the partner, and no notification is issued for an
+  item the viewer can no longer access. An elapsed offline lease drops the item locally while the
+  grant may still be active server-side, and it returns on the next confirmed refresh: that is the
+  default-deny bound at work, not a signal about the partner's decision. The cached figure is the
+  service's deterministic result in integer minor units with currency; the client formats it and
+  never recalculates, projects or nets it. A money-committing action against a stale figure
+  requires a successful refresh first.
 - **Signal.** `client_state.stale` with `client=android`,
   `surface_id=example_household_shared_aggregate`, `scope=region`; no amount, member identity or
   grant identifier.
@@ -604,9 +694,11 @@ built, pinning `taxonomy_version`.
 
 Each gate keeps a surface registry, one entry per surface, in the shape of
 `definitions.surface_registration` in the schema: `surface_id`, `client`, `applicable_states`,
-`item`, `attempt`, and optionally `primary_action`, `what_appears_here`, `capabilities` and
-`freshness_window_seconds`. The data file carries one illustrative, synthetic entry
-(`example_transactions_home`), validated by the tests and belonging to no real client.
+`item`, `attempt`, and optionally `primary_action`, `what_appears_here`, `still_available` (when
+`quota_exceeded` is applicable), `submit_label` (the form's registered submit label, which the
+validation variant of `error` keeps), `capabilities` and `freshness_window_seconds`. The data file
+carries one illustrative, synthetic entry (`example_transactions_home`), validated by the tests
+and belonging to no real client.
 
 The gates run two assertions:
 
@@ -623,55 +715,118 @@ The gates run two assertions:
 design-system component tickets (E34) consume the required, forbidden and recovery content per
 state, adding platform adaptations without changing the vocabulary.
 
-## 13. Extending the taxonomy
+## 13. Extending and versioning the taxonomy
 
-Identifiers are added here first, never in a client. To add a state or a `permission_denied`
-cause class: open a PenniLogic/docs issue naming the identifier, its condition and the surfaces
-that need it; add it to the data file and this document with its definition, triggering
-condition, required and forbidden content, exactly one recovery action, canonical copy, signal and
-`composes_to_degraded` flag (a new state also joins the precedence list, and may add its own
-worked example alongside the three required ones); bump `taxonomy_version` (minor for additions,
-major for a removed or renamed identifier); run `python scripts/check_client_states.py` and
-`python -m unittest discover -s scripts/tests`; obtain the independent reviews this repository
-requires. Clients bump their pin only after the change is merged.
+### 13.1 Procedure
+
+Identifiers are added here first, never in a client. To add a state, a `permission_denied` cause
+class, a placeholder, a reason identifier under a client-determined condition (section 9.1) or a
+content rendering (section 9.2): open a PenniLogic/docs issue naming the identifier, its condition
+and the surfaces that need it; add it to the data file and this document — a state or cause with
+its definition, triggering condition, required and forbidden content, exactly one recovery action,
+canonical copy, signal and `composes_to_degraded` flag (a new state also joins the precedence
+list, and may add its own worked example alongside the three required ones); a reason under its
+condition with its meaning and when it clears, byte-identical to the client's implementation; a
+content rendering with its canonical copy naming no person — bump `taxonomy_version` under
+section 13.2 and record the version in `version_history` and section 13.3; run
+`python scripts/check_client_states.py` and `python -m unittest discover -s scripts/tests`; obtain
+the independent reviews this repository requires. Clients bump their pin only after the change is
+merged.
 
 Pending extensions already owned elsewhere: `T-CON-12` binds codes to identifiers and adds none
 without this procedure; `T-AND-06` adds resource-degraded identifiers; `T-AND-07` publishes
 Android platform-capability and capture-health condition identifiers, each bound to exactly one
-state here; `T-SEC-05` names a cause class for operations denied by an adverse integrity verdict if
-the existing classes do not fit.
+state here (its seven capture-health reason identifiers were published in 1.1.0, section 9.1);
+`T-SEC-05` names a cause class for operations denied by an adverse integrity verdict if the
+existing classes do not fit.
+
+### 13.2 Versioning rule
+
+`1.0.0`, merged to `main` as `6eb4da65` via [PenniLogic/docs#138](https://github.com/PenniLogic/docs/pull/138)
+on 2026-09-29, is the first *published* version (the Contract reviewer's ruling on that pull
+request). The schema change made before that merge — the required `composes_to_degraded`
+property — was not a versioning event, because nothing had been published or pinned. From
+`1.0.0` on, every change to the data file bumps `taxonomy_version`, including a wording
+correction to a canonical string:
+
+- **patch** — wording of descriptions, conditions, rules or examples that alters no identifier and
+  no canonical string;
+- **minor** — an addition: a state, cause, placeholder, reason identifier, content rendering,
+  copy variant or canonical string, a changed canonical string, or a new *optional* schema
+  property;
+- **major** — a removed or renamed identifier, a removed canonical string, or a new *required*
+  schema property (`schema_version` changes with it).
+
+The data file records the same history in `version_history`; the validator checks that it starts
+at `1.0.0`, ends at the current version and that each entry's bump matches its version arithmetic.
+
+### 13.3 Version history
+
+| Version | Date | Change | References |
+| --- | --- | --- | --- |
+| `1.0.0` | 2026-09-29 | First published version. | [PenniLogic/docs#1](https://github.com/PenniLogic/docs/issues/1) (`T-UX-01`), [PenniLogic/docs#138](https://github.com/PenniLogic/docs/pull/138) |
+| `1.1.0` | 2026-09-30 | Minor, additions only; no identifier or canonical string removed or renamed. Reviewer follow-ups from #138: the validation variant of `error` keeps the form's registered submit label (`label_by_variant`, placeholder `{submit_label}`); optional `still_available` and `submit_label` registration properties; the `stale` marker is associated with the group of figures it qualifies; no notification is issued for an item the viewer can no longer access; the `rate_limited` condition says *should*; an elapsed-lease drop from the sharing overview is stated as local; the validator rejects a duplicate state section, binds a worked example's copy and label to its cause, and is proven against duplicated identifiers. Seven Android capture-health reason identifiers published under `capture_paused_by_platform` and `capture_blocked_by_setting`, byte-identical to the android source of record (section 9.1). Own-key usage reconciled with ADR-023: tokens never produce `quota_exceeded`, the request allowance still can (sections 3.7, 11.2). Five content renderings with canonical copy naming no person for ADR-021 erasure residue (section 9.2). | [PenniLogic/docs#139](https://github.com/PenniLogic/docs/issues/139), [PenniLogic/android#57](https://github.com/PenniLogic/android/issues/57), ADR-021 ([PenniLogic/docs#41](https://github.com/PenniLogic/docs/issues/41)), ADR-023 ([PenniLogic/docs#47](https://github.com/PenniLogic/docs/issues/47)) |
 
 ## 14. Validation and evidence
 
 `python scripts/check_client_states.py` (also invoked by `python scripts/check_docs.py`) validates
 the data against the schema with a strict draft-07 subset that rejects any keyword it does not
 implement, then enforces: the eight required identifiers; the hyphenated name and the
-`client_state.` signal per identifier; exactly one recovery action whose label offers one action;
+`client_state.` signal per identifier; exactly one recovery action whose label offers one action,
+including its per-cause and per-variant labels, which name only declared causes and variants;
 only declared placeholders and no forbidden term in canonical copy; the required copy rules; a
 precedence list naming every state once; the `offline`/`stale` and `error`/`degraded` distinctions
 with data display that genuinely differs and matches the states; `composes_to_degraded` true for
 `error` and `offline` only, so a denial or an exhausted quota never adds a surface notice;
 conceptual contract conditions including `entitlement_denied` and `grant_not_active`, bound to
-known states and causes and free of code-like tokens; the declared guarantees of
-`permission_denied` (data hidden, rest of surface usable, no hidden-data disclosure) and
-`quota_exceeded` (what remains available is stated); the three required worked examples present,
-each rendering an instantiation of its state's canonical copy and recovery label (placeholders
-filled, nothing paraphrased) with matching state, cause, signal, declared signal attributes and an
-`example_`-prefixed surface identifier; the two coverage assertions and a valid illustrative
-registration; and that each state's own section 3.n carries every canonical headline, body and
-action label of that state verbatim — scoped to the section, so a paraphrase cannot hide behind a
-mention elsewhere — and that the document mentions every identifier, recovery action, distinction,
-example, condition, rule and the version.
+known states and causes and free of code-like tokens; reason identifiers (section 9.1) only under
+client-determined conditions, unique across conditions, distinct from every state, condition and
+cause identifier, free of code-like tokens, and the seven published for `T-AND-07` pinned to their
+conditions so a removal or a move is a validator failure until a major bump; content renderings
+(section 9.2) distinct from state identifiers, with copy that carries no placeholder and no
+forbidden term; a `version_history` that starts at `1.0.0`, ends at the current version and whose
+bumps match their version arithmetic; the declared guarantees of `permission_denied` (data hidden,
+rest of surface usable, no hidden-data disclosure) and `quota_exceeded` (what remains available is
+stated); the three required worked examples present, each rendering an instantiation of its
+state's canonical copy and recovery label (placeholders filled, nothing paraphrased, and bound to
+the example's cause when it names one, so a `device` example cannot pass with the `plan` copy or
+label) with matching state, cause, signal, declared signal attributes and an `example_`-prefixed
+surface identifier; the two coverage assertions and a valid illustrative registration; and that
+each state's own section 3.n exists exactly once — a duplicate section for a state is an error,
+because a second section carrying the canonical copy would let the first paraphrase it — and
+carries every canonical headline, body and action label of that state verbatim, scoped to the
+section; that the reason table of section 9.1 lists exactly the published reasons under the same
+conditions, in both directions; that the rendering table of section 9.2 lists exactly the
+published renderings and carries their copy verbatim; and that the document mentions every
+identifier, recovery action, placeholder, distinction, example, condition, rule, version-history
+entry and the version.
+
+**Accepted limit (N2 of the #138 review).** Within one state section the copy check is a substring
+test. Where the same canonical string is listed more than once for a state — the
+`permission_denied` default headline equals its `sharing` variant headline, and its default body
+equals the `sharing` and `role` bodies — a paraphrase of one listing survives while the other is
+present. This is accepted because the section-scoped check already prevents a paraphrase from
+hiding behind a mention elsewhere in the document, the data file and not the document is what
+clients and gates assert, and a human reader sees a state's copy as one list in one place. It is
+recorded here rather than silently left; a future version may count occurrences if the cost is
+justified.
 
 `python -m unittest discover -s scripts/tests` runs `scripts/tests/test_client_states.py`, which
 maps each acceptance criterion to a named test and proves the checks bite with planted defects: a
-removed identifier, a second recovery action, a blaming phrase, an undeclared placeholder, an
-invented code, identical data display for a distinguished pair, a denial or quota state flagged as
-composing to `degraded`, a missing worked example, a worked example whose rendered copy paraphrases
-the canonical copy, a document that omits an identifier or alters canonical copy in a state's own
-section while another mention stays intact, and a schema keyword the validator does not implement.
-These prove the published data and this document; they are not a client build, and no client
-coverage is claimed.
+removed identifier, a duplicated state or contract-condition identifier, a second recovery action,
+a blaming phrase, an undeclared placeholder, an invented code, identical data display for a
+distinguished pair, a denial or quota state flagged as composing to `degraded`, a missing worked
+example, a worked example whose rendered copy paraphrases the canonical copy or renders another
+cause's copy or label, a document that omits an identifier or alters canonical copy in a state's
+own section while another mention stays intact, a duplicated state section, a reason identifier
+missing from the data or the document, listed under the wrong condition in either, published under
+a contract-level condition, duplicated, colliding with a state identifier or carrying a code-like
+token, a content rendering whose copy carries a placeholder or a forbidden term or is paraphrased
+in the document, a version history that ends elsewhere or whose bump does not add up, and a
+schema keyword the validator does not implement. It also pins the seven `T-AND-07` reason
+identifiers byte for byte to the android source of record and the whole `1.0.0` identifier
+surface, so a rename or removal that would need a major bump fails a named test. These prove the
+published data and this document; they are not a client build, and no client coverage is claimed.
 
 ## 15. Rollout, rollback and observability notes
 
@@ -685,14 +840,24 @@ any client.
 ## 16. References
 
 - Ticket: `T-UX-01`, [PenniLogic/docs#1](https://github.com/PenniLogic/docs/issues/1); parent epic
-  [PenniLogic/docs#2](https://github.com/PenniLogic/docs/issues/2).
+  [PenniLogic/docs#2](https://github.com/PenniLogic/docs/issues/2); first post-publication revision
+  [PenniLogic/docs#139](https://github.com/PenniLogic/docs/issues/139) (reviewer follow-ups of
+  [#138](https://github.com/PenniLogic/docs/pull/138)).
 - Error catalogue and code bindings: `T-CON-12`,
   [PenniLogic/contracts#16](https://github.com/PenniLogic/contracts/issues/16).
+- Android capture-health reason identifiers: `T-AND-07`,
+  [PenniLogic/android#57](https://github.com/PenniLogic/android/issues/57), source of record
+  `docs/platform/capture-health-identifiers.json` (android main `ff15e94e`).
 - Sharing contract and revocation bounds: `T-CON-04`; sharing model ADR-005; entitlements ADR-007;
-  entitlement and quota model ADR-023 (`T-ADR-ENT-09`); domain model
+  shared-data erasure and its renderings ADR-021
+  ([PenniLogic/docs#41](https://github.com/PenniLogic/docs/issues/41), section 6.2); entitlement
+  and quota model ADR-023 ([PenniLogic/docs#47](https://github.com/PenniLogic/docs/issues/47),
+  `T-ADR-ENT-09`, sections 6, 9 and 16); domain model
   [`architecture/01-domain-model.md`](../architecture/01-domain-model.md) sections 3, 5 and 7.
 - Consumers: `T-QA-06`, `T-QA-08`, `T-QA-13` (client quality gates), `T-DSY-01` (state
   treatments), E34 (components), E30 (localisation), `T-AND-06`, `T-AND-07`, `T-AUTH-01`,
-  `T-SEC-05`, `T-SYN-03`.
+  `T-SEC-05`, `T-SYN-03`, `T-NOT-01` (no notification for an item the viewer can no longer
+  access), and the ADR-021 rendering owners `T-TRU-04`, `T-FAM-05`, `T-FAM-06`, `T-FAM-07`,
+  `T-SPL-03`.
 - Product truth: [`PRODUCT.md`](../PRODUCT.md); delivery policy
   [`governance/DELIVERY.md`](../governance/DELIVERY.md).
