@@ -255,10 +255,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-021
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-ERASE-07` |
-| Status | PENDING |
+| Source | <a id="adr-021--shared-data-erasure-and-cross-user-key-access"></a> [ADR-021.md](ADR-021.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-ERASE-07 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-021 -->
@@ -359,7 +359,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-ERASE-07` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Shared-data erasure and cross-user key access - the open question ADR-006 named |
 | Blocks | Sharing and split groups (E15, E16), erasure and data-principal rights |
 <!-- SLOT END ADR-021 -->
