@@ -219,10 +219,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-018
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-CRYPTO-04` |
-| Status | PENDING |
+| Source | <a id="adr-018--encryption-scope-searchable-fields-row-level-security-and-deduplication-artefacts"></a> [ADR-018.md](ADR-018.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-CRYPTO-04 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-018 -->
@@ -231,10 +231,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-019
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-AUTH-05` |
-| Status | PENDING |
+| Source | <a id="adr-019--authentication-passkeys-at-mvp-in-repository-webauthn-relying-party-identifier-device-bound-sessions-and-recovery"></a> [ADR-019.md](ADR-019.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-AUTH-05 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-019 -->
@@ -243,10 +243,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-020
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-ADMIN-06` |
-| Status | PENDING |
+| Source | <a id="adr-020--administrative-boundary-separate-deployable-database-role-and-three-audit-streams"></a> [ADR-020.md](ADR-020.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-ADMIN-06 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-020 -->
@@ -267,10 +267,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-022
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-AIEGRESS-08` |
+| Source | <a id="adr-022--ai-egress-runtime-platform-and-mode-c-custom-endpoints"></a> [ADR-022.md](ADR-022.md) |
 | Status | PENDING |
 | Ticket | T-ADR-AIEGRESS-08 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-022 -->
@@ -329,7 +329,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-CRYPTO-04` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Encryption scope, searchable fields, row-level security and grant-mediated reads; also the distinct device-local raw-message HMAC, server structured dedupe key and reversible fuzzy-match semantics that supersede ADR-004's ambiguous hash sentence |
 | Blocks | Data protection floor (E19), capture contract (E02), sharing (E15, E16), any environment holding real data |
 <!-- SLOT END ADR-018 -->
@@ -339,7 +339,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-AUTH-05` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Authentication provider, passkeys, the relying-party identifier, and account recovery |
 | Blocks | Auth, onboarding, recovery, all clients |
 <!-- SLOT END ADR-019 -->
@@ -349,7 +349,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-ADMIN-06` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Administrative boundary: deployment separation, database role, and how the foundational audit trail, the chained administrative log and the subject-visible transparency stream relate - stores, and single or dual write |
 | Blocks | Admin console (E13), audit and insider-risk controls, transparency surfaces |
 <!-- SLOT END ADR-020 -->
