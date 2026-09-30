@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E09",
+  "title": "SMS capture and Play declaration",
+  "issue": "PenniLogic/docs#10",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

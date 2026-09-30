@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E28",
+  "title": "Advanced ingestion: email, receipts and cash",
+  "issue": "PenniLogic/docs#31",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

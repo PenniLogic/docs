@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E15",
+  "title": "Split groups",
+  "issue": "PenniLogic/docs#16",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}
