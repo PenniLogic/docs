@@ -93,18 +93,23 @@ is a non-legacy source whose recorded status is `ACCEPTED` or `SUPERSEDED`. The
 legacy fourteen are frozen by the pinned reference and need none of this.
 
 Every decided record carries its `**Status:** STATUS · YYYY-MM-DD` line (above) and
-names its proving tests: a heading (`##` to `####`, not the record heading) whose
+names its proving tests: some heading (`##` to `####`, not the record heading) whose
 text contains the word `test` or `tests`, with at least one backticked test or
 fixture name in that section's prose (a sub-heading of the section counts; text
-inside fenced code does not). A draft with `status: PENDING` may still lack the
-section.
+inside fenced code does not). Every such heading is examined and the first
+section that names a test satisfies the rule; the error lists the sections that
+were examined. A draft with `status: PENDING` may still lack the section.
 
 Every fenced ```` ```json ```` block of a non-legacy record, draft or decided,
-must parse as strict JSON with no duplicate keys, and a block whose top level is an
+must parse as RFC 8259 JSON — no duplicate keys, no `NaN`/`Infinity`/`-Infinity`
+literals, no number that overflows a binary64 to infinity, no lone-surrogate
+`\uD800`–`\uDFFF` escapes — and a block whose top
+level is an
 object must declare a version field — `version` or any `*_version`/`*-version` key
 holding a non-empty string or a positive integer (`schema_version`,
 `policy_version`, `parameters_version`) — so the machine-readable artefacts that
-dependent tickets consume cannot rot silently. Arrays and scalars (templates of
+dependent tickets consume cannot rot silently. The same parser reads the layout's
+JSON documents. Arrays and scalars (templates of
 externally specified files, value lists) are exempt from the version rule. One
 block decided before this rule, ADR-020 §10, is admitted by an explicit pin on its
 record and content digest in `scripts/validate_adr_layout.py`; the pin dies the

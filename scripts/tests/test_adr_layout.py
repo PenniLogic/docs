@@ -1206,6 +1206,24 @@ class ProvingTestsTests(ScratchCase):
         self.fails(r"the tests section '### 7\. Tests' names no test",
                    tail=DECISION + "\n### 7. Tests\n\nGrouped below.\n\n### 8. Rollout\n\n`not_a_test_name`\n")
 
+    def test_every_tests_heading_is_examined_not_only_the_first(self):
+        """PR #158 core F1: an earlier prose section whose heading contains 'test' must not hide a
+        later compliant tests section; when none names a test, every section examined is listed."""
+        policy = "\n### 0. Test data policy\n\nSynthetic data only; no production records.\n"
+        self.write("ADR-015.md", source(tail=DECISION + policy + TESTS_SECTION))
+        adr.validate_sources(self.root)
+        self.write("ADR-015.md", source(tail=DECISION + TESTS_SECTION + policy))
+        adr.validate_sources(self.root)
+        self.write("ADR-015.md", source(tail=DECISION + policy + "\n#### 0.1 Tests of the policy\n\n`policy_test`\n"))
+        adr.validate_sources(self.root)
+        self.fails(
+            r"adr/ADR-015\.md: none of the tests sections '### 0\. Test data policy', "
+            r"'### 1\. Tests implementation tickets must add' names a test \(no backticked identifier\); "
+            r"a decided record names its proving tests",
+            tail=DECISION + policy + "\n### 1. Tests implementation tickets must add\n\nTests are added by the tickets.\n",
+        )
+        self.fails(r"the tests section '### 0\. Test data policy' names no test", tail=DECISION + policy)
+
     def test_the_record_heading_and_fenced_code_do_not_count(self):
         self.fails(r"a decided record must name its proving tests", title="Testing strategy", tail=DECISION)
         self.fails(r"a decided record must name its proving tests",
@@ -1253,6 +1271,37 @@ class JsonBlockTests(ScratchCase):
         self.fails(r"fenced JSON block 1 \(line \d+\): duplicate JSON key 'schema_version'", '{"schema_version": 1, "schema_version": 1}')
         self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON", "", status="PENDING")
         self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON", '{"schema_version": 1,}')
+
+    def test_non_json_literals_and_lone_surrogates_are_rejected_everywhere(self):
+        """PR #158 core F2 / security S1: RFC 8259 has no NaN, Infinity or -Infinity, and a lone
+        surrogate escape decodes to text no UTF-8 consumer accepts; blocks and documents alike."""
+        for literal in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(literal=literal):
+                self.fails(r"fenced JSON block 1 \(line \d+\): non-JSON literal " + literal + "$",
+                           '{"schema_version": 1, "x": ' + literal + "}")
+                self.fails(r"fenced JSON block 1 \(line \d+\): non-JSON literal " + literal + "$",
+                           '{"schema_version": 1, "x": [1, {"y": ' + literal + "}]}", status="PENDING")
+        self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON \(lone surrogate escape U\+D83D\)",
+                   '{"schema_version": 1, "x": "\\ud83d"}')
+        self.fails(r"invalid JSON \(lone surrogate escape U\+DC00\)", '{"schema_version": 1, "\\udc00": 1}')
+        self.passes('{"schema_version": 1, "x": "\\ud83d\\ude00 and \\u00e9"}')  # a valid pair and BMP escape
+        self.passes('{"schema_version": 1, "x": 1e308, "y": -0.0, "z": "nan"}')
+        # Valid syntax that overflows a binary64 is the same rot by another door: it would re-emit as Infinity.
+        self.fails(r"fenced JSON block 1 \(line \d+\): number 1e400 overflows to inf; no consumer can round-trip it",
+                   '{"schema_version": 1, "x": 1e400}')
+        self.fails(r"number -1e999 overflows to -inf", '{"schema_version": 1, "x": [-1e999]}')
+        (self.adr / "ADR-015.md").unlink()  # back to the baseline so the documents, not README drift, are reported
+        original = self.read("reservations.json")
+        for document in ("reservations.json", "legacy-bodies.json", "accepted-records.json"):
+            with self.subTest(document=document):
+                data = self.read(document)
+                self.write(document, data.replace(b'"schema_version": 1,', b'"schema_version": NaN,'))
+                self.assert_fails(document.replace(".", r"\.") + ": non-JSON literal NaN$")
+                self.write(document, data)
+        self.write("reservations.json", original.replace(b'"question": "Money', b'"question": "\\udbff Money'))
+        self.assert_fails(r"reservations\.json: invalid JSON \(lone surrogate escape U\+DBFF\)")
+        self.write("reservations.json", original)
+        adr.check_layout(self.root)
 
     def test_missing_or_unusable_version_fails(self):
         message = (r"adr/ADR-015\.md: fenced JSON block 1 \(line \d+\) declares no version field \(schema_version, "

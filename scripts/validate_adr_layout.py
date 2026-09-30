@@ -34,9 +34,10 @@ in reservations.json is never rewritten. scripts/check_docs.py runs ``check`` so
 layout with the standard library only.
 
 Accepted-record integrity (adr/LAYOUT.md, "Accepted-record integrity"; STRIDE finding E26-F16): a
-decided record (recorded ACCEPTED or SUPERSEDED) must name its proving tests under a heading that
-contains the word "tests", and every fenced ```json block of a non-legacy record must parse as
-strict JSON whose top-level object declares a version field. adr/accepted-records.json is the
+decided record (recorded ACCEPTED or SUPERSEDED) must name its proving tests under some heading that
+contains the word "test(s)", and every fenced ```json block of a non-legacy record must parse as
+RFC 8259 JSON (no duplicate keys, NaN/Infinity literals or lone surrogates) whose top-level object
+declares a version field. adr/accepted-records.json is the
 committed acceptance registry: one entry per allocation, in allocation order, holding the date and
 the SHA-256/length of each decided record's source bytes (null until the record is decided).
 ``check`` requires every decided record to be registered with its current bytes; a change to a
@@ -372,7 +373,9 @@ def render_reservations(allocations):
 
 
 def strict_json_loads(text, label):
-    """Parse JSON with duplicate keys rejected; the label names the document in every error."""
+    """Parse RFC 8259 JSON: duplicate keys, the non-JSON literals NaN/Infinity/-Infinity, numbers
+    that overflow to infinity and lone-surrogate escapes are rejected; the label names the document
+    in every error."""
 
     def reject_duplicates(pairs):
         value = {}
@@ -382,10 +385,27 @@ def strict_json_loads(text, label):
             value[key] = item
         return value
 
+    def reject_constant(literal):
+        raise LayoutError(f"{label}: non-JSON literal {literal}")
+
+    def finite_float(literal):
+        value = float(literal)
+        if value != value or value in (float("inf"), float("-inf")):
+            raise LayoutError(f"{label}: number {literal} overflows to {value}; no consumer can round-trip it")
+        return value
+
     try:
-        return json.loads(text, object_pairs_hook=reject_duplicates)
+        value = json.loads(
+            text, object_pairs_hook=reject_duplicates, parse_constant=reject_constant, parse_float=finite_float
+        )
     except json.JSONDecodeError as error:
         raise LayoutError(f"{label}: invalid JSON ({error})") from None
+    try:
+        # A lone surrogate escape (\ud800 without its pair) decodes to text no UTF-8 consumer accepts.
+        json.dumps(value, ensure_ascii=False).encode("utf-8")
+    except UnicodeEncodeError as error:
+        raise LayoutError(f"{label}: invalid JSON (lone surrogate escape U+{ord(error.object[error.start]):04X})") from None
+    return value
 
 
 def load_json_document(path):
@@ -632,7 +652,9 @@ def check_json_blocks(source):
 
 
 def check_proving_tests(source):
-    """A decided record names its proving tests: a heading containing 'tests' with backticked names."""
+    """A decided record names its proving tests: some heading containing 'test(s)' whose section
+    holds a backticked name. Every matching heading is examined; the record passes on the first
+    section that names a test and fails only when none of them does."""
     label = f"{ADR_DIR}/{source.number}.md"
     lines = source.body.split("\n")
     prose = outside_fences(lines)
@@ -641,6 +663,7 @@ def check_proving_tests(source):
         for index in prose
         if index > 0 and SECTION_HEADING.fullmatch(lines[index])  # line 0 is the record's own heading
     ]
+    examined = []
     for position, (index, heading) in enumerate(headings):
         if not TESTS_WORD.search(heading.group(2)):
             continue
@@ -650,9 +673,16 @@ def check_proving_tests(source):
         )
         if any(BACKTICKED_NAME.search(lines[line]) for line in prose if index < line < end):
             return
+        examined.append(lines[index])
+    if len(examined) == 1:
         raise LayoutError(
-            f"{label}: the tests section {lines[index]!r} names no test (no backticked identifier); "
+            f"{label}: the tests section {examined[0]!r} names no test (no backticked identifier); "
             "a decided record names its proving tests"
+        )
+    if examined:
+        raise LayoutError(
+            f"{label}: none of the tests sections {', '.join(map(repr, examined))} names a test (no backticked "
+            "identifier); a decided record names its proving tests"
         )
     raise LayoutError(
         f"{label}: a decided record must name its proving tests under a heading containing the word "
