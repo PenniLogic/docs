@@ -22,6 +22,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -1302,6 +1303,85 @@ class JsonBlockTests(ScratchCase):
         self.assert_fails(r"reservations\.json: invalid JSON \(lone surrogate escape U\+DBFF\)")
         self.write("reservations.json", original)
         adr.check_layout(self.root)
+
+    def test_integer_literals_follow_the_same_finiteness_rule_everywhere(self):
+        """PR #158 core F3 / security S2 (docs#161): the overflow rule covers integer literals too.
+        `1` followed by 400 zeros is Infinity to every binary64 consumer and is refused naming the
+        record, block, line and digit count, never the literal; the rule is finiteness, not exactness,
+        so 9007199254740993 (beyond 2^53) passes. Blocks and documents alike."""
+        huge = "1" + "0" * 400
+        record = self.record('{"schema_version": 1, "x": ' + huge + "}")
+        fence_line = record.split("\n").index("```json") + 1
+        self.fails(
+            r"adr/ADR-015\.md: fenced JSON block 1 \(line " + str(fence_line) + r"\): integer literal of 401 digits "
+            r"overflows a binary64 to inf; no consumer can round-trip it$",
+            '{"schema_version": 1, "x": ' + huge + "}",
+        )
+        with self.assertRaises(adr.LayoutError) as caught:
+            adr.validate_sources(self.root)
+        self.assertNotIn("0" * 20, str(caught.exception))  # described by its length, never echoed
+        self.fails(r"fenced JSON block 1 \(line \d+\): integer literal of 401 digits overflows a binary64 to -inf;",
+                   '{"schema_version": 1, "x": [1, {"y": -' + huge + "}]}", status="PENDING")
+        self.fails(r"integer literal of 401 digits overflows a binary64 to inf", '{"schema_version": ' + huge + "}")
+        # The rule is the value, not the digit count: 1e308 written out is finite, 1.8e308 written out is not.
+        self.passes('{"schema_version": 1, "x": 1' + "0" * 308 + "}")
+        self.fails(r"integer literal of 309 digits overflows a binary64 to inf", '{"schema_version": 1, "x": 18' + "0" * 307 + "}")
+        self.passes('{"schema_version": 1, "x": 9007199254740993, "y": -9007199254740993, "z": -0}')
+        self.passes('{"schema_version": 9007199254740993}')
+        # Leading zeros are a syntax error before any number hook runs.
+        self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON \(Expecting ',' delimiter", '{"schema_version": 1, "x": 0' + huge + "}")
+        self.passes('{"schema_version": 1, "x": 1.0e308}')  # the float rule is unchanged
+        self.fails(r"number 1e400 overflows to inf", '{"schema_version": 1, "x": 1e400}')
+        (self.adr / "ADR-015.md").unlink()  # back to the baseline so the documents, not README drift, are reported
+        for document in ("reservations.json", "legacy-bodies.json", "accepted-records.json"):
+            with self.subTest(document=document):
+                data = self.read(document)
+                self.write(document, data.replace(b'"schema_version": 1,', b'"schema_version": ' + huge.encode() + b","))
+                self.assert_fails(
+                    document.replace(".", r"\.") + r": integer literal of 401 digits overflows a binary64 to inf; "
+                    r"no consumer can round-trip it$"
+                )
+                self.write(document, data)
+        adr.check_layout(self.root)
+
+    def test_over_long_integer_literals_fail_closed_naming_the_block_in_the_library_cli_and_check_docs(self):
+        """A literal beyond Python's int-string digit limit (sys.get_int_max_str_digits(), 4300 by
+        default) used to escape as a bare ValueError: exit 1 without record, block or line. It is now
+        the same labelled LayoutError in the library, the CLI and check_docs, and the interpreter's
+        limit is left in force rather than raised."""
+        limit = sys.get_int_max_str_digits()  # 0 when the interpreter runs with the limit disabled
+        digits = max(limit, 4300) + 1
+        message = rf"adr/ADR-015\.md: fenced JSON block 1 \(line \d+\): integer literal of {digits} digits "
+        if limit:
+            message += rf"exceeds the interpreter's {limit}-digit conversion limit and "
+        message += "overflows a binary64 to inf; no consumer can round-trip it"
+        block = '{"schema_version": 1, "x": ' + "9" * digits + "}"
+        self.fails(message + "$", block)
+        self.fails(message.replace("to inf", "to -inf") + "$", '{"schema_version": 1, "x": [-' + "9" * digits + "]}", status="PENDING")
+        self.assertEqual(sys.get_int_max_str_digits(), limit)
+        self.write("ADR-015.md", self.record(block))
+        for command in (["check"], ["render", "--ticket", MONEY]):
+            with self.subTest(command=command[0]):
+                out, err = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                    code = adr.main([*command, "--root", str(self.root)])
+                self.assertEqual((code, out.getvalue()), (1, ""))
+                self.assertRegex(err.getvalue(), "^ERROR: " + message + "\n")
+                self.assertNotIn("Traceback", err.getvalue())
+        self.assertEqual(self.read("README.md"), Baseline.read("README.md"))  # render refused before writing
+        self.assertEqual(self.read("accepted-records.json"), Baseline.read("accepted-records.json"))
+        check_docs = load("check_docs")
+        for name in ("planning", "product"):
+            shutil.copytree(ROOT / name, self.root / name)
+        (self.root / "scripts").mkdir()
+        for path in SCRIPTS.glob("*.py"):
+            shutil.copy(path, self.root / "scripts" / path.name)
+        check_docs.ROOT = self.root
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            self.assertEqual(check_docs.main(), 1)
+        self.assertRegex(err.getvalue(), "^Documentation check failed: " + message + "\n$")
+        self.assertEqual(sys.get_int_max_str_digits(), limit)
 
     def test_missing_or_unusable_version_fails(self):
         message = (r"adr/ADR-015\.md: fenced JSON block 1 \(line \d+\) declares no version field \(schema_version, "

@@ -374,8 +374,8 @@ def render_reservations(allocations):
 
 def strict_json_loads(text, label):
     """Parse RFC 8259 JSON: duplicate keys, the non-JSON literals NaN/Infinity/-Infinity, numbers
-    that overflow to infinity and lone-surrogate escapes are rejected; the label names the document
-    in every error."""
+    (integer or fraction/exponent literals) that overflow a binary64 to infinity and lone-surrogate
+    escapes are rejected; the label names the document in every error."""
 
     def reject_duplicates(pairs):
         value = {}
@@ -394,9 +394,38 @@ def strict_json_loads(text, label):
             raise LayoutError(f"{label}: number {literal} overflows to {value}; no consumer can round-trip it")
         return value
 
+    def finite_int(literal):
+        # The same rule for an integer literal: its binary64 value must be finite (finiteness, not
+        # exactness, so 9007199254740993 passes). An overflowing literal is hundreds of digits long,
+        # so the message names its digit count instead of echoing it.
+        digits = len(literal.removeprefix("-"))
+        infinity = "-inf" if literal.startswith("-") else "inf"
+        try:
+            value = int(literal)
+        except ValueError:
+            # Python refuses str-to-int conversions above sys.get_int_max_str_digits() digits; that
+            # bounded-work limit stays in force and the literal is far beyond a binary64 anyway.
+            raise LayoutError(
+                f"{label}: integer literal of {digits} digits exceeds the interpreter's "
+                f"{sys.get_int_max_str_digits()}-digit conversion limit and overflows a binary64 to {infinity}; "
+                "no consumer can round-trip it"
+            ) from None
+        try:
+            float(value)
+        except OverflowError:
+            raise LayoutError(
+                f"{label}: integer literal of {digits} digits overflows a binary64 to {infinity}; "
+                "no consumer can round-trip it"
+            ) from None
+        return value
+
     try:
         value = json.loads(
-            text, object_pairs_hook=reject_duplicates, parse_constant=reject_constant, parse_float=finite_float
+            text,
+            object_pairs_hook=reject_duplicates,
+            parse_constant=reject_constant,
+            parse_float=finite_float,
+            parse_int=finite_int,
         )
     except json.JSONDecodeError as error:
         raise LayoutError(f"{label}: invalid JSON ({error})") from None
