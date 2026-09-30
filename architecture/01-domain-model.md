@@ -198,8 +198,10 @@ a stable ordering) and make it visible. Money must never be created or destroyed
 > is research history, not implementation authority. ADR-023 §1 names this section and
 > [`03-stack-and-monetization.md` §8](03-stack-and-monetization.md#8-entitlements--feature-flags) as
 > the two sketches it supersedes in full, and states which rules below remain binding (server-side
-> checks, own-key usage metered but not charged against the token allowance, a defined and displayed
-> reset semantic, reserve-then-reconcile for streamed consumption, no data loss on a plan change) and
+> checks; own-key usage metered with its tokens never charged against the plan — while ADR-023 §6
+> **narrows** rule 2 below by charging own-key *requests* against the version's `requests` limit; a
+> defined and displayed reset semantic, reserve-then-reconcile for streamed consumption, no data
+> loss on a plan change) and
 > which are discarded (the mutable `plans` row, plan-scoped `max_requests`/`max_tokens`/
 > `allowed_models[]`, `cost_micros` and `byok(bool)` on usage events). Read ADR-023 for plan
 > versions, feature keys, the `requests` and `tokens` dimensions, the model allowlist and
