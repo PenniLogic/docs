@@ -194,8 +194,8 @@
           "title": "AI delivery sessions read public issue and pull-request comments as instructions while holding a write-capable credential",
           "attack_path": "Anyone comments on a public issue or pull request with text shaped like a coordinator or owner instruction; an implementer or reviewer session follows it and uses the basiltt gh credential to comment, edit, delete branches, change the Project or merge, none of which the required CI check prevents.",
           "recommended_control": "Publish, in the shared agent profiles and repository instructions, that only the issue body as published by the owner and messages from the coordinator session are instructions and that every comment or body edit from another account is untrusted data to report; require sessions to confirm the author of any instruction-like text before acting; scope the credential each session receives to what its ticket needs.",
-          "status": "open",
-          "owner_ticket": null,
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/.github#4",
           "resolution": null
         },
         {
@@ -205,8 +205,8 @@
           "title": "The sole owner account is the single administrative identity for the organisation and has no published hardening baseline",
           "attack_path": "Phishing, a leaked or over-scoped token, or malware on the one machine that stores the gh credential gives an attacker the organisation owner: rulesets are changed, the required check is disabled, code is merged and branches deleted, and any future repository secret is readable.",
           "recommended_control": "Publish and verify an account baseline: phishing-resistant second factor on the owner account, a fine-grained token per machine with minimal repository scope and an expiry, encrypted credential storage, a periodic token rotation, an alert path for suspicious sign-ins, and a rehearsed revocation drill that invalidates every session's credential.",
-          "status": "open",
-          "owner_ticket": null,
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#43",
           "resolution": null
         },
         {

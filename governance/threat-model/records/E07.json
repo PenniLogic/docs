@@ -45,7 +45,7 @@
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "The retention signal decides whether the product continues, so the integrity of events, assignments and cohorts is the asset. Two gaps: assignment and exposure must be server-side and append-only rather than client-reported (E07-F04), and event ingestion, the pipeline and the dashboard the team reads have no owning ticket for schema validation, rate limits and deduplication, so forged or inflated events from a rooted device or a script would be counted (E07-F05).",
+          "analysis": "The retention signal decides whether the product continues, so the integrity of events, assignments and cohorts is the asset. Two gaps: assignment and exposure must be server-side and append-only rather than client-reported (E07-F04), and event ingestion, the pipeline and the dashboard the team reads had no owning ticket for schema validation, rate limits and deduplication when this refresh was performed, so forged or inflated events from a rooted device or a script would be counted (E07-F05, since handed to api#82).",
           "evidence": [],
           "findings": [
             "E07-F04",
@@ -66,7 +66,7 @@
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Three channels leak debt status. Event payloads: the exit criterion forbids financial values, but derived values such as payoff horizon, debt count or milestone are quasi-financial and need coarsening, and the allowlist needs a test rather than a code review (E07-F01). Retention messages: a digest or dormancy nudge puts a balance or a debt-free date on a lock screen, an email preview or a widget where a household member reads it (E07-F02). Study participants: the concept test and usability sessions gather personal financial disclosures under the research evidence system (E07-F06). Dashboards over small cohorts are part of the unowned pipeline (E07-F05).",
+          "analysis": "Three channels leak debt status. Event payloads: the exit criterion forbids financial values, but derived values such as payoff horizon, debt count or milestone are quasi-financial and need coarsening, and the allowlist needs a test rather than a code review (E07-F01). Retention messages: a digest or dormancy nudge puts a balance or a debt-free date on a lock screen, an email preview or a widget where a household member reads it (E07-F02). Study participants: the concept test and usability sessions gather personal financial disclosures under the research evidence system (E07-F06). Dashboards over small cohorts are part of the pipeline finding (E07-F05).",
           "evidence": [
             "PenniLogic/docs#8 exit criteria: zero financial values in any analytics payload, verified by inspecting captured events",
             "PenniLogic/android#16: automated privacy traffic inspection on every release candidate (E25)"
@@ -80,7 +80,7 @@
         {
           "id": "denial_of_service",
           "disposition": "finding",
-          "analysis": "An event flood from one device or script inflates ingestion cost and buries real signal; without per-device rate limits and deduplication in the pipeline the same unowned gap as E07-F05 applies.",
+          "analysis": "An event flood from one device or script inflates ingestion cost and buries real signal; without per-device rate limits and deduplication in the pipeline the same gap as E07-F05 applies.",
           "evidence": [],
           "findings": [
             "E07-F05"
@@ -138,7 +138,7 @@
         {
           "id": "administrative_identity_compromise",
           "disposition": "not_applicable",
-          "analysis": "The epic introduces no operator identity. Whoever administers the analytics dashboard is part of the unowned pipeline gap (E07-F05) and, once the dashboard has an owner, of the admin console's operator model (E13).",
+          "analysis": "The epic introduces no operator identity. Whoever administers the analytics dashboard is part of the pipeline finding (E07-F05, api#82) and, once the dashboard exists, of the admin console's operator model (E13).",
           "evidence": [],
           "findings": []
         }
@@ -192,11 +192,11 @@
           "id": "E07-F05",
           "category": "tampering",
           "severity": "high",
-          "title": "Event ingestion, the pipeline and the team dashboard have no owning ticket",
+          "title": "Event ingestion, the pipeline and the team dashboard had no owning ticket",
           "attack_path": "Forged, replayed or flooded events from a rooted device or a script are accepted without schema validation, per-device rate limits or deduplication; the retention signal that decides whether the debt-first wedge continues is corrupted, ingestion cost rises, and a dashboard over a small cohort re-identifies users.",
           "recommended_control": "An owning ticket for the ingestion endpoint and pipeline: schema validation against the E07-F01 allowlist, per-identity rate limits and deduplication, append-only storage with retention, a dashboard with cohort minimums and a named access list, and no third-party analytics SDK on the client.",
-          "status": "open",
-          "owner_ticket": null,
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#82",
           "resolution": null
         },
         {
