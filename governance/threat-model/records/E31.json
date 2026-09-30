@@ -183,9 +183,9 @@
           "title": "Agent profiles and repository instructions do not define untrusted content or per-ticket credential scope",
           "attack_path": "A non-owner comment, body edit or fork pull-request diff carries instruction-shaped text; a session reading it as part of its task follows it because no profile or instruction file tells it that only the owner's published issue body and the coordinator's messages are instructions, and the session's credential lets it comment, edit, delete branches, change the Project or merge.",
           "recommended_control": "State in the shared agent profiles and the generated repository instructions that content from any account other than the owner, and the file content of any pull request the owner did not open, is data to report and never instruction; require author confirmation before acting on instruction-like text; scope each session's credential to its ticket; add a profile lint that fails a profile without the rule (the same work E01-F03 handed to this ticket).",
-          "status": "handed_off",
-          "owner_ticket": "PenniLogic/.github#4",
-          "resolution": null
+          "status": "closed",
+          "owner_ticket": null,
+          "resolution": "Closed by PenniLogic/.github#4 (closed 2026-09-30): the untrusted-content rule now lives in the shared agent profiles and the generated repository instructions. PenniLogic/.github pull request 7 (main d7a9a2ff) carries the instruction-provenance block between markers in every shared profile agents/*.agent.md, with scripts/check_agent_profiles.py failing a profile that omits it and agents/README.md publishing the author-confirmation walkthrough. PenniLogic/infra pull request 48 (main eff4e3cc) renders the same paragraph from governance/generate.py into every consumer's generated .github/copilot-instructions.md, regenerated in all eight consumers from infra 4e6e749f. PenniLogic/docs pull request 160 (main 8c77f11d) records the credential-scope and ownership-refusal rule in governance/DELIVERY.md. The profile lint this finding asked for is delivered; per-ticket credential scoping is not and remains with PenniLogic/infra#43 (owner-gated). The control is published text plus a lint, not runtime enforcement of what a session does."
         },
         {
           "id": "E31-F02",
@@ -227,9 +227,9 @@
           "title": "The least-privilege rule for agent profile capabilities is not published where sessions read it",
           "attack_path": "A future profile repair grants a Developer or Producer profile blanket tool access, reviewer authority or the right to launch sub-agents; an implementer session then reviews or approves its own change, or spawns a reviewer whose output it counts as approval, and the separation the delivery policy depends on collapses without any check noticing.",
           "recommended_control": "Publish in the shared profiles that each role holds only the native capabilities its duties need, that no implementer or producer profile may hold reviewer authority or launch sub-agents, and that a session never counts a reviewer it invoked as approval; enforce it with the same profile lint that carries the untrusted-content rule, so a profile that widens a capability fails review.",
-          "status": "handed_off",
-          "owner_ticket": "PenniLogic/.github#4",
-          "resolution": null
+          "status": "closed",
+          "owner_ticket": null,
+          "resolution": "Closed by PenniLogic/.github#9 (pull request 10, squash-merged into PenniLogic/.github main as 8f6005e on 2026-09-30): every shared profile in PenniLogic/.github agents/*.agent.md carries the least-privilege rule between the least-privilege-rule v1 markers; scripts/check_agent_profiles.py classifies every tool name into a capability class, pins the per-role capability matrix (developer: read, execute, write_files; producer: read; reviewer: read, execute) and fails a profile that holds review_authority, sub_agent_launch, merge or write_files outside its role, that omits or alters the block, or that lists an unclassified tool; proven by test_developer_with_a_review_tool_fails, test_producer_with_a_sub_agent_launcher_fails, test_reviewer_with_merge_or_push_fails, test_profile_without_the_rule_fails_in_every_role and test_unclassified_tool_fails_closed in scripts/tests/test_agent_profiles.py; agents/README.md publishes the matrix. Runtime enforcement of what a session actually does stays out of scope (reviewed, not proven)."
         }
       ]
     }

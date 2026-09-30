@@ -226,9 +226,9 @@
           "title": "AI delivery sessions read public issue and pull-request content as instructions while holding a write-capable credential",
           "attack_path": "Anyone comments on a public issue or pull request, edits a body, or opens a pull request from a fork whose diff carries instruction-shaped text in a code comment, a markdown file or a test fixture; an implementer or reviewer session follows it and uses the basiltt gh credential to comment, edit, delete branches, change the Project or merge, none of which the required CI check prevents.",
           "recommended_control": "Publish, in the shared agent profiles and repository instructions, that only the issue body as published by the owner and messages from the coordinator session are instructions; that every comment or body edit from another account, and the file content of any pull request not opened by the owner, is untrusted data to report, never instruction; require sessions to confirm the author of any instruction-like text before acting; scope the credential each session receives to what its ticket needs.",
-          "status": "handed_off",
-          "owner_ticket": "PenniLogic/.github#4",
-          "resolution": null
+          "status": "closed",
+          "owner_ticket": null,
+          "resolution": "Closed by PenniLogic/.github#4 (closed 2026-09-30) through three merges. PenniLogic/.github pull request 7 (main d7a9a2ff) publishes the instruction-provenance block between markers in every agents/*.agent.md, fails a profile without it in scripts/check_agent_profiles.py and walks through the author-confirmation procedure in agents/README.md. PenniLogic/infra pull request 48 (main eff4e3cc) renders the provenance paragraph from governance/generate.py into every consumer's generated .github/copilot-instructions.md, regenerated in all eight consumers from infra 4e6e749f. PenniLogic/docs pull request 160 (main 8c77f11d) records the credential-scope and ownership-refusal rule in governance/DELIVERY.md. Per-ticket credential scoping is not delivered by this closure and remains with PenniLogic/infra#43 (owner-gated); the control is published text plus a profile lint, not runtime enforcement of what a session does."
         },
         {
           "id": "E01-F04",
