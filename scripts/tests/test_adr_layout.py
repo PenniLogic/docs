@@ -12,6 +12,7 @@ decision.
 """
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -41,10 +42,13 @@ adr = load("validate_adr_layout")
 LIVE_README = (ROOT / "adr" / "README.md").read_bytes()
 REFERENCE = (ROOT / "adr" / "presplit-reference.md").read_bytes()
 LEGACY_FILES = [f"ADR-{index:03d}.md" for index in range(1, 15)]
-SPLIT_OUTPUT = LEGACY_FILES + ["legacy-bodies.json", "reservations.json", "README.md"]
+SPLIT_OUTPUT = LEGACY_FILES + ["legacy-bodies.json", "reservations.json", "accepted-records.json", "README.md"]
 MONEY, CAT, CRYPTO = "T-ADR-MONEY-01", "T-ADR-CAT-02", "T-ADR-CRYPTO-04"
 # A slot block together with the blank line that follows it in the rendered README.
 SLOT_BLOCK = re.compile(adr.SLOT_PATTERN.pattern + r"\n", re.DOTALL)
+# The proving-tests section every synthetic decided record carries (adr/LAYOUT.md, accepted-record integrity).
+TESTS_SECTION = "\n### 1. Tests implementation tickets must add\n\n`sample_conformance_test` proves the sample rule.\n"
+DECISION = "\n**Decision.** Sample text.\n"
 
 
 class Baseline:
@@ -91,6 +95,7 @@ def live_state():
         "allocations": allocations,
         "published": [number for number in headers if int(number[4:]) > 14],
         "pending": [n for n in allocations if headers.get(n, {}).get("status", "PENDING") == "PENDING"],
+        "decided": [n for n in allocations if headers.get(n, {}).get("status", "PENDING") != "PENDING"],
         "superseded": {fields["supersedes"] for fields in headers.values()} - {"null"},
     }
 
@@ -113,7 +118,7 @@ def make_writable(path):
 
 def source(number="ADR-015", ticket=MONEY, title="Money wire format, time and idempotency",
            status="ACCEPTED", date="2026-10-01", supersedes="null", superseded_by="null",
-           body_status=None, body_date=None, extra_header=(), tail="\n**Decision.** Sample text.\n"):
+           body_status=None, body_date=None, extra_header=(), tail=DECISION + TESTS_SECTION):
     """A synthetic decision source; the text is a placeholder, not an architecture decision."""
     header = ["---", f"number: {number}"]
     if ticket is not None:
@@ -190,7 +195,7 @@ class LiveTreeTests(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             self.assertEqual(adr.main(["check", "--root", str(ROOT)]), 0)
         self.assertTrue(out.getvalue().startswith("ADR layout valid: 14 legacy records, "), out.getvalue())
-        self.assertTrue(out.getvalue().endswith("; adr/README.md matches.\n"), out.getvalue())
+        self.assertTrue(out.getvalue().endswith("; adr/README.md and adr/accepted-records.json match.\n"), out.getvalue())
 
     def test_reference_pins_verify(self):
         self.assertEqual(adr.blob_oid(REFERENCE), adr.REFERENCE_BLOB_OID)
@@ -198,6 +203,47 @@ class LiveTreeTests(unittest.TestCase):
 
     def test_legacy_set_is_complete_in_the_committed_tree(self):
         self.assertEqual(sorted(adr.validate_sources(ROOT).legacy), [f"ADR-{i:03d}" for i in range(1, 15)])
+
+    def test_committed_registry_pins_every_decided_record_by_its_bytes(self):
+        """Read straight from the files: each decided record's date, SHA-256 and length are registered,
+        each undecided allocation is a null entry, and the file is in canonical form."""
+        live = live_state()
+        registry = json.loads((ROOT / "adr" / "accepted-records.json").read_bytes())
+        self.assertEqual(registry["schema_version"], 1)
+        self.assertEqual([item["number"] for item in registry["items"]], live["allocations"])
+        for item in registry["items"]:
+            number = item["number"]
+            with self.subTest(entry=number):
+                if number in live["decided"]:
+                    data = (ROOT / "adr" / f"{number}.md").read_bytes()
+                    text = data.decode("utf-8")
+                    header = dict(line.split(": ", 1) for line in text[4:text.index("\n---\n")].split("\n"))
+                    self.assertEqual(item, {
+                        "number": number, "date": header["date"],
+                        "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data),
+                    })
+                else:
+                    self.assertEqual(item, {"number": number, "date": None, "sha256": None, "bytes": None})
+        self.assertEqual(
+            (ROOT / "adr" / "accepted-records.json").read_bytes(), adr.render_registry(registry["items"]).encode("utf-8")
+        )
+
+    def test_committed_decided_records_name_their_tests_and_carry_valid_json_blocks(self):
+        layout = adr.validate_sources(ROOT)
+        for number, source in layout.sources.items():
+            if number in layout.legacy:
+                continue
+            with self.subTest(record=number):
+                adr.check_json_blocks(source)
+                if source.decided:
+                    adr.check_proving_tests(source)
+
+    def test_grandfather_pins_are_well_formed_and_name_their_record(self):
+        for (number, digest), note in adr.UNVERSIONED_JSON_BLOCKS.items():
+            with self.subTest(pin=number):
+                self.assertRegex(number, r"^ADR-\d{3}$")
+                self.assertRegex(digest, r"^[0-9a-f]{64}$")
+                self.assertIn(number, note)
 
 
 class BaselineTests(ScratchCase):
@@ -285,6 +331,16 @@ class SplitTests(unittest.TestCase):
                 with self.subTest(slot=number):
                     self.assertEqual(committed_slots[number], slots)
         self.assertEqual(SLOT_BLOCK.sub("", produced_readme), SLOT_BLOCK.sub("", LIVE_README.decode("utf-8")))
+        # The registry starts empty: every allocation is a null entry, and the committed registry keeps
+        # exactly those null entries for numbers no decided record has claimed.
+        produced_registry = {item["number"]: item for item in json.loads(self.produced("accepted-records.json"))["items"]}
+        committed_registry = {item["number"]: item for item in json.loads((ROOT / "adr" / "accepted-records.json").read_bytes())["items"]}
+        self.assertEqual(list(produced_registry), list(committed)[:9])
+        for number, item in produced_registry.items():
+            self.assertEqual(item, {"number": number, "date": None, "sha256": None, "bytes": None})
+            if number not in live["decided"]:
+                with self.subTest(entry=number):
+                    self.assertEqual(committed_registry[number], item)
         if live["allocations"] == list(committed)[:9] and not live["published"]:
             for name in SPLIT_OUTPUT:
                 with self.subTest(name=name):
@@ -796,13 +852,18 @@ class ScopedRenderTests(ScratchCase):
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample", supersedes="ADR-004"))
         adr.render(self.root, CRYPTO)
         original_004 = adr.collect_slots(Baseline.readme())["ADR-004"]
+        # Retargeting an uncommitted supersession edits a record this branch already registered on
+        # the same date: the base registry is restored first (adr/LAYOUT.md, before-merge workflow).
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample", supersedes="ADR-005"))
+        self.assert_fails(r"ADR-018\.md: accepted record edited without a date change", lambda root: adr.render(root, CRYPTO))
+        self.write("accepted-records.json", Baseline.read("accepted-records.json"))
         self.assertTrue(adr.render(self.root, CRYPTO))
         after = self.readme()
         self.assertEqual(adr.collect_slots(after)["ADR-004"], original_004)
         self.assertEqual(slot_rows(after, "ADR-005")[0]["Status"], "SUPERSEDED")
         self.assertEqual(slot_rows(after, "ADR-018")[0]["Supersedes"], "ADR-005")
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample"))
+        self.write("accepted-records.json", Baseline.read("accepted-records.json"))
         self.assertTrue(adr.render(self.root, CRYPTO))
         self.assertEqual(adr.mask_slots(Baseline.readme(), {"ADR-018"}), adr.mask_slots(self.readme(), {"ADR-018"}))
         adr.check_layout(self.root)
@@ -826,6 +887,475 @@ class ScopedRenderTests(ScratchCase):
         self.assertEqual(self.read("reservations.json"), Baseline.read("reservations.json"))
         self.assertEqual(self.read("legacy-bodies.json"), Baseline.read("legacy-bodies.json"))
         self.assertEqual(self.read("ADR-015.md"), source().encode("utf-8"))
+
+
+class RegistryTests(ScratchCase):
+    """adr/accepted-records.json (E26-F16): decided records are pinned by date and bytes; an undated
+    edit, a withdrawal or a stale entry fails ``check`` naming the record, and ``render`` refuses to
+    launder any of them. Compliant records pass unchanged."""
+
+    def registry(self):
+        return {item["number"]: item for item in json.loads(self.read("accepted-records.json"))["items"]}
+
+    def entry(self, number="ADR-015"):
+        data = self.read(f"{number}.md")
+        text = data.decode("utf-8")
+        date = dict(line.split(": ", 1) for line in text[4:text.index("\n---\n")].split("\n"))["date"]
+        return {"number": number, "date": date, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+
+    def publish_and_register(self, **kwargs):
+        self.write("ADR-015.md", source(**kwargs))
+        self.assertEqual(adr.render(self.root, MONEY), ["adr/README.md", "adr/accepted-records.json"])
+        self.assertEqual(adr.check_layout(self.root)["published"], 1)
+
+    def assert_render_refuses(self, pattern, ticket=MONEY):
+        before = {name: self.read(name) for name in ("README.md", "accepted-records.json")}
+        for scope in (ticket, None):
+            with self.subTest(scope=scope):
+                self.assert_fails(pattern, lambda root, scope=scope: adr.render(root, scope))
+        for name, data in before.items():
+            self.assertEqual(self.read(name), data, f"{name} must not change when render refuses")
+        self.assertEqual([p.name for p in self.adr.glob(".*.tmp")], [])
+
+    def test_baseline_registry_holds_one_null_entry_per_allocation(self):
+        registry = self.registry()
+        self.assertEqual(list(registry), [f"ADR-{index:03d}" for index in range(15, 24)])
+        for number, item in registry.items():
+            self.assertEqual(item, {"number": number, "date": None, "sha256": None, "bytes": None})
+        self.assertEqual(self.read("accepted-records.json"), adr.render_registry(registry.values()).encode("utf-8"))
+
+    def test_publishing_registers_the_decided_record(self):
+        self.publish_and_register()
+        self.assertEqual(self.registry()["ADR-015"], self.entry())
+        self.assertEqual(self.registry()["ADR-016"], {"number": "ADR-016", "date": None, "sha256": None, "bytes": None})
+        self.assertEqual(adr.render(self.root, MONEY), [])
+        self.assertEqual(adr.render(self.root), [])
+
+    def test_pending_draft_is_not_registered(self):
+        self.write("ADR-015.md", source(status="PENDING"))
+        self.assertEqual(adr.render(self.root, MONEY), ["adr/README.md"])
+        self.assertEqual(self.read("accepted-records.json"), Baseline.read("accepted-records.json"))
+        adr.check_layout(self.root)
+
+    def test_unregistered_decided_record_fails_check_once_the_readme_matches(self):
+        self.publish_and_register()
+        self.write("accepted-records.json", Baseline.read("accepted-records.json"))
+        self.assert_fails(
+            r"adr/ADR-015\.md: decided record ADR-015 is not registered in adr/accepted-records\.json; its owner "
+            r"registers it with render --ticket T-ADR-MONEY-01"
+        )
+        self.assertEqual(adr.render(self.root, MONEY), ["adr/accepted-records.json"])
+        adr.check_layout(self.root)
+
+    def test_missing_registry_fails_check_and_is_never_regenerated_over_decided_records(self):
+        # Without decided records the registry never existed: an unscoped render creates the empty ledger.
+        (self.adr / "accepted-records.json").unlink()
+        self.assert_fails(r"adr/accepted-records\.json is missing; the layout owner creates it with an unscoped render")
+        self.assert_fails(r"accepted-records\.json is missing; a ticket-scoped render never creates the registry",
+                          lambda root: adr.render(root, MONEY))
+        self.assertEqual(adr.render(self.root), ["adr/accepted-records.json"])
+        self.assertEqual(self.read("accepted-records.json"), Baseline.read("accepted-records.json"))
+        # With a decided record, a missing registry is restored from the reviewed commit, never rebuilt:
+        # deleting the ledger and re-rendering would otherwise launder an undated edit.
+        self.publish_and_register()
+        (self.adr / "accepted-records.json").unlink()
+        self.edit("ADR-015.md", "Sample text.", "Sample text, quietly changed.")
+        self.assert_fails(r"adr/accepted-records\.json is missing; the layout owner creates it")
+        self.assert_fails(
+            r"adr/accepted-records\.json is missing while decided records exist \(ADR-015\); restore it from the "
+            r"reviewed commit, it is never regenerated from the current sources",
+            adr.render,
+        )
+        self.assert_fails(r"a ticket-scoped render never creates the registry", lambda root: adr.render(root, MONEY))
+        self.assertFalse((self.adr / "accepted-records.json").exists())
+
+    def test_undated_edit_of_a_registered_record_fails_check_and_render_refuses(self):
+        self.publish_and_register()
+        registered = self.entry()
+        # A body edit that leaves the README untouched: only the registry can reveal it.
+        self.edit("ADR-015.md", "Sample text.", "Sample text, quietly changed.")
+        message = (
+            r"adr/ADR-015\.md: accepted record edited without a date change \(registered 2026-10-01 as sha256 "
+            + registered["sha256"][:12] + r"…, " + str(registered["bytes"]) + r" bytes; the current bytes differ\); "
+            r"amend it with a later date or publish a superseding record"
+        )
+        self.assert_fails(message)
+        self.assert_render_refuses(message)
+        # A header edit that also moves README bytes: README drift is reported first, render still refuses.
+        self.write("ADR-015.md", source(title="Money wire format, time, idempotency and more"))
+        self.assert_fails("does not match the rendered layout: generated slot ADR-015 differs")
+        self.assert_render_refuses(r"adr/ADR-015\.md: accepted record edited without a date change")
+        self.write("ADR-015.md", source())
+        adr.check_layout(self.root)
+
+    def test_dated_amendment_re_registers_and_an_earlier_date_is_refused(self):
+        self.publish_and_register()
+        self.write("ADR-015.md", source(date="2026-10-02").replace("Sample text.", "Sample text, amended."))
+        self.assert_fails("generated slot ADR-015 differs")
+        self.assertEqual(adr.render(self.root, MONEY), ["adr/README.md", "adr/accepted-records.json"])
+        self.assertEqual(self.registry()["ADR-015"], self.entry())
+        self.assertEqual(self.registry()["ADR-015"]["date"], "2026-10-02")
+        self.assertEqual(slot_rows(self.readme(), "ADR-015")[0]["Date"], "2026-10-02")
+        adr.check_layout(self.root)
+        # The amendment of a record whose README bytes do not move is named until it is re-registered.
+        self.write("ADR-015.md", source(date="2026-10-02").replace("Sample text.", "Sample text, amended twice."))
+        self.assert_fails(r"adr/ADR-015\.md: accepted record edited without a date change")
+        self.write("ADR-015.md", source(date="2026-10-03").replace("Sample text.", "Sample text, amended twice."))
+        self.assert_fails("generated slot ADR-015 differs")
+        self.write("README.md", adr.render_readme(adr.validate_sources(self.root)))
+        self.assert_fails(
+            r"adr/ADR-015\.md: accepted record amended on 2026-10-03 \(registered 2026-10-02\); its owner "
+            r"re-registers it with render --ticket T-ADR-MONEY-01"
+        )
+        self.assertEqual(adr.render(self.root, MONEY), ["adr/accepted-records.json"])
+        adr.check_layout(self.root)
+        self.write("ADR-015.md", source(date="2026-09-30"))
+        self.assert_fails("generated slot ADR-015 differs")
+        self.assert_render_refuses(r"adr/ADR-015\.md: re-dated 2026-09-30, earlier than its registered acceptance date 2026-10-03")
+
+    def test_withdrawing_a_registered_record_fails(self):
+        self.publish_and_register()
+        self.write("ADR-015.md", source(status="PENDING"))
+        self.assert_fails("generated slot ADR-015 differs")
+        self.assert_render_refuses(
+            r"adr/ADR-015\.md: registered as decided on 2026-10-01 but now records PENDING; a decided record is "
+            r"superseded, never withdrawn \(restore it or review a preservation migration\)"
+        )
+        self.write("README.md", adr.render_readme(adr.validate_sources(self.root)))
+        self.assert_fails(r"adr/ADR-015\.md: registered as decided on 2026-10-01 but now records PENDING")
+        (self.adr / "ADR-015.md").unlink()
+        self.write("README.md", adr.render_readme(adr.validate_sources(self.root)))
+        self.assert_fails(r"adr/ADR-015\.md: registered as decided on 2026-10-01 but is missing; a decided record is superseded")
+        self.assert_render_refuses(r"adr/ADR-015\.md: registered as decided on 2026-10-01 but is missing")
+
+    def test_supersession_leaves_the_predecessor_entry_unchanged_and_a_predecessor_edit_needs_a_date(self):
+        self.publish_and_register()
+        predecessor = self.entry()
+        self.write("ADR-016.md", source(number="ADR-016", ticket=CAT, title="Sample", supersedes="ADR-015"))
+        self.assertEqual(adr.render(self.root, CAT), ["adr/README.md", "adr/accepted-records.json"])
+        registry = self.registry()
+        self.assertEqual(registry["ADR-015"], predecessor)
+        self.assertEqual(registry["ADR-016"], self.entry("ADR-016"))
+        summary = adr.check_layout(self.root)
+        self.assertEqual((summary["published"], summary["superseded"]), (2, 1))
+        # Recording the supersession on the predecessor is itself a change: dated, it re-registers.
+        self.write("ADR-015.md", source(status="SUPERSEDED", superseded_by="ADR-016"))
+        self.assert_render_refuses(r"adr/ADR-015\.md: accepted record edited without a date change")
+        self.write("ADR-015.md", source(status="SUPERSEDED", superseded_by="ADR-016", date="2026-10-05"))
+        self.assertEqual(adr.render(self.root, MONEY), ["adr/README.md", "adr/accepted-records.json"])
+        self.assertEqual(self.registry()["ADR-015"]["date"], "2026-10-05")
+        self.assertEqual(adr.check_layout(self.root)["superseded"], 1)
+
+    def test_scoped_render_changes_only_its_own_entry_and_refuses_foreign_registry_drift(self):
+        self.publish_and_register()
+        self.write("ADR-016.md", source(number="ADR-016", ticket=CAT, title="Sample"))
+        self.assertEqual(adr.render(self.root, CAT), ["adr/README.md", "adr/accepted-records.json"])
+        adr.check_layout(self.root)
+        # Unregister ADR-016 behind the owner's back; the README still matches, so the registry decides.
+        registry = json.loads(self.read("accepted-records.json"))
+        for item in registry["items"]:
+            if item["number"] == "ADR-016":
+                item.update(date=None, sha256=None, bytes=None)
+        self.write("accepted-records.json", adr.render_registry(registry["items"]))
+        self.assert_fails(r"adr/ADR-016\.md: decided record ADR-016 is not registered")
+        self.assert_fails(
+            r"adr/accepted-records\.json differs from the source records outside the entries owned by T-ADR-MONEY-01: "
+            r"adr/ADR-016\.md: decided record ADR-016 is not registered .*; a ticket-scoped render refuses to alter "
+            r"those bytes",
+            lambda root: adr.render(root, MONEY),
+        )
+        self.assertEqual(adr.render(self.root, CAT), ["adr/accepted-records.json"])
+        adr.check_layout(self.root)
+        # An undated foreign edit is refused the same way and never laundered by another ticket.
+        self.edit("ADR-016.md", "Sample text.", "Sample text, changed by someone else.")
+        self.assert_fails(r"adr/ADR-016\.md: accepted record edited without a date change")
+        self.assert_fails(r"outside the entries owned by T-ADR-MONEY-01: adr/ADR-016\.md: accepted record edited without",
+                          lambda root: adr.render(root, MONEY))
+        self.assert_fails(r"adr/ADR-016\.md: accepted record edited without a date change", lambda root: adr.render(root, CAT))
+        self.assert_fails(r"adr/ADR-016\.md: accepted record edited without a date change", adr.render)
+
+    def test_reviewed_allocation_addition_gets_a_null_entry_from_the_layout_owner(self):
+        reservations = json.loads(self.read("reservations.json"))
+        reservations["items"].append({
+            "number": "ADR-024", "ticket": "T-ADR-NEW-13", "state": "PENDING", "question": "q", "blocks": "b",
+        })
+        self.write("reservations.json", json.dumps(reservations, indent=2) + "\n")
+        self.assert_fails("generated slot ADR-024 differs")
+        self.write("README.md", adr.render_readme(adr.validate_sources(self.root)))
+        self.assert_fails(r"adr/accepted-records\.json has no entry for ADR-024; the layout owner adds it with an unscoped render")
+        self.write("ADR-024.md", source(number="ADR-024", ticket="T-ADR-NEW-13", title="Sample"))
+        self.write("README.md", Baseline.read("README.md"))
+        self.assert_fails("has no generated slot for ADR-024", lambda root: adr.render(root, "T-ADR-NEW-13"))
+        self.assertEqual(self.read("accepted-records.json"), Baseline.read("accepted-records.json"))
+        (self.adr / "ADR-024.md").unlink()
+        self.assertEqual(adr.render(self.root), ["adr/README.md", "adr/accepted-records.json"])
+        self.assertEqual(self.registry()["ADR-024"], {"number": "ADR-024", "date": None, "sha256": None, "bytes": None})
+        self.write("ADR-024.md", source(number="ADR-024", ticket="T-ADR-NEW-13", title="Sample"))
+        self.assertEqual(adr.render(self.root, "T-ADR-NEW-13"), ["adr/README.md", "adr/accepted-records.json"])
+        self.assertEqual(self.registry()["ADR-024"], self.entry("ADR-024"))
+        self.assertEqual(adr.check_layout(self.root)["allocations"], 10)
+
+    def test_registry_shape_rules(self):
+        self.publish_and_register()
+        good = self.read("accepted-records.json")
+        cases = (
+            (good.replace(b'"schema_version": 1,', b'"schema_version": 1,\n  "schema_version": 1,'), "duplicate JSON key 'schema_version'"),
+            (good.replace(b'"schema_version": 1,', b'"schema_version": 2,'), "schema_version must be the integer 1"),
+            (good.replace(b'"bytes": null\n    },\n    {\n      "number": "ADR-017"', b'"bytes": null, "x": 1\n    },\n    {\n      "number": "ADR-017"'),
+             "each item declares exactly number, date, sha256, bytes"),
+            (good.replace(b'"number": "ADR-016"', b'"number": "ADR-099"'), r"ADR-099 has no allocation; a registered decision is never dropped silently"),
+            (good.replace(b'"number": "ADR-016"', b'"number": "ADR-017"'), "duplicate number ADR-017"),
+            (good.replace(b'"date": null,\n      "sha256": null,\n      "bytes": null\n    },\n    {\n      "number": "ADR-017"',
+                          b'"date": "2026-10-01",\n      "sha256": null,\n      "bytes": null\n    },\n    {\n      "number": "ADR-017"'),
+             "ADR-016 must record date, sha256 and bytes together or all null"),
+            (good.replace(b'"date": "2026-10-01"', b'"date": "2026-13-01"'), "ADR-015: date '2026-13-01' is not a valid calendar date"),
+            (good.replace(b'"date": "2026-10-01"', b'"date": 20261001'), "ADR-015 date must be a string"),
+            (good.replace(str(self.entry()["bytes"]).encode(), b'"' + str(self.entry()["bytes"]).encode() + b'"'), "ADR-015 bytes must be a positive integer"),
+            (good.replace(str(self.entry()["bytes"]).encode(), b"0"), "ADR-015 bytes must be a positive integer"),
+            (good.replace(self.entry()["sha256"].encode(), self.entry()["sha256"].upper().encode()), "ADR-015 sha256 must be 64 lowercase hex digits"),
+            (json.dumps(json.loads(good), indent=4).encode() + b"\n", r"accepted-records\.json must stay byte-exact to its canonical rendering"),
+            (good.replace(str(self.entry()["bytes"]).encode(), str(self.entry()["bytes"] + 1).encode()),
+             r"accepted-records\.json: entry ADR-015 is inconsistent with the unchanged registered bytes"),
+            (b"{", r"accepted-records\.json: invalid JSON"),
+        )
+        for data, pattern in cases:
+            with self.subTest(pattern=pattern):
+                self.assertNotEqual(data, good)
+                self.write("accepted-records.json", data)
+                self.assert_fails(pattern)
+        # Entries out of allocation order are refused too.
+        registry = json.loads(good)
+        registry["items"].reverse()
+        self.write("accepted-records.json", adr.render_registry(registry["items"]))
+        self.assert_fails(r"accepted-records\.json: entries must follow allocation order")
+        # A missing entry is added only by the layout owner; a corrupt file is never overwritten by render.
+        registry = json.loads(good)
+        registry["items"] = [item for item in registry["items"] if item["number"] != "ADR-016"]
+        self.write("accepted-records.json", adr.render_registry(registry["items"]))
+        self.assert_fails(r"accepted-records\.json has no entry for ADR-016; the layout owner adds it with an unscoped render")
+        self.assert_fails(r"has no entry for ADR-016; the layout owner adds it", lambda root: adr.render(root, MONEY))
+        self.assertEqual(adr.render(self.root), ["adr/accepted-records.json"])
+        self.assertEqual(self.read("accepted-records.json"), good)
+        self.write("accepted-records.json", b"{")
+        self.assert_fails(r"accepted-records\.json: invalid JSON", adr.render)
+        self.assertEqual(self.read("accepted-records.json"), b"{")
+
+    def test_render_refuses_before_writing_anything(self):
+        self.publish_and_register()
+        self.write("ADR-016.md", source(number="ADR-016", ticket=CAT, title="Sample"))
+        self.edit("ADR-015.md", "Sample text.", "Sample text, quietly changed.")
+        # ADR-016 is legitimately publishable, yet the undated ADR-015 edit stops the whole render.
+        self.assert_render_refuses(r"adr/ADR-015\.md: accepted record edited without a date change", ticket=CAT)
+
+    def test_check_docs_reports_registry_failures(self):
+        check_docs = load("check_docs")
+        for name in ("planning", "product"):
+            shutil.copytree(ROOT / name, self.root / name)
+        (self.root / "scripts").mkdir()
+        for path in SCRIPTS.glob("*.py"):
+            shutil.copy(path, self.root / "scripts" / path.name)
+        check_docs.ROOT = self.root
+        self.publish_and_register()
+        self.edit("ADR-015.md", "Sample text.", "Sample text, quietly changed.")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            self.assertEqual(check_docs.main(), 1)
+        self.assertIn("Documentation check failed: adr/ADR-015.md: accepted record edited without a date change", err.getvalue())
+
+
+class ProvingTestsTests(ScratchCase):
+    """A decided record names its proving tests; drafts and the frozen legacy records are exempt."""
+
+    def fails(self, pattern, **kwargs):
+        self.write("ADR-015.md", source(**kwargs))
+        self.assert_fails(pattern, adr.validate_sources)
+
+    def test_decided_record_without_a_tests_heading_fails(self):
+        pattern = (r"adr/ADR-015\.md: a decided record must name its proving tests under a heading containing "
+                   r"the word 'tests' \(none found\)")
+        self.fails(pattern, tail=DECISION)
+        self.fails(pattern, tail=DECISION + "\n### 7. Verification\n\n`sample_test` proves it.\n")
+        self.write("ADR-015.md", source(tail=DECISION))
+        self.assert_fails(pattern)
+        self.assert_fails(pattern, lambda root: adr.render(root, MONEY))
+
+    def test_tests_heading_without_a_named_test_fails(self):
+        self.fails(
+            r"adr/ADR-015\.md: the tests section '### 1\. Tests implementation tickets must add' names no test "
+            r"\(no backticked identifier\); a decided record names its proving tests",
+            tail=DECISION + "\n### 1. Tests implementation tickets must add\n\nTests are added by the tickets.\n",
+        )
+
+    def test_pending_draft_may_lack_tests_but_a_recorded_supersession_may_not(self):
+        self.write("ADR-015.md", source(status="PENDING", tail=DECISION))
+        adr.validate_sources(self.root)
+        self.write("ADR-015.md", source(status="SUPERSEDED", tail=DECISION))
+        self.write("ADR-016.md", source(number="ADR-016", ticket=CAT, title="Sample", supersedes="ADR-015"))
+        self.assert_fails(r"adr/ADR-015\.md: a decided record must name its proving tests", adr.validate_sources)
+        self.write("ADR-015.md", source(status="SUPERSEDED"))
+        self.assertEqual(adr.validate_sources(self.root).successors, {"ADR-015": "ADR-016"})
+
+    def test_heading_variants_and_sub_sections_count(self):
+        for heading in ("## Conformance tests", "#### 9.1 Test matrix", "### TESTS the tickets add", "### 7. Tests"):
+            with self.subTest(heading=heading):
+                self.write("ADR-015.md", source(tail=DECISION + f"\n{heading}\n\n`named_test` proves it.\n"))
+                adr.validate_sources(self.root)
+        # Names under a deeper sub-heading of the tests section count; the next same-level heading ends it.
+        self.write("ADR-015.md", source(tail=DECISION + "\n### 7. Tests\n\nGrouped below.\n\n#### 7.1 Money\n\n`money_test`\n\n### 8. Rollout\n\nText.\n"))
+        adr.validate_sources(self.root)
+        self.fails(r"the tests section '### 7\. Tests' names no test",
+                   tail=DECISION + "\n### 7. Tests\n\nGrouped below.\n\n### 8. Rollout\n\n`not_a_test_name`\n")
+
+    def test_every_tests_heading_is_examined_not_only_the_first(self):
+        """PR #158 core F1: an earlier prose section whose heading contains 'test' must not hide a
+        later compliant tests section; when none names a test, every section examined is listed."""
+        policy = "\n### 0. Test data policy\n\nSynthetic data only; no production records.\n"
+        self.write("ADR-015.md", source(tail=DECISION + policy + TESTS_SECTION))
+        adr.validate_sources(self.root)
+        self.write("ADR-015.md", source(tail=DECISION + TESTS_SECTION + policy))
+        adr.validate_sources(self.root)
+        self.write("ADR-015.md", source(tail=DECISION + policy + "\n#### 0.1 Tests of the policy\n\n`policy_test`\n"))
+        adr.validate_sources(self.root)
+        self.fails(
+            r"adr/ADR-015\.md: none of the tests sections '### 0\. Test data policy', "
+            r"'### 1\. Tests implementation tickets must add' names a test \(no backticked identifier\); "
+            r"a decided record names its proving tests",
+            tail=DECISION + policy + "\n### 1. Tests implementation tickets must add\n\nTests are added by the tickets.\n",
+        )
+        self.fails(r"the tests section '### 0\. Test data policy' names no test", tail=DECISION + policy)
+
+    def test_the_record_heading_and_fenced_code_do_not_count(self):
+        self.fails(r"a decided record must name its proving tests", title="Testing strategy", tail=DECISION)
+        self.fails(r"a decided record must name its proving tests",
+                   tail=DECISION + "\n```text\n### Tests\n`inside_a_code_block`\n```\n")
+        self.fails(r"the tests section '### 7\. Tests' names no test",
+                   tail=DECISION + "\n### 7. Tests\n\n```text\n`only_inside_a_code_block`\n```\n")
+
+
+class JsonBlockTests(ScratchCase):
+    """Every fenced ```json block of a non-legacy record parses strictly, and a top-level object
+    declares a version field; arrays, scalars and non-JSON fences are left alone."""
+
+    def record(self, block, status="ACCEPTED", fence="```", info="json"):
+        return source(status=status, tail=DECISION + f"\n{fence}{info}\n{block}\n{fence}\n" + TESTS_SECTION)
+
+    def fails(self, pattern, block, **kwargs):
+        self.write("ADR-015.md", self.record(block, **kwargs))
+        self.assert_fails(pattern, adr.validate_sources)
+
+    def passes(self, block, **kwargs):
+        self.write("ADR-015.md", self.record(block, **kwargs))
+        adr.validate_sources(self.root)
+
+    def test_version_keys_that_satisfy_the_rule(self):
+        for block in ('{"schema_version": 1}', '{"policy_version": "2026-09-30.6"}', '{"parameters_version": "1"}',
+                      '{"version": 7}', '{"schema-version": 1}', '{"SCHEMA_VERSION": 2, "x": null}'):
+            with self.subTest(block=block):
+                self.passes(block)
+
+    def test_arrays_scalars_and_non_json_fences_are_exempt_from_the_version_rule(self):
+        self.passes('[{"relation": ["a"], "target": {"namespace": "android_app"}}]')
+        self.passes('"just a string"')
+        self.passes("42")
+        self.passes("{not json at all", info="text")
+        self.passes("{not json at all", info="json5")
+        self.passes("{not json at all", info="jsonc")
+
+    def test_invalid_json_and_duplicate_keys_fail_naming_the_record_block_and_line(self):
+        record = self.record('{"schema_version": 1 "x": 2}')
+        fence_line = record.split("\n").index("```json") + 1
+        self.fails(
+            r"adr/ADR-015\.md: fenced JSON block 1 \(line " + str(fence_line) + r"\): invalid JSON \(Expecting ',' delimiter",
+            '{"schema_version": 1 "x": 2}',
+        )
+        self.fails(r"fenced JSON block 1 \(line \d+\): duplicate JSON key 'schema_version'", '{"schema_version": 1, "schema_version": 1}')
+        self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON", "", status="PENDING")
+        self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON", '{"schema_version": 1,}')
+
+    def test_non_json_literals_and_lone_surrogates_are_rejected_everywhere(self):
+        """PR #158 core F2 / security S1: RFC 8259 has no NaN, Infinity or -Infinity, and a lone
+        surrogate escape decodes to text no UTF-8 consumer accepts; blocks and documents alike."""
+        for literal in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(literal=literal):
+                self.fails(r"fenced JSON block 1 \(line \d+\): non-JSON literal " + literal + "$",
+                           '{"schema_version": 1, "x": ' + literal + "}")
+                self.fails(r"fenced JSON block 1 \(line \d+\): non-JSON literal " + literal + "$",
+                           '{"schema_version": 1, "x": [1, {"y": ' + literal + "}]}", status="PENDING")
+        self.fails(r"fenced JSON block 1 \(line \d+\): invalid JSON \(lone surrogate escape U\+D83D\)",
+                   '{"schema_version": 1, "x": "\\ud83d"}')
+        self.fails(r"invalid JSON \(lone surrogate escape U\+DC00\)", '{"schema_version": 1, "\\udc00": 1}')
+        self.passes('{"schema_version": 1, "x": "\\ud83d\\ude00 and \\u00e9"}')  # a valid pair and BMP escape
+        self.passes('{"schema_version": 1, "x": 1e308, "y": -0.0, "z": "nan"}')
+        # Valid syntax that overflows a binary64 is the same rot by another door: it would re-emit as Infinity.
+        self.fails(r"fenced JSON block 1 \(line \d+\): number 1e400 overflows to inf; no consumer can round-trip it",
+                   '{"schema_version": 1, "x": 1e400}')
+        self.fails(r"number -1e999 overflows to -inf", '{"schema_version": 1, "x": [-1e999]}')
+        (self.adr / "ADR-015.md").unlink()  # back to the baseline so the documents, not README drift, are reported
+        original = self.read("reservations.json")
+        for document in ("reservations.json", "legacy-bodies.json", "accepted-records.json"):
+            with self.subTest(document=document):
+                data = self.read(document)
+                self.write(document, data.replace(b'"schema_version": 1,', b'"schema_version": NaN,'))
+                self.assert_fails(document.replace(".", r"\.") + ": non-JSON literal NaN$")
+                self.write(document, data)
+        self.write("reservations.json", original.replace(b'"question": "Money', b'"question": "\\udbff Money'))
+        self.assert_fails(r"reservations\.json: invalid JSON \(lone surrogate escape U\+DBFF\)")
+        self.write("reservations.json", original)
+        adr.check_layout(self.root)
+
+    def test_missing_or_unusable_version_fails(self):
+        message = (r"adr/ADR-015\.md: fenced JSON block 1 \(line \d+\) declares no version field \(schema_version, "
+                   r"policy_version, parameters_version or another \*_version key holding a non-empty string or positive integer\)")
+        self.fails(message + "$", '{"adr": "ADR-015", "roles": []}')
+        self.fails(message + r"; 'schema_version' is None", '{"schema_version": null}')
+        self.fails(message + r"; 'schema_version' is ''", '{"schema_version": ""}')
+        self.fails(message + r"; 'schema_version' is 0", '{"schema_version": 0}')
+        self.fails(message + r"; 'schema_version' is True", '{"schema_version": true}')
+        self.fails(message + r"; 'schema_version' is -1", '{"schema_version": -1}')
+        self.fails(message + r"; 'schema_version' is 1\.0", '{"schema_version": 1.0}')
+        self.fails(message + "$", '{"schemaVersion": 1}')
+        self.fails(message + "$", '{"nested": {"schema_version": 1}}')
+        self.fails(message, '{"adr": "ADR-015"}', status="PENDING")
+
+    def test_second_block_is_numbered_and_uppercase_or_attributed_info_strings_count(self):
+        self.write("ADR-015.md", source(tail=DECISION + '\n```json\n{"schema_version": 1}\n```\n\nText.\n\n```JSON title="x"\n{"adr": 1}\n```\n' + TESTS_SECTION))
+        self.assert_fails(r"fenced JSON block 2 \(line \d+\) declares no version field", adr.validate_sources)
+
+    def test_tilde_fences_longer_fences_and_unclosed_fences(self):
+        self.passes('{"schema_version": 1}', fence="~~~")
+        self.fails(r"fenced JSON block 1 .* declares no version field", '{"x": 1}', fence="~~~")
+        self.passes('{"schema_version": 1, "note": "```"}', fence="````")
+        self.passes('{"schema_version": 1}\n')  # a blank line inside the block is still a closed block
+        self.write("ADR-015.md", source(tail=DECISION + '\n```json\n{"schema_version": 1}\n' + TESTS_SECTION))
+        self.assert_fails(r"fenced JSON block 1 \(line \d+\) is never closed", adr.validate_sources)
+
+    def test_legacy_records_are_not_scanned(self):
+        layout = adr.validate_sources(self.root)
+        for number in layout.legacy:
+            self.assertNotIn("```json", layout.sources[number].body)
+
+    def test_grandfather_pin_admits_exactly_the_pinned_bytes_of_the_pinned_record(self):
+        block = '{\n  "adr": "ADR-015",\n  "roles": ["a"]\n}'
+        digest = hashlib.sha256((block + "\n").encode("utf-8")).hexdigest()
+        self.fails(r"fenced JSON block 1 .* declares no version field", block)
+        with mock.patch.dict(adr.UNVERSIONED_JSON_BLOCKS, {("ADR-015", digest): "ADR-015 sample pin"}, clear=True):
+            self.passes(block)
+            self.fails(r"fenced JSON block 1 .* declares no version field", block.replace('"a"', '"b"'))
+            self.write("ADR-016.md", source(number="ADR-016", ticket=CAT, title="Sample", tail=DECISION + f"\n```json\n{block}\n```\n" + TESTS_SECTION))
+            self.write("ADR-015.md", source())
+            self.assert_fails(r"adr/ADR-016\.md: fenced JSON block 1 .* declares no version field", adr.validate_sources)
+
+    def test_fenced_block_scanner(self):
+        lines = ["text", "```json", "{", "```", "  ~~~", "inner ``` not a close", "  ~~~~", "````", "```", "````", "``` not `a fence", "~~~x", "tail"]
+        blocks = [(info, first, last, content) for info, first, last, content in adr.fenced_blocks(lines)]
+        self.assertEqual(blocks, [
+            ("json", 1, 3, ["{"]),
+            ("", 4, 6, ["inner ``` not a close"]),
+            ("", 7, 9, ["```"]),
+            ("x", 11, None, ["tail"]),
+        ])
+        self.assertEqual(adr.outside_fences(lines), [0, 10])
+        self.assertEqual(list(adr.fenced_blocks(["    ```json", "{", "    ```"])), [])
 
 
 class WriterTests(unittest.TestCase):
@@ -931,12 +1461,19 @@ class CliTests(ScratchCase):
     def test_render_reports_updates_and_no_ops(self):
         self.write("ADR-015.md", source())
         code, out, _ = self.run_cli("render", "--ticket", MONEY)
-        self.assertEqual((code, out), (0, "adr/README.md updated for T-ADR-MONEY-01.\n"))
+        self.assertEqual((code, out), (0, "adr/README.md and adr/accepted-records.json updated for T-ADR-MONEY-01.\n"))
         code, out, _ = self.run_cli("render", "--ticket", MONEY)
-        self.assertEqual((code, out), (0, "adr/README.md already matches the rendered layout for T-ADR-MONEY-01.\n"))
+        self.assertEqual(
+            (code, out),
+            (0, "adr/README.md and adr/accepted-records.json already match the rendered layout for T-ADR-MONEY-01.\n"),
+        )
         code, out, _ = self.run_cli("check")
         self.assertEqual(code, 0)
         self.assertIn("1 published reserved records, 8 pending", out)
+        # A PENDING draft changes only the README; the registry stays untouched.
+        self.write("ADR-016.md", source(number="ADR-016", ticket=CAT, title="Sample", status="PENDING"))
+        code, out, _ = self.run_cli("render", "--ticket", CAT)
+        self.assertEqual((code, out), (0, "adr/README.md updated for T-ADR-CAT-02.\n"))
 
     def test_filesystem_failures_report_the_causal_chain(self):
         self.write("ADR-015.md", source())
@@ -948,18 +1485,20 @@ class CliTests(ScratchCase):
         self.assertIn("unlink failed", err)
         self.assertIn("caused by: OSError('replace failed')", err)
         self.assertEqual(self.read("README.md"), Baseline.read("README.md"))
+        self.assertEqual(self.read("accepted-records.json"), Baseline.read("accepted-records.json"))
         make_writable(self.adr)
-        for path in self.adr.glob(".README.md.*.tmp"):
+        for path in self.adr.glob(".*.tmp"):
             path.unlink()
 
 
 GIT = shutil.which("git")
 
 
-@unittest.skipUnless(GIT, "git is not available")
-class GitIntegrationTests(ScratchCase):
-    """Independent ordinary tickets land in either order without conflict; same-predecessor
-    supersessions conflict textually and are rejected semantically. Local repositories only."""
+class GitScratchCase(ScratchCase):
+    """A scratch layout committed as ``main`` of a local git repository: isolated HOME and config,
+    no hooks, no signing, LF checkouts, no fsync (test-only speed). Local repositories only."""
+
+    INIT_REPO = True  # subclasses that only work on copies of a template repository skip the init
 
     def setUp(self):
         super().setUp()
@@ -971,15 +1510,20 @@ class GitIntegrationTests(ScratchCase):
             "GIT_CONFIG_GLOBAL": str(self.home / "gitconfig"), "GIT_CONFIG_PARAMETERS": "",
             "GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.invalid",
             "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.invalid",
+            "GIT_AUTHOR_DATE": "2026-10-01T00:00:00Z", "GIT_COMMITTER_DATE": "2026-10-01T00:00:00Z",
         }
+        if self.INIT_REPO:
+            self.init_repo()
+
+    def init_repo(self):
         self.git("init", "-q", "-b", "main")
         self.commit("baseline")
 
-    def git(self, *args, check=True):
+    def git(self, *args, cwd=None, check=True):
         return subprocess.run(
-            [GIT, "-c", "core.autocrlf=false", "-c", "commit.gpgsign=false",
-             "-c", f"core.hooksPath={self.home / 'nohooks'}", *args],
-            cwd=self.root, env=self.env, capture_output=True, text=True, encoding="utf-8", check=check,
+            [GIT, "-c", "core.autocrlf=false", "-c", "commit.gpgsign=false", "-c", "core.fsync=none",
+             "-c", "gc.auto=0", "-c", f"core.hooksPath={self.home / 'nohooks'}", *args],
+            cwd=cwd or self.root, env=self.env, capture_output=True, text=True, encoding="utf-8", check=check,
         )
 
     def commit(self, message):
@@ -987,6 +1531,7 @@ class GitIntegrationTests(ScratchCase):
         self.git("commit", "-q", "-m", message)
 
     def land(self, branch, number, ticket, **kwargs):
+        """Publish one synthetic record on its own branch from main with a ticket-scoped render."""
         self.git("checkout", "-q", "-b", branch, "main")
         self.write(f"{number}.md", source(number=number, ticket=ticket, title=f"Sample {number}", **kwargs))
         self.assertTrue(adr.render(self.root, ticket))
@@ -995,6 +1540,12 @@ class GitIntegrationTests(ScratchCase):
     def squash(self, branch):
         self.git("merge", "-q", "--squash", branch)
         self.git("commit", "-q", "-m", f"squash {branch}")
+
+
+@unittest.skipUnless(GIT, "git is not available")
+class GitIntegrationTests(GitScratchCase):
+    """Independent ordinary tickets land in either order without conflict; same-predecessor
+    supersessions conflict textually and are rejected semantically. Local repositories only."""
 
     def test_independent_tickets_squash_merge_cleanly_in_both_orders(self):
         self.land("money", "ADR-015", MONEY)
