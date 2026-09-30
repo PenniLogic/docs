@@ -16,12 +16,15 @@ The old private repositories, unmerged branches and discussions remain in
 python scripts/setup.py
 python scripts/check_repository.py
 python scripts/check_docs.py
+python scripts/check_test_strategy.py
 python -m unittest discover -s scripts/tests
 ```
 
 See [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 Product specifications and the preserved backlog are in
-[PenniLogic/docs](https://github.com/PenniLogic/docs).
+[PenniLogic/docs](https://github.com/PenniLogic/docs). Verification requirements:
+[PenniLogic/docs/governance/test-strategy.md](https://github.com/PenniLogic/docs/blob/main/governance/test-strategy.md)
+(numbers in [governance/test-strategy.json](https://github.com/PenniLogic/docs/blob/main/governance/test-strategy.json)).
 
 ## Cost and permissions
 
