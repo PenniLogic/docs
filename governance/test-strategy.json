@@ -1,0 +1,2016 @@
+{
+  "schema_version": 1,
+  "strategy_version": "1.1.1",
+  "source_issue": {
+    "reference": "PenniLogic/docs#22",
+    "identity": "PenniLogic-old/docs#21"
+  },
+  "document": "governance/test-strategy.md",
+  "schema": "governance/test-strategy.schema.json",
+  "inventory": "planning/issue-inventory.json",
+  "reference_format": "^PenniLogic/(\\.github|docs|contracts|api|ai\\-service|android|web|admin|infra)#([1-9][0-9]*)$",
+  "principles": [
+    "Money-path code is verified against an independent source of truth, never only against tests written by the same author against the same misunderstanding",
+    "A verification category exists only if a public issue owns its executable evidence; the check fails an unowned category rather than tolerating a promise",
+    "Numbers live here and nowhere else: harnesses read the floors, ceilings and budgets from this file and never restate them",
+    "Test data is synthetic only; production data never reaches any lower environment",
+    "Flaky tests are quarantined and fixed, never retried into green"
+  ],
+  "categories": [
+    {
+      "id": "unit_tests",
+      "name": "Deterministic unit tests",
+      "layer": "All repositories",
+      "approach": "Deterministic unit tests on every change, run by the native CI job of each repository; no network, no wall clock and no unseeded randomness",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#75",
+          "identity": "T-SCA-API-01"
+        },
+        {
+          "reference": "PenniLogic/contracts#2",
+          "identity": "T-SCA-CON-01"
+        },
+        {
+          "reference": "PenniLogic/ai-service#1",
+          "identity": "T-SCA-AIS-01"
+        },
+        {
+          "reference": "PenniLogic/android#1",
+          "identity": "T-SCA-AND-01"
+        },
+        {
+          "reference": "PenniLogic/web#1",
+          "identity": "T-SCA-WEB-01"
+        },
+        {
+          "reference": "PenniLogic/admin#1",
+          "identity": "T-SCA-ADM-01"
+        },
+        {
+          "reference": "PenniLogic/infra#24",
+          "identity": "T-SCA-INF-01"
+        },
+        {
+          "reference": "PenniLogic/infra#22",
+          "identity": "PenniLogic-old/infra#1"
+        }
+      ],
+      "evidence": "The repository's native CI check on the pull request head; per-package line and branch coverage compared with the floors in this file on every run"
+    },
+    {
+      "id": "domain_ledger_property",
+      "name": "Property-based ledger invariants",
+      "layer": "Domain/ledger",
+      "approach": "Property-based tests over shared generators; the zero-sum invariant, non-negativity where required, rounding and period-boundary rules are machine-checked on generated cases",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#22",
+          "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/api#3",
+          "identity": "PenniLogic-old/api#3"
+        }
+      ],
+      "evidence": "Property suite in the api pull request gate; a planted rounding error fails the build and names the falsifying case"
+    },
+    {
+      "id": "debt_maths_independent_model",
+      "name": "Independent-model verification of debt maths",
+      "layer": "Debt maths",
+      "approach": "Every debt, budgeting and allocation result is compared with a second, independently written implementation across the full case matrix, in addition to mutation testing of the production packages",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#22",
+          "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/api#16",
+          "identity": "PenniLogic-old/api#16"
+        }
+      ],
+      "evidence": "Oracle comparison report per run; any disagreement fails the api build and names the case"
+    },
+    {
+      "id": "mutation_testing",
+      "name": "Mutation testing on money paths",
+      "layer": "Money-path packages",
+      "approach": "Mutation score measured per package by the gate in the repository that owns the package (the api harness for api packages, the Android gate for android.ledger and android.parsers) and compared with the mutation floor published for that package in this file; every money-path package has one",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#22",
+          "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/android#65",
+          "identity": "T-QA-01-AND"
+        }
+      ],
+      "evidence": "Per-package mutation score published on every run against its floor; a score below the floor fails the build"
+    },
+    {
+      "id": "parser_golden_corpus",
+      "name": "Parser golden corpus",
+      "layer": "Parsers",
+      "approach": "Golden-corpus regression: every newly observed bank or wallet format becomes a permanent synthetic, structurally faithful case; the corpus is privacy-scanned, versioned and published with coverage by issuer",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        },
+        {
+          "reference": "PenniLogic/android#46",
+          "identity": "T-PRS-01"
+        },
+        {
+          "reference": "PenniLogic/android#47",
+          "identity": "T-PRS-02"
+        }
+      ],
+      "evidence": "Full-corpus run on every parser change with coverage by issuer and rule version published; a regression or a planted identifier in the corpus fails the merge"
+    },
+    {
+      "id": "api_contract",
+      "name": "API contract tests",
+      "layer": "API",
+      "approach": "Provider verification that the running service satisfies the published OpenAPI specification, with additive-versus-breaking classification of every change",
+      "owners": [
+        {
+          "reference": "PenniLogic/contracts#3",
+          "identity": "T-QA-02"
+        },
+        {
+          "reference": "PenniLogic/api#3",
+          "identity": "PenniLogic-old/api#3"
+        }
+      ],
+      "evidence": "Provider verification on the api pull request against the published contract artifact; a removed field fails unless the expand-and-contract protocol was followed"
+    },
+    {
+      "id": "contract_provider_consumer",
+      "name": "Provider and consumer contract testing",
+      "layer": "Contracts",
+      "approach": "Consumer verification of the generated Kotlin, TypeScript and Python clients against the published artifact, with a compatibility report naming each consumer and its verified contract version",
+      "owners": [
+        {
+          "reference": "PenniLogic/contracts#3",
+          "identity": "T-QA-02"
+        }
+      ],
+      "evidence": "Compatibility report per contract version naming every consumer; a drifting consumer fails its own pipeline"
+    },
+    {
+      "id": "integration_tests",
+      "name": "Service integration tests",
+      "layer": "api",
+      "approach": "Service tests against a real PostgreSQL instance from the idempotent local bootstrap, exercising database policies and migrations directly",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#3",
+          "identity": "PenniLogic-old/api#3"
+        },
+        {
+          "reference": "PenniLogic/api#23",
+          "identity": "T-QA-03"
+        },
+        {
+          "reference": "PenniLogic/infra#2",
+          "identity": "PenniLogic-old/infra#2"
+        }
+      ],
+      "evidence": "Integration job in the api pull request gate using the bootstrap database; a failure names the service and the query"
+    },
+    {
+      "id": "android_unit_instrumented",
+      "name": "Android unit and instrumented journeys",
+      "layer": "Android",
+      "approach": "Unit tests plus instrumented critical journeys on the device matrix in this file: the API 31, current-release and large-text emulator lanes are required on every pull request and the TalkBack, low-memory, OEM and physical lanes at release candidate, once the Android gate wires them; no emulator lane runs in android CI at publication",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        }
+      ],
+      "evidence": "Instrumented results per lane on the pull request and the release candidate; a failing lane is reported by lane and blocks"
+    },
+    {
+      "id": "web_e2e_journeys",
+      "name": "Web end-to-end journeys",
+      "layer": "Web",
+      "approach": "Playwright end-to-end tests of the critical journeys (login, transaction entry, payoff view, import, export) against a seeded synthetic environment on latest-stable Chromium, Firefox and WebKit",
+      "owners": [
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        }
+      ],
+      "evidence": "Journey suite per engine on the web pull request; a browser-specific failure is reported by engine and blocks"
+    },
+    {
+      "id": "admin_e2e_journeys",
+      "name": "Admin operator journeys",
+      "layer": "Admin",
+      "approach": "Playwright operator journeys (search, redacted read, unmask request, four-eyes approval, support-verified action) with a planted-defect gate proving that weakened redaction, an unmask without a verified ticket and a self-approval each fail",
+      "owners": [
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        }
+      ],
+      "evidence": "Operator journey suite and planted-defect results on the admin pull request; a planted defect that passes fails the suite"
+    },
+    {
+      "id": "accessibility_conformance",
+      "name": "Accessibility conformance",
+      "layer": "Web, admin, Android",
+      "approach": "WCAG 2.2 AA on web and admin: a named, pinned WCAG-tagged automated ruleset with zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core journeys (best-practice rules that are not WCAG success criteria are advisory; an exception requires a recorded reason and an expiry on the pull request), run in every browser configuration in this file, plus keyboard-only and screen-reader walkthroughs; Android runs Accessibility Test Framework checks in the instrumented suite and Android Lint accessibility rules with pinned versions, meets the Material accessibility baseline and every applicable WCAG 2.2 AA outcome, and is walked through with TalkBack and Switch Access; every applicable client state taxonomy state on each core journey is asserted against client-state-taxonomy section 8 (announced once with the published politeness, focus target, no re-announcement on return, recovery action reachable by keyboard and switch, disabled controls exposing their reason)",
+      "owners": [
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        }
+      ],
+      "evidence": "Automated scan with zero violations at any impact level for WCAG-tagged Level A and AA rules on core journeys in every browser configuration, Android Accessibility Test Framework and Lint results, and attached walkthrough evidence per release covering every applicable taxonomy state; a planted unlabeled control, undersized target, contrast failure, unannounced state or focus that does not move on an error fails the gate"
+    },
+    {
+      "id": "performance_budgets",
+      "name": "Performance budgets",
+      "layer": "Web, admin, Android, API",
+      "approach": "The numeric budgets published in this file are enforced per pull request and per release candidate; a deliberate regression must fail",
+      "owners": [
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        },
+        {
+          "reference": "PenniLogic/infra#29",
+          "identity": "T-QA-05"
+        }
+      ],
+      "evidence": "Measured value against its budget on every run; a regressed budget fails the pull request or the release candidate"
+    },
+    {
+      "id": "security_negative_tests",
+      "name": "Security negative tests",
+      "layer": "Security",
+      "approach": "Tests that actively attempt violations from inside the code and against the running service: cross-tenant reads, broken object authorization, mass assignment, authentication bypass and token replay; entitlement tampering by a client claiming a feature its plan lacks, with absence of an entitlement denying per gated feature; rate limiting, lockout and credential stuffing; step-up bypass and step-up token replay on export, deletion and sharing invitations; sharing-grant default deny with absent or expired grants, aggregate-versus-detail separation and differencing attacks; plus the AI request-forgery and operator red-team suites",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#23",
+          "identity": "T-QA-03"
+        },
+        {
+          "reference": "PenniLogic/api#29",
+          "identity": "T-BIL-01"
+        },
+        {
+          "reference": "PenniLogic/api#40",
+          "identity": "T-SEC-04"
+        },
+        {
+          "reference": "PenniLogic/api#34",
+          "identity": "T-FAM-01"
+        },
+        {
+          "reference": "PenniLogic/ai-service#3",
+          "identity": "T-AI-03"
+        },
+        {
+          "reference": "PenniLogic/admin#9",
+          "identity": "T-ADM-12"
+        }
+      ],
+      "evidence": "Attack suite and object-level authorization coverage report on every api, ai-service and admin pull request, with a negative test per gated feature and per grant scope, and throttling, lockout and step-up replay attempts rejected and audited; a deliberately weakened fixture must make the suite fail"
+    },
+    {
+      "id": "log_redaction_gate",
+      "name": "Log and evidence redaction gate",
+      "layer": "Backend logging and evidence artifacts",
+      "approach": "Structured logging with a published field allowlist; a static rule that fails the build when a money or personal-data type is logged; a runtime scan of sampled emitted records in CI with a planted money value; fail-closed scrubbing that drops a record rather than emitting it raw, on error paths and exception messages as well as the happy path; failure screenshots and recorded evidence artifacts scrubbed of money values, raw message text and personal data before upload",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#21",
+          "identity": "T-PLT-04"
+        },
+        {
+          "reference": "PenniLogic/android#18",
+          "identity": "T-CMP-03"
+        },
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ],
+      "evidence": "Static rule and runtime scan results on every api pull request, and scrubbed-artifact confirmation in each client gate; a planted money value in an emitted record or an uploaded artifact fails the pipeline"
+    },
+    {
+      "id": "static_dependency_secret_gates",
+      "name": "Static analysis, dependency and secret gates",
+      "layer": "Pipeline",
+      "approach": "Static application security testing per language, dependency review with an expiring exception process, full-history secret scanning and the SDK allowlist, all blocking",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#28",
+          "identity": "T-QA-04"
+        },
+        {
+          "reference": "PenniLogic/infra#23",
+          "identity": "PenniLogic-old/infra#3"
+        }
+      ],
+      "evidence": "Blocking checks on every pull request; a planted injection pattern, advisory or secret fails, and a secret triggers a rotation ticket"
+    },
+    {
+      "id": "security_regression_smoke",
+      "name": "Security regression smoke in the deploy pipeline",
+      "layer": "Deploy pipeline",
+      "approach": "Dynamic scanning of the ephemeral deployed build for the authenticated and unauthenticated surface, plus signed-artifact and provenance verification before deployment",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#28",
+          "identity": "T-QA-04"
+        },
+        {
+          "reference": "PenniLogic/infra#31",
+          "identity": "T-QA-11"
+        }
+      ],
+      "evidence": "Dynamic scan report and artifact verification result attached to each deployment; a high-severity finding or an unsigned or tampered artifact fails the deploy gate"
+    },
+    {
+      "id": "supply_chain_verification",
+      "name": "Supply-chain verification",
+      "layer": "Infrastructure, containers, Android binaries",
+      "approach": "Infrastructure-as-code policy scanning, container image scanning before publication and deployment, Android release static analysis, a CycloneDX bill of materials per artifact and signed provenance",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#31",
+          "identity": "T-QA-11"
+        }
+      ],
+      "evidence": "Per-artifact bill of materials and provenance linked from the release record; a planted misconfiguration, vulnerable image or insecure Android fixture fails"
+    },
+    {
+      "id": "load_stress_soak",
+      "name": "Load, stress and soak",
+      "layer": "Backend at scale",
+      "approach": "Load profiles at realistic peak against the latency and error budgets in this file, a stress run to the breaking point that records the failure mode, and a sustained soak asserting no memory or connection growth and exact quota counters",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#29",
+          "identity": "T-QA-05"
+        }
+      ],
+      "evidence": "Dated run results against the budgets attached to the release candidate; a regression fails the release"
+    },
+    {
+      "id": "chaos_fault_injection",
+      "name": "Chaos and fault injection",
+      "layer": "Dependencies",
+      "approach": "Injected database failover, key-service outage, cache loss, provider outage and webhook storms, each with a defined expected behaviour; a key-service outage must never corrupt or expose data",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#29",
+          "identity": "T-QA-05"
+        }
+      ],
+      "evidence": "Per-fault observed-versus-expected behaviour report per release candidate; an undefined or violated behaviour fails"
+    },
+    {
+      "id": "disaster_recovery_restore",
+      "name": "Disaster-recovery restore drills",
+      "layer": "Backups and recovery",
+      "approach": "A performed restore into a clean environment with measured recovery point and recovery time, a timed game day against the objectives in this file, and proof that user erasure survives restore",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#26",
+          "identity": "T-PLT-02"
+        },
+        {
+          "reference": "PenniLogic/infra#29",
+          "identity": "T-QA-05"
+        },
+        {
+          "reference": "PenniLogic/infra#33",
+          "identity": "T-SEC-07"
+        }
+      ],
+      "evidence": "Dated drill and game-day records with measured recovery point and time against the targets; the runbook correction is part of the record"
+    },
+    {
+      "id": "privacy_traffic_inspection",
+      "name": "Privacy traffic inspection",
+      "layer": "Release candidate egress",
+      "approach": "Every release candidate runs its core journeys through an intercepting proxy; the capture must contain no raw message text, no monetary value in analytics and no host outside the allowlist shared with the payload-scrubbing hook",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#16",
+          "identity": "T-QA-09"
+        },
+        {
+          "reference": "PenniLogic/android#18",
+          "identity": "T-CMP-03"
+        }
+      ],
+      "evidence": "Signed evidence pack per release candidate consumed by the Data Safety declaration; a planted raw string, monetary value or unknown host fails the release"
+    },
+    {
+      "id": "billing_webhook_replay",
+      "name": "Billing and webhook adversarial replay",
+      "layer": "Billing",
+      "approach": "Webhook signature verification and idempotent processing plus an adversarial replay and forgery suite across purchase, renewal, refund and entitlement transitions, with nightly reconciliation against the provider",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#32",
+          "identity": "T-BIL-05"
+        },
+        {
+          "reference": "PenniLogic/api#48",
+          "identity": "T-BIL-06"
+        }
+      ],
+      "evidence": "Replay and forgery suite in the api pull request gate and a nightly drift alarm; a replayed or forged event must produce no second effect"
+    },
+    {
+      "id": "model_evaluation",
+      "name": "Model evaluation in continuous integration",
+      "layer": "AI service",
+      "approach": "Grounding, refusal, advice-boundary, numeric-fidelity and prompt-injection evaluations against a governed synthetic corpus with the accuracy floor in this file and pinned provider model versions",
+      "owners": [
+        {
+          "reference": "PenniLogic/ai-service#7",
+          "identity": "T-AI-06"
+        },
+        {
+          "reference": "PenniLogic/ai-service#4",
+          "identity": "T-AI-05"
+        }
+      ],
+      "evidence": "Evaluation report per pull request and on any model version change; a score below the floor or an altered number fails the merge"
+    },
+    {
+      "id": "threat_model_refresh",
+      "name": "STRIDE threat-model refresh",
+      "layer": "Definition of Ready",
+      "approach": "A dated per-epic STRIDE refresh with a named owner before the epic's first ticket starts, covering the ingestion boundary, raw-content-never-leaves-device and the parser-config signing chain as well as application-layer risks, recorded machine-readably",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#48",
+          "identity": "T-QA-14"
+        }
+      ],
+      "evidence": "Refresh record per epic checked at Definition of Ready and in independent review; a stale or incomplete refresh is reported as invalid"
+    },
+    {
+      "id": "penetration_test",
+      "name": "Independent penetration test",
+      "layer": "Pre-launch",
+      "approach": "Independent external test scoped from the current threat model with every high and critical finding closed and retested; accepted risks carry an owner and an expiry",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#43",
+          "identity": "T-QA-10"
+        }
+      ],
+      "evidence": "Report, retest records and the accepted-risk register read by the public-launch gate; an open high finding or an expired accepted risk fails the gate"
+    },
+    {
+      "id": "flaky_test_quarantine",
+      "name": "Flaky-test quarantine",
+      "layer": "Pipeline",
+      "approach": "Quarantine and fix, never silently retry into green: the numbers in this file bound automatic re-execution, trigger quarantine, cap the quarantine rate and age quarantined tests out",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#28",
+          "identity": "T-QA-04"
+        }
+      ],
+      "evidence": "Per-repository flake rate, quarantine list with owning tickets and retry counts published on every run; an exceeded ceiling fails the pipeline"
+    },
+    {
+      "id": "client_state_coverage",
+      "name": "Client state coverage",
+      "layer": "Android, web, admin surfaces",
+      "approach": "Every registered surface handles every applicable identifier of the published client state taxonomy with the canonical copy and exactly one recovery action, proven with a planted omission (taxonomy coverage assertion client_state_coverage)",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#1",
+          "identity": "T-UX-01"
+        },
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        }
+      ],
+      "evidence": "Coverage assertion in each client gate against the taxonomy data file at the pinned taxonomy_version, extended with the section 8 semantics assertion for each rendered state (announced once, focus target, no re-announcement on return, recovery action operable by keyboard and switch); a planted omission or an unannounced state fails",
+      "taxonomy_assertion": "client_state_coverage"
+    },
+    {
+      "id": "client_state_taxonomy_first",
+      "name": "Client state taxonomy first",
+      "layer": "Android, web, admin surfaces",
+      "approach": "The client's state enumeration is a subset of the identifiers in the taxonomy data file at the pinned taxonomy_version; a new state is added to the taxonomy first and only then to any client (taxonomy coverage assertion taxonomy_first)",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#1",
+          "identity": "T-UX-01"
+        },
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        }
+      ],
+      "evidence": "Subset assertion in each client gate against the identifiers at the pinned taxonomy_version; a planted unlisted identifier fails",
+      "taxonomy_assertion": "taxonomy_first"
+    },
+    {
+      "id": "internationalization_checks",
+      "name": "Internationalization checks",
+      "layer": "Android, web",
+      "approach": "Locale-aware INR formatting, a pseudo-localization run over every core journey, and long-string and right-to-left layout safety; single-currency MVP, multi-currency not claimed",
+      "owners": [
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/android#34",
+          "identity": "T-GLO-02"
+        }
+      ],
+      "evidence": "Formatting, pseudo-localization and layout checks in the client gates; a hardcoded symbol, grouping or clipped label fails"
+    },
+    {
+      "id": "insider_risk_controls",
+      "name": "Insider-risk control checks",
+      "layer": "Admin",
+      "approach": "A planted-defect gate on redaction, unmask and four-eyes operator journeys plus the operator red-team suite as a blocking console release gate",
+      "owners": [
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        },
+        {
+          "reference": "PenniLogic/admin#9",
+          "identity": "T-ADM-12"
+        }
+      ],
+      "evidence": "Planted-defect and red-team results per admin release; a planted defect that passes fails the release"
+    },
+    {
+      "id": "release_rollback_rehearsal",
+      "name": "Release rollback rehearsal",
+      "layer": "Deploy and store release",
+      "approach": "A rehearsed, dated deploy rollback and a rehearsed staged-rollout halt with a minimum supported version policy",
+      "owners": [
+        {
+          "reference": "PenniLogic/infra#25",
+          "identity": "T-PLT-01"
+        },
+        {
+          "reference": "PenniLogic/android#37",
+          "identity": "T-REL-01"
+        }
+      ],
+      "evidence": "Dated rollback and halt rehearsal records read by the release evidence gates; a missing or stale record fails the gate"
+    },
+    {
+      "id": "android_release_gate",
+      "name": "Android release gate",
+      "layer": "Play release",
+      "approach": "Play App Signing custody, track promotion and a staged rollout that halts on the crash and ANR budgets published in this file",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#37",
+          "identity": "T-REL-01"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ],
+      "evidence": "Vitals measurements against the budgets per rollout stage; a breach halts promotion"
+    },
+    {
+      "id": "compliance_reconciliation",
+      "name": "Compliance reconciliation",
+      "layer": "Compliance",
+      "approach": "Obligation and risk matrices reconciled against the issue inventory, and versioned jurisdiction profiles that fail closed when a statutory value is missing",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#44",
+          "identity": "T-CMP-04"
+        }
+      ],
+      "evidence": "Reconciliation run per compliance pack version; an unowned obligation or an unknown ticket fails"
+    },
+    {
+      "id": "design_to_code_regression",
+      "name": "Design-to-code regression",
+      "layer": "Design QA",
+      "approach": "Visual, interaction and semantic regression against the design source plus cross-platform parity and release design QA",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#135",
+          "identity": "T-DQA-10"
+        },
+        {
+          "reference": "PenniLogic/docs#136",
+          "identity": "T-DQA-11"
+        }
+      ],
+      "evidence": "Regression and parity reports per client release; an unreviewed divergence fails design QA"
+    },
+    {
+      "id": "release_evidence_gates",
+      "name": "Release evidence gates",
+      "layer": "Release",
+      "approach": "Executable private-beta and public-launch gates read the named evidence artifact of every contributing category within the freshness window and fail naming the missing item and its owner; no manual override",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#49",
+          "identity": "T-REL-02"
+        },
+        {
+          "reference": "PenniLogic/docs#50",
+          "identity": "T-REL-03"
+        }
+      ],
+      "evidence": "Gate run output naming each artifact, its age and its verdict; a missing, stale or failing artifact fails"
+    },
+    {
+      "id": "strategy_reconciliation",
+      "name": "Strategy reconciliation",
+      "layer": "This document",
+      "approach": "The check in this repository reconciles every category, deliverable, device lane and fixture family with an owning public issue and every named package with its numbers, and is re-run at each cadence trigger",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#22",
+          "identity": "PenniLogic-old/docs#21"
+        }
+      ],
+      "evidence": "python scripts/check_test_strategy.py in the docs CI job and its unit tests; an unowned category, a dangling identifier or a package without a number fails"
+    }
+  ],
+  "deliverables": [
+    {
+      "id": "independent_model_harness",
+      "name": "Independent-model verification harness",
+      "description": "A second, independently written implementation of debt, budgeting and allocation arithmetic used as the oracle for every money-path result, wired to the per-package floors in this file; the debt-mathematics reference schedules and fixed mutation catalogue are owned by the independent verification suite ticket",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#22",
+          "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/api#16",
+          "identity": "PenniLogic-old/api#16"
+        }
+      ]
+    },
+    {
+      "id": "money_path_generators",
+      "name": "Shared money-path generators",
+      "description": "Property-based generators for amounts, currencies, dates, schedules and split shares reused by every repository that tests money",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#22",
+          "identity": "T-QA-01"
+        }
+      ]
+    },
+    {
+      "id": "red_team_scenarios",
+      "name": "Black-box red-team scenarios",
+      "description": "Written scenarios for a malicious administrator, a malicious family member, a hostile merchant string and a stolen unlocked device, each with a recorded outcome, plus the operator red-team suite",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#43",
+          "identity": "T-QA-10"
+        },
+        {
+          "reference": "PenniLogic/admin#9",
+          "identity": "T-ADM-12"
+        }
+      ]
+    },
+    {
+      "id": "physical_test_device",
+      "name": "Physical Android test device with an Indian SIM",
+      "description": "One mid-range Android device with an Indian SIM and a synthetic test account, provisioned, wiped between campaigns and inventoried; required by the device matrix and not yet available",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#14",
+          "identity": "T-QA-07"
+        }
+      ]
+    },
+    {
+      "id": "sanitized_parser_corpus",
+      "name": "Sanitized parser corpus",
+      "description": "Synthetic, structurally faithful bank and wallet message corpus with a privacy scan, a versioned schema and a contribution protocol that forbids pasting a real message",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        },
+        {
+          "reference": "PenniLogic/android#46",
+          "identity": "T-PRS-01"
+        }
+      ]
+    },
+    {
+      "id": "evidence_gate_runner",
+      "name": "Executable release evidence gates",
+      "description": "The private-beta and public-launch gate runners that read the named evidence artifacts and fail on a missing, stale or failing item",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#49",
+          "identity": "T-REL-02"
+        },
+        {
+          "reference": "PenniLogic/docs#50",
+          "identity": "T-REL-03"
+        }
+      ]
+    }
+  ],
+  "change_classes": [
+    {
+      "id": "money_path",
+      "description": "Any change to a money-path package: ledger, debt, budget, split, money types, goals, income, billing arithmetic, idempotent writes or amount-extracting parsers",
+      "mandatory_categories": [
+        "unit_tests",
+        "domain_ledger_property",
+        "debt_maths_independent_model",
+        "mutation_testing",
+        "integration_tests",
+        "log_redaction_gate"
+      ],
+      "manual_evidence": [
+        "Money review role recorded in the pull request"
+      ]
+    },
+    {
+      "id": "parser",
+      "description": "Parser templates, rules, corpus entries and capture normalisation",
+      "mandatory_categories": [
+        "unit_tests",
+        "parser_golden_corpus",
+        "mutation_testing",
+        "privacy_traffic_inspection"
+      ],
+      "manual_evidence": [
+        "Corpus contribution reviewed as a synthetic transcription, never a real message"
+      ]
+    },
+    {
+      "id": "contract",
+      "description": "Any change to the published OpenAPI contract or a generated client",
+      "mandatory_categories": [
+        "unit_tests",
+        "api_contract",
+        "contract_provider_consumer"
+      ],
+      "manual_evidence": [
+        "Contract review role confirms the additive-versus-breaking classification"
+      ]
+    },
+    {
+      "id": "api_service",
+      "description": "Backend service code outside money paths and security boundaries",
+      "mandatory_categories": [
+        "unit_tests",
+        "integration_tests",
+        "api_contract",
+        "security_negative_tests",
+        "static_dependency_secret_gates",
+        "log_redaction_gate"
+      ],
+      "manual_evidence": []
+    },
+    {
+      "id": "security_boundary",
+      "description": "Authentication, authorization, tenancy, encryption, sharing grants, entitlements, operator controls and egress policy",
+      "mandatory_categories": [
+        "unit_tests",
+        "security_negative_tests",
+        "static_dependency_secret_gates",
+        "security_regression_smoke",
+        "threat_model_refresh",
+        "log_redaction_gate"
+      ],
+      "manual_evidence": [
+        "Security review role; the epic's threat-model refresh record is cited"
+      ]
+    },
+    {
+      "id": "android_client",
+      "description": "Android application code",
+      "mandatory_categories": [
+        "unit_tests",
+        "android_unit_instrumented",
+        "accessibility_conformance",
+        "performance_budgets",
+        "client_state_coverage",
+        "client_state_taxonomy_first",
+        "internationalization_checks",
+        "privacy_traffic_inspection"
+      ],
+      "manual_evidence": [
+        "TalkBack and Switch Access walkthrough evidence on the core journeys",
+        "Physical-device permission journey once the device lane is available"
+      ]
+    },
+    {
+      "id": "web_client",
+      "description": "Customer web application code",
+      "mandatory_categories": [
+        "unit_tests",
+        "web_e2e_journeys",
+        "accessibility_conformance",
+        "performance_budgets",
+        "client_state_coverage",
+        "client_state_taxonomy_first",
+        "internationalization_checks"
+      ],
+      "manual_evidence": [
+        "Keyboard-only and screen-reader walkthrough evidence on the core journeys"
+      ]
+    },
+    {
+      "id": "admin_console",
+      "description": "Admin console code",
+      "mandatory_categories": [
+        "unit_tests",
+        "admin_e2e_journeys",
+        "accessibility_conformance",
+        "performance_budgets",
+        "client_state_coverage",
+        "client_state_taxonomy_first",
+        "insider_risk_controls"
+      ],
+      "manual_evidence": [
+        "Keyboard-only operator walkthrough evidence",
+        "Design review for intentional role-specific divergence"
+      ]
+    },
+    {
+      "id": "ai_service",
+      "description": "AI gateway, tool dispatcher and evaluation code",
+      "mandatory_categories": [
+        "unit_tests",
+        "model_evaluation",
+        "security_negative_tests",
+        "static_dependency_secret_gates"
+      ],
+      "manual_evidence": [
+        "Prompt and tool contract review"
+      ]
+    },
+    {
+      "id": "billing",
+      "description": "Store billing, webhooks, entitlements and subscription lifecycle",
+      "mandatory_categories": [
+        "unit_tests",
+        "billing_webhook_replay",
+        "mutation_testing",
+        "integration_tests",
+        "security_negative_tests",
+        "log_redaction_gate"
+      ],
+      "manual_evidence": [
+        "Money review role recorded in the pull request"
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "description": "Infrastructure as code, pipelines, containers and the canonical generator",
+      "mandatory_categories": [
+        "unit_tests",
+        "supply_chain_verification",
+        "static_dependency_secret_gates",
+        "security_regression_smoke"
+      ],
+      "manual_evidence": [
+        "Core and Security review for any CI or policy change"
+      ]
+    },
+    {
+      "id": "data_migration",
+      "description": "A database schema migration",
+      "mandatory_categories": [
+        "unit_tests",
+        "integration_tests",
+        "release_rollback_rehearsal"
+      ],
+      "manual_evidence": [
+        "One migration at a time with reversal evidence recorded"
+      ]
+    },
+    {
+      "id": "documentation_and_planning",
+      "description": "Documents, decision records, backlog data and this strategy's data",
+      "mandatory_categories": [
+        "unit_tests",
+        "strategy_reconciliation"
+      ],
+      "manual_evidence": [
+        "Core review; QA review when a check's behaviour changes"
+      ]
+    },
+    {
+      "id": "release",
+      "description": "Promotion of a release candidate to beta or production",
+      "mandatory_categories": [
+        "release_evidence_gates",
+        "privacy_traffic_inspection",
+        "load_stress_soak",
+        "chaos_fault_injection",
+        "security_regression_smoke",
+        "android_release_gate"
+      ],
+      "manual_evidence": [
+        "Release review role reads the gate output, never a checklist"
+      ]
+    }
+  ],
+  "floor_policy": {
+    "money_path_minimum": {
+      "line": 95,
+      "branch": 90,
+      "mutation": 85
+    },
+    "other_minimum": {
+      "line": 60,
+      "branch": 50
+    },
+    "money_path_ratchet": true,
+    "unlisted_package_rule": "A package present in a repository build but absent from this inventory fails that repository's harness; a package listed here without a line, branch or (on money paths) mutation number fails this check. Neither case is an exemption.",
+    "renaming_rule": "Renaming, adding or removing a package is a pull request to this file with Core and QA review; the harness never infers a floor for an unknown name.",
+    "mutation_enforcement_rule": "Every repository that carries a money-path package must have a mutation_testing owner in that repository; a repository without one is recorded here as an enforcement gap with its packages, a reason and a resolution, and its floors stand as requirements that no harness is yet chartered to enforce.",
+    "mutation_enforcement_gaps": []
+  },
+  "packages": [
+    {
+      "id": "api.money",
+      "repository": "PenniLogic/api",
+      "domain": "money",
+      "description": "Money value type: integer minor units with currency and exponent, rounding and allocation primitives",
+      "money_path": true,
+      "line_coverage_floor_percent": 97,
+      "branch_coverage_floor_percent": 93,
+      "mutation_score_floor_percent": 90
+    },
+    {
+      "id": "api.ledger",
+      "repository": "PenniLogic/api",
+      "domain": "ledger",
+      "description": "Append-only double-entry ledger: postings, balances and reversing corrections",
+      "money_path": true,
+      "line_coverage_floor_percent": 97,
+      "branch_coverage_floor_percent": 93,
+      "mutation_score_floor_percent": 90
+    },
+    {
+      "id": "api.debt",
+      "repository": "PenniLogic/api",
+      "domain": "debt",
+      "description": "Debt engine: amortisation, payoff strategies, instalment and tenure maths",
+      "money_path": true,
+      "line_coverage_floor_percent": 97,
+      "branch_coverage_floor_percent": 93,
+      "mutation_score_floor_percent": 90
+    },
+    {
+      "id": "api.budget",
+      "repository": "PenniLogic/api",
+      "domain": "budget",
+      "description": "Budget allocation, period boundaries and rollover arithmetic",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "api.split",
+      "repository": "PenniLogic/api",
+      "domain": "split",
+      "description": "Split-group shares, settlements and dispute arithmetic",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "api.goals",
+      "repository": "PenniLogic/api",
+      "domain": "goals",
+      "description": "Goal progress, income-gap and contribution arithmetic",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "api.income",
+      "repository": "PenniLogic/api",
+      "domain": "income",
+      "description": "Irregular and salaried income recognition and period attribution",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "api.billing",
+      "repository": "PenniLogic/api",
+      "domain": "billing",
+      "description": "Entitlements, plan versions, purchase, renewal and refund processing and webhook idempotency",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "api.sync",
+      "repository": "PenniLogic/api",
+      "domain": "idempotency",
+      "description": "Idempotent write handling for the offline mutation queue: keys, replay and conflict rules",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "api.identity",
+      "repository": "PenniLogic/api",
+      "domain": "security",
+      "description": "Authentication, sessions, recovery, tenancy and object authorization",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "api.admin",
+      "repository": "PenniLogic/api",
+      "domain": "security",
+      "description": "Operator API: redaction, unmask, four-eyes and access monitoring",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "api.http",
+      "repository": "PenniLogic/api",
+      "domain": "transport",
+      "description": "Routing, serialisation and contract binding",
+      "money_path": false,
+      "line_coverage_floor_percent": 80,
+      "branch_coverage_floor_percent": 70
+    },
+    {
+      "id": "api.notifications",
+      "repository": "PenniLogic/api",
+      "domain": "messaging",
+      "description": "Notification and transactional email outbox, scheduling and retries",
+      "money_path": false,
+      "line_coverage_floor_percent": 80,
+      "branch_coverage_floor_percent": 70
+    },
+    {
+      "id": "contracts.spec",
+      "repository": "PenniLogic/contracts",
+      "domain": "contract",
+      "description": "OpenAPI specification lint, examples, client generation and publishing tooling",
+      "money_path": false,
+      "line_coverage_floor_percent": 80,
+      "branch_coverage_floor_percent": 70
+    },
+    {
+      "id": "ai_service.gateway",
+      "repository": "PenniLogic/ai-service",
+      "domain": "ai",
+      "description": "Virtual keys, provider routing, failover and spend metering",
+      "money_path": false,
+      "line_coverage_floor_percent": 85,
+      "branch_coverage_floor_percent": 75
+    },
+    {
+      "id": "ai_service.tools",
+      "repository": "PenniLogic/ai-service",
+      "domain": "privacy",
+      "description": "Tool dispatcher, injection defences and data minimisation",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "ai_service.evaluation",
+      "repository": "PenniLogic/ai-service",
+      "domain": "ai",
+      "description": "Evaluation harness, corpus loading and scoring",
+      "money_path": false,
+      "line_coverage_floor_percent": 85,
+      "branch_coverage_floor_percent": 75
+    },
+    {
+      "id": "android.ledger",
+      "repository": "PenniLogic/android",
+      "domain": "ledger",
+      "description": "Local ledger projection, offline balances and pending-transaction arithmetic on device",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "android.parsers",
+      "repository": "PenniLogic/android",
+      "domain": "parser",
+      "description": "Bank and wallet message parsing: amount, merchant, account and date extraction against the corpus",
+      "money_path": true,
+      "line_coverage_floor_percent": 95,
+      "branch_coverage_floor_percent": 90,
+      "mutation_score_floor_percent": 85
+    },
+    {
+      "id": "android.money_format",
+      "repository": "PenniLogic/android",
+      "domain": "money_display",
+      "description": "INR-first money rendering and locale formatting; no arithmetic",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "android.capture",
+      "repository": "PenniLogic/android",
+      "domain": "privacy",
+      "description": "SMS and notification capture, permission and restricted-settings handling; raw content never leaves the device",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "android.sync",
+      "repository": "PenniLogic/android",
+      "domain": "reliability",
+      "description": "Offline mutation queue, idempotency keys and replay",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "android.billing",
+      "repository": "PenniLogic/android",
+      "domain": "billing",
+      "description": "Play Billing integration and entitlement cache",
+      "money_path": false,
+      "line_coverage_floor_percent": 85,
+      "branch_coverage_floor_percent": 75
+    },
+    {
+      "id": "android.ui",
+      "repository": "PenniLogic/android",
+      "domain": "ui",
+      "description": "Compose screens, navigation and client-state rendering",
+      "money_path": false,
+      "line_coverage_floor_percent": 70,
+      "branch_coverage_floor_percent": 60
+    },
+    {
+      "id": "web.money_format",
+      "repository": "PenniLogic/web",
+      "domain": "money_display",
+      "description": "INR formatting and derivation display; no arithmetic",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "web.import_export",
+      "repository": "PenniLogic/web",
+      "domain": "data",
+      "description": "Import, export and recovery flows",
+      "money_path": false,
+      "line_coverage_floor_percent": 85,
+      "branch_coverage_floor_percent": 75
+    },
+    {
+      "id": "web.app",
+      "repository": "PenniLogic/web",
+      "domain": "ui",
+      "description": "Routes, pages and components",
+      "money_path": false,
+      "line_coverage_floor_percent": 70,
+      "branch_coverage_floor_percent": 60
+    },
+    {
+      "id": "admin.redaction",
+      "repository": "PenniLogic/admin",
+      "domain": "security",
+      "description": "Redaction rules, unmask requests and evidence capture",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "admin.four_eyes",
+      "repository": "PenniLogic/admin",
+      "domain": "security",
+      "description": "Second-approver workflow and self-approval prevention",
+      "money_path": false,
+      "line_coverage_floor_percent": 90,
+      "branch_coverage_floor_percent": 85
+    },
+    {
+      "id": "admin.app",
+      "repository": "PenniLogic/admin",
+      "domain": "ui",
+      "description": "Console routes, pages and components",
+      "money_path": false,
+      "line_coverage_floor_percent": 70,
+      "branch_coverage_floor_percent": 60
+    },
+    {
+      "id": "infra.governance",
+      "repository": "PenniLogic/infra",
+      "domain": "tooling",
+      "description": "Canonical generator, repository profiles and templates",
+      "money_path": false,
+      "line_coverage_floor_percent": 85,
+      "branch_coverage_floor_percent": 75
+    },
+    {
+      "id": "infra.tooling",
+      "repository": "PenniLogic/infra",
+      "domain": "tooling",
+      "description": "Bootstrap, smoke and policy scripts",
+      "money_path": false,
+      "line_coverage_floor_percent": 80,
+      "branch_coverage_floor_percent": 70
+    },
+    {
+      "id": "docs.scripts",
+      "repository": "PenniLogic/docs",
+      "domain": "tooling",
+      "description": "Repository, documentation, taxonomy and strategy checks",
+      "money_path": false,
+      "line_coverage_floor_percent": 85,
+      "branch_coverage_floor_percent": 75
+    }
+  ],
+  "flake_policy": {
+    "quarantine_rate_ceiling_percent": 2,
+    "retry_limit": 1,
+    "money_path_retry_limit": 0,
+    "quarantine_after_flakes": 2,
+    "flake_window_days": 14,
+    "quarantine_max_age_days": 14,
+    "retry_semantics": "One automatic re-execution is allowed only to classify a failure: a pass on re-execution is recorded as a flake event against the test and counts towards quarantine, never as a clean pass; the money-path change class gets no re-execution at all",
+    "on_quarantine_ceiling_exceeded": "The repository's pipeline fails for every change except fixes to quarantined tests until the rate is back under the ceiling",
+    "on_retry_limit_exceeded": "A pipeline step configured to retry beyond the limit fails the pipeline configuration check; a test that still fails after the permitted re-execution is a real failure and blocks",
+    "on_quarantine_expired": "A test quarantined for longer than the maximum age fails the build until it is fixed, or deleted with recorded reviewer approval on its owning ticket"
+  },
+  "pipeline_budgets": {
+    "money_path_harness_minutes": 20,
+    "pull_request_gate_minutes": 30,
+    "release_candidate_gate_minutes": 120,
+    "on_exceeded": "Exceeding a pipeline budget fails the run rather than warning, so a slow harness cannot be disabled for speed"
+  },
+  "performance_budgets": [
+    {
+      "id": "android_cold_start",
+      "surface": "Android",
+      "metric": "Cold start to first interactive frame",
+      "budget": 2000,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p95 over ten launches of a release build on the mid-range physical device lane",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "android_timeline_frame_time",
+      "surface": "Android",
+      "metric": "Frame time while scrolling the transaction timeline",
+      "budget": 16,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p95 over a 10000-row synthetic history on the minimum-supported low-memory lane",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "android_janky_frames",
+      "surface": "Android",
+      "metric": "Janky frames while scrolling the transaction timeline",
+      "budget": 5,
+      "unit": "percent",
+      "comparison": "at_most",
+      "condition": "10000-row synthetic history on the minimum-supported low-memory lane",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "android_crash_rate",
+      "surface": "Android",
+      "metric": "User-perceived crash rate",
+      "budget": 1.09,
+      "unit": "percent",
+      "comparison": "at_most",
+      "condition": "Per staged-rollout stage from Play Vitals; the Play core-vitals bad-behaviour threshold",
+      "gate": "android_release_gate"
+    },
+    {
+      "id": "android_anr_rate",
+      "surface": "Android",
+      "metric": "User-perceived ANR rate",
+      "budget": 0.47,
+      "unit": "percent",
+      "comparison": "at_most",
+      "condition": "Per staged-rollout stage from Play Vitals; the Play core-vitals bad-behaviour threshold",
+      "gate": "android_release_gate"
+    },
+    {
+      "id": "web_lcp",
+      "surface": "Web",
+      "metric": "Largest Contentful Paint on the dashboard route",
+      "budget": 2500,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p75 on a throttled mid-tier mobile profile with a seeded synthetic account",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "web_inp",
+      "surface": "Web",
+      "metric": "Interaction to Next Paint on the core journeys",
+      "budget": 200,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p75 on a throttled mid-tier mobile profile",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "web_cls",
+      "surface": "Web",
+      "metric": "Cumulative Layout Shift on the core journeys",
+      "budget": 0.1,
+      "unit": "score",
+      "comparison": "at_most",
+      "condition": "p75 on a throttled mid-tier mobile profile",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "web_initial_javascript",
+      "surface": "Web",
+      "metric": "Compressed JavaScript transferred to render the dashboard route",
+      "budget": 250,
+      "unit": "KB",
+      "comparison": "at_most",
+      "condition": "Production build, first navigation",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "admin_lcp",
+      "surface": "Admin",
+      "metric": "Largest Contentful Paint on the subject search route",
+      "budget": 2500,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p75 on a desktop profile with a seeded synthetic environment",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "admin_inp",
+      "surface": "Admin",
+      "metric": "Interaction to Next Paint on the operator journeys",
+      "budget": 200,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p75 on a desktop profile",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "admin_list_render",
+      "surface": "Admin",
+      "metric": "Subject list render time with 1000 rows",
+      "budget": 500,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "Seeded synthetic environment, desktop profile",
+      "gate": "performance_budgets"
+    },
+    {
+      "id": "api_read_latency",
+      "surface": "API",
+      "metric": "Read endpoint latency at the published peak load",
+      "budget": 300,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p95 during the load profile on the isolated load environment",
+      "gate": "load_stress_soak"
+    },
+    {
+      "id": "api_write_latency",
+      "surface": "API",
+      "metric": "Write endpoint latency at the published peak load",
+      "budget": 500,
+      "unit": "ms",
+      "comparison": "at_most",
+      "condition": "p95 during the load profile on the isolated load environment",
+      "gate": "load_stress_soak"
+    },
+    {
+      "id": "api_error_rate",
+      "surface": "API",
+      "metric": "Server error rate at the published peak load",
+      "budget": 0.1,
+      "unit": "percent",
+      "comparison": "at_most",
+      "condition": "During the load profile on the isolated load environment",
+      "gate": "load_stress_soak"
+    },
+    {
+      "id": "ai_task_accuracy",
+      "surface": "AI service",
+      "metric": "Task accuracy on the governed evaluation corpus",
+      "budget": 95,
+      "unit": "percent",
+      "comparison": "at_least",
+      "condition": "Every pull request and every provider model version change",
+      "gate": "model_evaluation"
+    }
+  ],
+  "recovery_objectives": {
+    "rpo_minutes": 15,
+    "rto_minutes": 240,
+    "status": "Initial targets for the disaster-recovery game day; the performed restore drill measures the real values and a change to these numbers is a reviewed pull request, not a claim"
+  },
+  "accessibility": {
+    "standard": "WCAG",
+    "version": "2.2",
+    "level": "AA",
+    "conformance_target": "WCAG 2.2 AA",
+    "automated_gate": "zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core journeys; best-practice rules that are not WCAG success criteria are advisory; an exception requires a recorded reason and an expiry on the pull request",
+    "surfaces": {
+      "web": "WCAG 2.2 AA is the minimum for customer web: a named, pinned WCAG-tagged automated ruleset with zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core journeys in every browser configuration in this file, plus keyboard-only and screen-reader walkthrough evidence covering every applicable client state",
+      "admin": "WCAG 2.2 AA is the minimum for the operator console: the same named, pinned WCAG-tagged ruleset with zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the operator journeys in every browser configuration in this file, plus keyboard-only operator walkthrough evidence",
+      "android": "Material accessibility baseline (TalkBack order and labels, 48dp touch targets, contrast, reduced motion, largest supported font scale) plus every applicable WCAG 2.2 AA content criterion, checked by Accessibility Test Framework checks in the instrumented suite and Android Lint accessibility rules with pinned versions on the large-text and TalkBack lanes, and walked through with TalkBack and Switch Access"
+    },
+    "automated_mechanisms": {
+      "web": "A WCAG-tagged automated ruleset named and version-pinned in the web gate configuration (the rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA), run on every core journey in every browser configuration; a rule the scanner cannot decide is routed to the manual walkthrough",
+      "admin": "The same WCAG-tagged automated ruleset, named and version-pinned in the admin gate configuration, run on every operator journey in every browser configuration",
+      "android": "Accessibility Test Framework checks enabled in the instrumented suite (or Compose semantics assertions for label, role, traversal order and 48dp targets) and Android Lint accessibility rules, versions pinned, run on the large-text and TalkBack emulator lanes"
+    },
+    "browser_configurations": [
+      "Default desktop viewport",
+      "Representative mobile viewport",
+      "200 percent zoom",
+      "prefers-reduced-motion: reduce",
+      "forced-colors: active"
+    ],
+    "ruleset_named_and_pinned": true,
+    "undecidable_rules_route_to_manual_walkthrough": true,
+    "manual_walkthrough": [
+      "Screen reader on every core journey and every applicable client state on it, every monetary value announced with its meaning",
+      "Keyboard-only (web, admin) and Switch Access (Android) completing every core journey and reaching every recovery action",
+      "200 percent text scaling and zoom without truncation or overlap; headlines wrap rather than clip",
+      "High-contrast and forced-colors mode",
+      "Reduced motion; no state depends on animation",
+      "State never conveyed by colour or icon alone",
+      "Client-state-taxonomy section 8 on each applicable state: entering the state is announced once with the published politeness (polite for loading, offline, stale and degraded; focus to the headline or an assertive announcement for error, permission_denied and quota_exceeded; focus to the rejected field for a validation error), a region-scope denial or quota state present on a later return is not re-announced and does not take focus, non-blocking notices never move focus, the recovery action is reachable by keyboard and switch, and controls disabled by a state expose the disabled state and its reason"
+    ],
+    "taxonomy_states": [
+      "empty",
+      "loading",
+      "error",
+      "offline",
+      "stale",
+      "permission_denied",
+      "quota_exceeded",
+      "degraded"
+    ],
+    "wcag_2_2_criteria_requiring_named_checks": [
+      "2.4.11 Focus Not Obscured (Minimum)",
+      "2.5.7 Dragging Movements",
+      "2.5.8 Target Size (Minimum)",
+      "3.2.6 Consistent Help",
+      "3.3.7 Redundant Entry",
+      "3.3.8 Accessible Authentication (Minimum)"
+    ],
+    "wcag_criteria_requiring_named_checks": [
+      "1.4.3 Contrast (Minimum)",
+      "1.4.4 Resize Text",
+      "2.4.3 Focus Order",
+      "3.3.1 Error Identification",
+      "4.1.2 Name, Role, Value",
+      "4.1.3 Status Messages"
+    ],
+    "not_claimed": "AAA criteria such as 2.4.13 Focus Appearance are covered by the manual walkthrough as an enhancement and are not part of the conformance claim"
+  },
+  "device_matrix": [
+    {
+      "id": "emulator_api_31",
+      "kind": "emulator",
+      "android_api_level": 31,
+      "configuration": "Default text size, no assistive technology",
+      "purpose": "Oldest supported release: permission and restricted-settings behaviour baseline",
+      "required_for": [
+        "pull_request",
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        }
+      ]
+    },
+    {
+      "id": "emulator_api_33",
+      "kind": "emulator",
+      "android_api_level": 33,
+      "configuration": "Default text size, no assistive technology",
+      "purpose": "Notification runtime permission and restricted-settings introduction",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        },
+        {
+          "reference": "PenniLogic/android#57",
+          "identity": "T-AND-07"
+        }
+      ]
+    },
+    {
+      "id": "emulator_current",
+      "kind": "emulator",
+      "android_api_level": "current",
+      "configuration": "Default text size, no assistive technology",
+      "purpose": "Current stable release (API 36 at publication), tracked by the behaviour-baseline ticket",
+      "required_for": [
+        "pull_request",
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/android#57",
+          "identity": "T-AND-07"
+        }
+      ]
+    },
+    {
+      "id": "emulator_large_text",
+      "kind": "emulator",
+      "android_api_level": "current",
+      "configuration": "Font scale at the largest the platform offers, display size largest, reduced motion on",
+      "purpose": "Largest supported text scale without truncation or overlap, 48dp targets and reduced-motion behaviour on every core screen and state",
+      "required_for": [
+        "pull_request",
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ]
+    },
+    {
+      "id": "emulator_talkback",
+      "kind": "emulator",
+      "android_api_level": "current",
+      "configuration": "TalkBack enabled; traversal order, label, announcement and focus assertions from the Accessibility Test Framework",
+      "purpose": "Screen-reader traversal of every core screen and applicable client state: announced once, focus target, monetary values announced with their meaning",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ]
+    },
+    {
+      "id": "managed_low_memory",
+      "kind": "managed_device",
+      "configuration": "Minimum-supported low-memory profile",
+      "purpose": "Minimum-supported low-memory profile: cold start, 10000-row timeline, offline queue and background capture budgets",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "required_not_yet_available",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ]
+    },
+    {
+      "id": "managed_oem_variant_a",
+      "kind": "managed_device",
+      "configuration": "OEM build with aggressive background restrictions",
+      "purpose": "First representative OEM variant with aggressive background restrictions: capture and recovery",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "required_not_yet_available",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        }
+      ]
+    },
+    {
+      "id": "managed_oem_variant_b",
+      "kind": "managed_device",
+      "configuration": "Second OEM build with aggressive background restrictions",
+      "purpose": "Second representative OEM variant with aggressive background restrictions: capture and recovery",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "required_not_yet_available",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#35",
+          "identity": "T-QA-12"
+        }
+      ]
+    },
+    {
+      "id": "physical_mid_range_indian_sim",
+      "kind": "physical",
+      "tier": "mid-range",
+      "configuration": "Mid-range device, Indian SIM, synthetic test account, wiped between campaigns",
+      "sim": {
+        "required": true,
+        "country": "IN"
+      },
+      "purpose": "Real SMS and notification permission behaviour, structurally realistic test SMS receipt, cold-start and list budgets; the only lane that observes real carrier traffic",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "required_not_yet_available",
+      "procurement": {
+        "reference": "PenniLogic/android#14",
+        "identity": "T-QA-07"
+      },
+      "owners": [
+        {
+          "reference": "PenniLogic/android#14",
+          "identity": "T-QA-07"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ]
+    }
+  ],
+  "test_data_policy": {
+    "synthetic_only": true,
+    "production_data_in_lower_environments": false,
+    "raw_message_content_in_fixtures": false,
+    "real_credentials_in_fixtures": false,
+    "rules": [
+      "Every fixture, corpus entry, seeded environment and evaluation case is synthetic, generated or transcribed under review; no production export, pseudonymised or otherwise, reaches any lower environment",
+      "A newly observed real format is transcribed into synthetic structure; the real message is never pasted, attached or quoted",
+      "Fixtures carry provenance (generator or transcription review) and a version, so a golden case is traceable without the original",
+      "Automated privacy scans with planted identifiers run over corpora and fixtures; a real-looking account number, name, message identifier or personal amount pattern fails",
+      "Fixture families are owned: a repository reuses the governed builder or golden case rather than inventing incompatible data",
+      "Logs, failure screenshots and evidence artifacts are scrubbed of money values, raw message text and personal data before they leave the process or are uploaded; the scrubber is fail-closed"
+    ],
+    "fixture_families": [
+      {
+        "id": "money_generators",
+        "description": "Property generators for amounts, currencies, dates, schedules and split shares",
+        "consumers": [
+          "PenniLogic/api",
+          "PenniLogic/android",
+          "PenniLogic/web"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/api#22",
+            "identity": "T-QA-01"
+          }
+        ]
+      },
+      {
+        "id": "parser_corpus",
+        "description": "Synthetic, structurally faithful bank and wallet message corpus with schema and privacy scan",
+        "consumers": [
+          "PenniLogic/android"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/android#35",
+            "identity": "T-QA-12"
+          },
+          {
+            "reference": "PenniLogic/android#46",
+            "identity": "T-PRS-01"
+          }
+        ]
+      },
+      {
+        "id": "ai_evaluation_corpus",
+        "description": "Governed synthetic evaluation cases with provenance, including adversarial and prompt-injection cases",
+        "consumers": [
+          "PenniLogic/ai-service"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/ai-service#7",
+            "identity": "T-AI-06"
+          }
+        ]
+      },
+      {
+        "id": "client_state_fixtures",
+        "description": "Client state taxonomy data and worked examples used by the surface coverage assertions",
+        "consumers": [
+          "PenniLogic/android",
+          "PenniLogic/web",
+          "PenniLogic/admin"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/docs#1",
+            "identity": "T-UX-01"
+          }
+        ]
+      },
+      {
+        "id": "seeded_synthetic_environment",
+        "description": "Seeded synthetic accounts, households and split groups for end-to-end, operator and load runs",
+        "consumers": [
+          "PenniLogic/web",
+          "PenniLogic/admin",
+          "PenniLogic/api",
+          "PenniLogic/infra"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/web#7",
+            "identity": "T-QA-06"
+          },
+          {
+            "reference": "PenniLogic/admin#3",
+            "identity": "T-QA-13"
+          },
+          {
+            "reference": "PenniLogic/infra#29",
+            "identity": "T-QA-05"
+          }
+        ]
+      },
+      {
+        "id": "billing_replay_fixtures",
+        "description": "Purchase, renewal, refund, replay and forgery event fixtures",
+        "consumers": [
+          "PenniLogic/api",
+          "PenniLogic/android"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/api#48",
+            "identity": "T-BIL-06"
+          }
+        ]
+      },
+      {
+        "id": "physical_device_test_account",
+        "description": "Synthetic test account and structurally realistic test SMS for the physical device",
+        "consumers": [
+          "PenniLogic/android"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/android#14",
+            "identity": "T-QA-07"
+          }
+        ]
+      },
+      {
+        "id": "local_database_bootstrap",
+        "description": "Idempotent local PostgreSQL bootstrap for integration and migration tests",
+        "consumers": [
+          "PenniLogic/api",
+          "PenniLogic/ai-service"
+        ],
+        "owners": [
+          {
+            "reference": "PenniLogic/infra#2",
+            "identity": "PenniLogic-old/infra#2"
+          }
+        ]
+      }
+    ]
+  },
+  "definition_of_ready": [
+    {
+      "id": "outcome_stated",
+      "text": "Outcome stated in user-observable terms"
+    },
+    {
+      "id": "acceptance_criteria_testable",
+      "text": "Acceptance criteria are testable and name the verification categories mandatory for the ticket's change class"
+    },
+    {
+      "id": "dependencies_unblocked",
+      "text": "Dependencies identified and unblocked in the issue graph; no historical Done status is treated as current acceptance"
+    },
+    {
+      "id": "estimated_and_sized",
+      "text": "Estimated below the split threshold, with component and phase assigned"
+    },
+    {
+      "id": "design_adr_settled",
+      "text": "Design and decision records settled where the ticket touches an architectural decision; open decisions are consumed, never guessed"
+    },
+    {
+      "id": "threat_model_refreshed",
+      "text": "A dated STRIDE threat-model refresh for the epic with a named owner, explicitly covering the ingestion boundary, raw content never leaving the device and the parser-config signing chain as well as application-layer risks",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#48",
+          "identity": "T-QA-14"
+        }
+      ]
+    },
+    {
+      "id": "privacy_payload_reviewed",
+      "text": "A privacy payload review for the epic: every outbound payload and analytics event the epic adds is classified against the shared allowlist, and the categories that need traffic inspection rather than code review are named",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#18",
+          "identity": "T-CMP-03"
+        },
+        {
+          "reference": "PenniLogic/android#16",
+          "identity": "T-QA-09"
+        }
+      ]
+    },
+    {
+      "id": "synthetic_fixtures_identified",
+      "text": "The fixture families the ticket reuses or extends are named; no new ungoverned test data"
+    },
+    {
+      "id": "inventory_snapshot_current",
+      "text": "For the first ticket of an epic: the issue inventory snapshot has been refreshed and the strategy check passes"
+    }
+  ],
+  "definition_of_done": [
+    {
+      "id": "acceptance_criteria_met",
+      "text": "Acceptance criteria demonstrably met, with evidence named according to the evidence rules"
+    },
+    {
+      "id": "mandatory_categories_evidenced",
+      "text": "Every category mandatory for the change class has a recorded pass signal on the merged head"
+    },
+    {
+      "id": "coverage_floors_met",
+      "text": "Line and branch coverage of every touched package meet the published floors, and money-path coverage did not decline"
+    },
+    {
+      "id": "mutation_floor_met",
+      "text": "Mutation score of every touched money-path package meets its published floor"
+    },
+    {
+      "id": "flake_policy_respected",
+      "text": "No test was retried beyond the published limit, no quarantine was added without an owning ticket, and no quarantined test was deleted without recorded approval"
+    },
+    {
+      "id": "independent_review_recorded",
+      "text": "Separate non-author Core review, QA for behaviour changes and the affected specialists recorded with session, reviewed commit and findings; no substantive finding unresolved"
+    },
+    {
+      "id": "no_secrets_no_production_data",
+      "text": "No secret, production data, raw message content or real financial record introduced; dependency additions reviewed against the SDK policy"
+    },
+    {
+      "id": "money_integer_minor_units_verified",
+      "text": "Money paths use integer minor units with currency, verified by a test rather than assumed"
+    },
+    {
+      "id": "docs_adr_updated",
+      "text": "Documents, decision records and this strategy's data updated when behaviour, a decision or a published number changed"
+    },
+    {
+      "id": "observability_in_place",
+      "text": "Observability in place for anything user-facing or failure-prone, including per-run publication of coverage, mutation score, flake rate and retry count against their floors"
+    }
+  ],
+  "evidence": {
+    "artifact_name_pattern": "<repository>__<category_id>__<commit_sha12>__<YYYYMMDD>.<extension>",
+    "artifact_name_regex": "^[a-z][a-z0-9-]*__[a-z][a-z0-9_]*__[0-9a-f]{12}__[0-9]{8}\\.[a-z0-9]+$",
+    "artifact_name_example": "api__mutation_testing__0123456789ab__20261005.json",
+    "required_fields": [
+      "category_id",
+      "owner_reference",
+      "commit_sha",
+      "produced_at",
+      "verdict",
+      "measured",
+      "floor_or_budget",
+      "strategy_version"
+    ],
+    "ci_artifact_retention_days": 90,
+    "release_evidence_retention_days": 400,
+    "release_evidence_location": "Attached to the release record of the artifact it proves (release assets), never only as a link to a transient CI artifact",
+    "freshness_window_days": 14,
+    "rule": "A release checklist consumes the named evidence files from the release record and compares each measured value with the floor or budget in this file; a link to a CI artifact is not evidence"
+  },
+  "review_cadence": {
+    "triggers": [
+      "Before an epic's first ticket leaves Ready (each epic boundary)",
+      "When a repository, package or verification category is added, renamed or removed",
+      "When any published number changes",
+      "Before each release evidence gate run",
+      "When the inventory snapshot is older than the warning age"
+    ],
+    "inventory_refresh_command": "python scripts/check_test_strategy.py --refresh-inventory",
+    "snapshot_age_warning_days": 30,
+    "change_control": "Any change to this data file is a pull request with Core and QA review; a floor, ceiling or budget may only be relaxed with a recorded reason and an expiry on the pull request"
+  },
+  "not_asserted": [
+    "No harness, gate, coverage, mutation, accessibility, load or device result is claimed by this file; every number is a requirement its owning issue must meet, and the check proves ownership and shape, not execution",
+    "Delivery-protocol enforcement in CI (contract-first metadata, migration lock, dependency validation) has no migrated owning issue in the public inventory and is therefore not asserted as a category until one exists",
+    "No emulator lane exists in PenniLogic/android CI at publication: the emulator lanes are provisionable on GitHub-hosted runners and become gates only when PenniLogic/android#15 (T-QA-08) wires them; until then any lane evidence is produced locally and attached to the pull request",
+    "The Android money-path mutation gate for android.ledger and android.parsers is owned by PenniLogic/android#65 (T-QA-01-AND), which is blocked by the api harness and the Android ledger work; no mutation run on any package is claimed until the owning gates exist",
+    "The ai-service integration job has no owning issue; integration_tests is scoped to api and no ai-service integration gate is asserted"
+  ]
+}
