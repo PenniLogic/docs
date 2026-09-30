@@ -231,10 +231,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-019
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-AUTH-05` |
-| Status | PENDING |
+| Source | <a id="adr-019--authentication-passkeys-at-mvp-in-repository-webauthn-relying-party-identifier-device-bound-sessions-and-recovery"></a> [ADR-019.md](ADR-019.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-AUTH-05 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-019 -->
@@ -339,7 +339,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-AUTH-05` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Authentication provider, passkeys, the relying-party identifier, and account recovery |
 | Blocks | Auth, onboarding, recovery, all clients |
 <!-- SLOT END ADR-019 -->
