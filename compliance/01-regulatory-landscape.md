@@ -487,7 +487,7 @@ When user financial data (transaction records, salary, debt details) is sent to 
 | **Data minimisation** | Never send raw transactions. Send only abstracted/anonymised inputs; structured summaries preferred. Strip PII where possible before sending to LLM. |
 | **Cross-border transfer compliance** | India: Monitor DPBI negative list; EU: SCCs with LLM providers needed. |
 
-**Potential LLM providers for financial data:** OpenAI API, Anthropic API and Google Cloud Vertex AI may qualify only for the exact approved model and feature set under a signed DPA and verified retention configuration. Consumer-facing products **must never** receive user financial data. Provider onboarding remains default-deny when evidence is absent, expired or excludes a used feature such as caching, files, batch processing or abuse monitoring.
+**Potential LLM providers for financial data:** OpenAI API, Anthropic API and Google Cloud Vertex AI may qualify only for the exact approved model and feature set under a signed DPA and verified retention configuration. Consumer-facing products **must never** receive user financial data. Provider onboarding remains default-deny when evidence is absent, expired or excludes a used feature such as caching, files, batch processing or abuse monitoring: under ADR-022 §2.2 a provider is enabled only when its code-managed allowlist entry carries the retention-mode and region evidence owned by `T-AI-07` (`retention_evidence_ref`) and the signed DPA and sub-processor disclosure owned by `T-CMP-04` (`processor_agreement_ref`).
 
 ---
 

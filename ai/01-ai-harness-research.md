@@ -228,7 +228,7 @@ Pricing structure confirmed at [api-docs.deepseek.com/quick_start/pricing/](http
 | Groq | ✅ claimed | UNVERIFIED | UNVERIFIED |
 | DeepSeek | ⚠️ Chinese jurisdiction | ❌ | ❌ for non-Chinese entities |
 
-**Recommendation for Mode A (app-managed financial data):** Start with no provider enabled. Approve only an exact provider, model, region, endpoint and feature set whose DPA, retention evidence and expiry pass the `T-AI-06` gate. A no-training statement never substitutes for ZDR evidence.
+**Recommendation for Mode A (app-managed financial data):** Start with no provider enabled. Approve only an exact provider, model, region, endpoint and feature set whose evidence is unexpired and passes the ADR-022 §2.2 gate: retention-mode and region evidence is owned by `T-AI-07` and carried on the code-managed provider allowlist entry as `retention_evidence_ref`; the signed processor agreement (DPA) and sub-processor disclosure are owned by `T-CMP-04` and carried as `processor_agreement_ref`. A no-training statement never substitutes for ZDR evidence.
 
 ### 3.7 Tiered Model Routing Recommendation
 
