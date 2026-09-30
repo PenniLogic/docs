@@ -279,10 +279,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-023
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-ENT-09` |
-| Status | PENDING |
+| Source | <a id="adr-023--entitlement-and-quota-model-plan-versions-feature-keys-request-and-token-dimensions-usage-ledger-and-reset-boundary"></a> [ADR-023.md](ADR-023.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-ENT-09 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-023 -->
@@ -379,7 +379,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-ENT-09` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Entitlement and quota model: plan and feature identity, request and token quota dimensions, per-plan model allowlist and unlisted-model refusal, BYOK quota treatment, event-sourced usage versus materialized counters, and the reset boundary and its time zone. **Supersedes** the conflicting sketches in `architecture/01-domain-model.md` §5 and `architecture/03-stack-and-monetization.md` §8 |
 | Blocks | Quota contract (`T-CON-03`), billing (`T-BIL-01`, `T-BIL-02`), AI gateway (`T-AI-01`) |
 <!-- SLOT END ADR-023 -->
