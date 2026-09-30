@@ -50,6 +50,15 @@ An explicit reviewed addition to `reservations.json` may allocate a number above
 023. It may not remove/reassign/change the original nine allocations or allocate
 a legacy number. A new record with no allocation always fails.
 
+Text that reaches the generated README — a source `title` and an allocation's
+`question` and `blocks` cells — must be one trimmed line of printable code points
+(`str.isprintable()`): control characters including CR, LF and TAB, the no-break
+space, Unicode line and paragraph separators, bidirectional overrides and every
+other non-printable code point are rejected, as are the HTML comment delimiters
+`<!--` and `-->` that could forge slot markers; a cell may not contain `|`. The
+check applies before any write, so `render` never emits such text and `check`
+rejects it in an existing file.
+
 Legacy source title, recorded status/date, null relationship fields and decision
 bytes remain frozen. The owner-approved file-boundary exception replaces only the
 terminal run of LF separator bytes with exactly one LF, matching the existing
@@ -75,6 +84,77 @@ agree with a successor's forward claim. Recorded `SUPERSEDED` without a valid
 successor fails. Chains are allowed; every replaced member is effectively
 SUPERSEDED, and only the terminal accepted member is currently ACCEPTED.
 
+## Accepted-record integrity
+
+An accepted record is the authority every downstream ticket implements, so a
+change to it that is not visible in the index is tampering with the plan (STRIDE
+finding E26-F16, `governance/threat-model/records/E26.json`). A *decided* record
+is a non-legacy source whose recorded status is `ACCEPTED` or `SUPERSEDED`. The
+legacy fourteen are frozen by the pinned reference and need none of this.
+
+Every decided record carries its `**Status:** STATUS · YYYY-MM-DD` line (above) and
+names its proving tests: some heading (`##` to `####`, not the record heading) whose
+text contains the word `test` or `tests`, with at least one backticked test or
+fixture name in that section's prose (a sub-heading of the section counts; text
+inside fenced code does not). Every such heading is examined and the first
+section that names a test satisfies the rule; the error lists the sections that
+were examined. A draft with `status: PENDING` may still lack the section.
+
+Every fenced ```` ```json ```` block of a non-legacy record, draft or decided,
+must parse as RFC 8259 JSON — no duplicate keys, no `NaN`/`Infinity`/`-Infinity`
+literals, no number that overflows a binary64 to infinity, no lone-surrogate
+`\uD800`–`\uDFFF` escapes — and a block whose top
+level is an
+object must declare a version field — `version` or any `*_version`/`*-version` key
+holding a non-empty string or a positive integer (`schema_version`,
+`policy_version`, `parameters_version`) — so the machine-readable artefacts that
+dependent tickets consume cannot rot silently. The same parser reads the layout's
+JSON documents. Arrays and scalars (templates of
+externally specified files, value lists) are exempt from the version rule. One
+block decided before this rule, ADR-020 §10, is admitted by an explicit pin on its
+record and content digest in `scripts/validate_adr_layout.py`; the pin dies the
+moment the block changes, and the dated amendment then declares `schema_version`.
+Errors name the record, the block ordinal and its line.
+
+`accepted-records.json` is the acceptance registry: `schema_version: 1` and one
+item per allocation, in allocation order, `{number, date, sha256, bytes}`; the
+three values are the record's date and the SHA-256 and length of its complete
+source bytes, or all `null` while the number has no decided record. Entries are
+fixed like README slots, so concurrent landings change disjoint lines. `check`
+requires the file to be canonical and every decided record to be registered with
+its current bytes, and fails naming the record when: a decided record is not
+registered (its owner runs `render --ticket`); the bytes changed with the same
+date (*accepted record edited without a date change*); the bytes changed with a
+later date but the entry is stale (*amended on …; re-registers with render*); the
+date moved earlier; or a registered record now records `PENDING` or is missing
+(*a decided record is superseded, never withdrawn*). `render` writes only a first
+registration or an amendment dated strictly later than the registered date; it
+refuses every other change before writing a byte, and `--ticket` restricts the
+entries it may change to the ticket's numbers while every other entry must
+already agree with its source.
+
+A superseding record leaves the predecessor's bytes, and therefore its entry,
+unchanged. Recording the supersession on the predecessor (`status: SUPERSEDED`,
+`superseded-by`) is itself a change and carries a later date. Before a pull
+request merges, the registry entry of its record is a proposal: after editing a
+decided record the branch already registered, restore `accepted-records.json`
+from the base branch and render again, or keep the draft `PENDING` until its
+final round. After the merge the registered bytes are the accepted decision.
+The registry is a ledger, not a projection: when it is damaged or missing while
+decided records exist, restore it from the reviewed commit; `render` refuses to
+overwrite a damaged registry or to recreate a missing one over decided records,
+and creates it only for a layout with no decided record (the initial split). A
+scoped render never creates it. The one-time bootstrap of this rule registered
+the six records accepted before it as they stood on `main`.
+
+This is a content-hash pin under ordinary code-review trust, like the migration
+pins: a change to the registry is visible in review, and an operator who rewrites
+the checker or the registry bypasses it. It does not identify who decided.
+Recommended for records decided after 2026-09-30, not yet enforced: a line
+`**Decided by:** PenniLogic/docs#<PR>, reviewed commit <sha>` naming the pull
+request whose independent reviews accepted the record. Enforcement is a later
+dated change once the six records accepted before this rule carry the line.
+
 ## Generator ownership and commands
 
 Decision authors edit only their own source, then run, for their allocated ticket:
@@ -85,7 +165,8 @@ python -B scripts/validate_adr_layout.py check
 ```
 
 Ticket-scoped generation refuses to alter bytes outside that ticket's slots and
-the derived slots of its previous and current predecessors. Before restoring an
+the derived slots of its previous and current predecessors, and outside that
+ticket's registry entries. Before restoring an
 earlier supersession effect, the generator reconstructs the prior owned-record
 links from the existing index and validates the whole unowned projection against
 the unchanged source records. Malformed relationships or unrelated index drift
@@ -154,12 +235,18 @@ python -B -c "import sys; from pathlib import Path; sys.path.insert(0, 'scripts'
 ```
 
 This checks the pinned raw reference, original body inventory and allocations,
-source/header/schema consistency, owner claims and the complete replacement graph.
-It does not establish that all later published records are present. Stop if this
+source/header/schema consistency, owner claims, the proving-tests and fenced-JSON
+rules and the complete replacement graph.
+It does not establish that all later published records are present, and it does
+not read the acceptance registry. Stop if this
 check fails, the inventory differs unexpectedly, accepted source/header bytes or
 modes have changed, or any retained work lacks an agreed owner. Restore missing
 inputs only from reviewed/retained evidence with the affected owners; never guess,
 rewrite pins, drop an allocation or rebuild the historical manifest to match drift.
+Restore a damaged or missing `accepted-records.json` from the reviewed commit in
+the same way; regenerating it from the current sources would launder an undated
+edit, so `render` refuses to overwrite a damaged registry or to recreate a
+missing one while decided records exist.
 
 Once preservation and input checks succeed, the layout owner may regenerate only
 the derived README without consulting its damaged prior projection:
@@ -188,7 +275,8 @@ If inputs are missing, reconstruct the initial layout in a **separate empty scra
 repository directory** using the same reviewed script and only the verified raw
 reference as both `adr/presplit-reference.md` and the initial `adr/README.md`. Run
 `split --root <scratch-root>` and `check --root <scratch-root>` there. Compare every
-retained initial source, allocation file and manifest against this reconstruction,
+retained initial source, allocation file, manifest and the empty acceptance
+registry against this reconstruction,
 including headers and bodies. Existing files must not be replaced just because a
 reconstruction is available. Stop on any differing retained source, downstream
 record, allocation extension or uncertain inventory; coordinate preservation with
@@ -200,7 +288,8 @@ validated reconstruction, preserving their modes. Do not copy its README over th
 working directory. Validate the now-complete working inputs, then use unscoped
 README regeneration and the preservation checks above. The pinned reference and
 historical manifest never become repairable candidate baselines. Tests exercise an
-injected mid-split failure and this isolated reconstruction, not real process death.
+injected mid-split failure and this isolated reconstruction, not real process death
+(`scripts/tests/test_adr_layout_exercises.py`, `SplitRecoveryTests`).
 
 ### Reverting the migration
 
@@ -220,12 +309,24 @@ python -B scripts/validate_adr_layout.py test
 pwsh -NoProfile -File planning-automation/validate-backlog-v2.ps1 -Quiet
 ```
 
-The stdlib-only suite uses the real pinned migration bodies and original owners,
+The stdlib-only suite (`scripts/tests/test_adr_layout.py` and
+`scripts/tests/test_adr_layout_exercises.py`) uses the real pinned migration
+bodies and original owners,
 not candidate manifests as expected values. Nine independent ordinary branches
 are committed from one split baseline. Forward, reverse, alternating, and both
 orders of every adjacent pair are serially squash-merged and committed, checking
 strict validation, exact rendering, owner retention and cumulative source sets
-after every merge. No custom/union merge driver or discarded first squash is used.
+after every merge (`SquashMergeMatrixTests`), and again onto a main that already
+holds two published records and one supersession
+(`SquashMergeMatrixOnPublishedFixtureTests`). No custom/union merge driver or
+discarded first squash is used.
 A separate same-predecessor test expects textual conflict and semantic rejection.
 Depth-1 clones use local `file://` transport and exercise a committed candidate,
-including a negative candidate, with no parent history or network.
+including a negative candidate, with no parent history or network
+(`ShallowCloneTests`): the positive candidates are the baseline and the two-record
+fixture; the negatives are a hand-edited generated slot and an undated edit of an
+accepted record, which the committed registry alone reveals in a one-commit clone.
+Planted negatives for the accepted-record rules (`RegistryTests`,
+`ProvingTestsTests`, `JsonBlockTests`) live in scratch fixtures, never in a
+committed record. The git exercises spawn about three hundred git processes; they
+run in seconds on a Linux runner and are bound by process creation on Windows.
