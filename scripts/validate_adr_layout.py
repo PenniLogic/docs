@@ -10,14 +10,15 @@ Commands, run from the repository root (every subcommand accepts ``--root``):
 ``check`` pins adr/presplit-reference.md to its recorded Git blob OID and SHA-256, derives the
 fourteen original bodies and the nine original allocations from those verified bytes, checks the
 historical manifest and the reservation file against them, validates every adr/ADR-###.md header
-and body, owner claims and the replacement graph, and finally requires adr/README.md to equal the
-rendered projection byte for byte. ``render`` writes that projection; with ``--ticket`` it refuses
-to alter bytes outside the slots of that ticket's allocated number and the derived slots of the
-record's previous and current predecessors. The ``--ticket`` argument is a declared scope guard,
-not authenticated identity: it limits which bytes one render may change and proves nothing about
-who ran it. ``split`` performs the one-time migration from the original monolithic README and
-refuses to overwrite an already split layout. ``test`` runs the stdlib unittest suite in
-scripts/tests/test_adr_layout*.py.
+and body, owner claims and the replacement graph, requires adr/README.md to equal the rendered
+projection byte for byte, and finally requires every decided record to be registered unchanged in
+adr/accepted-records.json. ``render`` writes that projection and registers decided records; with
+``--ticket`` it refuses to alter bytes outside the slots and registry entries of that ticket's
+allocated number and the derived slots of the record's previous and current predecessors. The
+``--ticket`` argument is a declared scope guard, not authenticated identity: it limits which bytes
+one render may change and proves nothing about who ran it. ``split`` performs the one-time
+migration from the original monolithic README and refuses to overwrite an already split layout.
+``test`` runs the stdlib unittest suite in scripts/tests/test_adr_layout*.py.
 
 Text that reaches the generated README (source titles, allocation tickets, questions and blocks)
 must be printable: control characters, CR/LF/TAB, Unicode line/paragraph separators, bidirectional
@@ -31,6 +32,19 @@ may be published early, its index slot links the file and shows the recorded PEN
 date, and its pending-gate row stays PENDING until the recorded status is ACCEPTED. The allocation
 in reservations.json is never rewritten. scripts/check_docs.py runs ``check`` so CI enforces the
 layout with the standard library only.
+
+Accepted-record integrity (adr/LAYOUT.md, "Accepted-record integrity"; STRIDE finding E26-F16): a
+decided record (recorded ACCEPTED or SUPERSEDED) must name its proving tests under a heading that
+contains the word "tests", and every fenced ```json block of a non-legacy record must parse as
+strict JSON whose top-level object declares a version field. adr/accepted-records.json is the
+committed acceptance registry: one entry per allocation, in allocation order, holding the date and
+the SHA-256/length of each decided record's source bytes (null until the record is decided).
+``check`` requires every decided record to be registered with its current bytes; a change to a
+registered record's bytes without a later date fails as an undated edit, and a registered record
+that turns PENDING or disappears fails as a withdrawal. ``render`` fills only the entries of the
+owned numbers, never with an undated change. The registry is a ledger, not a projection: when it is
+damaged or missing while decided records exist, it is restored from the reviewed commit; ``render``
+never regenerates it from the current sources.
 """
 
 import argparse
@@ -60,12 +74,15 @@ README_NAME = "README.md"
 REFERENCE_NAME = "presplit-reference.md"
 MANIFEST_NAME = "legacy-bodies.json"
 RESERVATIONS_NAME = "reservations.json"
+REGISTRY_NAME = "accepted-records.json"
 
 STATUSES = ("PENDING", "ACCEPTED", "SUPERSEDED")
+DECIDED_STATUSES = ("ACCEPTED", "SUPERSEDED")
 REQUIRED_FIELDS = ("number", "title", "status", "date", "supersedes", "superseded-by")
 TICKET_FIELD = "ticket"
 MANIFEST_FIELDS = ("number", "title", "sha256", "bytes")
 RESERVATION_FIELDS = ("number", "ticket", "state", "question", "blocks")
+REGISTRY_FIELDS = ("number", "date", "sha256", "bytes")
 EMPTY = "—"
 
 NUMBER_PATTERN = re.compile(r"ADR-\d{3}")
@@ -80,6 +97,24 @@ ALLOCATION_ROW = re.compile(r"^\| (ADR-\d{3}) \| `([^`]+)` \| (.+?) \| (.+?) \|$
 PENDING_HEADING = "## Pending execution-gate ADRs\n"
 SLOT_PATTERN = re.compile(r"<!-- SLOT START (ADR-\d{3}) -->\n(.*?)<!-- SLOT END \1 -->\n", re.DOTALL)
 CELL_PATTERN = re.compile(r"^\| ([^|]+?) \| (.*) \|$", re.MULTILINE)
+
+# Markdown structure used by the accepted-record rules: CommonMark fences (three or more backticks
+# or tildes, indented at most three spaces; the closing fence is at least as long) and headings.
+FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+FENCE_CLOSE = re.compile(r"^ {0,3}(`{3,}|~{3,})[ \t]*$")
+SECTION_HEADING = re.compile(r"^(#{2,4}) (.+)$")
+TESTS_WORD = re.compile(r"\btests?\b", re.IGNORECASE)
+BACKTICKED_NAME = re.compile(r"`[^`\n]+`")
+VERSION_KEY = re.compile(r"(?:^|[_-])version$", re.IGNORECASE)
+
+# Fenced JSON blocks decided before the version rule existed, pinned by record and content digest.
+# A pin is dead the moment its block changes (every such change is a dated amendment), and the
+# amended block must then declare a version field; the layout owner removes dead pins.
+UNVERSIONED_JSON_BLOCKS = {
+    ("ADR-020", "9dd1860eecbceee981716fd792e9c21d6ef4984671d87e541944c053c99b7868"): (
+        "ADR-020 §10 machine-readable artefact as merged in PenniLogic/docs#151 (2026-09-30)"
+    ),
+}
 
 BEGIN_INDEX = "<!-- BEGIN GENERATED ACCEPTED INDEX -->\n"
 END_INDEX = "<!-- END GENERATED ACCEPTED INDEX -->\n"
@@ -206,6 +241,12 @@ class Source:
     ticket: object
     header: str
     body: str
+    sha256: str  # over the complete source bytes; the acceptance registry pins decided records by it
+    bytes: int
+
+    @property
+    def decided(self):
+        return self.status in DECIDED_STATUSES
 
 
 @dataclasses.dataclass
@@ -330,8 +371,8 @@ def render_reservations(allocations):
     ])
 
 
-def load_json_document(path):
-    label = f"{ADR_DIR}/{path.name}"
+def strict_json_loads(text, label):
+    """Parse JSON with duplicate keys rejected; the label names the document in every error."""
 
     def reject_duplicates(pairs):
         value = {}
@@ -342,13 +383,22 @@ def load_json_document(path):
         return value
 
     try:
+        return json.loads(text, object_pairs_hook=reject_duplicates)
+    except json.JSONDecodeError as error:
+        raise LayoutError(f"{label}: invalid JSON ({error})") from None
+
+
+def load_json_document(path):
+    label = f"{ADR_DIR}/{path.name}"
+    try:
         data = path.read_bytes()
     except FileNotFoundError:
         raise LayoutError(f"{label} is missing") from None
     try:
-        return json.loads(data.decode("utf-8"), object_pairs_hook=reject_duplicates)
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as error:
         raise LayoutError(f"{label}: invalid JSON ({error})") from None
+    return strict_json_loads(text, label)
 
 
 def parse_items(document, label, fields):
@@ -504,7 +554,110 @@ def parse_source(name, data):
             f"{label}: body records {recorded.group(1)} · {recorded.group(2)} but the header records "
             f"{status} · {date}"
         )
-    return Source(number, title, status, date, supersedes, superseded_by, ticket, header, body)
+    return Source(
+        number, title, status, date, supersedes, superseded_by, ticket, header, body,
+        hashlib.sha256(data).hexdigest(), len(data),
+    )
+
+
+def fenced_blocks(lines):
+    """Yield ``(info, first_index, last_index, content_lines)`` per CommonMark fenced code block.
+
+    Indices are positions in ``lines``; ``last_index`` is the closing fence, or ``None`` when the
+    fence is never closed (the block then runs to the end of the text).
+    """
+    index = 0
+    while index < len(lines):
+        opening = FENCE_OPEN.fullmatch(lines[index])
+        # A backtick fence's info string may not contain a backtick (CommonMark); such a line is text.
+        if opening is None or (opening.group(1).startswith("`") and "`" in opening.group(2)):
+            index += 1
+            continue
+        fence, info = opening.group(1), opening.group(2).strip()
+        content, closing = [], None
+        for position in range(index + 1, len(lines)):
+            close = FENCE_CLOSE.fullmatch(lines[position])
+            if close and close.group(1)[0] == fence[0] and len(close.group(1)) >= len(fence):
+                closing = position
+                break
+            content.append(lines[position])
+        yield info, index, closing, content
+        index = len(lines) if closing is None else closing + 1
+
+
+def outside_fences(lines):
+    """Indices of the lines that are not part of a fenced code block (fence lines included)."""
+    inside = set()
+    for _, first, last, _ in fenced_blocks(lines):
+        inside.update(range(first, len(lines) if last is None else last + 1))
+    return [index for index in range(len(lines)) if index not in inside]
+
+
+def declared_version(document):
+    """The (key, value) of a version-like top-level field with a usable value, else None."""
+    for key, value in document.items():
+        if VERSION_KEY.search(key) and (
+            (isinstance(value, str) and value.strip())
+            or (isinstance(value, int) and not isinstance(value, bool) and value > 0)
+        ):
+            return key, value
+    return None
+
+
+def check_json_blocks(source):
+    """Every fenced ```json block parses strictly; a top-level object declares a version field."""
+    label = f"{ADR_DIR}/{source.number}.md"
+    header_lines = source.header.count("\n")
+    ordinal = 0
+    for info, first, last, content in fenced_blocks(source.body.split("\n")):
+        words = info.split()
+        if not words or words[0].lower() != "json":
+            continue
+        ordinal += 1
+        block = f"{label}: fenced JSON block {ordinal} (line {header_lines + first + 1})"
+        if last is None:
+            raise LayoutError(f"{block} is never closed")
+        text = "\n".join(content) + "\n"
+        document = strict_json_loads(text, block)
+        if not isinstance(document, dict) or declared_version(document) is not None:
+            continue
+        if (source.number, hashlib.sha256(text.encode("utf-8")).hexdigest()) in UNVERSIONED_JSON_BLOCKS:
+            continue
+        present = [key for key in document if VERSION_KEY.search(key)]
+        detail = f"; {present[0]!r} is {document[present[0]]!r}" if present else ""
+        raise LayoutError(
+            f"{block} declares no version field (schema_version, policy_version, parameters_version or "
+            f"another *_version key holding a non-empty string or positive integer){detail}"
+        )
+
+
+def check_proving_tests(source):
+    """A decided record names its proving tests: a heading containing 'tests' with backticked names."""
+    label = f"{ADR_DIR}/{source.number}.md"
+    lines = source.body.split("\n")
+    prose = outside_fences(lines)
+    headings = [
+        (index, SECTION_HEADING.fullmatch(lines[index]))
+        for index in prose
+        if index > 0 and SECTION_HEADING.fullmatch(lines[index])  # line 0 is the record's own heading
+    ]
+    for position, (index, heading) in enumerate(headings):
+        if not TESTS_WORD.search(heading.group(2)):
+            continue
+        end = next(
+            (later for later, match in headings[position + 1:] if len(match.group(1)) <= len(heading.group(1))),
+            len(lines),
+        )
+        if any(BACKTICKED_NAME.search(lines[line]) for line in prose if index < line < end):
+            return
+        raise LayoutError(
+            f"{label}: the tests section {lines[index]!r} names no test (no backticked identifier); "
+            "a decided record names its proving tests"
+        )
+    raise LayoutError(
+        f"{label}: a decided record must name its proving tests under a heading containing the word "
+        "'tests' (none found)"
+    )
 
 
 def read_sources(root):
@@ -606,7 +759,146 @@ def validate_sources(root):
             raise LayoutError(
                 f"{label}: ticket {source.ticket} does not own {number}, which is allocated to {allocation.ticket}"
             )
+        check_json_blocks(source)
+        if source.decided:
+            check_proving_tests(source)
     return Layout(legacy, allocations, sources, resolve_replacements(sources))
+
+
+def registry_entry(source):
+    """The registry item that pins one decided source: its date and the SHA-256/length of its bytes."""
+    return {"number": source.number, "date": source.date, "sha256": source.sha256, "bytes": source.bytes}
+
+
+def null_entry(number):
+    return {"number": number, "date": None, "sha256": None, "bytes": None}
+
+
+def render_registry(items):
+    return render_json([{field: item[field] for field in REGISTRY_FIELDS} for item in items])
+
+
+def load_registry(root, allocations, complete=True):
+    """Parse adr/accepted-records.json; return number -> item, one per allocation, in allocation order.
+
+    With ``complete`` false (an unscoped render) entries for newly allocated numbers may be absent.
+    """
+    label = f"{ADR_DIR}/{REGISTRY_NAME}"
+    path = Path(root) / ADR_DIR / REGISTRY_NAME
+    if not path.exists():
+        raise LayoutError(f"{label} is missing; the layout owner creates it with an unscoped render")
+    items = parse_items(load_json_document(path), label, REGISTRY_FIELDS)
+    for item in items:
+        number = item["number"]
+        values = [item[field] for field in REGISTRY_FIELDS[1:]]
+        if any(value is None for value in values) and any(value is not None for value in values):
+            raise LayoutError(f"{label}: {number} must record date, sha256 and bytes together or all null")
+        if item["date"] is not None:
+            if not isinstance(item["date"], str):
+                raise LayoutError(f"{label}: {number} date must be a string")
+            canonical_date(item["date"], f"{label}: {number}")
+            if not isinstance(item["sha256"], str) or not HEX_PATTERN.fullmatch(item["sha256"]):
+                raise LayoutError(f"{label}: {number} sha256 must be 64 lowercase hex digits")
+            if isinstance(item["bytes"], bool) or not isinstance(item["bytes"], int) or item["bytes"] < 1:
+                raise LayoutError(f"{label}: {number} bytes must be a positive integer")
+    registered = [item["number"] for item in items]
+    extra = [number for number in registered if number not in allocations]
+    if extra:
+        raise LayoutError(
+            f"{label}: {', '.join(extra)} has no allocation; a registered decision is never dropped silently "
+            "(review the allocation and the ledger together)"
+        )
+    if registered != [number for number in allocations if number in registered]:
+        raise LayoutError(f"{label}: entries must follow allocation order")
+    missing = [number for number in allocations if number not in registered]
+    if missing and complete:
+        raise LayoutError(
+            f"{label} has no entry for {', '.join(missing)}; the layout owner adds it with an unscoped render"
+        )
+    return {item["number"]: item for item in items}
+
+
+def describe_entry_drift(number, source, entry):
+    """Why a registry entry disagrees with its source, or None when they agree (adr/LAYOUT.md)."""
+    label = f"{ADR_DIR}/{number}.md"
+    registered = entry["date"] is not None
+    if source is None or not source.decided:
+        if not registered:
+            return None
+        state = "is missing" if source is None else f"now records {source.status}"
+        return (
+            f"{label}: registered as decided on {entry['date']} but {state}; a decided record is superseded, "
+            "never withdrawn (restore it or review a preservation migration)"
+        )
+    if not registered:
+        return (
+            f"{label}: decided record {number} is not registered in {ADR_DIR}/{REGISTRY_NAME}; its owner "
+            f"registers it with render --ticket {source.ticket}"
+        )
+    if (entry["date"], entry["sha256"], entry["bytes"]) == (source.date, source.sha256, source.bytes):
+        return None
+    if entry["sha256"] == source.sha256:
+        return f"{ADR_DIR}/{REGISTRY_NAME}: entry {number} is inconsistent with the unchanged registered bytes"
+    if source.date == entry["date"]:
+        return (
+            f"{label}: accepted record edited without a date change (registered {entry['date']} as sha256 "
+            f"{entry['sha256'][:12]}…, {entry['bytes']} bytes; the current bytes differ); amend it with a "
+            "later date or publish a superseding record"
+        )
+    if source.date < entry["date"]:
+        return f"{label}: re-dated {source.date}, earlier than its registered acceptance date {entry['date']}"
+    return (
+        f"{label}: accepted record amended on {source.date} (registered {entry['date']}); its owner re-registers "
+        f"it with render --ticket {source.ticket}"
+    )
+
+
+def validate_registry(root, layout):
+    """``check``: every decided record is registered with its current bytes; the file is canonical."""
+    root = Path(root)
+    registry = load_registry(root, layout.allocations)
+    for number in layout.allocations:
+        reason = describe_entry_drift(number, layout.sources.get(number), registry[number])
+        if reason is not None:
+            raise LayoutError(reason)
+    if (root / ADR_DIR / REGISTRY_NAME).read_bytes() != render_registry(registry.values()).encode("utf-8"):
+        raise LayoutError(f"{ADR_DIR}/{REGISTRY_NAME} must stay byte-exact to its canonical rendering")
+    return registry
+
+
+def plan_registry(layout, existing, ticket=None, owned=None):
+    """Registry items after a render; only a first registration or a dated amendment changes an entry.
+
+    ``existing`` maps number -> item, or is None when the file does not exist yet. A ticket-scoped
+    render (``owned`` numbers) refuses when any other entry disagrees with its source.
+    """
+    items = []
+    for number in layout.allocations:
+        source = layout.sources.get(number)
+        current = None if existing is None else existing.get(number)
+        if current is None:
+            if owned is not None:
+                raise LayoutError(
+                    f"{ADR_DIR}/{REGISTRY_NAME} has no entry for {number}; the layout owner adds it with an "
+                    "unscoped render"
+                )
+            current = null_entry(number)
+        reason = describe_entry_drift(number, source, current)
+        if reason is None:
+            items.append(current)
+            continue
+        if owned is not None and number not in owned:
+            raise LayoutError(
+                f"{ADR_DIR}/{REGISTRY_NAME} differs from the source records outside the entries owned by "
+                f"{ticket}: {reason}; a ticket-scoped render refuses to alter those bytes"
+            )
+        decided = source is not None and source.decided
+        registered = current["date"] is not None
+        if decided and (not registered or (source.sha256 != current["sha256"] and source.date > current["date"])):
+            items.append(registry_entry(source))
+            continue
+        raise LayoutError(reason)
+    return items
 
 
 def render_slot(number, rows):
@@ -791,7 +1083,7 @@ def write_output(destination, data):
 
 
 def check_layout(root):
-    """Validate sources and require adr/README.md to equal the rendered projection exactly."""
+    """Validate sources, require adr/README.md to equal the projection, then the acceptance registry."""
     root = Path(root)
     layout = validate_sources(root)
     expected = render_readme(layout).encode("utf-8")
@@ -805,36 +1097,63 @@ def check_layout(root):
         raise LayoutError(
             f"{ADR_DIR}/{README_NAME} does not match the rendered layout: {describe_drift(actual, expected)}"
         )
+    validate_registry(root, layout)
     return layout.summary()
 
 
 def render(root, ticket=None):
-    """Write the rendered README (ticket-scoped when requested); return whether bytes changed."""
+    """Write the README and the acceptance registry (ticket-scoped when requested).
+
+    Every refusal is raised before any byte is written. Returns the list of ``adr/`` file names
+    whose bytes changed (empty when the layout already matched).
+    """
     root = Path(root)
     if ticket is not None and not TICKET_PATTERN.fullmatch(ticket):
         raise LayoutError(f"ticket {ticket!r} is malformed")
     layout = validate_sources(root)
     rendered = render_readme(layout).encode("utf-8")
     path = root / ADR_DIR / README_NAME
+    registry_path = root / ADR_DIR / REGISTRY_NAME
     try:
         existing = path.read_bytes()
     except FileNotFoundError:
         existing = None
+    owned = None
     if ticket is not None:
         if existing is None:
             raise LayoutError(
                 f"{ADR_DIR}/{README_NAME} is missing; a ticket-scoped render never recreates the projection"
             )
+        if not registry_path.exists():
+            raise LayoutError(
+                f"{ADR_DIR}/{REGISTRY_NAME} is missing; a ticket-scoped render never creates the registry"
+            )
         try:
             existing_text = existing.decode("utf-8")
         except UnicodeDecodeError:
             raise LayoutError(f"{ADR_DIR}/{README_NAME} is not valid UTF-8") from None
-        _, allowed = scoped_numbers(layout, ticket, existing_text)
+        owned, allowed = scoped_numbers(layout, ticket, existing_text)
         check_scope(existing_text, rendered.decode("utf-8"), allowed, ticket)
-    if existing == rendered:
-        return False
-    write_output(path, rendered)
-    return True
+    if registry_path.exists():
+        registry = load_registry(root, layout.allocations, complete=False)
+    else:
+        registry = None
+        decided = [number for number, source in layout.sources.items() if number not in layout.legacy and source.decided]
+        if decided:
+            raise LayoutError(
+                f"{ADR_DIR}/{REGISTRY_NAME} is missing while decided records exist ({', '.join(decided)}); restore "
+                "it from the reviewed commit, it is never regenerated from the current sources"
+            )
+    planned = render_registry(plan_registry(layout, registry, ticket, owned)).encode("utf-8")
+    existing_registry = registry_path.read_bytes() if registry is not None else None
+    changed = []
+    if existing != rendered:
+        write_output(path, rendered)
+        changed.append(f"{ADR_DIR}/{README_NAME}")
+    if existing_registry != planned:
+        write_output(registry_path, planned)
+        changed.append(f"{ADR_DIR}/{REGISTRY_NAME}")
+    return changed
 
 
 def split(root):
@@ -848,7 +1167,8 @@ def split(root):
         raise LayoutError(f"split requires {ADR_DIR}/{README_NAME} and {ADR_DIR}/{REFERENCE_NAME}: {error}") from None
     legacy = derive_legacy(reference)
     allocations = derive_allocations(reference)
-    outputs = [adr / f"{number}.md" for number in legacy] + [adr / MANIFEST_NAME, adr / RESERVATIONS_NAME]
+    outputs = [adr / f"{number}.md" for number in legacy]
+    outputs += [adr / MANIFEST_NAME, adr / RESERVATIONS_NAME, adr / REGISTRY_NAME]
     present = {path.name for path in outputs if path.exists()}
     present |= {path.name for path in adr.iterdir() if path.name.lower().startswith("adr-")}
     if present:
@@ -859,6 +1179,7 @@ def split(root):
         write_output(adr / f"{record.number}.md", legacy_source(record))
     write_output(adr / MANIFEST_NAME, render_manifest(legacy))
     write_output(adr / RESERVATIONS_NAME, render_reservations(allocations))
+    write_output(adr / REGISTRY_NAME, render_registry(null_entry(number) for number in allocations))
     write_output(adr / README_NAME, render_readme(validate_sources(root)))
     return check_layout(root)
 
@@ -880,8 +1201,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="ADR layout generator and validator (adr/LAYOUT.md).")
     commands = parser.add_subparsers(dest="command", required=True)
     for name, text in (
-        ("check", "validate sources and require the README to match the rendered projection"),
-        ("render", "write the rendered README, optionally scoped to one ticket's slots"),
+        ("check", "validate sources and the acceptance registry; require the README to match the projection"),
+        ("render", "write the README and register decided records, optionally scoped to one ticket"),
         ("split", "migrate the original monolithic README into the per-file layout"),
         ("test", "run the stdlib unittest suite for this generator"),
     ):
@@ -898,12 +1219,17 @@ def main(argv=None):
         return run_tests()
     try:
         if args.command == "check":
-            print(f"ADR layout valid: {describe_summary(check_layout(args.root))}; {ADR_DIR}/{README_NAME} matches.")
+            print(
+                f"ADR layout valid: {describe_summary(check_layout(args.root))}; {ADR_DIR}/{README_NAME} and "
+                f"{ADR_DIR}/{REGISTRY_NAME} match."
+            )
         elif args.command == "render":
             changed = render(args.root, args.ticket)
             scope = f" for {args.ticket}" if args.ticket else ""
-            state = "updated" if changed else "already matches the rendered layout"
-            print(f"{ADR_DIR}/{README_NAME} {state}{scope}.")
+            if changed:
+                print(f"{' and '.join(changed)} updated{scope}.")
+            else:
+                print(f"{ADR_DIR}/{README_NAME} and {ADR_DIR}/{REGISTRY_NAME} already match the rendered layout{scope}.")
         else:
             print(f"Split complete: {describe_summary(split(args.root))}.")
     except (LayoutError, OSError, ValueError) as error:
