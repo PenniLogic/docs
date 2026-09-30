@@ -9,9 +9,9 @@
     },
     {
       "number": "ADR-016",
-      "date": null,
-      "sha256": null,
-      "bytes": null
+      "date": "2026-09-30",
+      "sha256": "3de637cf26eeebcd58748bbc39565f303a02756de0d3b15370d02bf4e7b1b03d",
+      "bytes": 161913
     },
     {
       "number": "ADR-017",
