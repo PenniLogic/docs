@@ -30,7 +30,7 @@ identifiers, never a display string.
 | Identifier | Lowercase `snake_case` value that clients and tests assert, for example `permission_denied`. Stable across versions; renaming is a major change. |
 | Name | The hyphenated human name used in tickets, for example permission-denied. |
 | Scope | Where the state may be rendered: a whole **surface**, a **region** of it, or the outcome of one **action**. At most one surface-scope state is shown at a time; region and action states coexist with the surface's content. |
-| Data display | Whether the data the state concerns may still be shown: `none` (nothing to show), `hidden` (exists but must not be shown), `shown` (unchanged) or `shown_marked` (shown, with one text marker per region that is programmatically associated with the group of figures it qualifies — a region-level accessible name or description, never a per-figure association — and announced once; at most a short per-figure flag). |
+| Data display | Whether the data the state concerns may still be shown: `none` (nothing to show), `hidden` (exists but must not be shown), `shown` (unchanged) or `shown_marked` (shown, with one text marker per region that is programmatically associated with the group of figures it qualifies — a region-level accessible description, or appended to the region's own accessible name, never replacing it, and never a per-figure association — and announced once; at most a short per-figure flag). |
 | Auto-resolves | Whether the state clears without the user acting once its condition ends. |
 | Composes to degraded | Whether a *supplementary* region in this state makes its host surface `degraded` (section 4). True only for `error` and `offline`; a denial or an exhausted quota renders alone. |
 | Recovery action | The single action offered. Its identifier is stable; its label is canonical copy. |
@@ -164,15 +164,15 @@ identifiers, never a display string.
   the service sent and never recomputed on the client; **one** canonical marker per stale region
   carrying the time of the last successful refresh, placed at the head of the region and
   programmatically associated with the group of figures it qualifies — a region-level accessible
-  name or description, never a per-figure association, which would re-announce the marker after
-  every figure — as text and not colour alone, with at most a short per-figure flag on long lists
-  and never a repeated marker; the single recovery action; the offline marker (the `offline`
-  headline) beside the region's stale marker when the platform reports no connectivity, without
-  leaving this state; for shared data, display only while the offline lease bound published by
-  `T-CON-04` has not elapsed, after which the cached shared data leaves the view and the region
-  follows the `permission_denied` rendering for a previously granted shared region (section 3.6); a
-  visual treatment distinct from confirmed values (`T-DSY-01` owns the treatment; the marker text is
-  the minimum).
+  description, or appended to the region's own accessible name, never replacing it, and never a
+  per-figure association, which would re-announce the marker after every figure — as text and not
+  colour alone, with at most a short per-figure flag on long lists and never a repeated marker; the
+  single recovery action; the offline marker (the `offline` headline) beside the region's stale
+  marker when the platform reports no connectivity, without leaving this state; for shared data,
+  display only while the offline lease bound published by `T-CON-04` has not elapsed, after which
+  the cached shared data leaves the view and the region follows the `permission_denied` rendering
+  for a previously granted shared region (section 3.6); a visual treatment distinct from confirmed
+  values (`T-DSY-01` owns the treatment; the marker text is the minimum).
 - **Must not show.** A stale region without its marker; a marker repeated after every figure, which
   makes a long stale list unusable with a screen reader; a money-committing action (settle, pay,
   transfer, confirm) pre-filled from stale figures without a successful refresh first, and if that
@@ -384,7 +384,8 @@ The decision test is whether the user can still complete the surface's purpose.
 ## 7. Copy rules
 
 Every canonical string in the data file obeys these rules; the validator enforces the forbidden
-terms and the placeholder list, and independent design review holds the rest.
+terms, the placeholder list and, for content renderings (section 9.2), the sixty-character limit,
+and independent design review holds the rest.
 
 | Rule | Statement |
 | --- | --- |
@@ -447,9 +448,10 @@ cause-asserting word because, and the exclamation mark.
 - Non-blocking notices (`degraded`, `stale`, the offline marker) never move focus away from the
   user's task.
 - A stale region has one marker, programmatically associated with the group of figures it
-  qualifies — a region-level accessible name or description, never a per-figure association such
-  as a description reference on each figure, which would re-announce the marker after every figure
-  — and announced once; a marker is never repeated after every figure.
+  qualifies — a region-level accessible description, or appended to the region's own accessible
+  name, never replacing it, and never a per-figure association such as a description reference on
+  each figure, which would re-announce the marker after every figure — and announced once; a marker
+  is never repeated after every figure.
 - Controls disabled by a state (`quota_exceeded`) stay visible and expose the disabled state and its
   reason.
 - Canonical copy remains readable at two hundred percent text scale; headlines wrap rather than
@@ -519,7 +521,7 @@ claims no client behaviour: the client's own tests are its evidence.
 | Reason | Condition | Client | Meaning | Clears when |
 | --- | --- | --- | --- | --- |
 | `force_stopped` | `capture_paused_by_platform` | android | The user force-stopped the app; receivers, scheduled jobs and pending intents stay off until the user opens the app again (on Android 15 and later pending intents are also cancelled). Limitation: on Android 11 to 14 a force-stop cannot be told apart from a swipe away from Recents with public platform interfaces and is not reported; the pause is shown only when the platform can say so or when the profile the app ran in was stopped. | Capture health is restored: the capture components are registered again and a health probe succeeds; a process start alone never clears it. |
-| `private_space_paused` | `capture_paused_by_platform` | android | The private space holding the app was locked, which stops every app inside it; a clone profile is classified the same way. Privacy: this records a concealment choice, kept on the device as a per-device state record and a local log event only, counted in aggregate at most, never joined to an account identifier, not exported, and erased with the capture-health record on sign-out or erasure. | Capture health is restored after the space is unlocked. |
+| `private_space_paused` | `capture_paused_by_platform` | android | The private space holding the app was locked, which stops every app inside it; a clone profile is classified the same way. Privacy: this records a concealment choice, kept on the device as a per-device state record and a local log event only, counted in aggregate at most, never joined to an account identifier, not exported by this baseline (any future export names its purpose, aggregation and retention in the client's record first), and erased with the capture-health record on sign-out or erasure. | Capture health is restored after the space is unlocked. |
 | `standby_bucket_restricted` | `capture_paused_by_platform` | android | The platform placed the app in the restricted standby bucket, so scheduled jobs run about once a day and the capture pipeline cannot keep up. | Capture health is restored, the same path as `force_stopped`; while the bucket stays restricted the reason is refreshed at each start. |
 | `background_restricted` | `capture_paused_by_platform` | android | The user applied a background restriction to the app in system settings; background work is not run. | Capture health is restored, the same path as `force_stopped`; while the restriction stays the reason is refreshed at each start. |
 | `listener_access_not_granted` | `capture_blocked_by_setting` | android | Notification access is not granted for the capture listener and the install source is not locked, so the platform's normal settings page enables it. | The user grants notification access. |
@@ -536,6 +538,7 @@ joint-goal or household total that is no longer complete. These are ordinary con
 for them. What they need is one canonical string each, so every client shows the same words where
 a person's name, authored text or complete figure used to be. The copy names no person, states no
 cause and carries no placeholder, so no name can appear; it follows every copy rule of section 7
+— the validator enforces the placeholder ban, the forbidden terms and the sixty-character limit —
 and does not embellish what the service states (the erased states on the wire are themselves the
 disclosure ADR-021 accepts). A rendering that qualifies a figure is a text marker associated with
 the group of figures it qualifies and announced once, as for `stale`. New copy of this kind is
@@ -656,13 +659,14 @@ the figure from a refresh two hours earlier and the platform reports no connecti
   offline marker is removed, no cause is invented. Offline lease bound elapses without confirmation:
   the client denies on its own, the cached figure and the region leave the view, and the viewer's
   own sharing overview no longer lists the item; the drop is local — the grant may still be active
-  server-side, and the item returns on the next confirmed refresh, so the drop is not a revocation
-  signal; no copy is rendered unless the viewer navigates to the item explicitly, in which case the
-  sharing-cause copy "You don't have access to this right now" with the action "See what's shared
-  with you" appears. Grant revoked by the partner and the client reconnects: the service refuses
-  and the rendering is identical to the elapsed lease — the region leaves the view and the
-  sharing-cause copy appears only on explicit navigation. The copy is the same as for a grant that
-  never existed; the taxonomy does not claim that the change itself is invisible.
+  server-side, and the item returns on the next confirmed refresh while the grant is still active,
+  so the drop is not a revocation signal; no copy is rendered unless the viewer navigates to the
+  item explicitly, in which case the sharing-cause copy "You don't have access to this right now"
+  with the action "See what's shared with you" appears. Grant revoked by the partner and the client
+  reconnects: the service refuses and the rendering is identical to the elapsed lease — the region
+  leaves the view and the sharing-cause copy appears only on explicit navigation. The copy is the
+  same as for a grant that never existed; the taxonomy does not claim that the change itself is
+  invisible.
 - **Privacy and money.** The sharing-cause copy is identical for a revoked grant, an expired grant,
   a never-granted view and an elapsed lease, so the copy itself discloses nothing about the
   partner's decision. **Honest residual:** a figure that was visible and is then absent is the
@@ -676,11 +680,11 @@ the figure from a refresh two hours earlier and the platform reports no connecti
   inherent-signal floor and no further. The recovery action after denial opens the viewer's own
   sharing overview and never notifies or asks the partner, and no notification is issued for an
   item the viewer can no longer access. An elapsed offline lease drops the item locally while the
-  grant may still be active server-side, and it returns on the next confirmed refresh: that is the
-  default-deny bound at work, not a signal about the partner's decision. The cached figure is the
-  service's deterministic result in integer minor units with currency; the client formats it and
-  never recalculates, projects or nets it. A money-committing action against a stale figure
-  requires a successful refresh first.
+  grant may still be active server-side, and it returns on the next confirmed refresh while the
+  grant is still active: that is the default-deny bound at work, not a signal about the partner's
+  decision. The cached figure is the service's deterministic result in integer minor units with
+  currency; the client formats it and never recalculates, projects or nets it. A money-committing
+  action against a stale figure requires a successful refresh first.
 - **Signal.** `client_state.stale` with `client=android`,
   `surface_id=example_household_shared_aggregate`, `scope=region`; no amount, member identity or
   grant identifier.
@@ -753,7 +757,9 @@ correction to a canonical string:
   no canonical string;
 - **minor** — an addition: a state, cause, placeholder, reason identifier, content rendering,
   copy variant or canonical string, a changed canonical string, or a new *optional* schema
-  property;
+  property; a changed canonical string is minor because the identifier a client asserts is
+  unchanged and the copy is data a client takes from the file at the version it pins, so an
+  exact-version pin never renders a string its version did not publish;
 - **major** — a removed or renamed identifier, a removed canonical string, or a new *required*
   schema property (`schema_version` changes with it).
 
@@ -783,23 +789,26 @@ known states and causes and free of code-like tokens; reason identifiers (sectio
 client-determined conditions, unique across conditions, distinct from every state, condition and
 cause identifier, free of code-like tokens, and the seven published for `T-AND-07` pinned to their
 conditions so a removal or a move is a validator failure until a major bump; content renderings
-(section 9.2) distinct from state identifiers, with copy that carries no placeholder and no
-forbidden term; a `version_history` that starts at `1.0.0`, ends at the current version and whose
-bumps match their version arithmetic; the declared guarantees of `permission_denied` (data hidden,
-rest of surface usable, no hidden-data disclosure) and `quota_exceeded` (what remains available is
-stated); the three required worked examples present, each rendering an instantiation of its
-state's canonical copy and recovery label (placeholders filled, nothing paraphrased, and bound to
-the example's cause when it names one, so a `device` example cannot pass with the `plan` copy or
-label) with matching state, cause, signal, declared signal attributes and an `example_`-prefixed
-surface identifier; the two coverage assertions and a valid illustrative registration; and that
-each state's own section 3.n exists exactly once — a duplicate section for a state is an error,
-because a second section carrying the canonical copy would let the first paraphrase it — and
-carries every canonical headline, body and action label of that state verbatim, scoped to the
-section; that the reason table of section 9.1 lists exactly the published reasons under the same
-conditions, in both directions; that the rendering table of section 9.2 lists exactly the
-published renderings and carries their copy verbatim; and that the document mentions every
-identifier, recovery action, placeholder, distinction, example, condition, rule, version-history
-entry and the version.
+(section 9.2) distinct from every state, condition, reason and cause identifier, with copy that
+carries no placeholder, no forbidden term and at most sixty characters; the sharing-cause copy
+and labels of `permission_denied` free of placeholders, so no name can appear beside a denial; a
+worked example that names a cause bound to that cause's copy variant and label, and rejected when
+the cause has neither, so the binding fails closed; a `version_history` that starts at `1.0.0`,
+ends at the current version and whose bumps match their version arithmetic; the declared
+guarantees of `permission_denied` (data hidden, rest of surface usable, no hidden-data disclosure)
+and `quota_exceeded` (what remains available is stated); the three required worked examples
+present, each rendering an instantiation of its state's canonical copy and recovery label
+(placeholders filled, nothing paraphrased, and bound to the example's cause when it names one, so
+a `device` example cannot pass with the `plan` copy or label) with matching state, cause, signal,
+declared signal attributes and an `example_`-prefixed surface identifier; the two coverage
+assertions and a valid illustrative registration; and that each state's own section 3.n exists
+exactly once — a duplicate section for a state is an error, because a second section carrying the
+canonical copy would let the first paraphrase it — and carries every canonical headline, body and
+action label of that state verbatim, scoped to the section; that the reason table of section 9.1
+lists exactly the published reasons under the same conditions, in both directions; that the
+rendering table of section 9.2 lists exactly the published renderings and carries their copy
+verbatim; and that the document mentions every identifier, recovery action, placeholder,
+distinction, example, condition, rule, version-history entry and the version.
 
 **Accepted limit (N2 of the #138 review).** Within one state section the copy check is a substring
 test. Where the same canonical string is listed more than once for a state — the
@@ -821,9 +830,11 @@ cause's copy or label, a document that omits an identifier or alters canonical c
 own section while another mention stays intact, a duplicated state section, a reason identifier
 missing from the data or the document, listed under the wrong condition in either, published under
 a contract-level condition, duplicated, colliding with a state identifier or carrying a code-like
-token, a content rendering whose copy carries a placeholder or a forbidden term or is paraphrased
-in the document, a version history that ends elsewhere or whose bump does not add up, and a
-schema keyword the validator does not implement. It also pins the seven `T-AND-07` reason
+token, a content rendering whose copy carries a placeholder or a forbidden term, exceeds sixty
+characters, collides with a condition, reason or cause identifier, or is paraphrased in the
+document, a sharing-cause label with a placeholder, a worked example naming a cause that has no
+copy variant or no label, a version history that ends elsewhere or whose bump does not add up, and
+a schema keyword the validator does not implement. It also pins the seven `T-AND-07` reason
 identifiers byte for byte to the android source of record and the whole `1.0.0` identifier
 surface, so a rename or removal that would need a major bump fails a named test. These prove the
 published data and this document; they are not a client build, and no client coverage is claimed.

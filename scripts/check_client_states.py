@@ -60,6 +60,9 @@ REASON_TEXT_FIELDS = (
 )
 REASON_SECTION = "Reason identifiers"
 RENDERING_SECTION = "Content renderings"
+# The plain_language rule of section 7: a headline or rendering label of at most sixty characters
+# before placeholders are filled. Enforced for content renderings, which have no placeholders.
+HEADLINE_LIMIT = 60
 
 PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
 # An HTTP-style status or a SCREAMING_SNAKE token would be an invented code; T-CON-12 owns codes.
@@ -238,6 +241,13 @@ def _check_states(data, states):
             raise ValueError(f"permission_denied copy variant {key!r} is not a cause")
         if key == "sharing" and PLACEHOLDER.search(variant["headline"] + variant["body"]):
             raise ValueError("permission_denied sharing-cause copy must not contain placeholders")
+    # The sharing-cause action label is rendered beside the sharing copy, so it is under the same
+    # ban: no placeholder means no name can appear (P1 of the #166 privacy review).
+    denied_action = denied["recovery_action"]
+    for slot in ("label_by_cause", "label_by_variant"):
+        label = denied_action.get(slot, {}).get("sharing")
+        if label is not None and PLACEHOLDER.search(label):
+            raise ValueError(f"permission_denied sharing-cause {slot} label must not contain placeholders")
     if denied["data_display"] != "hidden":
         raise ValueError("permission_denied must hide data behind the denial")
     guarantees = denied.get("guarantees", {})
@@ -370,7 +380,9 @@ def _check_rendered_copy(example, state):
     """A worked example renders the state's canonical copy, never a paraphrase.
 
     When the example names a cause, only that cause's copy variant and action label qualify, so a
-    device example cannot pass by rendering the plan variant or the plan label.
+    device example cannot pass by rendering the plan variant or the plan label. A named cause that
+    has no variant or no label falls closed: the example is rejected rather than matched against
+    every other cause's copy (C1 of the #166 core review).
     """
     rendered = example["copy_rendered"]
     copy = state["copy"]
@@ -378,12 +390,25 @@ def _check_rendered_copy(example, state):
     cause = example.get("cause")
     variants = copy.get("variants", {})
     by_cause = action.get("label_by_cause", {})
-    bound = f" for cause {cause!r}" if cause is not None and (cause in variants or cause in by_cause) else ""
-    if cause is not None and cause in variants:
-        templates = [(variants[cause]["headline"], variants[cause]["body"])]
-    else:
+    if cause is None:
+        bound = ""
         templates = [(copy["headline"], copy["body"])]
         templates += [(variant["headline"], variant["body"]) for variant in variants.values()]
+        labels = action_labels(action)
+    else:
+        bound = f" for cause {cause!r}"
+        if cause not in variants:
+            raise ValueError(
+                f"Worked example {example['id']}: {state['id']} has no copy variant for cause {cause!r}, "
+                "so the rendered copy cannot be bound"
+            )
+        if cause not in by_cause:
+            raise ValueError(
+                f"Worked example {example['id']}: {state['id']} has no recovery label for cause {cause!r}, "
+                "so the rendered action cannot be bound"
+            )
+        templates = [(variants[cause]["headline"], variants[cause]["body"])]
+        labels = [by_cause[cause]]
     if not any(
         _instantiates(rendered["headline"], headline) and _instantiates(rendered["body"], body)
         for headline, body in templates
@@ -392,10 +417,6 @@ def _check_rendered_copy(example, state):
             f"Worked example {example['id']}: rendered copy is not an instantiation "
             f"of the canonical copy of {state['id']}{bound}"
         )
-    if cause is not None and cause in by_cause:
-        labels = [by_cause[cause], *action.get("label_by_variant", {}).values()]
-    else:
-        labels = action_labels(action)
     if not any(_instantiates(rendered["action"], label) for label in labels):
         raise ValueError(
             f"Worked example {example['id']}: rendered action is not the recovery action of {state['id']}{bound}"
@@ -453,18 +474,27 @@ def _check_adoption(data, states):
         raise ValueError("Illustrative registration names an unknown client")
 
 
-def _check_content_renderings(data, states):
+def _check_content_renderings(data, states, placement):
     """Ordinary content-state renderings carry one canonical string that can name no person."""
     renderings = _unique_ids(data.get("content_renderings", []), "content rendering")
+    reserved = set(states) | {item["id"] for item in data["contract_conditions"]} | set(placement)
+    for state in states.values():
+        reserved |= {cause["id"] for cause in state.get("causes", [])}
     for rendering in renderings.values():
-        if rendering["id"] in states:
-            raise ValueError(f"Content rendering {rendering['id']} collides with a state identifier")
+        if rendering["id"] in reserved:
+            raise ValueError(
+                f"Content rendering {rendering['id']} collides with a state, condition, reason or cause identifier"
+            )
         label = rendering["copy"]["label"]
         if PLACEHOLDER.search(label):
             raise ValueError(f"Content rendering {rendering['id']} copy must not contain placeholders")
         term = forbidden_term(label, data["forbidden_terms"])
         if term:
             raise ValueError(f"Content rendering {rendering['id']}: forbidden term {term!r} in canonical copy")
+        if len(label) > HEADLINE_LIMIT:
+            raise ValueError(
+                f"Content rendering {rendering['id']}: copy is longer than {HEADLINE_LIMIT} characters"
+            )
     return renderings
 
 
@@ -475,7 +505,7 @@ def _version_tuple(version):
 def _check_versions(data):
     """version_history starts at the first published version, ends at the current one and adds up."""
     history = data.get("version_history")
-    if history is None:
+    if not history:
         return
     versions = [entry["version"] for entry in history]
     if versions[0] != FIRST_PUBLISHED_VERSION or history[0]["bump"] != "initial":
@@ -629,7 +659,7 @@ def check_taxonomy(data, document):
     placement = _check_contract_conditions(data, states)
     _check_worked_examples(data, states)
     _check_adoption(data, states)
-    renderings = _check_content_renderings(data, states)
+    renderings = _check_content_renderings(data, states, placement)
     _check_versions(data)
     _check_document(data, document, states, placement, renderings)
     return {
