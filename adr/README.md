@@ -267,10 +267,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-022
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-AIEGRESS-08` |
+| Source | <a id="adr-022--ai-egress-runtime-platform-and-mode-c-custom-endpoints"></a> [ADR-022.md](ADR-022.md) |
 | Status | PENDING |
 | Ticket | T-ADR-AIEGRESS-08 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-022 -->
