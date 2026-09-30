@@ -716,13 +716,12 @@ class RefreshTests(unittest.TestCase):
                 return {"login": module.OPERATOR, "id": module.OPERATOR_ID}
             if args[1].startswith("orgs/"):
                 return {"id": module.ORGANIZATION_ID}
-            return {"data": {"repository": {"databaseId": 1, "issues": {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": []}}}}
+            return {"data": {"repository": {"databaseId": 1, "issues": {"totalCount": 0, "pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": []}}}}
         with self.assertRaisesRegex(RuntimeError, "resolved to id 1"):
             module.fetch_inventory(run=run)
 
-    def test_refresh_builds_a_valid_inventory_from_pages(self):
-        pages = {}
-
+    @staticmethod
+    def _paged_runner(pages, total_count_for_docs=2):
         def run(args, payload=None):
             if args[:2] == ["api", "user"]:
                 return {"login": module.OPERATOR, "id": module.OPERATOR_ID}
@@ -742,13 +741,21 @@ class RefreshTests(unittest.TestCase):
                               "body": "Original specification: https://github.com/PenniLogic-old/docs/issues/21"}]
             return {"data": {"repository": {
                 "databaseId": module.REPOSITORY_IDS[full_name],
-                "issues": {"pageInfo": {"hasNextPage": first and name == "docs", "endCursor": "c1"}, "nodes": nodes},
+                "issues": {
+                    "totalCount": total_count_for_docs if name == "docs" else 0,
+                    "pageInfo": {"hasNextPage": first and name == "docs", "endCursor": "c1"}, "nodes": nodes,
+                },
             }}}
+        return run
 
+    def test_refresh_builds_a_valid_inventory_from_pages(self):
+        pages = {}
+        run = self._paged_runner(pages)
         result = module.fetch_inventory(run=run, now=module.datetime.datetime(2026, 9, 30, tzinfo=module.datetime.timezone.utc))
         index = module.validate_inventory(result)
         self.assertEqual(pages["PenniLogic/docs"], 2)
         self.assertEqual(result["issue_count"], 2)
+        self.assertEqual(result["repositories"]["PenniLogic/docs"], {"id": module.REPOSITORY_IDS["PenniLogic/docs"], "issue_count": 2, "total_count": 2})
         self.assertEqual(result["snapshot_at"], "2026-09-30T00:00:00Z")
         self.assertEqual(index["PenniLogic/docs#1"]["title"], "Taxonomy")
         self.assertEqual(index["PenniLogic/docs#1"]["plan_id"], "T-UX-01")
@@ -756,6 +763,38 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(index["PenniLogic/docs#22"]["state_reason"], "completed")
         self.assertEqual(index["PenniLogic/docs#22"]["source"], "PenniLogic-old/docs#21")
         self.assertIsNone(index["PenniLogic/docs#22"]["plan_id"])
+
+    def test_refresh_fails_when_drained_count_differs_from_total_count(self):
+        """planning/README.md rule 1: a truncated connection is an error, never a shorter inventory."""
+        run = self._paged_runner({}, total_count_for_docs=3)
+        with self.assertRaisesRegex(RuntimeError, "PenniLogic/docs: drained 2 issues but the connection reports totalCount 3"):
+            module.fetch_inventory(run=run)
+
+    def test_snapshot_without_total_count_is_rejected(self):
+        snapshot = inventory()
+        del snapshot["repositories"]["PenniLogic/docs"]["total_count"]
+        with self.assertRaisesRegex(ValueError, "does not record total_count equal to its drained issue_count"):
+            module.validate_inventory(snapshot)
+
+    def test_published_snapshot_records_total_count_beside_every_drained_count(self):
+        for name, record in INVENTORY["repositories"].items():
+            self.assertEqual(record["total_count"], record["issue_count"], name)
+
+    def test_inventory_diff_reports_added_removed_state_and_identity_changes(self):
+        """planning/README.md rule 4: the refresh prints a read-back receipt against the previous snapshot."""
+        before = inventory()
+        after = inventory()
+        removed = after["issues"].pop(0)["reference"]
+        after["issues"].append({**before["issues"][1], "reference": "PenniLogic/docs#999999", "number": 999999})
+        target = issue(after, "PenniLogic/infra#29")
+        target["state"], target["state_reason"] = "closed", "completed"
+        issue(after, "PenniLogic/api#22")["plan_id"] = "T-QA-01-RENAMED"
+        diff = module.inventory_diff(before, after)
+        self.assertEqual(diff["added"], ["PenniLogic/docs#999999"])
+        self.assertEqual(diff["removed"], [removed])
+        self.assertEqual(diff["state_changed"], ["PenniLogic/infra#29"])
+        self.assertEqual(diff["identity_changed"], ["PenniLogic/api#22"])
+        self.assertEqual(module.inventory_diff({}, before)["added"], sorted(i["reference"] for i in before["issues"]))
 
     def test_gh_failure_is_reported_without_token_text(self):
         def runner(command, **kwargs):

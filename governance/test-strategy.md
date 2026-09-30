@@ -98,10 +98,15 @@ CI has no network access to GitHub and no token, so the reconciliation is design
    `GITHUB_TOKEN` and `GIT_CONFIG_PARAMETERS` are removed. It verifies the login and user id, the
    organization id and every repository id before reading anything, derives each issue's identity from
    the `plan-id` marker and the original-specification link in its body rather than from its title, and
-   never reads, prints or stores a token. The snapshot is never edited by hand: if a refreshed snapshot no
-   longer carries an identity the strategy expects, the check fails and the strategy is corrected in the
-   same pull request. Run the refresh in a process that has already confirmed `gh api user --jq .login`
-   prints `basiltt`, then run the check, and commit the snapshot with the change that needed it.
+   never reads, prints or stores a token. It follows the planning reader rules in `planning/README.md`:
+   every issues connection is drained until `hasNextPage` is false and the drained count must equal the
+   connection's `totalCount` (both are recorded per repository, and the check rejects a snapshot that
+   does not carry them equal), and the refresh prints a read-back receipt against the previous snapshot
+   (issues added, removed, state changed, identity changed) so the diff is reviewed rather than assumed.
+   The snapshot is never edited by hand: if a refreshed snapshot no longer carries an identity the
+   strategy expects, the check fails and the strategy is corrected in the same pull request. Run the
+   refresh in a process that has already confirmed `gh api user --jq .login` prints `basiltt`, then run
+   the check, and commit the snapshot with the change that needed it.
 
 The snapshot carries its `snapshot_at` time. The cadence in section 17 states when it must be refreshed;
 the check does not fail on age, because a CI job with no network cannot fix it.

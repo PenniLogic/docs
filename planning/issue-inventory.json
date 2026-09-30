@@ -3,7 +3,7 @@
   "organization": "PenniLogic",
   "organization_id": 335295566,
   "operator": "basiltt",
-  "snapshot_at": "2026-09-30T01:07:38Z",
+  "snapshot_at": "2026-09-30T01:15:16Z",
   "refresh_command": "python scripts/check_test_strategy.py --refresh-inventory",
   "note": "Offline snapshot of the public issue inventory for the test strategy reconciliation; identity comes from the plan-id marker and the original-specification source each issue body carries, never from titles. Refresh at each review-cadence trigger.",
   "issue_count": 408,
@@ -12,39 +12,48 @@
   "repositories": {
     "PenniLogic/.github": {
       "id": 1394134381,
-      "issue_count": 3
+      "issue_count": 3,
+      "total_count": 3
     },
     "PenniLogic/docs": {
       "id": 1394134442,
-      "issue_count": 139
+      "issue_count": 139,
+      "total_count": 139
     },
     "PenniLogic/contracts": {
       "id": 1394134505,
-      "issue_count": 25
+      "issue_count": 25,
+      "total_count": 25
     },
     "PenniLogic/api": {
       "id": 1394134582,
-      "issue_count": 81
+      "issue_count": 81,
+      "total_count": 81
     },
     "PenniLogic/ai-service": {
       "id": 1394134652,
-      "issue_count": 14
+      "issue_count": 14,
+      "total_count": 14
     },
     "PenniLogic/android": {
       "id": 1394134737,
-      "issue_count": 63
+      "issue_count": 63,
+      "total_count": 63
     },
     "PenniLogic/web": {
       "id": 1394134850,
-      "issue_count": 26
+      "issue_count": 26,
+      "total_count": 26
     },
     "PenniLogic/admin": {
       "id": 1394135000,
-      "issue_count": 19
+      "issue_count": 19,
+      "total_count": 19
     },
     "PenniLogic/infra": {
       "id": 1394135059,
-      "issue_count": 38
+      "issue_count": 38,
+      "total_count": 38
     }
   },
   "issues": [

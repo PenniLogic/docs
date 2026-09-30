@@ -167,6 +167,7 @@ query($owner: String!, $name: String!, $after: String) {
   repository(owner: $owner, name: $name) {
     databaseId
     issues(first: 100, after: $after, states: [OPEN, CLOSED], orderBy: {field: CREATED_AT, direction: ASC}) {
+      totalCount
       pageInfo { hasNextPage endCursor }
       nodes { number title state stateReason body }
     }
@@ -261,6 +262,9 @@ def validate_inventory(inventory):
     for name, record in repositories.items():
         if not isinstance(record, dict) or record.get("id") != REPOSITORY_IDS[name]:
             raise ValueError(f"Inventory repository {name} does not carry id {REPOSITORY_IDS[name]}")
+        # planning/README.md rule 1: the drained count is recorded beside the connection's totalCount.
+        if record.get("total_count") != record.get("issue_count") or isinstance(record.get("issue_count"), bool):
+            raise ValueError(f"Inventory repository {name} does not record total_count equal to its drained issue_count")
     issues = inventory.get("issues")
     if not isinstance(issues, list) or not issues:
         raise ValueError("Inventory has no issues")
@@ -1054,6 +1058,7 @@ def fetch_inventory(run=gh, now=None):
         owner, name = full_name.split("/")
         after = None
         count = 0
+        total = None
         while True:
             variables = {"owner": owner, "name": name, "after": after}
             data = run(["api", "graphql", "--input", "-"], {"query": ISSUES_QUERY, "variables": variables})
@@ -1063,13 +1068,18 @@ def fetch_inventory(run=gh, now=None):
             if repository["databaseId"] != expected_id:
                 raise RuntimeError(f"Repository {full_name} resolved to id {repository['databaseId']}, expected {expected_id}")
             page = repository["issues"]
+            total = page["totalCount"]
             for node in page["nodes"]:
                 issues.append(inventory_record(full_name, node))
                 count += 1
             if not page["pageInfo"]["hasNextPage"]:
                 break
             after = page["pageInfo"]["endCursor"]
-        repositories[full_name] = {"id": expected_id, "issue_count": count}
+        # planning/README.md rule 1: a connection drained by hasNextPage alone has not proven it read the
+        # whole population; the fetched count must equal totalCount, and both are recorded.
+        if count != total:
+            raise RuntimeError(f"{full_name}: drained {count} issues but the connection reports totalCount {total}")
+        repositories[full_name] = {"id": expected_id, "issue_count": count, "total_count": total}
     issues.sort(key=lambda issue: (REPOSITORY_ORDER[issue["repository"]], issue["number"]))
     now = now or datetime.datetime.now(datetime.timezone.utc)
     return {
@@ -1096,6 +1106,49 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2, ensure_ascii=True) + "\n", encoding="utf-8", newline="\n")
 
 
+def inventory_diff(before, after):
+    """Read-back receipt (planning/README.md rule 4): what changed between two snapshots, by reference."""
+    old = {issue["reference"]: issue for issue in before.get("issues", [])}
+    new = {issue["reference"]: issue for issue in after["issues"]}
+    identity = ("plan_id", "source")
+    state = ("state", "state_reason")
+    return {
+        "added": sorted(reference for reference in new if reference not in old),
+        "removed": sorted(reference for reference in old if reference not in new),
+        "state_changed": sorted(
+            reference for reference in new if reference in old
+            and any(old[reference].get(key) != new[reference].get(key) for key in state)
+        ),
+        "identity_changed": sorted(
+            reference for reference in new if reference in old
+            and any(old[reference].get(key) != new[reference].get(key) for key in identity)
+        ),
+    }
+
+
+def _refresh_inventory():
+    """Refresh the snapshot as basiltt, validate it, write it and print the receipt against the previous one."""
+    target = ROOT / INVENTORY
+    previous = load_json(target) if target.exists() else {"issues": []}
+    inventory = fetch_inventory()
+    validate_inventory(inventory)
+    write_json(target, inventory)
+    drained = ", ".join(
+        f"{name.split('/')[1]} {record['issue_count']}/{record['total_count']}" for name, record in inventory["repositories"].items()
+    )
+    diff = inventory_diff(previous, inventory)
+    print(f"Issue inventory refreshed as {OPERATOR}: {inventory['issue_count']} issues at {inventory['snapshot_at']}.")
+    print(f"Drained/totalCount per repository: {drained}.")
+    print(
+        f"Receipt against the previous snapshot: {len(diff['added'])} added, {len(diff['removed'])} removed, "
+        f"{len(diff['state_changed'])} state changes, {len(diff['identity_changed'])} identity changes."
+    )
+    for key in ("added", "removed", "identity_changed"):
+        if diff[key]:
+            print(f"  {key}: {', '.join(diff[key])}")
+    return inventory
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Validate the published test strategy against the issue inventory.")
     parser.add_argument("--refresh-inventory", action="store_true", help=f"regenerate {INVENTORY} from the live API as {OPERATOR}")
@@ -1103,10 +1156,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.refresh_inventory:
-            inventory = fetch_inventory()
-            validate_inventory(inventory)
-            write_json(ROOT / INVENTORY, inventory)
-            print(f"Issue inventory refreshed as {OPERATOR}: {inventory['issue_count']} issues at {inventory['snapshot_at']}.")
+            _refresh_inventory()
         if args.render:
             for name, block in render_document_blocks(load_json(ROOT / STRATEGY)).items():
                 print(f"<!-- {name} -->\n{block}")
