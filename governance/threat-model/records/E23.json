@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E23",
+  "title": "User-facing trust and privacy controls",
+  "issue": "PenniLogic/docs#26",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}
