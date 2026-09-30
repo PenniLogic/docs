@@ -195,10 +195,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-016
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-CAT-02` |
-| Status | PENDING |
+| Source | <a id="adr-016--categories-as-an-append-only-reporting-dimension-exact-allocations-as-of-views-and-redirect-merges"></a> [ADR-016.md](ADR-016.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-CAT-02 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-016 -->
@@ -309,7 +309,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-CAT-02` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Category model: append-only reporting dimension versus mutable rows that silently rewrite historical reports |
 | Blocks | Ledger schema, budgets, reporting |
 <!-- SLOT END ADR-016 -->
