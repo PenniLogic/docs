@@ -1,0 +1,4141 @@
+{
+  "schema_version": 1,
+  "organization": "PenniLogic",
+  "organization_id": 335295566,
+  "operator": "basiltt",
+  "snapshot_at": "2026-09-30T01:15:16Z",
+  "refresh_command": "python scripts/check_test_strategy.py --refresh-inventory",
+  "note": "Offline snapshot of the public issue inventory for the test strategy reconciliation; identity comes from the plan-id marker and the original-specification source each issue body carries, never from titles. Refresh at each review-cadence trigger.",
+  "issue_count": 408,
+  "open_count": 345,
+  "closed_count": 63,
+  "repositories": {
+    "PenniLogic/.github": {
+      "id": 1394134381,
+      "issue_count": 3,
+      "total_count": 3
+    },
+    "PenniLogic/docs": {
+      "id": 1394134442,
+      "issue_count": 139,
+      "total_count": 139
+    },
+    "PenniLogic/contracts": {
+      "id": 1394134505,
+      "issue_count": 25,
+      "total_count": 25
+    },
+    "PenniLogic/api": {
+      "id": 1394134582,
+      "issue_count": 81,
+      "total_count": 81
+    },
+    "PenniLogic/ai-service": {
+      "id": 1394134652,
+      "issue_count": 14,
+      "total_count": 14
+    },
+    "PenniLogic/android": {
+      "id": 1394134737,
+      "issue_count": 63,
+      "total_count": 63
+    },
+    "PenniLogic/web": {
+      "id": 1394134850,
+      "issue_count": 26,
+      "total_count": 26
+    },
+    "PenniLogic/admin": {
+      "id": 1394135000,
+      "issue_count": 19,
+      "total_count": 19
+    },
+    "PenniLogic/infra": {
+      "id": 1394135059,
+      "issue_count": 38,
+      "total_count": 38
+    }
+  },
+  "issues": [
+    {
+      "reference": "PenniLogic/.github#1",
+      "repository": "PenniLogic/.github",
+      "number": 1,
+      "title": "[T-GOV-AGENT-CAP-01] Align Developer and Producer capabilities with native duties",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/.github-private#9",
+      "plan_id": "T-GOV-AGENT-CAP-01"
+    },
+    {
+      "reference": "PenniLogic/.github#2",
+      "repository": "PenniLogic/.github",
+      "number": 2,
+      "title": "[T-GOV-KEYLESS-AGENTS-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/.github-private#15",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/.github#4",
+      "repository": "PenniLogic/.github",
+      "number": 4,
+      "title": "Treat non-owner issue and pull-request comments as untrusted data in the shared agent profiles and repository instructions",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-GOV-STRIDE-E01-F03"
+    },
+    {
+      "reference": "PenniLogic/docs#1",
+      "repository": "PenniLogic/docs",
+      "number": 1,
+      "title": "Publish the shared client state and copy taxonomy for every non-happy path",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#52",
+      "plan_id": "T-UX-01"
+    },
+    {
+      "reference": "PenniLogic/docs#2",
+      "repository": "PenniLogic/docs",
+      "number": 2,
+      "title": "[EPIC] E01 - Engineering foundations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#1",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#3",
+      "repository": "PenniLogic/docs",
+      "number": 3,
+      "title": "[EPIC] E02 - Contracts and domain model",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#2",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#4",
+      "repository": "PenniLogic/docs",
+      "number": 4,
+      "title": "[EPIC] E03 - Identity and accounts",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#3",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#5",
+      "repository": "PenniLogic/docs",
+      "number": 5,
+      "title": "[EPIC] E04 - Ledger and transactions",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#4",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#6",
+      "repository": "PenniLogic/docs",
+      "number": 6,
+      "title": "[EPIC] E05 - Debt engine",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#5",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#7",
+      "repository": "PenniLogic/docs",
+      "number": 7,
+      "title": "[EPIC] E06 - Debt experience (Android)",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#6",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#8",
+      "repository": "PenniLogic/docs",
+      "number": 8,
+      "title": "[EPIC] E07 - Retention instrumentation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#7",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#9",
+      "repository": "PenniLogic/docs",
+      "number": 9,
+      "title": "[EPIC] E08 - Ingestion pipeline",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#8",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#10",
+      "repository": "PenniLogic/docs",
+      "number": 10,
+      "title": "[EPIC] E09 - SMS capture and Play declaration",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#9",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#11",
+      "repository": "PenniLogic/docs",
+      "number": 11,
+      "title": "[EPIC] E10 - Notification capture",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#10",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#12",
+      "repository": "PenniLogic/docs",
+      "number": 12,
+      "title": "[EPIC] E11 - Clarification inbox",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#11",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#13",
+      "repository": "PenniLogic/docs",
+      "number": 13,
+      "title": "[EPIC] E12 - Web application",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#12",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#14",
+      "repository": "PenniLogic/docs",
+      "number": 14,
+      "title": "[EPIC] E13 - Admin console",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#13",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#15",
+      "repository": "PenniLogic/docs",
+      "number": 15,
+      "title": "[EPIC] E14 - Subscriptions and entitlements",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#14",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#16",
+      "repository": "PenniLogic/docs",
+      "number": 16,
+      "title": "[EPIC] E15 - Split groups",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#15",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#17",
+      "repository": "PenniLogic/docs",
+      "number": 17,
+      "title": "[EPIC] E16 - Family groups",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#16",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#18",
+      "repository": "PenniLogic/docs",
+      "number": 18,
+      "title": "[EPIC] E17 - AI harness",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#17",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#19",
+      "repository": "PenniLogic/docs",
+      "number": 19,
+      "title": "[EPIC] E18 - AI product features",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#18",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#20",
+      "repository": "PenniLogic/docs",
+      "number": 20,
+      "title": "[EPIC] E19 - Security hardening",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#19",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#21",
+      "repository": "PenniLogic/docs",
+      "number": 21,
+      "title": "[EPIC] E20 - Compliance readiness",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#20",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#22",
+      "repository": "PenniLogic/docs",
+      "number": 22,
+      "title": "Define and publish the test strategy",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#21",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#23",
+      "repository": "PenniLogic/docs",
+      "number": 23,
+      "title": "Define the release checklist and non-functional quality gates",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#22",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#24",
+      "repository": "PenniLogic/docs",
+      "number": 24,
+      "title": "[EPIC] E21 - Income and budgeting",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#23",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#25",
+      "repository": "PenniLogic/docs",
+      "number": 25,
+      "title": "[EPIC] E22 - Goal planning",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#24",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#26",
+      "repository": "PenniLogic/docs",
+      "number": 26,
+      "title": "[EPIC] E23 - User-facing trust and privacy controls",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#25",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#27",
+      "repository": "PenniLogic/docs",
+      "number": 27,
+      "title": "[EPIC] E24 - Platform, deployment and reliability",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#26",
+      "plan_id": "E24"
+    },
+    {
+      "reference": "PenniLogic/docs#28",
+      "repository": "PenniLogic/docs",
+      "number": 28,
+      "title": "[EPIC] E25 - Quality, verification and release assurance",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#27",
+      "plan_id": "E25"
+    },
+    {
+      "reference": "PenniLogic/docs#29",
+      "repository": "PenniLogic/docs",
+      "number": 29,
+      "title": "[EPIC] E26 - Architecture decision gates",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#28",
+      "plan_id": "E26"
+    },
+    {
+      "reference": "PenniLogic/docs#30",
+      "repository": "PenniLogic/docs",
+      "number": 30,
+      "title": "[EPIC] E27 - Launch-blocking compliance floor",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#29",
+      "plan_id": "E27"
+    },
+    {
+      "reference": "PenniLogic/docs#31",
+      "repository": "PenniLogic/docs",
+      "number": 31,
+      "title": "[EPIC] E28 - Advanced ingestion: email, receipts and cash",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#30",
+      "plan_id": "E28"
+    },
+    {
+      "reference": "PenniLogic/docs#32",
+      "repository": "PenniLogic/docs",
+      "number": 32,
+      "title": "[EPIC] E29 - Account Aggregator and open banking readiness",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#31",
+      "plan_id": "E29"
+    },
+    {
+      "reference": "PenniLogic/docs#33",
+      "repository": "PenniLogic/docs",
+      "number": 33,
+      "title": "[EPIC] E30 - Globalization and multi-currency",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#32",
+      "plan_id": "E30"
+    },
+    {
+      "reference": "PenniLogic/docs#34",
+      "repository": "PenniLogic/docs",
+      "number": 34,
+      "title": "[EPIC] E32 - Server sync and offline data plane",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#34",
+      "plan_id": "E32"
+    },
+    {
+      "reference": "PenniLogic/docs#35",
+      "repository": "PenniLogic/docs",
+      "number": 35,
+      "title": "ADR: money wire format, time and idempotency conventions",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#37",
+      "plan_id": "T-ADR-MONEY-01"
+    },
+    {
+      "reference": "PenniLogic/docs#36",
+      "repository": "PenniLogic/docs",
+      "number": 36,
+      "title": "ADR: category model as an append-only reporting dimension",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#38",
+      "plan_id": "T-ADR-CAT-02"
+    },
+    {
+      "reference": "PenniLogic/docs#37",
+      "repository": "PenniLogic/docs",
+      "number": 37,
+      "title": "ADR: ledger currency, foreign exchange reservation and debt balance derivation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#39",
+      "plan_id": "T-ADR-LEDGER-03"
+    },
+    {
+      "reference": "PenniLogic/docs#38",
+      "repository": "PenniLogic/docs",
+      "number": 38,
+      "title": "ADR: encryption scope, searchable fields and row-level security",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#40",
+      "plan_id": "T-ADR-CRYPTO-04"
+    },
+    {
+      "reference": "PenniLogic/docs#39",
+      "repository": "PenniLogic/docs",
+      "number": 39,
+      "title": "ADR: authentication, passkeys, provider, relying-party identifier and recovery",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#41",
+      "plan_id": "T-ADR-AUTH-05"
+    },
+    {
+      "reference": "PenniLogic/docs#40",
+      "repository": "PenniLogic/docs",
+      "number": 40,
+      "title": "ADR: administrative boundary, deployment, database role and audit stream",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#42",
+      "plan_id": "T-ADR-ADMIN-06"
+    },
+    {
+      "reference": "PenniLogic/docs#41",
+      "repository": "PenniLogic/docs",
+      "number": 41,
+      "title": "ADR: shared-data erasure and cross-user key access",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#43",
+      "plan_id": "T-ADR-ERASE-07"
+    },
+    {
+      "reference": "PenniLogic/docs#42",
+      "repository": "PenniLogic/docs",
+      "number": 42,
+      "title": "ADR: AI egress, runtime platform and Mode C custom endpoints",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#44",
+      "plan_id": "T-ADR-AIEGRESS-08"
+    },
+    {
+      "reference": "PenniLogic/docs#43",
+      "repository": "PenniLogic/docs",
+      "number": 43,
+      "title": "Run the independent penetration test and named red-team scenarios before public launch",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#45",
+      "plan_id": "T-QA-10"
+    },
+    {
+      "reference": "PenniLogic/docs#44",
+      "repository": "PenniLogic/docs",
+      "number": 44,
+      "title": "Publish the compliance floor pack and rehearse the breach reporting drill",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#46",
+      "plan_id": "T-CMP-04"
+    },
+    {
+      "reference": "PenniLogic/docs#45",
+      "repository": "PenniLogic/docs",
+      "number": 45,
+      "title": "Complete post-beta compliance readiness: counsel review, roles, transfers and payment self-assessment",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#47",
+      "plan_id": "T-CMR-01"
+    },
+    {
+      "reference": "PenniLogic/docs#46",
+      "repository": "PenniLogic/docs",
+      "number": 46,
+      "title": "Produce the account aggregator readiness assessment and consent artefact design",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#48",
+      "plan_id": "T-AAG-01"
+    },
+    {
+      "reference": "PenniLogic/docs#47",
+      "repository": "PenniLogic/docs",
+      "number": 47,
+      "title": "ADR: entitlement and quota model, plan identity and usage accounting",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#54",
+      "plan_id": "T-ADR-ENT-09"
+    },
+    {
+      "reference": "PenniLogic/docs#48",
+      "repository": "PenniLogic/docs",
+      "number": 48,
+      "title": "Run the per-epic STRIDE threat-model refresh at Definition of Ready",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#55",
+      "plan_id": "T-QA-14"
+    },
+    {
+      "reference": "PenniLogic/docs#49",
+      "repository": "PenniLogic/docs",
+      "number": 49,
+      "title": "Run the executable MVP and private-beta evidence gate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#56",
+      "plan_id": "T-REL-02"
+    },
+    {
+      "reference": "PenniLogic/docs#50",
+      "repository": "PenniLogic/docs",
+      "number": 50,
+      "title": "Run the public-launch evidence gate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#57",
+      "plan_id": "T-REL-03"
+    },
+    {
+      "reference": "PenniLogic/docs#51",
+      "repository": "PenniLogic/docs",
+      "number": 51,
+      "title": "Establish the parser template authoring runbook and format-change response",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#61",
+      "plan_id": "T-PRS-03"
+    },
+    {
+      "reference": "PenniLogic/docs#52",
+      "repository": "PenniLogic/docs",
+      "number": 52,
+      "title": "ADR: credit bureau score integration or explicit non-goal",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#62",
+      "plan_id": "T-ADR-BUREAU-11"
+    },
+    {
+      "reference": "PenniLogic/docs#53",
+      "repository": "PenniLogic/docs",
+      "number": 53,
+      "title": "Run the debt-first concept test before the debt experience is built",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#63",
+      "plan_id": "T-RES-01"
+    },
+    {
+      "reference": "PenniLogic/docs#54",
+      "repository": "PenniLogic/docs",
+      "number": 54,
+      "title": "Run moderated usability on the Android onboarding and permission prototype",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#64",
+      "plan_id": "T-RES-02"
+    },
+    {
+      "reference": "PenniLogic/docs#55",
+      "repository": "PenniLogic/docs",
+      "number": 55,
+      "title": "Publish shared design tokens, theming and the dark mode contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#65",
+      "plan_id": "T-DSY-01"
+    },
+    {
+      "reference": "PenniLogic/docs#56",
+      "repository": "PenniLogic/docs",
+      "number": 56,
+      "title": "ADR: persisted user-derived embeddings or explicit prohibition",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#67",
+      "plan_id": "T-ADR-EMBED-12"
+    },
+    {
+      "reference": "PenniLogic/docs#57",
+      "repository": "PenniLogic/docs",
+      "number": 57,
+      "title": "Complete the Play Financial features declaration and permission classification",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#69",
+      "plan_id": "T-CMP-05"
+    },
+    {
+      "reference": "PenniLogic/docs#58",
+      "repository": "PenniLogic/docs",
+      "number": 58,
+      "title": "[EPIC] E33 - Experience strategy, research and design operations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#71",
+      "plan_id": "E33"
+    },
+    {
+      "reference": "PenniLogic/docs#59",
+      "repository": "PenniLogic/docs",
+      "number": 59,
+      "title": "[EPIC] E34 - Cross-platform design system, content and handoff",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#72",
+      "plan_id": "E34"
+    },
+    {
+      "reference": "PenniLogic/docs#60",
+      "repository": "PenniLogic/docs",
+      "number": 60,
+      "title": "[EPIC] E35 - Android experience design",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#73",
+      "plan_id": "E35"
+    },
+    {
+      "reference": "PenniLogic/docs#61",
+      "repository": "PenniLogic/docs",
+      "number": 61,
+      "title": "[EPIC] E36 - Customer web experience design",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#74",
+      "plan_id": "E36"
+    },
+    {
+      "reference": "PenniLogic/docs#62",
+      "repository": "PenniLogic/docs",
+      "number": 62,
+      "title": "[EPIC] E37 - Admin and operator experience design",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#75",
+      "plan_id": "E37"
+    },
+    {
+      "reference": "PenniLogic/docs#63",
+      "repository": "PenniLogic/docs",
+      "number": 63,
+      "title": "[EPIC] E38 - Experience validation and design quality assurance",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#76",
+      "plan_id": "E38"
+    },
+    {
+      "reference": "PenniLogic/docs#64",
+      "repository": "PenniLogic/docs",
+      "number": 64,
+      "title": "Establish CDO governance, DesignOps and artifact decision rights",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#77",
+      "plan_id": "T-UXR-01"
+    },
+    {
+      "reference": "PenniLogic/docs#65",
+      "repository": "PenniLogic/docs",
+      "number": 65,
+      "title": "Create the ethical research operations and participant evidence system",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#78",
+      "plan_id": "T-UXR-02"
+    },
+    {
+      "reference": "PenniLogic/docs#66",
+      "repository": "PenniLogic/docs",
+      "number": 66,
+      "title": "Validate personas, jobs, financial mental models and exclusion risks",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#79",
+      "plan_id": "T-UXR-03"
+    },
+    {
+      "reference": "PenniLogic/docs#67",
+      "repository": "PenniLogic/docs",
+      "number": 67,
+      "title": "Map end-to-end journeys and service blueprints across every channel",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#80",
+      "plan_id": "T-UXR-04"
+    },
+    {
+      "reference": "PenniLogic/docs#69",
+      "repository": "PenniLogic/docs",
+      "number": 69,
+      "title": "Publish the cross-repository parallel pull request and expand-migrate-contract protocol",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/docs#36",
+      "plan_id": "T-GOV-02"
+    },
+    {
+      "reference": "PenniLogic/docs#70",
+      "repository": "PenniLogic/docs",
+      "number": 70,
+      "title": "Split the ADR record into per-decision files and generate the index",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/docs#53",
+      "plan_id": "T-ADR-INDEX-10"
+    },
+    {
+      "reference": "PenniLogic/docs#71",
+      "repository": "PenniLogic/docs",
+      "number": 71,
+      "title": "[T-ADR-REC-01] Make ADR output writes recoverable and align rollback guidance",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/docs#168",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#72",
+      "repository": "PenniLogic/docs",
+      "number": 72,
+      "title": "Document the GraphQL silent-truncation trap and audit the live planning scripts",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/docs#176",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#73",
+      "repository": "PenniLogic/docs",
+      "number": 73,
+      "title": "[T-GOV-KEYLESS-DOCS-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/docs#180",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#74",
+      "repository": "PenniLogic/docs",
+      "number": 74,
+      "title": "Approve platform allocation, sitemaps and navigation architecture",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#81",
+      "plan_id": "T-UXR-05"
+    },
+    {
+      "reference": "PenniLogic/docs#75",
+      "repository": "PenniLogic/docs",
+      "number": 75,
+      "title": "Publish the screen, flow, component and test traceability registry",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#82",
+      "plan_id": "T-UXR-06"
+    },
+    {
+      "reference": "PenniLogic/docs#76",
+      "repository": "PenniLogic/docs",
+      "number": 76,
+      "title": "Select and record the PenniLogic visual and interaction direction",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#83",
+      "plan_id": "T-UXR-07"
+    },
+    {
+      "reference": "PenniLogic/docs#77",
+      "repository": "PenniLogic/docs",
+      "number": 77,
+      "title": "Define UX outcome metrics, continuous research and design debt governance",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#84",
+      "plan_id": "T-UXR-08"
+    },
+    {
+      "reference": "PenniLogic/docs#78",
+      "repository": "PenniLogic/docs",
+      "number": 78,
+      "title": "Establish the governed Figma libraries and component contribution model",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#85",
+      "plan_id": "T-DSY-02"
+    },
+    {
+      "reference": "PenniLogic/docs#79",
+      "repository": "PenniLogic/docs",
+      "number": 79,
+      "title": "Define typography, iconography, illustration and financial visual language",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#86",
+      "plan_id": "T-DSY-03"
+    },
+    {
+      "reference": "PenniLogic/docs#80",
+      "repository": "PenniLogic/docs",
+      "number": 80,
+      "title": "Design navigation, action, form and validation component families",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#87",
+      "plan_id": "T-DSY-04"
+    },
+    {
+      "reference": "PenniLogic/docs#81",
+      "repository": "PenniLogic/docs",
+      "number": 81,
+      "title": "Design money, data display, collection and visualization components",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#88",
+      "plan_id": "T-DSY-05"
+    },
+    {
+      "reference": "PenniLogic/docs#82",
+      "repository": "PenniLogic/docs",
+      "number": 82,
+      "title": "Design feedback, overlay, trust, consent and security components",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#89",
+      "plan_id": "T-DSY-06"
+    },
+    {
+      "reference": "PenniLogic/docs#83",
+      "repository": "PenniLogic/docs",
+      "number": 83,
+      "title": "Specify adaptive layout, themes, motion, haptics and reduced-motion behavior",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#90",
+      "plan_id": "T-DSY-07"
+    },
+    {
+      "reference": "PenniLogic/docs#84",
+      "repository": "PenniLogic/docs",
+      "number": 84,
+      "title": "Publish the product glossary, voice and regulated content patterns",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#91",
+      "plan_id": "T-CNT-01"
+    },
+    {
+      "reference": "PenniLogic/docs#85",
+      "repository": "PenniLogic/docs",
+      "number": 85,
+      "title": "Define localization, pseudo-localization and bidirectional content readiness",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#92",
+      "plan_id": "T-CNT-02"
+    },
+    {
+      "reference": "PenniLogic/docs#86",
+      "repository": "PenniLogic/docs",
+      "number": 86,
+      "title": "Publish the design-to-code handoff and conformance contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#93",
+      "plan_id": "T-HND-01"
+    },
+    {
+      "reference": "PenniLogic/docs#87",
+      "repository": "PenniLogic/docs",
+      "number": 87,
+      "title": "Design the Android sitemap, adaptive shell and navigation behavior",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#94",
+      "plan_id": "T-UXA-01"
+    },
+    {
+      "reference": "PenniLogic/docs#88",
+      "repository": "PenniLogic/docs",
+      "number": 88,
+      "title": "Design Android authentication, onboarding, consent, permissions and recovery",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#95",
+      "plan_id": "T-UXA-02"
+    },
+    {
+      "reference": "PenniLogic/docs#89",
+      "repository": "PenniLogic/docs",
+      "number": 89,
+      "title": "Design Android home, debt list, detail and debt-free status",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#96",
+      "plan_id": "T-UXA-03"
+    },
+    {
+      "reference": "PenniLogic/docs#90",
+      "repository": "PenniLogic/docs",
+      "number": 90,
+      "title": "Design Android strategies, simulator and advanced debt scenarios",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#97",
+      "plan_id": "T-UXA-04"
+    },
+    {
+      "reference": "PenniLogic/docs#91",
+      "repository": "PenniLogic/docs",
+      "number": 91,
+      "title": "Design Android transactions, accounts, categories and statement import",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#98",
+      "plan_id": "T-UXA-05"
+    },
+    {
+      "reference": "PenniLogic/docs#92",
+      "repository": "PenniLogic/docs",
+      "number": 92,
+      "title": "Design Android capture health, clarification, email and receipt review",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#99",
+      "plan_id": "T-UXA-06"
+    },
+    {
+      "reference": "PenniLogic/docs#93",
+      "repository": "PenniLogic/docs",
+      "number": 93,
+      "title": "Design Android income, budgets, recurring items and bill calendar",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#100",
+      "plan_id": "T-UXA-07"
+    },
+    {
+      "reference": "PenniLogic/docs#94",
+      "repository": "PenniLogic/docs",
+      "number": 94,
+      "title": "Design Android goals, net worth, holdings and financial reports",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#101",
+      "plan_id": "T-UXA-08"
+    },
+    {
+      "reference": "PenniLogic/docs#95",
+      "repository": "PenniLogic/docs",
+      "number": 95,
+      "title": "Design the Android split-group lifecycle and settlement experience",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#102",
+      "plan_id": "T-UXA-09"
+    },
+    {
+      "reference": "PenniLogic/docs#96",
+      "repository": "PenniLogic/docs",
+      "number": 96,
+      "title": "Design Android family sharing, household goals and safe exit",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#103",
+      "plan_id": "T-UXA-10"
+    },
+    {
+      "reference": "PenniLogic/docs#97",
+      "repository": "PenniLogic/docs",
+      "number": 97,
+      "title": "Design Android assistant, BYOK, history and natural-language drafts",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#104",
+      "plan_id": "T-UXA-11"
+    },
+    {
+      "reference": "PenniLogic/docs#98",
+      "repository": "PenniLogic/docs",
+      "number": 98,
+      "title": "Design Android billing, notification preferences and retention messaging",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#105",
+      "plan_id": "T-UXA-12"
+    },
+    {
+      "reference": "PenniLogic/docs#99",
+      "repository": "PenniLogic/docs",
+      "number": 99,
+      "title": "Design Android trust, privacy, support and account control",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#106",
+      "plan_id": "T-UXA-13"
+    },
+    {
+      "reference": "PenniLogic/docs#100",
+      "repository": "PenniLogic/docs",
+      "number": 100,
+      "title": "Design Android constrained-device, offline and adaptive failure behavior",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#107",
+      "plan_id": "T-UXA-14"
+    },
+    {
+      "reference": "PenniLogic/docs#101",
+      "repository": "PenniLogic/docs",
+      "number": 101,
+      "title": "Design the debt-progress Android home-screen widget and privacy states",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#108",
+      "plan_id": "T-UXA-15"
+    },
+    {
+      "reference": "PenniLogic/docs#102",
+      "repository": "PenniLogic/docs",
+      "number": 102,
+      "title": "Validate and publish the complete Android prototype and handoff",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#109",
+      "plan_id": "T-UXA-16"
+    },
+    {
+      "reference": "PenniLogic/docs#103",
+      "repository": "PenniLogic/docs",
+      "number": 103,
+      "title": "Design the responsive web shell, authentication and recovery journeys",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#110",
+      "plan_id": "T-UXW-01"
+    },
+    {
+      "reference": "PenniLogic/docs#104",
+      "repository": "PenniLogic/docs",
+      "number": 104,
+      "title": "Design web accounts, transactions, bulk actions, imports and export",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#111",
+      "plan_id": "T-UXW-02"
+    },
+    {
+      "reference": "PenniLogic/docs#105",
+      "repository": "PenniLogic/docs",
+      "number": 105,
+      "title": "Design the web debt dashboard, strategy comparison and derivation inspector",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#112",
+      "plan_id": "T-UXW-03"
+    },
+    {
+      "reference": "PenniLogic/docs#106",
+      "repository": "PenniLogic/docs",
+      "number": 106,
+      "title": "Design web debt entry and advanced debt scenario workflows",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#113",
+      "plan_id": "T-UXW-04"
+    },
+    {
+      "reference": "PenniLogic/docs#107",
+      "repository": "PenniLogic/docs",
+      "number": 107,
+      "title": "Design the web clarification, candidate comparison and rule rollback inbox",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#114",
+      "plan_id": "T-UXW-05"
+    },
+    {
+      "reference": "PenniLogic/docs#108",
+      "repository": "PenniLogic/docs",
+      "number": 108,
+      "title": "Design web net worth, holdings, income, budgets and goals",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#115",
+      "plan_id": "T-UXW-06"
+    },
+    {
+      "reference": "PenniLogic/docs#109",
+      "repository": "PenniLogic/docs",
+      "number": 109,
+      "title": "Design web split groups, family sharing and household goals",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#116",
+      "plan_id": "T-UXW-07"
+    },
+    {
+      "reference": "PenniLogic/docs#110",
+      "repository": "PenniLogic/docs",
+      "number": 110,
+      "title": "Design the web assistant, BYOK and custom endpoint management",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#117",
+      "plan_id": "T-UXW-08"
+    },
+    {
+      "reference": "PenniLogic/docs#111",
+      "repository": "PenniLogic/docs",
+      "number": 111,
+      "title": "Design web billing, plan lifecycle and notification preferences",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#118",
+      "plan_id": "T-UXW-09"
+    },
+    {
+      "reference": "PenniLogic/docs#112",
+      "repository": "PenniLogic/docs",
+      "number": 112,
+      "title": "Design the web trust centre, privacy controls and support journeys",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#119",
+      "plan_id": "T-UXW-10"
+    },
+    {
+      "reference": "PenniLogic/docs#113",
+      "repository": "PenniLogic/docs",
+      "number": 113,
+      "title": "Design multi-currency web presentation and reporting controls",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#120",
+      "plan_id": "T-UXW-11"
+    },
+    {
+      "reference": "PenniLogic/docs#114",
+      "repository": "PenniLogic/docs",
+      "number": 114,
+      "title": "Validate and publish the complete customer web prototype and handoff",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#121",
+      "plan_id": "T-UXW-12"
+    },
+    {
+      "reference": "PenniLogic/docs#115",
+      "repository": "PenniLogic/docs",
+      "number": 115,
+      "title": "Design operator roles, console shell and authorization-aware sitemap",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#122",
+      "plan_id": "T-UXM-01"
+    },
+    {
+      "reference": "PenniLogic/docs#116",
+      "repository": "PenniLogic/docs",
+      "number": 116,
+      "title": "Design redaction, unmask, elevation, bulk export and break-glass flows",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#123",
+      "plan_id": "T-UXM-02"
+    },
+    {
+      "reference": "PenniLogic/docs#117",
+      "repository": "PenniLogic/docs",
+      "number": 117,
+      "title": "Design operator lifecycle, role changes and qualification recertification",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#124",
+      "plan_id": "T-UXM-03"
+    },
+    {
+      "reference": "PenniLogic/docs#118",
+      "repository": "PenniLogic/docs",
+      "number": 118,
+      "title": "Design plans, features, quotas and immutable version operations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#125",
+      "plan_id": "T-UXM-04"
+    },
+    {
+      "reference": "PenniLogic/docs#119",
+      "repository": "PenniLogic/docs",
+      "number": 119,
+      "title": "Design AI provider, routing, spend-cap and kill-switch operations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#126",
+      "plan_id": "T-UXM-05"
+    },
+    {
+      "reference": "PenniLogic/docs#120",
+      "repository": "PenniLogic/docs",
+      "number": 120,
+      "title": "Design support, account status, refunds and billing operations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#127",
+      "plan_id": "T-UXM-06"
+    },
+    {
+      "reference": "PenniLogic/docs#121",
+      "repository": "PenniLogic/docs",
+      "number": 121,
+      "title": "Design the rights-request and grievance operator queue",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#128",
+      "plan_id": "T-UXM-07"
+    },
+    {
+      "reference": "PenniLogic/docs#122",
+      "repository": "PenniLogic/docs",
+      "number": 122,
+      "title": "Design audit, access monitoring and aggregate analytics surfaces",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#129",
+      "plan_id": "T-UXM-08"
+    },
+    {
+      "reference": "PenniLogic/docs#123",
+      "repository": "PenniLogic/docs",
+      "number": 123,
+      "title": "Design production-access broker, restore and access-governance views",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#130",
+      "plan_id": "T-UXM-09"
+    },
+    {
+      "reference": "PenniLogic/docs#124",
+      "repository": "PenniLogic/docs",
+      "number": 124,
+      "title": "Design incident, red-team and release evidence operations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#131",
+      "plan_id": "T-UXM-10"
+    },
+    {
+      "reference": "PenniLogic/docs#125",
+      "repository": "PenniLogic/docs",
+      "number": 125,
+      "title": "Validate and publish the complete admin operator prototype and handoff",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#132",
+      "plan_id": "T-UXM-11"
+    },
+    {
+      "reference": "PenniLogic/docs#126",
+      "repository": "PenniLogic/docs",
+      "number": 126,
+      "title": "Enforce experience registry, artifact and design-dependency coverage",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#133",
+      "plan_id": "T-DQA-01"
+    },
+    {
+      "reference": "PenniLogic/docs#127",
+      "repository": "PenniLogic/docs",
+      "number": 127,
+      "title": "Run independent heuristic reviews and cognitive walkthroughs",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#134",
+      "plan_id": "T-DQA-02"
+    },
+    {
+      "reference": "PenniLogic/docs#128",
+      "repository": "PenniLogic/docs",
+      "number": 128,
+      "title": "Audit prototype accessibility with assistive technology",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#135",
+      "plan_id": "T-DQA-03"
+    },
+    {
+      "reference": "PenniLogic/docs#129",
+      "repository": "PenniLogic/docs",
+      "number": 129,
+      "title": "Validate Android critical journeys and permission comprehension",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#136",
+      "plan_id": "T-DQA-04"
+    },
+    {
+      "reference": "PenniLogic/docs#130",
+      "repository": "PenniLogic/docs",
+      "number": 130,
+      "title": "Validate customer web bulk, planning and recovery journeys",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#137",
+      "plan_id": "T-DQA-05"
+    },
+    {
+      "reference": "PenniLogic/docs#131",
+      "repository": "PenniLogic/docs",
+      "number": 131,
+      "title": "Validate admin operator accuracy, four-eyes and clock-pressure journeys",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#138",
+      "plan_id": "T-DQA-06"
+    },
+    {
+      "reference": "PenniLogic/docs#132",
+      "repository": "PenniLogic/docs",
+      "number": 132,
+      "title": "Validate financial comprehension, content and localization readiness",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#139",
+      "plan_id": "T-DQA-07"
+    },
+    {
+      "reference": "PenniLogic/docs#133",
+      "repository": "PenniLogic/docs",
+      "number": 133,
+      "title": "Red-team privacy, coercion, dark-pattern and unsafe operator designs",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#140",
+      "plan_id": "T-DQA-08"
+    },
+    {
+      "reference": "PenniLogic/docs#134",
+      "repository": "PenniLogic/docs",
+      "number": 134,
+      "title": "Gate tokens, components, variants and design-system adoption",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#141",
+      "plan_id": "T-DQA-09"
+    },
+    {
+      "reference": "PenniLogic/docs#135",
+      "repository": "PenniLogic/docs",
+      "number": 135,
+      "title": "Implement design-to-code visual, interaction and semantic regression",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#142",
+      "plan_id": "T-DQA-10"
+    },
+    {
+      "reference": "PenniLogic/docs#136",
+      "repository": "PenniLogic/docs",
+      "number": 136,
+      "title": "Run cross-platform parity, UAT and release design QA",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#143",
+      "plan_id": "T-DQA-11"
+    },
+    {
+      "reference": "PenniLogic/docs#137",
+      "repository": "PenniLogic/docs",
+      "number": 137,
+      "title": "Run the cross-platform upfront design readiness gate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/docs#144",
+      "plan_id": "T-DQA-12"
+    },
+    {
+      "reference": "PenniLogic/docs#139",
+      "repository": "PenniLogic/docs",
+      "number": 139,
+      "title": "Client state taxonomy 1.0.x: reviewer follow-ups (section parser duplicate heading, still_available registration slot, validation retry label, marker association wording, rate_limited wording)",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#141",
+      "repository": "PenniLogic/docs",
+      "number": 141,
+      "title": "Restore the ADR layout generator and validator (validate_adr_layout.py) per adr/LAYOUT.md",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": null,
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/docs#146",
+      "repository": "PenniLogic/docs",
+      "number": 146,
+      "title": "ADR layout validator follow-ups: LAYOUT.md validation exercises and accepted-record integrity rules",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-ADR-INDEX-10-FOLLOWUP-01"
+    },
+    {
+      "reference": "PenniLogic/contracts#1",
+      "repository": "PenniLogic/contracts",
+      "number": 1,
+      "title": "Define the OpenAPI contract skeleton and generate clients",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#1",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/contracts#2",
+      "repository": "PenniLogic/contracts",
+      "number": 2,
+      "title": "Scaffold the contracts repository with spec lint, code generation and publishing",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#2",
+      "plan_id": "T-SCA-CON-01"
+    },
+    {
+      "reference": "PenniLogic/contracts#3",
+      "repository": "PenniLogic/contracts",
+      "number": 3,
+      "title": "Run provider and consumer contract testing against the published specification",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#3",
+      "plan_id": "T-QA-02"
+    },
+    {
+      "reference": "PenniLogic/contracts#4",
+      "repository": "PenniLogic/contracts",
+      "number": 4,
+      "title": "Define the sync contract: change feed, cursors, conflict rules and engine decision",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#4",
+      "plan_id": "T-SYN-01"
+    },
+    {
+      "reference": "PenniLogic/contracts#5",
+      "repository": "PenniLogic/contracts",
+      "number": 5,
+      "title": "Expand the contract for debts, strategies and simulation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#5",
+      "plan_id": "T-CON-01"
+    },
+    {
+      "reference": "PenniLogic/contracts#6",
+      "repository": "PenniLogic/contracts",
+      "number": 6,
+      "title": "Expand the contract for ingestion, deduplication and clarification",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#6",
+      "plan_id": "T-CON-02"
+    },
+    {
+      "reference": "PenniLogic/contracts#7",
+      "repository": "PenniLogic/contracts",
+      "number": 7,
+      "title": "Expand the contract for billing, entitlements and quota",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#7",
+      "plan_id": "T-CON-03"
+    },
+    {
+      "reference": "PenniLogic/contracts#8",
+      "repository": "PenniLogic/contracts",
+      "number": 8,
+      "title": "Publish the sharing contract for groups, grants, splits and settlements",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#8",
+      "plan_id": "T-CON-04"
+    },
+    {
+      "reference": "PenniLogic/contracts#9",
+      "repository": "PenniLogic/contracts",
+      "number": 9,
+      "title": "Expand the contract for multi-currency amounts, exchange groups and reporting currency",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#9",
+      "plan_id": "T-CON-05"
+    },
+    {
+      "reference": "PenniLogic/contracts#10",
+      "repository": "PenniLogic/contracts",
+      "number": 10,
+      "title": "Publish the deterministic AI tool contract with server-derived user scope",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#10",
+      "plan_id": "T-CON-06"
+    },
+    {
+      "reference": "PenniLogic/contracts#11",
+      "repository": "PenniLogic/contracts",
+      "number": 11,
+      "title": "Publish the administrative API contract with redaction as the default representation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#11",
+      "plan_id": "T-CON-07"
+    },
+    {
+      "reference": "PenniLogic/contracts#12",
+      "repository": "PenniLogic/contracts",
+      "number": 12,
+      "title": "Publish the contract for income, budgeting, safe-to-spend, net worth and goals",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#12",
+      "plan_id": "T-CON-08"
+    },
+    {
+      "reference": "PenniLogic/contracts#13",
+      "repository": "PenniLogic/contracts",
+      "number": 13,
+      "title": "Publish the shared statement-import contract components",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#14",
+      "plan_id": "T-CON-10"
+    },
+    {
+      "reference": "PenniLogic/contracts#14",
+      "repository": "PenniLogic/contracts",
+      "number": 14,
+      "title": "Publish the export, consent, rights-request and transparency contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#15",
+      "plan_id": "T-CON-09"
+    },
+    {
+      "reference": "PenniLogic/contracts#15",
+      "repository": "PenniLogic/contracts",
+      "number": 15,
+      "title": "Publish the messaging preference, device and support request contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#16",
+      "plan_id": "T-CON-11"
+    },
+    {
+      "reference": "PenniLogic/contracts#16",
+      "repository": "PenniLogic/contracts",
+      "number": 16,
+      "title": "Publish the shared error catalogue and problem detail contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#17",
+      "plan_id": "T-CON-12"
+    },
+    {
+      "reference": "PenniLogic/contracts#17",
+      "repository": "PenniLogic/contracts",
+      "number": 17,
+      "title": "Publish transaction lifecycle extensions for refunds, cash and recurring charges",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#18",
+      "plan_id": "T-CON-13"
+    },
+    {
+      "reference": "PenniLogic/contracts#18",
+      "repository": "PenniLogic/contracts",
+      "number": 18,
+      "title": "Publish the optional assistant conversation lifecycle contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#19",
+      "plan_id": "T-CON-14"
+    },
+    {
+      "reference": "PenniLogic/contracts#19",
+      "repository": "PenniLogic/contracts",
+      "number": 19,
+      "title": "Publish the core entity provenance and source-event contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#20",
+      "plan_id": "T-CON-15"
+    },
+    {
+      "reference": "PenniLogic/contracts#20",
+      "repository": "PenniLogic/contracts",
+      "number": 20,
+      "title": "Publish the natural-language transaction draft contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#21",
+      "plan_id": "T-CON-16"
+    },
+    {
+      "reference": "PenniLogic/contracts#21",
+      "repository": "PenniLogic/contracts",
+      "number": 21,
+      "title": "Publish the transaction query and filter contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/contracts#22",
+      "plan_id": "T-CON-17"
+    },
+    {
+      "reference": "PenniLogic/contracts#22",
+      "repository": "PenniLogic/contracts",
+      "number": 22,
+      "title": "[T-LEAN-C-CONTRACTS] Activate the reviewed lean development baseline",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/contracts#34",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/contracts#23",
+      "repository": "PenniLogic/contracts",
+      "number": 23,
+      "title": "[T-LEAN-M-CONTRACTS] Admit the lean validator transition",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/contracts#30",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/contracts#24",
+      "repository": "PenniLogic/contracts",
+      "number": 24,
+      "title": "[T-LEAN-V-CONTRACTS] Install the admitted lean-compatible validator",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/contracts#32",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/contracts#25",
+      "repository": "PenniLogic/contracts",
+      "number": 25,
+      "title": "[T-GOV-KEYLESS-CON-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/contracts#36",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#1",
+      "repository": "PenniLogic/api",
+      "number": 1,
+      "title": "Implement the Money primitive and ban floating-point money in CI",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#1",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#2",
+      "repository": "PenniLogic/api",
+      "number": 2,
+      "title": "Create the double-entry ledger schema with a database-enforced zero-sum invariant",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#2",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#3",
+      "repository": "PenniLogic/api",
+      "number": 3,
+      "title": "Establish the test harness: property-based testing and contract tests",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#3",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#4",
+      "repository": "PenniLogic/api",
+      "number": 4,
+      "title": "Implement registration, login and session management",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#4",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#5",
+      "repository": "PenniLogic/api",
+      "number": 5,
+      "title": "Implement refresh token rotation with reuse detection",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#5",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#6",
+      "repository": "PenniLogic/api",
+      "number": 6,
+      "title": "Implement financial account management",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#6",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#7",
+      "repository": "PenniLogic/api",
+      "number": 7,
+      "title": "Implement transaction creation with correct double entries",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#7",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#8",
+      "repository": "PenniLogic/api",
+      "number": 8,
+      "title": "Handle transfers between the users own accounts correctly",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#8",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#9",
+      "repository": "PenniLogic/api",
+      "number": 9,
+      "title": "Implement categories with hierarchy and system defaults",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#9",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#10",
+      "repository": "PenniLogic/api",
+      "number": 10,
+      "title": "Implement CSV and bank statement import with dry-run preview",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#10",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#11",
+      "repository": "PenniLogic/api",
+      "number": 11,
+      "title": "Model debts with their real-world terms",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#11",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#12",
+      "repository": "PenniLogic/api",
+      "number": 12,
+      "title": "Build the amortisation engine",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#12",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#13",
+      "repository": "PenniLogic/api",
+      "number": 13,
+      "title": "Compute payoff projections across the debt portfolio",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#13",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#14",
+      "repository": "PenniLogic/api",
+      "number": 14,
+      "title": "Implement avalanche, snowball and custom payoff strategies with comparison",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#14",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#15",
+      "repository": "PenniLogic/api",
+      "number": 15,
+      "title": "Build the extra-payment simulator",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#15",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#16",
+      "repository": "PenniLogic/api",
+      "number": 16,
+      "title": "Build the independent verification suite for all debt mathematics",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#16",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#17",
+      "repository": "PenniLogic/api",
+      "number": 17,
+      "title": "Build the source-agnostic ingestion pipeline",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#17",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#18",
+      "repository": "PenniLogic/api",
+      "number": 18,
+      "title": "Implement cross-channel deduplication with source precedence",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#18",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#19",
+      "repository": "PenniLogic/api",
+      "number": 19,
+      "title": "Implement merchant normalisation, categorisation rules and recurring detection",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#19",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#20",
+      "repository": "PenniLogic/api",
+      "number": 20,
+      "title": "Publish reversible schema migrations and a synthetic demonstration dataset",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#21",
+      "plan_id": "T-ENV-01"
+    },
+    {
+      "reference": "PenniLogic/api#21",
+      "repository": "PenniLogic/api",
+      "number": 21,
+      "title": "Implement log scrubbing and a no-financial-data-in-logs gate in the backend",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#22",
+      "plan_id": "T-PLT-04"
+    },
+    {
+      "reference": "PenniLogic/api#22",
+      "repository": "PenniLogic/api",
+      "number": 22,
+      "title": "Build the money-path verification harness: property, mutation, idempotency and independent model",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#23",
+      "plan_id": "T-QA-01"
+    },
+    {
+      "reference": "PenniLogic/api#23",
+      "repository": "PenniLogic/api",
+      "number": 23,
+      "title": "Build the tenancy, object-authorization and authentication attack suite",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#24",
+      "plan_id": "T-QA-03"
+    },
+    {
+      "reference": "PenniLogic/api#24",
+      "repository": "PenniLogic/api",
+      "number": 24,
+      "title": "Implement the consent ledger, purpose registry, data-principal rights and retention jobs",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#25",
+      "plan_id": "T-CMP-01"
+    },
+    {
+      "reference": "PenniLogic/api#25",
+      "repository": "PenniLogic/api",
+      "number": 25,
+      "title": "Implement server sync endpoints with tenancy isolation and pooler safety",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#26",
+      "plan_id": "T-SYN-02"
+    },
+    {
+      "reference": "PenniLogic/api#26",
+      "repository": "PenniLogic/api",
+      "number": 26,
+      "title": "Stand up the admin API boundary with its own identity domain and default-deny policy engine",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#27",
+      "plan_id": "T-ADM-01"
+    },
+    {
+      "reference": "PenniLogic/api#27",
+      "repository": "PenniLogic/api",
+      "number": 27,
+      "title": "Implement the tamper-evident administrative audit chain and write-once stream",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#28",
+      "plan_id": "T-ADM-02"
+    },
+    {
+      "reference": "PenniLogic/api#28",
+      "repository": "PenniLogic/api",
+      "number": 28,
+      "title": "Implement server-side redaction and independently sourced unmask authorization",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#29",
+      "plan_id": "T-ADM-03"
+    },
+    {
+      "reference": "PenniLogic/api#29",
+      "repository": "PenniLogic/api",
+      "number": 29,
+      "title": "Implement entitlement storage, server-side resolution, trial anti-abuse and bring-your-own-key guards",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#30",
+      "plan_id": "T-BIL-01"
+    },
+    {
+      "reference": "PenniLogic/api#30",
+      "repository": "PenniLogic/api",
+      "number": 30,
+      "title": "Implement quota primitives: reservation, reconciliation and reset semantics",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#31",
+      "plan_id": "T-BIL-02"
+    },
+    {
+      "reference": "PenniLogic/api#31",
+      "repository": "PenniLogic/api",
+      "number": 31,
+      "title": "Implement web checkout for India and international payments with tax invoicing",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#32",
+      "plan_id": "T-BIL-04"
+    },
+    {
+      "reference": "PenniLogic/api#32",
+      "repository": "PenniLogic/api",
+      "number": 32,
+      "title": "Verify provider webhooks and make notification processing idempotent",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#33",
+      "plan_id": "T-BIL-05"
+    },
+    {
+      "reference": "PenniLogic/api#33",
+      "repository": "PenniLogic/api",
+      "number": 33,
+      "title": "Implement the split ledger: groups, share types and deterministic remainder",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#34",
+      "plan_id": "T-SPL-01"
+    },
+    {
+      "reference": "PenniLogic/api#34",
+      "repository": "PenniLogic/api",
+      "number": 34,
+      "title": "Implement the relationship-based authorization model with per-member, per-category grants",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#35",
+      "plan_id": "T-FAM-01"
+    },
+    {
+      "reference": "PenniLogic/api#35",
+      "repository": "PenniLogic/api",
+      "number": 35,
+      "title": "Implement instant revocation, safe exit, access transparency and cross-user key access",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#36",
+      "plan_id": "T-FAM-02"
+    },
+    {
+      "reference": "PenniLogic/api#36",
+      "repository": "PenniLogic/api",
+      "number": 36,
+      "title": "Build the deterministic tool layer that owns all AI-facing arithmetic",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#37",
+      "plan_id": "T-AI-04"
+    },
+    {
+      "reference": "PenniLogic/api#37",
+      "repository": "PenniLogic/api",
+      "number": 37,
+      "title": "Implement the data protection floor: envelope encryption, blind index and row-level security",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#38",
+      "plan_id": "T-SEC-01"
+    },
+    {
+      "reference": "PenniLogic/api#38",
+      "repository": "PenniLogic/api",
+      "number": 38,
+      "title": "Implement the crypto-shredding erasure path and its verification harness",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#39",
+      "plan_id": "T-SEC-02"
+    },
+    {
+      "reference": "PenniLogic/api#39",
+      "repository": "PenniLogic/api",
+      "number": 39,
+      "title": "Build the foundational audit event service",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#40",
+      "plan_id": "T-SEC-03"
+    },
+    {
+      "reference": "PenniLogic/api#40",
+      "repository": "PenniLogic/api",
+      "number": 40,
+      "title": "Implement rate limiting, lockout, takeover detection and step-up authentication",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#41",
+      "plan_id": "T-SEC-04"
+    },
+    {
+      "reference": "PenniLogic/api#41",
+      "repository": "PenniLogic/api",
+      "number": 41,
+      "title": "Model income, detect payroll expectations and build the variable-income budgeting engine",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#42",
+      "plan_id": "T-INC-01"
+    },
+    {
+      "reference": "PenniLogic/api#42",
+      "repository": "PenniLogic/api",
+      "number": 42,
+      "title": "Compute safe-to-spend, cash-flow forecast and the surplus feed to the debt simulator",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#43",
+      "plan_id": "T-INC-02"
+    },
+    {
+      "reference": "PenniLogic/api#43",
+      "repository": "PenniLogic/api",
+      "number": 43,
+      "title": "Build the goal engine with projections, multi-goal competition and income-gap analysis",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#44",
+      "plan_id": "T-GOL-01"
+    },
+    {
+      "reference": "PenniLogic/api#44",
+      "repository": "PenniLogic/api",
+      "number": 44,
+      "title": "Reconcile ATM withdrawals and cash spending against the existing manual entries",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#45",
+      "plan_id": "T-ING-03"
+    },
+    {
+      "reference": "PenniLogic/api#45",
+      "repository": "PenniLogic/api",
+      "number": 45,
+      "title": "Implement aggregator consent, fetch and mapping behind a default-off kill switch",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#46",
+      "plan_id": "T-AAG-02"
+    },
+    {
+      "reference": "PenniLogic/api#46",
+      "repository": "PenniLogic/api",
+      "number": 46,
+      "title": "Implement the multi-currency ledger with clearing accounts, linked groups and quoted rates",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#47",
+      "plan_id": "T-GLO-01"
+    },
+    {
+      "reference": "PenniLogic/api#47",
+      "repository": "PenniLogic/api",
+      "number": 47,
+      "title": "Implement just-in-time elevation, four-eyes bulk export and access monitoring",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#48",
+      "plan_id": "T-ADM-05"
+    },
+    {
+      "reference": "PenniLogic/api#48",
+      "repository": "PenniLogic/api",
+      "number": 48,
+      "title": "Implement the subscription lifecycle, reconciliation and adversarial replay suite",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#49",
+      "plan_id": "T-BIL-06"
+    },
+    {
+      "reference": "PenniLogic/api#49",
+      "repository": "PenniLogic/api",
+      "number": 49,
+      "title": "Implement split authorization, settlement recording and counterparty erasure",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#50",
+      "plan_id": "T-SPL-03"
+    },
+    {
+      "reference": "PenniLogic/api#50",
+      "repository": "PenniLogic/api",
+      "number": 50,
+      "title": "Model deterministic refinance and consolidation scenarios in the debt engine",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#51",
+      "plan_id": "T-DEBT-01"
+    },
+    {
+      "reference": "PenniLogic/api#51",
+      "repository": "PenniLogic/api",
+      "number": 51,
+      "title": "Implement refund, chargeback and credit-note entitlement and quota unwind",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#52",
+      "plan_id": "T-BIL-07"
+    },
+    {
+      "reference": "PenniLogic/api#52",
+      "repository": "PenniLogic/api",
+      "number": 52,
+      "title": "Resolve cross-channel entitlement precedence for simultaneous Play and web subscriptions",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#53",
+      "plan_id": "T-BIL-08"
+    },
+    {
+      "reference": "PenniLogic/api#53",
+      "repository": "PenniLogic/api",
+      "number": 53,
+      "title": "Automate DEK, KEK and blind-index key rotation with resumable re-encryption",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#54",
+      "plan_id": "T-SEC-06"
+    },
+    {
+      "reference": "PenniLogic/api#54",
+      "repository": "PenniLogic/api",
+      "number": 54,
+      "title": "Compute personal net worth and its trend from the ledger with per-currency separation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#55",
+      "plan_id": "T-NWT-01"
+    },
+    {
+      "reference": "PenniLogic/api#55",
+      "repository": "PenniLogic/api",
+      "number": 55,
+      "title": "Build the schema migration runner, registry integration and reversal evidence",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#56",
+      "plan_id": "T-MIG-01"
+    },
+    {
+      "reference": "PenniLogic/api#56",
+      "repository": "PenniLogic/api",
+      "number": 56,
+      "title": "Build the notification and transactional email outbox with scheduling and retries",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#57",
+      "plan_id": "T-NOT-01"
+    },
+    {
+      "reference": "PenniLogic/api#57",
+      "repository": "PenniLogic/api",
+      "number": 57,
+      "title": "Implement account recovery, reverification and session revocation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#58",
+      "plan_id": "T-AUTH-01"
+    },
+    {
+      "reference": "PenniLogic/api#58",
+      "repository": "PenniLogic/api",
+      "number": 58,
+      "title": "Build user support intake, status and the ticket-verification endpoint",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#59",
+      "plan_id": "T-SUP-01"
+    },
+    {
+      "reference": "PenniLogic/api#59",
+      "repository": "PenniLogic/api",
+      "number": 59,
+      "title": "Implement administrator joiner, mover and leaver lifecycle with recertification",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#60",
+      "plan_id": "T-ADM-06"
+    },
+    {
+      "reference": "PenniLogic/api#60",
+      "repository": "PenniLogic/api",
+      "number": 60,
+      "title": "Implement immutable plan versions, subscription pinning and grandfathering",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#61",
+      "plan_id": "T-BIL-10"
+    },
+    {
+      "reference": "PenniLogic/api#61",
+      "repository": "PenniLogic/api",
+      "number": 61,
+      "title": "Model manually entered holdings and asset classes feeding net worth",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#62",
+      "plan_id": "T-NWT-04"
+    },
+    {
+      "reference": "PenniLogic/api#62",
+      "repository": "PenniLogic/api",
+      "number": 62,
+      "title": "Import balances and history from competitor exports",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#63",
+      "plan_id": "T-MIG-02"
+    },
+    {
+      "reference": "PenniLogic/api#63",
+      "repository": "PenniLogic/api",
+      "number": 63,
+      "title": "Build server-side experiment assignment and exposure logging",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#64",
+      "plan_id": "T-EXP-01"
+    },
+    {
+      "reference": "PenniLogic/api#64",
+      "repository": "PenniLogic/api",
+      "number": 64,
+      "title": "Detect autopay mandates and warn before a debit is likely to bounce",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#65",
+      "plan_id": "T-MND-01"
+    },
+    {
+      "reference": "PenniLogic/api#65",
+      "repository": "PenniLogic/api",
+      "number": 65,
+      "title": "Model Indian loan mechanics: prepayment choice, charges and tax-adjusted rate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#66",
+      "plan_id": "T-DEBT-02"
+    },
+    {
+      "reference": "PenniLogic/api#66",
+      "repository": "PenniLogic/api",
+      "number": 66,
+      "title": "Implement linked consumer refunds without misclassifying income",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#67",
+      "plan_id": "T-TXN-01"
+    },
+    {
+      "reference": "PenniLogic/api#67",
+      "repository": "PenniLogic/api",
+      "number": 67,
+      "title": "Provide sourced salary-market options for a measured goal income gap",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#68",
+      "plan_id": "T-GOL-04"
+    },
+    {
+      "reference": "PenniLogic/api#68",
+      "repository": "PenniLogic/api",
+      "number": 68,
+      "title": "Implement opt-in encrypted assistant history with export and erasure",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#69",
+      "plan_id": "T-AIP-06"
+    },
+    {
+      "reference": "PenniLogic/api#69",
+      "repository": "PenniLogic/api",
+      "number": 69,
+      "title": "Model credit-card cycles and advanced payoff strategies",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#70",
+      "plan_id": "T-DEBT-03"
+    },
+    {
+      "reference": "PenniLogic/api#70",
+      "repository": "PenniLogic/api",
+      "number": 70,
+      "title": "Manage recurring charges with confirmation, price alerts and cancel assist",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#71",
+      "plan_id": "T-RCR-01"
+    },
+    {
+      "reference": "PenniLogic/api#71",
+      "repository": "PenniLogic/api",
+      "number": 71,
+      "title": "Build sinking funds for known irregular expenses",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#72",
+      "plan_id": "T-BUD-01"
+    },
+    {
+      "reference": "PenniLogic/api#72",
+      "repository": "PenniLogic/api",
+      "number": 72,
+      "title": "Build household aggregates and joint goals under granular grants",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#73",
+      "plan_id": "T-FAM-05"
+    },
+    {
+      "reference": "PenniLogic/api#73",
+      "repository": "PenniLogic/api",
+      "number": 73,
+      "title": "Implement secure server-side transaction query and search",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/api#74",
+      "plan_id": "T-TXN-03"
+    },
+    {
+      "reference": "PenniLogic/api#74",
+      "repository": "PenniLogic/api",
+      "number": 74,
+      "title": "[T-LEAN-V-API] Install the admitted lean-compatible validator",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/api#92",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#75",
+      "repository": "PenniLogic/api",
+      "number": 75,
+      "title": "Scaffold the api service so real build, test and lint run in CI",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/api#20",
+      "plan_id": "T-SCA-API-01"
+    },
+    {
+      "reference": "PenniLogic/api#76",
+      "repository": "PenniLogic/api",
+      "number": 76,
+      "title": "[T-GOV-SCA-MAN-API] Accept the exact scaffold authorization manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/api#82",
+      "plan_id": "T-GOV-SCA-MAN-API"
+    },
+    {
+      "reference": "PenniLogic/api#77",
+      "repository": "PenniLogic/api",
+      "number": 77,
+      "title": "[T-GOV-SCA-POL-API] Accept the inactive API policy bridge",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/api#83",
+      "plan_id": "T-GOV-SCA-POL-API"
+    },
+    {
+      "reference": "PenniLogic/api#78",
+      "repository": "PenniLogic/api",
+      "number": 78,
+      "title": "[T-GOV-SCA-BASE-API] Adopt compatible API coverage-base transport",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/api#84",
+      "plan_id": "T-GOV-SCA-BASE-API"
+    },
+    {
+      "reference": "PenniLogic/api#79",
+      "repository": "PenniLogic/api",
+      "number": 79,
+      "title": "[T-LEAN-M-API] Admit the lean validator transition",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/api#90",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#80",
+      "repository": "PenniLogic/api",
+      "number": 80,
+      "title": "[T-GOV-KEYLESS-API-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/api#94",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/api#82",
+      "repository": "PenniLogic/api",
+      "number": 82,
+      "title": "Own the analytics event ingestion endpoint, pipeline and team dashboard with schema validation, rate limits and cohort minimums",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-RET-INGEST-01"
+    },
+    {
+      "reference": "PenniLogic/ai-service#1",
+      "repository": "PenniLogic/ai-service",
+      "number": 1,
+      "title": "Scaffold the ai-service repository with build, test and lint",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/ai-service#1",
+      "plan_id": "T-SCA-AIS-01"
+    },
+    {
+      "reference": "PenniLogic/ai-service#2",
+      "repository": "PenniLogic/ai-service",
+      "number": 2,
+      "title": "Deploy the AI gateway with virtual keys, encrypted key storage and the metering bridge",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#2",
+      "plan_id": "T-AI-01"
+    },
+    {
+      "reference": "PenniLogic/ai-service#3",
+      "repository": "PenniLogic/ai-service",
+      "number": 3,
+      "title": "Implement custom endpoint validation and the adversarial request-forgery suite",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#3",
+      "plan_id": "T-AI-03"
+    },
+    {
+      "reference": "PenniLogic/ai-service#4",
+      "repository": "PenniLogic/ai-service",
+      "number": 4,
+      "title": "Implement the tool dispatcher, injection defences and data minimisation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#4",
+      "plan_id": "T-AI-05"
+    },
+    {
+      "reference": "PenniLogic/ai-service#5",
+      "repository": "PenniLogic/ai-service",
+      "number": 5,
+      "title": "Ship categorisation and merchant enrichment gated on the deterministic baseline",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#5",
+      "plan_id": "T-AIP-01"
+    },
+    {
+      "reference": "PenniLogic/ai-service#6",
+      "repository": "PenniLogic/ai-service",
+      "number": 6,
+      "title": "Enforce numeric provenance and ship grounded question answering with citations and insights",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#6",
+      "plan_id": "T-AIP-02"
+    },
+    {
+      "reference": "PenniLogic/ai-service#7",
+      "repository": "PenniLogic/ai-service",
+      "number": 7,
+      "title": "Gate AI merges on the evaluation suite, numeric fidelity and spend controls",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#7",
+      "plan_id": "T-AI-06"
+    },
+    {
+      "reference": "PenniLogic/ai-service#8",
+      "repository": "PenniLogic/ai-service",
+      "number": 8,
+      "title": "Implement bounded provider routing, failover and circuit breakers for the AI gateway",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#8",
+      "plan_id": "T-AI-07"
+    },
+    {
+      "reference": "PenniLogic/ai-service#9",
+      "repository": "PenniLogic/ai-service",
+      "number": 9,
+      "title": "Build confirmation-gated natural-language transaction entry",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/ai-service#9",
+      "plan_id": "T-AIP-05"
+    },
+    {
+      "reference": "PenniLogic/ai-service#10",
+      "repository": "PenniLogic/ai-service",
+      "number": 10,
+      "title": "[T-GOV-AI-CI-M1-01] Admit the first AI CI protecting manifest",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/ai-service#25",
+      "plan_id": "T-GOV-AI-CI-M1-01"
+    },
+    {
+      "reference": "PenniLogic/ai-service#11",
+      "repository": "PenniLogic/ai-service",
+      "number": 11,
+      "title": "[T-GOV-SCA-MAN-AIS] Accept the exact scaffold authorization manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/ai-service#18",
+      "plan_id": "T-GOV-SCA-MAN-AIS"
+    },
+    {
+      "reference": "PenniLogic/ai-service#12",
+      "repository": "PenniLogic/ai-service",
+      "number": 12,
+      "title": "[T-GOV-AI-EXEC-MAN-01] Admit the preserving AI executor manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/ai-service#20",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/ai-service#13",
+      "repository": "PenniLogic/ai-service",
+      "number": 13,
+      "title": "[T-GOV-AI-EXEC-V2-01] Transport the exact AI V2 validator only",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/ai-service#22",
+      "plan_id": "T-GOV-AI-EXEC-V2-01"
+    },
+    {
+      "reference": "PenniLogic/ai-service#14",
+      "repository": "PenniLogic/ai-service",
+      "number": 14,
+      "title": "[T-GOV-KEYLESS-AIS-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/ai-service#27",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#1",
+      "repository": "PenniLogic/android",
+      "number": 1,
+      "title": "Scaffold the android application so real build, unit test and lint run in CI",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/android#13",
+      "plan_id": "T-SCA-AND-01"
+    },
+    {
+      "reference": "PenniLogic/android#2",
+      "repository": "PenniLogic/android",
+      "number": 2,
+      "title": "Set up the Android application skeleton and architecture",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#1",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#3",
+      "repository": "PenniLogic/android",
+      "number": 3,
+      "title": "Build the debt-free countdown as the primary home surface",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#2",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#4",
+      "repository": "PenniLogic/android",
+      "number": 4,
+      "title": "Build debt entry, list and detail screens",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#3",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#5",
+      "repository": "PenniLogic/android",
+      "number": 5,
+      "title": "Build the strategy comparison and extra-payment simulator UI",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#4",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#6",
+      "repository": "PenniLogic/android",
+      "number": 6,
+      "title": "Implement offline-first persistence and sync queue",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#5",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#7",
+      "repository": "PenniLogic/android",
+      "number": 7,
+      "title": "Instrument the activation funnel and retention cohorts",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#6",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#8",
+      "repository": "PenniLogic/android",
+      "number": 8,
+      "title": "Implement the on-device deterministic SMS parser",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#7",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#9",
+      "repository": "PenniLogic/android",
+      "number": 9,
+      "title": "Ship parser rules as remotely updatable configuration",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#8",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#10",
+      "repository": "PenniLogic/android",
+      "number": 10,
+      "title": "Build SMS permission onboarding and file the Play Permissions Declaration",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#9",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#11",
+      "repository": "PenniLogic/android",
+      "number": 11,
+      "title": "Build notification access onboarding and verify the Android 12 restricted-settings path",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#10",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#12",
+      "repository": "PenniLogic/android",
+      "number": 12,
+      "title": "Build the clarification inbox for low-confidence transactions",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#11",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#13",
+      "repository": "PenniLogic/android",
+      "number": 13,
+      "title": "Implement notification capture with on-device parsing",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#12",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#14",
+      "repository": "PenniLogic/android",
+      "number": 14,
+      "title": "Procure and provision the physical Android test device",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#14",
+      "plan_id": "T-QA-07"
+    },
+    {
+      "reference": "PenniLogic/android#15",
+      "repository": "PenniLogic/android",
+      "number": 15,
+      "title": "Gate the Android application on instrumented journeys, accessibility and performance budgets",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#15",
+      "plan_id": "T-QA-08"
+    },
+    {
+      "reference": "PenniLogic/android#16",
+      "repository": "PenniLogic/android",
+      "number": 16,
+      "title": "Automate privacy traffic inspection on every release candidate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#16",
+      "plan_id": "T-QA-09"
+    },
+    {
+      "reference": "PenniLogic/android#17",
+      "repository": "PenniLogic/android",
+      "number": 17,
+      "title": "Build pre-onboarding consent, the age gate and the permission dashboard on Android",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#17",
+      "plan_id": "T-CMP-02"
+    },
+    {
+      "reference": "PenniLogic/android#18",
+      "repository": "PenniLogic/android",
+      "number": 18,
+      "title": "Produce the third-party component inventory, payload scrubbing and the data safety declaration",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#18",
+      "plan_id": "T-CMP-03"
+    },
+    {
+      "reference": "PenniLogic/android#19",
+      "repository": "PenniLogic/android",
+      "number": 19,
+      "title": "Reconcile the Android sync client against the server contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#19",
+      "plan_id": "T-SYN-03"
+    },
+    {
+      "reference": "PenniLogic/android#20",
+      "repository": "PenniLogic/android",
+      "number": 20,
+      "title": "Build Android authentication, session handling and onboarding",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#20",
+      "plan_id": "T-AND-01"
+    },
+    {
+      "reference": "PenniLogic/android#21",
+      "repository": "PenniLogic/android",
+      "number": 21,
+      "title": "Build Android manual transaction entry, accounts and category management",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#21",
+      "plan_id": "T-AND-02"
+    },
+    {
+      "reference": "PenniLogic/android#22",
+      "repository": "PenniLogic/android",
+      "number": 22,
+      "title": "Build Android statement and file import with a dry-run preview",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#22",
+      "plan_id": "T-AND-03"
+    },
+    {
+      "reference": "PenniLogic/android#23",
+      "repository": "PenniLogic/android",
+      "number": 23,
+      "title": "Integrate store billing and real-time notifications on Android",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#23",
+      "plan_id": "T-BIL-03"
+    },
+    {
+      "reference": "PenniLogic/android#24",
+      "repository": "PenniLogic/android",
+      "number": 24,
+      "title": "Build the Android split experience with itemised bills, settlements and activation instrumentation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#24",
+      "plan_id": "T-SPL-02"
+    },
+    {
+      "reference": "PenniLogic/android#25",
+      "repository": "PenniLogic/android",
+      "number": 25,
+      "title": "Build Android family sharing with cached-data eviction and a coercive-control review",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#25",
+      "plan_id": "T-FAM-03"
+    },
+    {
+      "reference": "PenniLogic/android#26",
+      "repository": "PenniLogic/android",
+      "number": 26,
+      "title": "Build the Android assistant surfaces with disclosure, override, refusal and advice-boundary guardrails",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#26",
+      "plan_id": "T-AIP-03"
+    },
+    {
+      "reference": "PenniLogic/android#27",
+      "repository": "PenniLogic/android",
+      "number": 27,
+      "title": "Harden the Android application: keystore storage, integrity verification and pinned transport",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#27",
+      "plan_id": "T-SEC-05"
+    },
+    {
+      "reference": "PenniLogic/android#28",
+      "repository": "PenniLogic/android",
+      "number": 28,
+      "title": "Build Android income, budget and bill calendar surfaces",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#28",
+      "plan_id": "T-INC-03"
+    },
+    {
+      "reference": "PenniLogic/android#29",
+      "repository": "PenniLogic/android",
+      "number": 29,
+      "title": "Build Android goal surfaces with scenario comparison, disclaimers and offline support",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#29",
+      "plan_id": "T-GOL-02"
+    },
+    {
+      "reference": "PenniLogic/android#30",
+      "repository": "PenniLogic/android",
+      "number": 30,
+      "title": "Build the application lock, privacy mode and screen protection",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#30",
+      "plan_id": "T-TRU-01"
+    },
+    {
+      "reference": "PenniLogic/android#31",
+      "repository": "PenniLogic/android",
+      "number": 31,
+      "title": "Build the Android transparency, export, deletion and consent surfaces",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#31",
+      "plan_id": "T-TRU-02"
+    },
+    {
+      "reference": "PenniLogic/android#32",
+      "repository": "PenniLogic/android",
+      "number": 32,
+      "title": "Parse email statement messages entirely on device and emit structured events only",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#32",
+      "plan_id": "T-ING-01"
+    },
+    {
+      "reference": "PenniLogic/android#33",
+      "repository": "PenniLogic/android",
+      "number": 33,
+      "title": "Build on-device receipt capture and text recognition with user confirmation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#33",
+      "plan_id": "T-ING-02"
+    },
+    {
+      "reference": "PenniLogic/android#34",
+      "repository": "PenniLogic/android",
+      "number": 34,
+      "title": "Build the Android localization framework and INR-first money rendering",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#34",
+      "plan_id": "T-GLO-02"
+    },
+    {
+      "reference": "PenniLogic/android#35",
+      "repository": "PenniLogic/android",
+      "number": 35,
+      "title": "Publish the sanitized parser corpus and Android compatibility matrix",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#35",
+      "plan_id": "T-QA-12"
+    },
+    {
+      "reference": "PenniLogic/android#36",
+      "repository": "PenniLogic/android",
+      "number": 36,
+      "title": "Build Android net worth dashboard with trend, drill-down and offline support",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#36",
+      "plan_id": "T-NWT-02"
+    },
+    {
+      "reference": "PenniLogic/android#37",
+      "repository": "PenniLogic/android",
+      "number": 37,
+      "title": "Establish Play App Signing, the AAB pipeline, tracks and staged rollout control",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#37",
+      "plan_id": "T-REL-01"
+    },
+    {
+      "reference": "PenniLogic/android#38",
+      "repository": "PenniLogic/android",
+      "number": 38,
+      "title": "Build the retention programme: milestones, digests, dormancy and its kill criterion",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#38",
+      "plan_id": "T-RET-01"
+    },
+    {
+      "reference": "PenniLogic/android#39",
+      "repository": "PenniLogic/android",
+      "number": 39,
+      "title": "Build the Android recovery, lost-device and re-enrolment journey",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#39",
+      "plan_id": "T-AUTH-02"
+    },
+    {
+      "reference": "PenniLogic/android#40",
+      "repository": "PenniLogic/android",
+      "number": 40,
+      "title": "Build the transaction timeline with search, detail, edit and reversal",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#40",
+      "plan_id": "T-AND-04"
+    },
+    {
+      "reference": "PenniLogic/android#41",
+      "repository": "PenniLogic/android",
+      "number": 41,
+      "title": "Implement Android notification permission, channels and token lifecycle",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#41",
+      "plan_id": "T-NOT-02"
+    },
+    {
+      "reference": "PenniLogic/android#42",
+      "repository": "PenniLogic/android",
+      "number": 42,
+      "title": "Build Android category spending, budgets and reporting parity",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#42",
+      "plan_id": "T-AND-05"
+    },
+    {
+      "reference": "PenniLogic/android#43",
+      "repository": "PenniLogic/android",
+      "number": 43,
+      "title": "Build the Android cross-user access log and shared-data visibility",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#43",
+      "plan_id": "T-TRU-04"
+    },
+    {
+      "reference": "PenniLogic/android#44",
+      "repository": "PenniLogic/android",
+      "number": 44,
+      "title": "Build the Android support intake and request status surface",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#44",
+      "plan_id": "T-SUP-02"
+    },
+    {
+      "reference": "PenniLogic/android#45",
+      "repository": "PenniLogic/android",
+      "number": 45,
+      "title": "Add Android currency selection and multi-currency presentation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#45",
+      "plan_id": "T-GLO-04"
+    },
+    {
+      "reference": "PenniLogic/android#46",
+      "repository": "PenniLogic/android",
+      "number": 46,
+      "title": "Author the initial bank and wallet parser template library",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#46",
+      "plan_id": "T-PRS-01"
+    },
+    {
+      "reference": "PenniLogic/android#47",
+      "repository": "PenniLogic/android",
+      "number": 47,
+      "title": "Publish the parser coverage target and enforce it as a release gate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#47",
+      "plan_id": "T-PRS-02"
+    },
+    {
+      "reference": "PenniLogic/android#48",
+      "repository": "PenniLogic/android",
+      "number": 48,
+      "title": "Build Android holdings entry and net worth composition",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#48",
+      "plan_id": "T-NWT-05"
+    },
+    {
+      "reference": "PenniLogic/android#49",
+      "repository": "PenniLogic/android",
+      "number": 49,
+      "title": "Build duress unlock and rapid conceal for coercive situations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#49",
+      "plan_id": "T-TRU-05"
+    },
+    {
+      "reference": "PenniLogic/android#50",
+      "repository": "PenniLogic/android",
+      "number": 50,
+      "title": "Bind the Android local schema to the published contract",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#50",
+      "plan_id": "T-SYN-04"
+    },
+    {
+      "reference": "PenniLogic/android#51",
+      "repository": "PenniLogic/android",
+      "number": 51,
+      "title": "Build adaptive Android behavior for constrained and large-screen devices",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#51",
+      "plan_id": "T-AND-06"
+    },
+    {
+      "reference": "PenniLogic/android#52",
+      "repository": "PenniLogic/android",
+      "number": 52,
+      "title": "Build the Android cash-withdrawal reconciliation journey",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#52",
+      "plan_id": "T-ING-04"
+    },
+    {
+      "reference": "PenniLogic/android#53",
+      "repository": "PenniLogic/android",
+      "number": 53,
+      "title": "Build the Android refund review and correction experience",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#53",
+      "plan_id": "T-TXN-02"
+    },
+    {
+      "reference": "PenniLogic/android#54",
+      "repository": "PenniLogic/android",
+      "number": 54,
+      "title": "Build the Android household dashboard and joint-goal experience",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#54",
+      "plan_id": "T-FAM-06"
+    },
+    {
+      "reference": "PenniLogic/android#55",
+      "repository": "PenniLogic/android",
+      "number": 55,
+      "title": "Build advanced Android debt terms, traps and scenario experiences",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#55",
+      "plan_id": "T-DEBT-04"
+    },
+    {
+      "reference": "PenniLogic/android#56",
+      "repository": "PenniLogic/android",
+      "number": 56,
+      "title": "Build the Android cross-channel notification preference editor",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#56",
+      "plan_id": "T-NOT-04"
+    },
+    {
+      "reference": "PenniLogic/android#57",
+      "repository": "PenniLogic/android",
+      "number": 57,
+      "title": "Adopt the Android 16 API 36 behavior baseline",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#57",
+      "plan_id": "T-AND-07"
+    },
+    {
+      "reference": "PenniLogic/android#58",
+      "repository": "PenniLogic/android",
+      "number": 58,
+      "title": "Build the privacy-safe Android debt progress home-screen widget",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/android#58",
+      "plan_id": "T-AND-08"
+    },
+    {
+      "reference": "PenniLogic/android#59",
+      "repository": "PenniLogic/android",
+      "number": 59,
+      "title": "[T-GOV-SCA-MAN-AND] Accept the exact scaffold authorization manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/android#66",
+      "plan_id": "T-GOV-SCA-MAN-AND"
+    },
+    {
+      "reference": "PenniLogic/android#60",
+      "repository": "PenniLogic/android",
+      "number": 60,
+      "title": "[T-GOV-AND-JDK-MAN-01] Admit the protecting Android JDK governance manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/android#69",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#61",
+      "repository": "PenniLogic/android",
+      "number": 61,
+      "title": "[T-GOV-AND-JDK-VAL-01] Adopt the preauthorized Android JDK input validator",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/android#71",
+      "plan_id": "T-GOV-AND-JDK-VAL-01"
+    },
+    {
+      "reference": "PenniLogic/android#62",
+      "repository": "PenniLogic/android",
+      "number": 62,
+      "title": "[T-GOV-KEYLESS-AND-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/android#73",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/android#65",
+      "repository": "PenniLogic/android",
+      "number": 65,
+      "title": "Adopt the money-path mutation-testing gate for the Android ledger and parser packages",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-QA-01-AND"
+    },
+    {
+      "reference": "PenniLogic/web#1",
+      "repository": "PenniLogic/web",
+      "number": 1,
+      "title": "Scaffold the web application with typed configuration and a real CI gate",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/web#1",
+      "plan_id": "T-SCA-WEB-01"
+    },
+    {
+      "reference": "PenniLogic/web#2",
+      "repository": "PenniLogic/web",
+      "number": 2,
+      "title": "[T-GOV-SCA-MAN-WEB] Accept the exact scaffold authorization manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/web#31",
+      "plan_id": "T-GOV-SCA-MAN-WEB"
+    },
+    {
+      "reference": "PenniLogic/web#3",
+      "repository": "PenniLogic/web",
+      "number": 3,
+      "title": "[T-GOV-WEB-RUN-MAN-01] Admit the exact Web runtime protecting manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/web#34",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/web#4",
+      "repository": "PenniLogic/web",
+      "number": 4,
+      "title": "[T-GOV-WEB-RUN-POL-01] Admit exact Web B policy without workflow or scaffold changes",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/web#36",
+      "plan_id": "T-GOV-WEB-RUN-POL-01"
+    },
+    {
+      "reference": "PenniLogic/web#5",
+      "repository": "PenniLogic/web",
+      "number": 5,
+      "title": "[T-GOV-WEB-RUN-WF-01] Install the exact Web C workflow and preserving manifest",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/web#38",
+      "plan_id": "T-GOV-WEB-RUN-WF-01"
+    },
+    {
+      "reference": "PenniLogic/web#6",
+      "repository": "PenniLogic/web",
+      "number": 6,
+      "title": "[T-GOV-KEYLESS-WEB-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/web#40",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/web#7",
+      "repository": "PenniLogic/web",
+      "number": 7,
+      "title": "Gate the web application on end-to-end journeys, accessibility and performance budgets",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#2",
+      "plan_id": "T-QA-06"
+    },
+    {
+      "reference": "PenniLogic/web#8",
+      "repository": "PenniLogic/web",
+      "number": 8,
+      "title": "Build the web shell with session parity, security headers and the money primitive",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#3",
+      "plan_id": "T-WEB-01"
+    },
+    {
+      "reference": "PenniLogic/web#9",
+      "repository": "PenniLogic/web",
+      "number": 9,
+      "title": "Build web transactions, bulk edit, statement import and full data export",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#4",
+      "plan_id": "T-WEB-02"
+    },
+    {
+      "reference": "PenniLogic/web#10",
+      "repository": "PenniLogic/web",
+      "number": 10,
+      "title": "Build the web debt dashboard, strategy comparison and derivation inspector with budgets and reporting",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#5",
+      "plan_id": "T-WEB-03"
+    },
+    {
+      "reference": "PenniLogic/web#11",
+      "repository": "PenniLogic/web",
+      "number": 11,
+      "title": "Render multi-currency balances, exchanges and reporting currency in the web application",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#6",
+      "plan_id": "T-GLO-03"
+    },
+    {
+      "reference": "PenniLogic/web#12",
+      "repository": "PenniLogic/web",
+      "number": 12,
+      "title": "Build the web customer billing portal with plan, quota and invoice management",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#8",
+      "plan_id": "T-BIL-09"
+    },
+    {
+      "reference": "PenniLogic/web#13",
+      "repository": "PenniLogic/web",
+      "number": 13,
+      "title": "Build the web split-group experience with itemised bills, settlement and disputes",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#9",
+      "plan_id": "T-SPL-04"
+    },
+    {
+      "reference": "PenniLogic/web#14",
+      "repository": "PenniLogic/web",
+      "number": 14,
+      "title": "Build web family sharing with grant management, instant revocation and cached-data eviction",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#10",
+      "plan_id": "T-FAM-04"
+    },
+    {
+      "reference": "PenniLogic/web#15",
+      "repository": "PenniLogic/web",
+      "number": 15,
+      "title": "Build the web assistant with citations, disclosure, BYOK and custom-endpoint management",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#11",
+      "plan_id": "T-AIP-04"
+    },
+    {
+      "reference": "PenniLogic/web#16",
+      "repository": "PenniLogic/web",
+      "number": 16,
+      "title": "Build the web net worth dashboard with trend, drill-down and export",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#12",
+      "plan_id": "T-NWT-03"
+    },
+    {
+      "reference": "PenniLogic/web#17",
+      "repository": "PenniLogic/web",
+      "number": 17,
+      "title": "Build the web income, budgeting, safe-to-spend and bill calendar surfaces",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#13",
+      "plan_id": "T-INC-04"
+    },
+    {
+      "reference": "PenniLogic/web#18",
+      "repository": "PenniLogic/web",
+      "number": 18,
+      "title": "Build web goal, competition and scenario surfaces with the advice-boundary disclaimer",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#14",
+      "plan_id": "T-GOL-03"
+    },
+    {
+      "reference": "PenniLogic/web#19",
+      "repository": "PenniLogic/web",
+      "number": 19,
+      "title": "Build the web support intake and request status surface",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#16",
+      "plan_id": "T-SUP-03"
+    },
+    {
+      "reference": "PenniLogic/web#20",
+      "repository": "PenniLogic/web",
+      "number": 20,
+      "title": "Build the web trust centre: consent, transparency, analytics opt-out and privacy mode",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#17",
+      "plan_id": "T-TRU-03"
+    },
+    {
+      "reference": "PenniLogic/web#21",
+      "repository": "PenniLogic/web",
+      "number": 21,
+      "title": "Build the cross-channel notification preference centre",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#18",
+      "plan_id": "T-NOT-03"
+    },
+    {
+      "reference": "PenniLogic/web#22",
+      "repository": "PenniLogic/web",
+      "number": 22,
+      "title": "Build the web household dashboard and joint-goal experience",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#19",
+      "plan_id": "T-FAM-07"
+    },
+    {
+      "reference": "PenniLogic/web#23",
+      "repository": "PenniLogic/web",
+      "number": 23,
+      "title": "Build web debt entry and advanced scenario experiences",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#20",
+      "plan_id": "T-DEBT-05"
+    },
+    {
+      "reference": "PenniLogic/web#24",
+      "repository": "PenniLogic/web",
+      "number": 24,
+      "title": "Build web holdings entry, revaluation and net-worth composition",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#21",
+      "plan_id": "T-NWT-06"
+    },
+    {
+      "reference": "PenniLogic/web#25",
+      "repository": "PenniLogic/web",
+      "number": 25,
+      "title": "Build the web clarification and rule-rollback inbox",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#22",
+      "plan_id": "T-WEB-04"
+    },
+    {
+      "reference": "PenniLogic/web#26",
+      "repository": "PenniLogic/web",
+      "number": 26,
+      "title": "Build web consent, age eligibility and privacy onboarding",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/web#23",
+      "plan_id": "T-WEB-05"
+    },
+    {
+      "reference": "PenniLogic/admin#1",
+      "repository": "PenniLogic/admin",
+      "number": 1,
+      "title": "Scaffold the admin console repository in isolation from the customer web app",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/admin#1",
+      "plan_id": "T-SCA-ADM-01"
+    },
+    {
+      "reference": "PenniLogic/admin#2",
+      "repository": "PenniLogic/admin",
+      "number": 2,
+      "title": "Build the admin console shell, operator session and default-deny navigation",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#2",
+      "plan_id": "T-ADM-04"
+    },
+    {
+      "reference": "PenniLogic/admin#3",
+      "repository": "PenniLogic/admin",
+      "number": 3,
+      "title": "Gate the admin console on operator journeys, accessibility and performance",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#3",
+      "plan_id": "T-QA-13"
+    },
+    {
+      "reference": "PenniLogic/admin#4",
+      "repository": "PenniLogic/admin",
+      "number": 4,
+      "title": "Build admin plan, feature and quota management with change recording",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#4",
+      "plan_id": "T-ADM-07"
+    },
+    {
+      "reference": "PenniLogic/admin#5",
+      "repository": "PenniLogic/admin",
+      "number": 5,
+      "title": "Build admin AI provider configuration and enforced spend caps",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#5",
+      "plan_id": "T-ADM-08"
+    },
+    {
+      "reference": "PenniLogic/admin#6",
+      "repository": "PenniLogic/admin",
+      "number": 6,
+      "title": "Build admin support tooling for lookup, status, suspension and refund",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#6",
+      "plan_id": "T-ADM-09"
+    },
+    {
+      "reference": "PenniLogic/admin#7",
+      "repository": "PenniLogic/admin",
+      "number": 7,
+      "title": "Build admin aggregate analytics with enforced cohort minimums",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#7",
+      "plan_id": "T-ADM-10"
+    },
+    {
+      "reference": "PenniLogic/admin#8",
+      "repository": "PenniLogic/admin",
+      "number": 8,
+      "title": "Build the admin audit review and access monitoring surface",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#8",
+      "plan_id": "T-ADM-11"
+    },
+    {
+      "reference": "PenniLogic/admin#9",
+      "repository": "PenniLogic/admin",
+      "number": 9,
+      "title": "Build the operator red-team suite as a blocking console release gate",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#9",
+      "plan_id": "T-ADM-12"
+    },
+    {
+      "reference": "PenniLogic/admin#10",
+      "repository": "PenniLogic/admin",
+      "number": 10,
+      "title": "Build the audited rights-request and grievance operator queue",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#10",
+      "plan_id": "T-ADM-13"
+    },
+    {
+      "reference": "PenniLogic/admin#11",
+      "repository": "PenniLogic/admin",
+      "number": 11,
+      "title": "Build the admin operator roster, lifecycle and qualification screens",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#11",
+      "plan_id": "T-ADM-14"
+    },
+    {
+      "reference": "PenniLogic/admin#12",
+      "repository": "PenniLogic/admin",
+      "number": 12,
+      "title": "Build admin unmask, elevation, bulk export and break-glass workflows",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#12",
+      "plan_id": "T-ADM-15"
+    },
+    {
+      "reference": "PenniLogic/admin#13",
+      "repository": "PenniLogic/admin",
+      "number": 13,
+      "title": "Build the governed production-access and restore review console",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#13",
+      "plan_id": "T-ADM-16"
+    },
+    {
+      "reference": "PenniLogic/admin#14",
+      "repository": "PenniLogic/admin",
+      "number": 14,
+      "title": "Build admin billing lifecycle, refund and reconciliation views",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#14",
+      "plan_id": "T-ADM-17"
+    },
+    {
+      "reference": "PenniLogic/admin#15",
+      "repository": "PenniLogic/admin",
+      "number": 15,
+      "title": "Build the admin incident, red-team and release evidence dashboard",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/admin#15",
+      "plan_id": "T-ADM-18"
+    },
+    {
+      "reference": "PenniLogic/admin#16",
+      "repository": "PenniLogic/admin",
+      "number": 16,
+      "title": "[T-GOV-SCA-MAN-ADM] Accept the exact scaffold authorization manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/admin#23",
+      "plan_id": "T-GOV-SCA-MAN-ADM"
+    },
+    {
+      "reference": "PenniLogic/admin#17",
+      "repository": "PenniLogic/admin",
+      "number": 17,
+      "title": "[T-GOV-ADM-EXEC-MAN-01] Admit the preserving Admin executor manifest",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/admin#25",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/admin#18",
+      "repository": "PenniLogic/admin",
+      "number": 18,
+      "title": "[T-GOV-ADM-EXEC-V2-01] Transport the exact Admin V2 validator only",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/admin#27",
+      "plan_id": "T-GOV-ADM-EXEC-V2-01"
+    },
+    {
+      "reference": "PenniLogic/admin#19",
+      "repository": "PenniLogic/admin",
+      "number": 19,
+      "title": "[T-GOV-KEYLESS-ADM-01] Adopt reviewed keyless governance and refreshed instructions",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/admin#30",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#2",
+      "repository": "PenniLogic/infra",
+      "number": 2,
+      "title": "Provide an idempotent local infrastructure bootstrap with healthy Postgres and Redis",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#2",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#3",
+      "repository": "PenniLogic/infra",
+      "number": 3,
+      "title": "Define branch protection, agent-review and adoption-gate policy",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#6",
+      "plan_id": "T-GOV-03"
+    },
+    {
+      "reference": "PenniLogic/infra#4",
+      "repository": "PenniLogic/infra",
+      "number": 4,
+      "title": "Obtain a GitHub plan that permits branch protection on private repositories",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#15",
+      "plan_id": "T-EXT-01"
+    },
+    {
+      "reference": "PenniLogic/infra#5",
+      "repository": "PenniLogic/infra",
+      "number": 5,
+      "title": "[T-GOV-SCA-GEN-01] Honor scaffold coverage and dependency activation without changing baseline artifacts",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#24",
+      "plan_id": "T-GOV-SCA-GEN-01"
+    },
+    {
+      "reference": "PenniLogic/infra#6",
+      "repository": "PenniLogic/infra",
+      "number": 6,
+      "title": "[T-GOV-SCA-BRIDGE-01] Publish the canonical API policy bridge",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#38",
+      "plan_id": "T-GOV-SCA-BRIDGE-01"
+    },
+    {
+      "reference": "PenniLogic/infra#7",
+      "repository": "PenniLogic/infra",
+      "number": 7,
+      "title": "[T-GOV-SCA-ACT-01] Activate the five canonical scaffold profiles",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#39",
+      "plan_id": "T-GOV-SCA-ACT-01"
+    },
+    {
+      "reference": "PenniLogic/infra#8",
+      "repository": "PenniLogic/infra",
+      "number": 8,
+      "title": "[T-GOV-PRE-EXEC-RUN-01] Authorize exact staged Web runtime and AI/Admin executor transport",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#46",
+      "plan_id": "T-GOV-PRE-EXEC-RUN-01"
+    },
+    {
+      "reference": "PenniLogic/infra#9",
+      "repository": "PenniLogic/infra",
+      "number": 9,
+      "title": "[T-GOV-EXEC-JDK-01] Preserve the verified Android JDK21 input through trusted execution",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#48",
+      "plan_id": "T-GOV-EXEC-JDK-01"
+    },
+    {
+      "reference": "PenniLogic/infra#10",
+      "repository": "PenniLogic/infra",
+      "number": 10,
+      "title": "[T-GOV-PLAN-AUDIT-01] Admit the exact planning audit workflow and reader contract",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#49",
+      "plan_id": "T-GOV-PLAN-AUDIT-01"
+    },
+    {
+      "reference": "PenniLogic/infra#11",
+      "repository": "PenniLogic/infra",
+      "number": 11,
+      "title": "[T-GOV-AGENT-NATIVE-01] Admit the native Developer and Producer duty contract",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#52",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#12",
+      "repository": "PenniLogic/infra",
+      "number": 12,
+      "title": "[T-GOV-AI-CI-ACT-01] Repair canonical AI CI activation contract",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#57",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#13",
+      "repository": "PenniLogic/infra",
+      "number": 13,
+      "title": "[T-GOV-AND-JDK-ALLOW-01] Authorize exact Android JDK input adoption hashes in PenniLogic/infra",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#59",
+      "plan_id": "T-GOV-AND-JDK-ALLOW-01"
+    },
+    {
+      "reference": "PenniLogic/infra#14",
+      "repository": "PenniLogic/infra",
+      "number": 14,
+      "title": "[T-GOV-LEAN-01] Deliver a lean, risk-based agent development baseline",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#64",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#15",
+      "repository": "PenniLogic/infra",
+      "number": 15,
+      "title": "[T-CI-GOV-LIVE-01] Verify the repaired protected PR path",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/infra#79",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#16",
+      "repository": "PenniLogic/infra",
+      "number": 16,
+      "title": "[T-CI-GOV-PERF-01] Keep required governance tests within the CI budget",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#80",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#17",
+      "repository": "PenniLogic/infra",
+      "number": 17,
+      "title": "[T-GOV-LOCAL-01] Finish local hooks and add read-only agent preflight tools",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#82",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#18",
+      "repository": "PenniLogic/infra",
+      "number": 18,
+      "title": "[T-GOV-COPILOT-DOCS-01] Align agent documentation with supported Copilot file surfaces",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#83",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#19",
+      "repository": "PenniLogic/infra",
+      "number": 19,
+      "title": "[T-GOV-COPILOT-DOCS-INFRA-01] Adopt the source-authorized Copilot documentation",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#84",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#20",
+      "repository": "PenniLogic/infra",
+      "number": 20,
+      "title": "[T-GOV-COPILOT-CONSUMERS-01] Authorize the remaining current-policy Copilot documentation",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#88",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#21",
+      "repository": "PenniLogic/infra",
+      "number": 21,
+      "title": "[T-CI-GOV-PERF-02] Restore governance-suite headroom without weakening gates",
+      "state": "closed",
+      "state_reason": "completed",
+      "source": "PenniLogic-old/infra#96",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#22",
+      "repository": "PenniLogic/infra",
+      "number": 22,
+      "title": "Enforce CI conformance across the eight repositories",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#1",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#23",
+      "repository": "PenniLogic/infra",
+      "number": 23,
+      "title": "Enforce secret scanning, dependency review and the SDK allowlist in CI",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#3",
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#24",
+      "repository": "PenniLogic/infra",
+      "number": 24,
+      "title": "Publish reusable CI workflows and prove the eight-repository CI policy is real",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#5",
+      "plan_id": "T-SCA-INF-01"
+    },
+    {
+      "reference": "PenniLogic/infra#25",
+      "repository": "PenniLogic/infra",
+      "number": 25,
+      "title": "Provision infrastructure as code with environments, deploy pipelines and rehearsed rollback",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#7",
+      "plan_id": "T-PLT-01"
+    },
+    {
+      "reference": "PenniLogic/infra#26",
+      "repository": "PenniLogic/infra",
+      "number": 26,
+      "title": "Implement backups, point-in-time recovery and a performed disaster-recovery restore drill",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#8",
+      "plan_id": "T-PLT-02"
+    },
+    {
+      "reference": "PenniLogic/infra#27",
+      "repository": "PenniLogic/infra",
+      "number": 27,
+      "title": "Deliver observability, service level objectives, alerting, on-call and regional log retention",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#9",
+      "plan_id": "T-PLT-03"
+    },
+    {
+      "reference": "PenniLogic/infra#28",
+      "repository": "PenniLogic/infra",
+      "number": 28,
+      "title": "Enforce static analysis, dynamic scanning, dependency and secret gates with flaky-test quarantine",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#10",
+      "plan_id": "T-QA-04"
+    },
+    {
+      "reference": "PenniLogic/infra#29",
+      "repository": "PenniLogic/infra",
+      "number": 29,
+      "title": "Build load, stress, soak and chaos suites and run a disaster-recovery game day",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#11",
+      "plan_id": "T-QA-05"
+    },
+    {
+      "reference": "PenniLogic/infra#30",
+      "repository": "PenniLogic/infra",
+      "number": 30,
+      "title": "Enforce egress policy denying private, loopback, link-local and metadata destinations",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#12",
+      "plan_id": "T-AI-02"
+    },
+    {
+      "reference": "PenniLogic/infra#31",
+      "repository": "PenniLogic/infra",
+      "number": 31,
+      "title": "Enforce IaC, container, mobile and software-supply-chain verification",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#14",
+      "plan_id": "T-QA-11"
+    },
+    {
+      "reference": "PenniLogic/infra#32",
+      "repository": "PenniLogic/infra",
+      "number": 32,
+      "title": "Govern human access to production data stores, backups and keys",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#18",
+      "plan_id": "T-PLT-05"
+    },
+    {
+      "reference": "PenniLogic/infra#33",
+      "repository": "PenniLogic/infra",
+      "number": 33,
+      "title": "Prove user erasure survives backup restore and disaster recovery",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#19",
+      "plan_id": "T-SEC-07"
+    },
+    {
+      "reference": "PenniLogic/infra#34",
+      "repository": "PenniLogic/infra",
+      "number": 34,
+      "title": "[T-GOV-SCA-CON-01] Authorize the contracts scaffold after its architecture prerequisites",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#36",
+      "plan_id": "T-GOV-SCA-CON-01"
+    },
+    {
+      "reference": "PenniLogic/infra#35",
+      "repository": "PenniLogic/infra",
+      "number": 35,
+      "title": "[T-GOV-EXEC-WIN-01] Fix trusted Windows command dispatch without escaping Python environments",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/infra#42",
+      "plan_id": "T-GOV-EXEC-WIN-01"
+    },
+    {
+      "reference": "PenniLogic/infra#36",
+      "repository": "PenniLogic/infra",
+      "number": 36,
+      "title": "[T-GOV-RUN-WEB-01] Provision the pinned Web runtime in existing trusted CI jobs",
+      "state": "closed",
+      "state_reason": "not_planned",
+      "source": "PenniLogic-old/infra#43",
+      "plan_id": "T-GOV-RUN-WEB-01"
+    },
+    {
+      "reference": "PenniLogic/infra#37",
+      "repository": "PenniLogic/infra",
+      "number": 37,
+      "title": "[T-GOV-NATIVE-LIFETIME-01] Own Windows native-command descendants through timeout cleanup",
+      "state": "open",
+      "state_reason": null,
+      "source": "PenniLogic-old/infra#53",
+      "plan_id": "T-GOV-NATIVE-LIFETIME-01"
+    },
+    {
+      "reference": "PenniLogic/infra#42",
+      "repository": "PenniLogic/infra",
+      "number": 42,
+      "title": "Generator PR C: close the LOW findings from PR #40 review (gitattributes guard, whole-context secret access, honest-state scope)",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": null
+    },
+    {
+      "reference": "PenniLogic/infra#43",
+      "repository": "PenniLogic/infra",
+      "number": 43,
+      "title": "Publish and verify the owner-account and credential hardening baseline for the single administrative identity",
+      "state": "open",
+      "state_reason": null,
+      "source": null,
+      "plan_id": "T-GOV-STRIDE-E01-F04"
+    }
+  ]
+}
