@@ -1,9 +1,14 @@
 """Tests for the ADR layout generator and validator (adr/LAYOUT.md, PenniLogic/docs#141).
 
-Every check runs against a scratch copy of the committed ``adr`` tree, never the repository
-files. Each planted negative proves that the validator fails closed; the positive end-to-end
-cases prove byte-exact reproduction of the committed README, the one-time ``split`` migration,
-ticket-scoped rendering and deterministic output. Nothing here writes an architecture decision.
+Scratch cases run against a copy of the *baseline* layout, which ``setUpModule`` builds once from
+the pinned pre-split reference with ``split``; nothing runs against the repository files and no
+test depends on how many reserved records the committed tree currently holds. The baseline is
+cross-checked against the committed frozen files (legacy sources, historical manifest, original
+allocations, untouched README slots), so a wrong ``split`` cannot hide behind a fixture it produced.
+Live-tree tests derive their expectations from the tree under test. Each planted negative proves
+that the validator fails closed; the positive cases prove byte-exact reproduction of the committed
+README, ticket-scoped rendering and deterministic output. Nothing here writes an architecture
+decision.
 """
 
 import contextlib
@@ -12,6 +17,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 import subprocess
@@ -32,12 +38,69 @@ def load(name):
 
 
 adr = load("validate_adr_layout")
-README = (ROOT / "adr" / "README.md").read_bytes()
+LIVE_README = (ROOT / "adr" / "README.md").read_bytes()
 REFERENCE = (ROOT / "adr" / "presplit-reference.md").read_bytes()
-COMMITTED = [f"ADR-{index:03d}.md" for index in range(1, 15)] + [
-    "legacy-bodies.json", "reservations.json", "README.md",
-]
+LEGACY_FILES = [f"ADR-{index:03d}.md" for index in range(1, 15)]
+SPLIT_OUTPUT = LEGACY_FILES + ["legacy-bodies.json", "reservations.json", "README.md"]
 MONEY, CAT, CRYPTO = "T-ADR-MONEY-01", "T-ADR-CAT-02", "T-ADR-CRYPTO-04"
+# A slot block together with the blank line that follows it in the rendered README.
+SLOT_BLOCK = re.compile(adr.SLOT_PATTERN.pattern + r"\n", re.DOTALL)
+
+
+class Baseline:
+    """The initial split layout: 14 legacy records, the 9 original allocations, nothing published."""
+
+    directory = None
+    adr = None
+
+    @classmethod
+    def build(cls):
+        cls.directory = tempfile.TemporaryDirectory()
+        root = Path(cls.directory.name)
+        (root / "adr").mkdir()
+        (root / "adr" / "presplit-reference.md").write_bytes(REFERENCE)
+        (root / "adr" / "README.md").write_bytes(REFERENCE)
+        adr.split(root)
+        cls.adr = root / "adr"
+
+    @classmethod
+    def read(cls, name):
+        return (cls.adr / name).read_bytes()
+
+    @classmethod
+    def readme(cls):
+        return cls.read("README.md").decode("utf-8")
+
+
+def setUpModule():
+    Baseline.build()
+
+
+def tearDownModule():
+    Baseline.directory.cleanup()
+
+
+def live_state():
+    """Facts about the committed tree read straight from headers and JSON, not via the generator."""
+    headers = {}
+    for path in sorted((ROOT / "adr").glob("ADR-*.md")):
+        text = path.read_text(encoding="utf-8")
+        headers[path.stem] = dict(line.split(": ", 1) for line in text[4:text.index("\n---\n")].split("\n"))
+    allocations = [item["number"] for item in json.loads((ROOT / "adr" / "reservations.json").read_bytes())["items"]]
+    return {
+        "allocations": allocations,
+        "published": [number for number in headers if int(number[4:]) > 14],
+        "pending": [n for n in allocations if headers.get(n, {}).get("status", "PENDING") == "PENDING"],
+        "superseded": {fields["supersedes"] for fields in headers.values()} - {"null"},
+    }
+
+
+def live_expectations():
+    state = live_state()
+    return {
+        "legacy": 14, "allocations": len(state["allocations"]), "published": len(state["published"]),
+        "pending": len(state["pending"]), "superseded": len(state["superseded"]),
+    }
 
 
 def make_writable(path):
@@ -72,13 +135,13 @@ def slot_rows(text, number):
 
 
 class ScratchCase(unittest.TestCase):
-    """A scratch repository root holding a copy of the committed adr tree."""
+    """A scratch repository root holding a copy of the baseline layout."""
 
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.root = Path(directory.name)
         self.addCleanup(self.cleanup, directory)
-        shutil.copytree(ROOT / "adr", self.root / "adr")
+        shutil.copytree(Baseline.adr, self.root / "adr")
         self.adr = self.root / "adr"
 
     def cleanup(self, directory):
@@ -104,31 +167,45 @@ class ScratchCase(unittest.TestCase):
         return self.read("README.md").decode("utf-8")
 
 
-class RepositoryTreeTests(ScratchCase):
+class LiveTreeTests(unittest.TestCase):
+    """The committed tree, read only. Expectations are derived from it, never pinned."""
+
     def test_check_passes_on_the_committed_tree(self):
-        summary = adr.check_layout(ROOT)
-        self.assertEqual(summary, {
-            "legacy": 14, "allocations": 9, "published": 0, "pending": 9, "superseded": 0,
-        })
+        self.assertEqual(adr.check_layout(ROOT), live_expectations())
 
     def test_render_reproduces_the_committed_readme_bytes(self):
         layout = adr.validate_sources(ROOT)
-        self.assertEqual(adr.render_readme(layout).encode("utf-8"), README)
-        self.assertNotIn(b"\r", README)
+        self.assertEqual(adr.render_readme(layout).encode("utf-8"), LIVE_README)
+        self.assertNotIn(b"\r", LIVE_README)
 
-    def test_unscoped_render_is_a_no_op_on_an_unchanged_tree(self):
-        self.assertFalse(adr.render(self.root))
-        self.assertEqual(self.read("README.md"), README)
+    def test_unscoped_render_is_a_no_op_on_a_copy_of_the_committed_tree(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(ROOT / "adr", root / "adr")
+            self.assertFalse(adr.render(root))
+            self.assertEqual((root / "adr" / "README.md").read_bytes(), LIVE_README)
 
     def test_cli_check_reports_success(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.assertEqual(adr.main(["check", "--root", str(ROOT)]), 0)
-        self.assertIn("14 legacy records, 9 allocations, 0 published", out.getvalue())
+        self.assertTrue(out.getvalue().startswith("ADR layout valid: 14 legacy records, "), out.getvalue())
+        self.assertTrue(out.getvalue().endswith("; adr/README.md matches.\n"), out.getvalue())
 
     def test_reference_pins_verify(self):
         self.assertEqual(adr.blob_oid(REFERENCE), adr.REFERENCE_BLOB_OID)
         adr.verify_reference(REFERENCE)
+
+    def test_legacy_set_is_complete_in_the_committed_tree(self):
+        self.assertEqual(sorted(adr.validate_sources(ROOT).legacy), [f"ADR-{i:03d}" for i in range(1, 15)])
+
+
+class BaselineTests(ScratchCase):
+    def test_baseline_is_the_initial_split(self):
+        self.assertEqual(adr.check_layout(self.root), {
+            "legacy": 14, "allocations": 9, "published": 0, "pending": 9, "superseded": 0,
+        })
+        self.assertEqual(sorted(p.name for p in self.adr.iterdir()), sorted(SPLIT_OUTPUT + ["presplit-reference.md"]))
 
     def test_reference_byte_change_is_rejected_by_both_pins(self):
         tampered = REFERENCE[:-2] + b"x" + REFERENCE[-1:]
@@ -185,13 +262,39 @@ class SplitTests(unittest.TestCase):
         (self.root / "adr" / "presplit-reference.md").write_bytes(REFERENCE)
         (self.root / "adr" / "README.md").write_bytes(REFERENCE)
 
-    def test_split_reproduces_every_committed_file_from_the_monolith(self):
+    def produced(self, name):
+        return (self.root / "adr" / name).read_bytes()
+
+    def test_split_reproduces_the_committed_frozen_files_from_the_monolith(self):
+        """Files the contract freezes must come out of the monolith exactly as committed; slots
+        that no later record has published or superseded must match the committed README."""
         summary = adr.split(self.root)
-        self.assertEqual(summary["legacy"], 14)
-        for name in COMMITTED:
+        self.assertEqual(summary, {"legacy": 14, "allocations": 9, "published": 0, "pending": 9, "superseded": 0})
+        self.assertEqual(sorted(p.name for p in (self.root / "adr").iterdir()), sorted(SPLIT_OUTPUT + ["presplit-reference.md"]))
+        for name in LEGACY_FILES + ["legacy-bodies.json"]:
             with self.subTest(name=name):
-                self.assertEqual((self.root / "adr" / name).read_bytes(), (ROOT / "adr" / name).read_bytes())
-        self.assertEqual(sorted(p.name for p in (self.root / "adr").iterdir()), sorted(COMMITTED + ["presplit-reference.md"]))
+                self.assertEqual(self.produced(name), (ROOT / "adr" / name).read_bytes())
+        committed = {item["number"]: item for item in json.loads((ROOT / "adr" / "reservations.json").read_bytes())["items"]}
+        for item in json.loads(self.produced("reservations.json"))["items"]:
+            self.assertEqual(item, committed[item["number"]])
+        live = live_state()
+        produced_readme = self.produced("README.md").decode("utf-8")
+        committed_slots = adr.collect_slots(LIVE_README.decode("utf-8"))
+        for number, slots in adr.collect_slots(produced_readme).items():
+            if number not in live["published"] and number not in live["superseded"]:
+                with self.subTest(slot=number):
+                    self.assertEqual(committed_slots[number], slots)
+        self.assertEqual(SLOT_BLOCK.sub("", produced_readme), SLOT_BLOCK.sub("", LIVE_README.decode("utf-8")))
+        if live["allocations"] == list(committed)[:9] and not live["published"]:
+            for name in SPLIT_OUTPUT:
+                with self.subTest(name=name):
+                    self.assertEqual(self.produced(name), (ROOT / "adr" / name).read_bytes())
+
+    def test_split_output_matches_the_module_baseline(self):
+        adr.split(self.root)
+        for name in SPLIT_OUTPUT:
+            with self.subTest(name=name):
+                self.assertEqual(self.produced(name), Baseline.read(name))
 
     def test_split_refuses_an_already_split_layout(self):
         adr.split(self.root)
@@ -329,7 +432,7 @@ class ReservationFileTests(ScratchCase):
     def test_original_allocation_cannot_be_reassigned_or_changed(self):
         self.edit("reservations.json", '"ticket": "T-ADR-CAT-02"', '"ticket": "T-ADR-CAT-99"')
         self.assert_fails("original allocation ADR-016 was changed or reassigned")
-        self.write("reservations.json", (ROOT / "adr" / "reservations.json").read_bytes())
+        self.write("reservations.json", Baseline.read("reservations.json"))
         self.edit("reservations.json", "Category model: append-only", "Category model: mutable")
         self.assert_fails("original allocation ADR-016 was changed or reassigned")
 
@@ -348,6 +451,35 @@ class ReservationFileTests(ScratchCase):
         })
         self.write("reservations.json", json.dumps(reservations, indent=2) + "\n")
         self.assert_fails("ticket T-ADR-MONEY-01 is allocated twice")
+
+    def test_non_printable_and_marker_text_in_cells_is_rejected(self):
+        original = self.read("reservations.json")
+        cases = {
+            "\r": "U\\+000D", "\t": "U\\+0009", "\x00": "U\\+0000", "\x1b": "U\\+001B",
+            "\u2028": "U\\+2028", "\u202e": "U\\+202E", "\xa0": "U\\+00A0",
+        }
+        for character, code in cases.items():
+            for key in ("question", "blocks"):
+                with self.subTest(character=code, key=key):
+                    reservations = json.loads(original)
+                    item = dict(reservations["items"][-1])
+                    item[key] = item[key][:5] + character + item[key][5:]
+                    item["number"], item["ticket"] = "ADR-024", "T-ADR-NEW-13"
+                    reservations["items"].append(item)
+                    self.write("reservations.json", json.dumps(reservations, indent=2) + "\n")
+                    self.assert_fails(f"ADR-024 {key} contains the non-printable character {code}")
+                    self.assert_fails("non-printable", lambda root: adr.render(root))
+        for forged in ("<!-- SLOT END ADR-024 -->", "x --> y"):
+            with self.subTest(forged=forged):
+                reservations = json.loads(original)
+                reservations["items"].append({
+                    "number": "ADR-024", "ticket": "T-ADR-NEW-13", "state": "PENDING",
+                    "question": forged, "blocks": "b",
+                })
+                self.write("reservations.json", json.dumps(reservations, indent=2) + "\n")
+                self.assert_fails("ADR-024 question must not contain HTML comment delimiters")
+        self.write("reservations.json", original)
+        self.assertEqual(adr.check_layout(self.root)["allocations"], 9)
 
     def test_invalid_json_and_missing_file_fail(self):
         self.write("reservations.json", "{")
@@ -450,6 +582,34 @@ class SourceFormatTests(ScratchCase):
         self.fails("supersedes must be null or an ADR-### reference, not 'ADR-4'", supersedes="ADR-4")
         self.fails("superseded-by must be null or an ADR-### reference, not ''", superseded_by="")
         self.fails("ticket 'money-01' is malformed", ticket="money-01")
+
+    def test_non_printable_title_is_rejected(self):
+        for character, code in (("\t", "U\\+0009"), ("\u202e", "U\\+202E"), ("\u2028", "U\\+2028"), ("\x1b", "U\\+001B")):
+            with self.subTest(character=code):
+                self.fails(f"ADR-015\\.md: title contains the non-printable character {code}", title=f"Money{character}wire")
+        self.fails("title must not contain HTML comment delimiters", title="Money <!-- SLOT END ADR-015 --> wire")
+        self.fails("title must be a non-empty trimmed string", title="Money ")
+
+    def test_symlinked_source_is_rejected(self):
+        self.write("ADR-015.md", source())
+        real = Path.is_symlink
+        with mock.patch.object(Path, "is_symlink", lambda path: path.name == "ADR-015.md" or real(path)):
+            self.assert_fails(r"adr/ADR-015\.md: sources must be regular files, not symbolic links", adr.validate_sources)
+        adr.validate_sources(self.root)
+
+    def test_real_symbolic_link_source_is_rejected(self):
+        self.write("ADR-015.md", source())
+        target = self.adr / "ADR-015.md"
+        link = self.adr / "ADR-016.md"
+        try:
+            os.symlink(target, link)
+        except (OSError, NotImplementedError) as error:
+            self.skipTest(f"symbolic links are not available here: {error}")
+        self.assertTrue(link.is_file(), "is_file() follows the link, which is why is_symlink() is checked first")
+        self.assert_fails(r"adr/ADR-016\.md: sources must be regular files, not symbolic links", adr.validate_sources)
+        link.unlink()
+        os.symlink(target, self.adr / "ADR-015.md.lnk")
+        self.assert_fails(r"adr/ADR-015\.md\.lnk: sources must be regular files, not symbolic links", adr.validate_sources)
 
     def test_body_heading_rules(self):
         self.write("ADR-015.md", source().replace("## ADR-015 — Money", "## ADR-015 - Money"))
@@ -559,7 +719,7 @@ class ScopedRenderTests(ScratchCase):
         self.write("ADR-015.md", source())
         self.assert_fails("generated slot ADR-015 differs")
         self.assertTrue(adr.render(self.root, MONEY))
-        before, after = README.decode("utf-8"), self.readme()
+        before, after = Baseline.readme(), self.readme()
         self.assertNotEqual(before, after)
         self.assertEqual(adr.mask_slots(before, {"ADR-015"}), adr.mask_slots(after, {"ADR-015"}))
         index, pending = slot_rows(after, "ADR-015")
@@ -590,7 +750,7 @@ class ScopedRenderTests(ScratchCase):
         self.assertEqual(pending["State"], "PENDING")
         summary = adr.check_layout(self.root)
         self.assertEqual((summary["published"], summary["pending"]), (1, 9))
-        self.assertEqual(json.loads(self.read("reservations.json")), json.loads((ROOT / "adr" / "reservations.json").read_bytes()))
+        self.assertEqual(json.loads(self.read("reservations.json")), json.loads(Baseline.read("reservations.json")))
 
     def test_scoped_render_refuses_to_alter_another_tickets_slots(self):
         self.write("ADR-015.md", source())
@@ -604,7 +764,7 @@ class ScopedRenderTests(ScratchCase):
         before = self.read("README.md")
         self.assert_fails("outside the slots owned by T-ADR-MONEY-01: text outside the generated slots", lambda root: adr.render(root, MONEY))
         self.assertEqual(self.read("README.md"), before)
-        self.write("README.md", README)
+        self.write("README.md", Baseline.read("README.md"))
         self.edit("README.md", "| Ticket | T-ADR-CAT-02 |\n| Date | — |", "| Ticket | T-ADR-CAT-02 |\n| Date | 2026-10-01 |")
         self.assert_fails("generated slot ADR-016 differs", lambda root: adr.render(root, MONEY))
 
@@ -612,7 +772,7 @@ class ScopedRenderTests(ScratchCase):
         self.write("ADR-015.md", source())
         (self.adr / "README.md").unlink()
         self.assert_fails("README.md is missing; a ticket-scoped render never recreates", lambda root: adr.render(root, MONEY))
-        self.write("README.md", README.replace(b"<!-- SLOT START ADR-015 -->", b"<!-- SLOT BEGIN ADR-015 -->"))
+        self.write("README.md", Baseline.read("README.md").replace(b"<!-- SLOT START ADR-015 -->", b"<!-- SLOT BEGIN ADR-015 -->"))
         self.assert_fails("has no generated slot for ADR-015", lambda root: adr.render(root, MONEY))
         self.assertTrue(adr.render(self.root))
         self.assertEqual(adr.check_layout(self.root)["published"], 1)
@@ -625,17 +785,17 @@ class ScopedRenderTests(ScratchCase):
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample", supersedes="ADR-004"))
         self.assertTrue(adr.render(self.root, CRYPTO))
         after = self.readme()
-        self.assertEqual(adr.mask_slots(README.decode("utf-8"), {"ADR-018", "ADR-004"}), adr.mask_slots(after, {"ADR-018", "ADR-004"}))
+        self.assertEqual(adr.mask_slots(Baseline.readme(), {"ADR-018", "ADR-004"}), adr.mask_slots(after, {"ADR-018", "ADR-004"}))
         self.assertEqual(slot_rows(after, "ADR-004")[0]["Superseded by"], "ADR-018")
         # Another ticket may not carry that predecessor change.
-        self.write("ADR-004.md", (ROOT / "adr" / "ADR-004.md").read_bytes())
-        self.write("README.md", README)
+        self.write("ADR-004.md", Baseline.read("ADR-004.md"))
+        self.write("README.md", Baseline.read("README.md"))
         self.assert_fails("outside the slots owned by T-ADR-MONEY-01: generated slot ADR-004", lambda root: adr.render(root, MONEY))
 
     def test_retargeting_restores_the_previous_predecessor(self):
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample", supersedes="ADR-004"))
         adr.render(self.root, CRYPTO)
-        original_004 = adr.collect_slots(README.decode("utf-8"))["ADR-004"]
+        original_004 = adr.collect_slots(Baseline.readme())["ADR-004"]
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample", supersedes="ADR-005"))
         self.assertTrue(adr.render(self.root, CRYPTO))
         after = self.readme()
@@ -644,7 +804,7 @@ class ScopedRenderTests(ScratchCase):
         self.assertEqual(slot_rows(after, "ADR-018")[0]["Supersedes"], "ADR-005")
         self.write("ADR-018.md", source(number="ADR-018", ticket=CRYPTO, title="Sample"))
         self.assertTrue(adr.render(self.root, CRYPTO))
-        self.assertEqual(adr.mask_slots(README.decode("utf-8"), {"ADR-018"}), adr.mask_slots(self.readme(), {"ADR-018"}))
+        self.assertEqual(adr.mask_slots(Baseline.readme(), {"ADR-018"}), adr.mask_slots(self.readme(), {"ADR-018"}))
         adr.check_layout(self.root)
 
     def test_inconsistent_prior_projection_is_rejected(self):
@@ -655,7 +815,7 @@ class ScopedRenderTests(ScratchCase):
                   "| Status | ACCEPTED |\n| Ticket | — |\n| Date | 2026-09-01 |\n| Supersedes | — |\n| Superseded by | — |")
         self.assert_fails("prior projection is inconsistent; ADR-018 claims to supersede ADR-004", lambda root: adr.render(root, CRYPTO))
         # Reverse link without the forward claim.
-        self.write("README.md", README)
+        self.write("README.md", Baseline.read("README.md"))
         self.edit("README.md", "| Date | 2026-09-01 |\n| Supersedes | — |\n| Superseded by | — |\n<!-- SLOT END ADR-004 -->",
                   "| Date | 2026-09-01 |\n| Supersedes | — |\n| Superseded by | ADR-018 |\n<!-- SLOT END ADR-004 -->")
         self.assert_fails("prior projection is inconsistent; ADR-004 is marked as superseded by a record of T-ADR-CRYPTO-04", lambda root: adr.render(root, CRYPTO))
@@ -663,8 +823,8 @@ class ScopedRenderTests(ScratchCase):
     def test_effective_state_is_never_written_back(self):
         self.write("ADR-015.md", source())
         adr.render(self.root, MONEY)
-        self.assertEqual(self.read("reservations.json"), (ROOT / "adr" / "reservations.json").read_bytes())
-        self.assertEqual(self.read("legacy-bodies.json"), (ROOT / "adr" / "legacy-bodies.json").read_bytes())
+        self.assertEqual(self.read("reservations.json"), Baseline.read("reservations.json"))
+        self.assertEqual(self.read("legacy-bodies.json"), Baseline.read("legacy-bodies.json"))
         self.assertEqual(self.read("ADR-015.md"), source().encode("utf-8"))
 
 
@@ -758,6 +918,16 @@ class CliTests(ScratchCase):
         self.assertEqual((code, out), (1, ""))
         self.assertTrue(err.startswith("ERROR: adr/ADR-015.md: ticket T-ADR-CAT-02 does not own ADR-015"))
 
+    def test_help_states_that_ticket_is_a_scope_guard_not_identity(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as caught:
+            adr.main(["render", "--help"])
+        self.assertEqual(caught.exception.code, 0)
+        text = " ".join(out.getvalue().split())
+        self.assertIn("a declared scope guard", text)
+        self.assertIn("not authenticated identity", text)
+        self.assertIn("not authenticated identity", " ".join(adr.__doc__.split()))
+
     def test_render_reports_updates_and_no_ops(self):
         self.write("ADR-015.md", source())
         code, out, _ = self.run_cli("render", "--ticket", MONEY)
@@ -777,7 +947,7 @@ class CliTests(ScratchCase):
         self.assertIn("ERROR: write of", err)
         self.assertIn("unlink failed", err)
         self.assertIn("caused by: OSError('replace failed')", err)
-        self.assertEqual(self.read("README.md"), README)
+        self.assertEqual(self.read("README.md"), Baseline.read("README.md"))
         make_writable(self.adr)
         for path in self.adr.glob(".README.md.*.tmp"):
             path.unlink()

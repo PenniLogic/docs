@@ -13,9 +13,16 @@ historical manifest and the reservation file against them, validates every adr/A
 and body, owner claims and the replacement graph, and finally requires adr/README.md to equal the
 rendered projection byte for byte. ``render`` writes that projection; with ``--ticket`` it refuses
 to alter bytes outside the slots of that ticket's allocated number and the derived slots of the
-record's previous and current predecessors. ``split`` performs the one-time migration from the
-original monolithic README and refuses to overwrite an already split layout. ``test`` runs the
-stdlib unittest suite in scripts/tests/test_adr_layout*.py.
+record's previous and current predecessors. The ``--ticket`` argument is a declared scope guard,
+not authenticated identity: it limits which bytes one render may change and proves nothing about
+who ran it. ``split`` performs the one-time migration from the original monolithic README and
+refuses to overwrite an already split layout. ``test`` runs the stdlib unittest suite in
+scripts/tests/test_adr_layout*.py.
+
+Text that reaches the generated README (source titles, allocation tickets, questions and blocks)
+must be printable: control characters, CR/LF/TAB, Unicode line/paragraph separators, bidirectional
+overrides and other non-printable code points are rejected, as are HTML comment delimiters that
+could forge slot markers. Sources must be regular files, not symbolic links.
 
 Effective state is derived and never stored back. An allocated number without a source, or whose
 source records ``status: PENDING``, renders as PENDING; a source with a valid successor renders as
@@ -149,6 +156,18 @@ def anchor(number, title):
     """GitHub-style heading slug of ``## ADR-### — Title`` for the index source cell."""
     text = re.sub(r"[^\w\- ]", "", f"{number} — {title}".lower())
     return text.replace(" ", "-")
+
+
+def check_rendered_text(value, label):
+    """Text that reaches the README: one trimmed line of printable code points, no marker forgery."""
+    if not isinstance(value, str) or not value or value != value.strip():
+        raise LayoutError(f"{label} must be a non-empty trimmed string")
+    if not value.isprintable():
+        offending = next(character for character in value if not character.isprintable())
+        raise LayoutError(f"{label} contains the non-printable character U+{ord(offending):04X}")
+    if "<!--" in value or "-->" in value:
+        raise LayoutError(f"{label} must not contain HTML comment delimiters")
+    return value
 
 
 @dataclasses.dataclass(frozen=True)
@@ -391,9 +410,9 @@ def validate_reservations(root, original):
         if not TICKET_PATTERN.fullmatch(item["ticket"]):
             raise LayoutError(f"{label}: {number} ticket {item['ticket']!r} is malformed")
         for key in ("question", "blocks"):
-            value = item[key]
-            if not value or value != value.strip() or "|" in value or "\n" in value:
-                raise LayoutError(f"{label}: {number} {key} must be one trimmed table cell without '|'")
+            value = check_rendered_text(item[key], f"{label}: {number} {key}")
+            if "|" in value:
+                raise LayoutError(f"{label}: {number} {key} must be one table cell without '|'")
         if item["ticket"] in tickets:
             raise LayoutError(f"{label}: ticket {item['ticket']} is allocated twice")
         tickets[item["ticket"]] = number
@@ -454,9 +473,7 @@ def parse_source(name, data):
     number = fields["number"]
     if not NUMBER_PATTERN.fullmatch(number) or f"{number}.md" != name:
         raise LayoutError(f"{label}: header number {number!r} must match the file name")
-    title = fields["title"]
-    if not title or title != title.strip():
-        raise LayoutError(f"{label}: title must be a non-empty trimmed string")
+    title = check_rendered_text(fields["title"], f"{label}: title")
     status = fields["status"]
     if status not in STATUSES:
         raise LayoutError(f"{label}: status must be one of {', '.join(STATUSES)}, not {status!r}")
@@ -495,6 +512,8 @@ def read_sources(root):
     for path in sorted((root / ADR_DIR).iterdir()):
         if not path.name.lower().startswith("adr-"):
             continue
+        if path.is_symlink():
+            raise LayoutError(f"{ADR_DIR}/{path.name}: sources must be regular files, not symbolic links")
         if not SOURCE_NAME_PATTERN.fullmatch(path.name) or not path.is_file():
             raise LayoutError(f"{ADR_DIR}/{path.name}: sources are files named exactly ADR-###.md")
         source = parse_source(path.name, path.read_bytes())
@@ -869,7 +888,11 @@ def main(argv=None):
         command = commands.add_parser(name, help=text)
         command.add_argument("--root", type=Path, default=ROOT, help="repository root containing adr/")
         if name == "render":
-            command.add_argument("--ticket", help="allocated ticket whose slots may change, e.g. T-ADR-MONEY-01")
+            command.add_argument(
+                "--ticket",
+                help="allocated ticket whose slots may change, e.g. T-ADR-MONEY-01; a declared scope "
+                "guard that limits which bytes this render may alter, not authenticated identity",
+            )
     args = parser.parse_args(argv)
     if args.command == "test":
         return run_tests()
