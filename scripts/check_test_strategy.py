@@ -9,8 +9,10 @@ and performance numbers live in the data file so the harnesses read them instead
 The reconciliation runs offline against planning/issue-inventory.json, a committed snapshot of the
 public issue inventory, because CI has no network access to GitHub and no token. A category with no
 owner, an owner reference that does not resolve to a snapshotted issue, an owner that carries a
-different plan identity than the strategy expects, an owner closed as not planned, or a named package
-with no published number all fail the check.
+different plan identity than the strategy expects, an owner closed as not planned, a named package
+with no published number, a money-path floor in a repository with neither a mutation owner nor a
+recorded enforcement gap, or a gate assertion of the client state taxonomy with no category all fail
+the check.
 
 `--refresh-inventory` regenerates the snapshot from the live API through the stored `gh` credential
 of `basiltt`. It removes the inherited token variables from the child process, verifies the login,
@@ -33,7 +35,13 @@ STRATEGY = "governance/test-strategy.json"
 SCHEMA = "governance/test-strategy.schema.json"
 DOCUMENT = "governance/test-strategy.md"
 INVENTORY = "planning/issue-inventory.json"
+# The client state taxonomy supplies the state identifiers and gate assertions the strategy must cover.
+TAXONOMY_DATA = "product/client-state-taxonomy.json"
+TAXONOMY_DOCUMENT = "product/client-state-taxonomy.md"
+# The canonical Definition of Ready and Done; this strategy only adds test-evidence requirements to it.
+DELIVERY_PLAN = "product/03-delivery-plan.md"
 REFRESH_COMMAND = "python scripts/check_test_strategy.py --refresh-inventory"
+GH_TIMEOUT_SECONDS = 180
 
 ORGANIZATION = "PenniLogic"
 ORGANIZATION_ID = 335295566
@@ -77,18 +85,61 @@ REQUIRED_CATEGORIES = (
     "unit_tests", "domain_ledger_property", "debt_maths_independent_model", "mutation_testing",
     "parser_golden_corpus", "api_contract", "contract_provider_consumer", "android_unit_instrumented",
     "web_e2e_journeys", "admin_e2e_journeys", "accessibility_conformance", "performance_budgets",
-    "security_negative_tests", "static_dependency_secret_gates", "security_regression_smoke",
+    "security_negative_tests", "log_redaction_gate", "static_dependency_secret_gates", "security_regression_smoke",
     "supply_chain_verification", "load_stress_soak", "chaos_fault_injection", "disaster_recovery_restore",
     "privacy_traffic_inspection", "billing_webhook_replay", "model_evaluation", "threat_model_refresh",
-    "penetration_test", "flaky_test_quarantine", "client_state_coverage", "release_evidence_gates",
-    "strategy_reconciliation",
+    "penetration_test", "flaky_test_quarantine", "client_state_coverage", "client_state_taxonomy_first",
+    "release_evidence_gates", "strategy_reconciliation",
 )
+# Phrases a category's text must keep, so a review-mandated scope cannot be quietly dropped later.
+# Matching is case-insensitive on the named field.
+REQUIRED_CATEGORY_PHRASES = {
+    "security_negative_tests": {
+        "approach": (
+            "cross-tenant", "object authorization", "mass assignment", "authentication bypass", "token replay",
+            "entitlement tampering", "rate limiting", "lockout", "credential stuffing", "step-up",
+            "default deny", "expired grant", "aggregate-versus-detail", "differencing",
+        ),
+        "evidence": ("negative test per gated feature", "per grant scope", "step-up replay"),
+    },
+    "log_redaction_gate": {
+        "approach": ("field allowlist", "static rule", "runtime scan", "planted money value", "fail-closed", "exception messages", "before upload"),
+        "evidence": ("planted money value",),
+    },
+    "accessibility_conformance": {
+        "approach": ("section 8", "switch access", "accessibility test framework", "lint"),
+        "evidence": ("unannounced state",),
+    },
+    "client_state_coverage": {"evidence": ("section 8",)},
+}
+# Change classes that must carry a category, because the reviewers found the class incomplete without it.
+REQUIRED_MANDATORY_CATEGORIES = {
+    "money_path": ("unit_tests", "domain_ledger_property", "mutation_testing", "debt_maths_independent_model", "log_redaction_gate"),
+    "api_service": ("log_redaction_gate", "security_negative_tests"),
+    "billing": ("log_redaction_gate", "security_negative_tests", "mutation_testing"),
+    "security_boundary": ("security_negative_tests", "log_redaction_gate", "threat_model_refresh"),
+    "android_client": ("accessibility_conformance", "client_state_coverage", "client_state_taxonomy_first"),
+    "web_client": ("accessibility_conformance", "client_state_coverage", "client_state_taxonomy_first"),
+    "admin_console": ("accessibility_conformance", "client_state_coverage", "client_state_taxonomy_first"),
+}
 REQUIRED_DELIVERABLES = ("independent_model_harness", "red_team_scenarios", "physical_test_device")
 REQUIRED_MONEY_DOMAINS = ("ledger", "debt", "budget", "split")
 REQUIRED_READY_ITEMS = ("threat_model_refreshed", "privacy_payload_reviewed")
 REQUIRED_DONE_ITEMS = ("coverage_floors_met", "mutation_floor_met", "flake_policy_respected")
-REQUIRED_CHANGE_CLASSES = ("money_path", "parser", "contract", "security_boundary")
-REQUIRED_DEVICE_LANES = ("emulator_api_31", "emulator_current", "physical_mid_range_indian_sim")
+REQUIRED_CHANGE_CLASSES = (
+    "money_path", "parser", "contract", "api_service", "security_boundary", "billing",
+    "android_client", "web_client", "admin_console",
+)
+REQUIRED_DEVICE_LANES = (
+    "emulator_api_31", "emulator_current", "emulator_large_text", "emulator_talkback", "physical_mid_range_indian_sim",
+)
+# No lane is ever recorded as running: an emulator lane is provisionable on the hosted runner until the
+# Android gate wires it, and a hardware lane is required until its procurement is done.
+LANE_AVAILABILITY = ("provisionable_in_ci", "required_not_yet_available")
+LANE_AVAILABILITY_TEXT = {
+    "provisionable_in_ci": "provisionable in CI, not yet running",
+    "required_not_yet_available": "required, not yet available",
+}
 PHYSICAL_DEVICE_LANE = "physical_mid_range_indian_sim"
 PHYSICAL_DEVICE_PROCUREMENT = "T-QA-07"
 THREAT_MODEL_OWNER = "T-QA-14"
@@ -96,6 +147,19 @@ ACCESSIBILITY_TARGET = {"standard": "WCAG", "version": "2.2", "level": "AA"}
 ACCESSIBILITY_PHRASE = "WCAG 2.2 AA"
 # The document must state the target as a sentence, not only reference the standard as a goal.
 CONFORMANCE_STATEMENT = "The conformance target is WCAG 2.2 AA."
+# The automated bar is conformance, not "critical only": axe-style impact levels put contrast and target
+# size at serious, so a critical-only gate would pass the very defects the signal promises to catch.
+AUTOMATED_GATE_STATEMENT = (
+    "zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core "
+    "journeys; best-practice rules that are not WCAG success criteria are advisory; an exception requires a "
+    "recorded reason and an expiry on the pull request"
+)
+AUTOMATED_GATE_PHRASE = "zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA"
+FORBIDDEN_ACCESSIBILITY_PHRASES = ("critical violations", "keyboard-only or switch", "keyboard or switch access completing")
+REQUIRED_BROWSER_CONFIGURATIONS = ("200 percent zoom", "prefers-reduced-motion: reduce", "forced-colors: active")
+REQUIRED_WCAG_NAMED_CHECKS = ("3.3.1 Error Identification", "4.1.3 Status Messages")
+REQUIRED_WCAG_2_2_NAMED_CHECKS = ("2.5.8 Target Size (Minimum)", "3.3.8 Accessible Authentication (Minimum)")
+ANDROID_MECHANISM_PHRASES = ("accessibility test framework", "lint", "pinned")
 EVIDENCE_NAME = re.compile(r"^[a-z][a-z0-9-]*__[a-z][a-z0-9_]*__[0-9a-f]{12}__[0-9]{8}\.[a-z0-9]+$")
 
 ISSUES_QUERY = """
@@ -284,18 +348,40 @@ def _resolve_owners(item, index, label):
 
 # --- strategy -----------------------------------------------------------------------------------
 
-def _check_categories(strategy, index):
+def _require_phrases(text, phrases, label):
+    lowered = text.lower()
+    for phrase in phrases:
+        if phrase.lower() not in lowered:
+            raise ValueError(f"{label} must keep the phrase {phrase!r}")
+
+
+def _check_categories(strategy, index, taxonomy_assertions):
     categories = _unique_ids(strategy["categories"], "category")
     for missing in [name for name in REQUIRED_CATEGORIES if name not in categories]:
         raise ValueError(f"Missing required verification category: {missing}")
     owners = set()
+    claimed = {}
     for category_id, category in categories.items():
         label = f"Category {category_id}"
         for key in ("name", "layer", "approach", "evidence"):
             if not _text(category.get(key)):
                 raise ValueError(f"{label} has no {key}")
+        for key, phrases in REQUIRED_CATEGORY_PHRASES.get(category_id, {}).items():
+            _require_phrases(category[key], phrases, f"{label} {key}")
+        assertion = category.get("taxonomy_assertion")
+        if assertion is not None:
+            if assertion in claimed:
+                raise ValueError(f"Taxonomy assertion {assertion} is claimed by both {claimed[assertion]} and {category_id}")
+            if assertion not in taxonomy_assertions:
+                raise ValueError(f"{label} claims unknown taxonomy assertion {assertion!r}")
+            claimed[assertion] = category_id
         for issue in _resolve_owners(category, index, label):
             owners.add(issue["reference"])
+    # Every gate assertion the client state taxonomy publishes must be a category here, so a client
+    # change class cannot under-state the evidence the taxonomy already requires of the same gates.
+    for assertion in taxonomy_assertions:
+        if assertion not in claimed:
+            raise ValueError(f"Taxonomy coverage assertion {assertion!r} is not covered by any category")
     return categories, owners
 
 
@@ -327,15 +413,52 @@ def _check_change_classes(strategy, categories):
                 raise ValueError(f"{label} names unknown category {category_id!r}")
         if not isinstance(change_class.get("manual_evidence"), list):
             raise ValueError(f"{label} must list its manual evidence, possibly empty")
-    if "unit_tests" not in classes["money_path"]["mandatory_categories"]:
-        raise ValueError("Change class money_path must make unit_tests mandatory")
-    for required in ("domain_ledger_property", "mutation_testing", "debt_maths_independent_model"):
-        if required not in classes["money_path"]["mandatory_categories"]:
-            raise ValueError(f"Change class money_path must make {required} mandatory")
+    for class_id, required in REQUIRED_MANDATORY_CATEGORIES.items():
+        for category_id in required:
+            if category_id not in classes[class_id]["mandatory_categories"]:
+                raise ValueError(f"Change class {class_id} must make {category_id} mandatory")
     return classes
 
 
-def _check_packages(strategy):
+def _check_mutation_enforcement(policy, packages, categories):
+    """A money-path floor in repository X needs a mutation owner in X, or an explicit recorded gap."""
+    money_by_repository = {}
+    for package_id, package in packages.items():
+        if package["money_path"]:
+            money_by_repository.setdefault(package["repository"], set()).add(package_id)
+    owner_repositories = {
+        parse_reference(owner["reference"])[0] for owner in categories["mutation_testing"]["owners"]
+    }
+    gaps = policy.get("mutation_enforcement_gaps")
+    if not isinstance(gaps, list):
+        raise ValueError("floor_policy.mutation_enforcement_gaps must be a list, possibly empty")
+    recorded = {}
+    for gap in gaps:
+        if not isinstance(gap, dict):
+            raise ValueError("floor_policy.mutation_enforcement_gaps entries must be objects")
+        repository = gap.get("repository")
+        if repository in recorded:
+            raise ValueError(f"Mutation enforcement gap for {repository} is recorded twice")
+        if repository not in money_by_repository:
+            raise ValueError(f"Mutation enforcement gap for {repository} names a repository with no money-path package")
+        if repository in owner_repositories:
+            raise ValueError(f"Mutation enforcement gap for {repository} is stale: a mutation_testing owner exists there")
+        if set(gap.get("packages") or []) != money_by_repository[repository]:
+            raise ValueError(f"Mutation enforcement gap for {repository} must list exactly its money-path packages")
+        for key in ("reason", "resolution"):
+            if not _text(gap.get(key)):
+                raise ValueError(f"Mutation enforcement gap for {repository} has no {key}")
+        recorded[repository] = gap
+    for repository, package_ids in sorted(money_by_repository.items()):
+        if repository not in owner_repositories and repository not in recorded:
+            raise ValueError(
+                f"Money-path packages {', '.join(sorted(package_ids))} carry mutation floors but {repository} has no "
+                "mutation_testing owner and no recorded enforcement gap"
+            )
+    return recorded
+
+
+def _check_packages(strategy, categories):
     packages = _unique_ids(strategy["packages"], "package", PACKAGE_ID)
     policy = strategy["floor_policy"]
     money_minimum, other_minimum = policy["money_path_minimum"], policy["other_minimum"]
@@ -345,6 +468,8 @@ def _check_packages(strategy):
         _percent(other_minimum.get(key), f"floor_policy.other_minimum.{key}")
     if policy.get("money_path_ratchet") is not True:
         raise ValueError("floor_policy.money_path_ratchet must be true: money-path coverage may not decline")
+    if not _text(policy.get("mutation_enforcement_rule")):
+        raise ValueError("floor_policy.mutation_enforcement_rule must be stated")
     domains = set()
     money_count = 0
     for package_id, package in packages.items():
@@ -388,7 +513,8 @@ def _check_packages(strategy):
                 f"No money-path package carries the {domain} domain; ledger, debt, budget and split "
                 "must each be a money-path package with a mutation floor"
             )
-    return packages, money_count
+    gaps = _check_mutation_enforcement(policy, packages, categories)
+    return packages, money_count, gaps
 
 
 def _check_flake_policy(policy):
@@ -435,25 +561,62 @@ def _check_budgets(strategy, categories):
     return budgets
 
 
-def _check_accessibility(accessibility):
+def _check_accessibility(accessibility, taxonomy_states):
     for key, expected in ACCESSIBILITY_TARGET.items():
         if accessibility.get(key) != expected:
             raise ValueError(f"accessibility.{key} must be {expected!r}; the conformance target is {ACCESSIBILITY_PHRASE}")
     if accessibility.get("conformance_target") != ACCESSIBILITY_PHRASE:
         raise ValueError(f"accessibility.conformance_target must read {ACCESSIBILITY_PHRASE!r}")
+    if accessibility.get("automated_gate") != AUTOMATED_GATE_STATEMENT:
+        raise ValueError("accessibility.automated_gate must be the published conformance bar, not a weaker impact threshold")
+    # A weaker bar or an optional assistive technology anywhere in the object is a regression, wherever it hides.
+    for phrase in FORBIDDEN_ACCESSIBILITY_PHRASES:
+        if phrase in json.dumps(accessibility).lower():
+            raise ValueError(f"accessibility must not contain the phrase {phrase!r}")
     surfaces = accessibility.get("surfaces")
     if not isinstance(surfaces, dict) or set(surfaces) != {"web", "admin", "android"}:
         raise ValueError("accessibility.surfaces must state the target for web, admin and android")
     for surface, statement in surfaces.items():
         if not _text(statement) or ACCESSIBILITY_PHRASE not in statement:
             raise ValueError(f"accessibility.surfaces.{surface} must state the {ACCESSIBILITY_PHRASE} target explicitly")
+    for surface in ("web", "admin"):
+        if AUTOMATED_GATE_PHRASE not in surfaces[surface]:
+            raise ValueError(f"accessibility.surfaces.{surface} must carry the automated gate bar {AUTOMATED_GATE_PHRASE!r}")
+    _require_phrases(surfaces["android"], ("Switch Access",), "accessibility.surfaces.android")
+    mechanisms = accessibility.get("automated_mechanisms")
+    if not isinstance(mechanisms, dict) or set(mechanisms) != {"web", "admin", "android"}:
+        raise ValueError("accessibility.automated_mechanisms must name the automated check for web, admin and android")
+    for surface, statement in mechanisms.items():
+        if not _text(statement):
+            raise ValueError(f"accessibility.automated_mechanisms.{surface} must name the mechanism")
+    _require_phrases(mechanisms["android"], ANDROID_MECHANISM_PHRASES, "accessibility.automated_mechanisms.android")
     for key in ("ruleset_named_and_pinned", "undecidable_rules_route_to_manual_walkthrough"):
         if accessibility.get(key) is not True:
             raise ValueError(f"accessibility.{key} must be true")
-    for key in ("manual_walkthrough", "wcag_2_2_criteria_requiring_named_checks"):
+    lists = (
+        "manual_walkthrough", "browser_configurations", "wcag_2_2_criteria_requiring_named_checks",
+        "wcag_criteria_requiring_named_checks", "taxonomy_states",
+    )
+    for key in lists:
         items = accessibility.get(key)
         if not isinstance(items, list) or not items or not all(_text(item) for item in items):
             raise ValueError(f"accessibility.{key} must be a non-empty list of statements")
+    for configuration in REQUIRED_BROWSER_CONFIGURATIONS:
+        if configuration not in accessibility["browser_configurations"]:
+            raise ValueError(f"accessibility.browser_configurations must include {configuration!r}")
+    for criterion in REQUIRED_WCAG_NAMED_CHECKS:
+        if criterion not in accessibility["wcag_criteria_requiring_named_checks"]:
+            raise ValueError(f"accessibility.wcag_criteria_requiring_named_checks must include {criterion!r}")
+    for criterion in REQUIRED_WCAG_2_2_NAMED_CHECKS:
+        if criterion not in accessibility["wcag_2_2_criteria_requiring_named_checks"]:
+            raise ValueError(f"accessibility.wcag_2_2_criteria_requiring_named_checks must include {criterion!r}")
+    walkthrough = " ".join(accessibility["manual_walkthrough"])
+    _require_phrases(walkthrough, ("Switch Access (Android)", "section 8", "announced once", "not re-announced"), "accessibility.manual_walkthrough")
+    # The states the walkthrough must cover are the taxonomy's states, read from the taxonomy, not restated.
+    if sorted(accessibility["taxonomy_states"]) != sorted(taxonomy_states):
+        raise ValueError("accessibility.taxonomy_states must list exactly the client state taxonomy's state identifiers")
+    if not _text(accessibility.get("not_claimed")):
+        raise ValueError("accessibility.not_claimed must state what the conformance claim excludes")
 
 
 def _check_device_matrix(strategy, index):
@@ -464,16 +627,24 @@ def _check_device_matrix(strategy, index):
         label = f"Device lane {lane_id}"
         if lane.get("kind") not in ("emulator", "managed_device", "physical"):
             raise ValueError(f"{label} has unknown kind {lane.get('kind')!r}")
-        for key in ("purpose", "required_for"):
+        for key in ("purpose", "required_for", "configuration"):
             if not lane.get(key):
                 raise ValueError(f"{label} has no {key}")
-        if lane.get("availability") not in ("available_in_ci", "required_not_yet_available"):
-            raise ValueError(f"{label} must state its availability honestly")
+        if lane.get("availability") not in LANE_AVAILABILITY:
+            raise ValueError(f"{label} must state its availability as one of {', '.join(LANE_AVAILABILITY)}; no lane runs yet")
+        if lane["kind"] == "emulator" and lane["availability"] != "provisionable_in_ci":
+            raise ValueError(f"{label} is an emulator lane and must be recorded as provisionable_in_ci")
+        if lane["kind"] != "emulator" and lane["availability"] != "required_not_yet_available":
+            raise ValueError(f"{label} needs hardware and must be recorded as required_not_yet_available")
         _resolve_owners(lane, index, label)
     if lanes["emulator_api_31"].get("android_api_level") != 31:
         raise ValueError("Device lane emulator_api_31 must pin Android API level 31")
     if lanes["emulator_current"].get("android_api_level") != "current":
         raise ValueError("Device lane emulator_current must track the current Android release")
+    _require_phrases(lanes["emulator_large_text"]["configuration"], ("font scale", "display size", "reduced motion"), "Device lane emulator_large_text configuration")
+    if "pull_request" not in lanes["emulator_large_text"]["required_for"]:
+        raise ValueError("Device lane emulator_large_text is required on every pull request")
+    _require_phrases(lanes["emulator_talkback"]["configuration"], ("TalkBack",), "Device lane emulator_talkback configuration")
     physical = lanes[PHYSICAL_DEVICE_LANE]
     if physical.get("kind") != "physical" or physical.get("tier") != "mid-range":
         raise ValueError(f"Device lane {PHYSICAL_DEVICE_LANE} must be a physical mid-range device")
@@ -620,6 +791,19 @@ def render_package_table(strategy):
     return _table(("Package", "Repository", "Money path", "Line floor %", "Branch floor %", "Mutation floor %"), rows)
 
 
+def render_mutation_gap_table(strategy):
+    gaps = strategy["floor_policy"]["mutation_enforcement_gaps"]
+    if not gaps:
+        return "Every repository that carries a money-path package has a mutation-testing owner in that repository.\n"
+    return _table(
+        ("Repository", "Money-path packages without an enforcement owner", "Reason", "Resolution"),
+        [
+            (gap["repository"], ", ".join(f"`{name}`" for name in gap["packages"]), gap["reason"], gap["resolution"])
+            for gap in gaps
+        ],
+    )
+
+
 def render_flake_table(strategy):
     policy = strategy["flake_policy"]
     return _table(
@@ -646,10 +830,34 @@ def render_device_table(strategy):
     for lane in strategy["device_matrix"]:
         api = lane.get("android_api_level", "n/a")
         rows.append((
-            f"`{lane['id']}`", lane["kind"], api, lane["purpose"], ", ".join(lane["required_for"]),
-            lane["availability"].replace("_", " "), _owner_cell(lane),
+            f"`{lane['id']}`", lane["kind"], api, lane["configuration"], lane["purpose"], ", ".join(lane["required_for"]),
+            LANE_AVAILABILITY_TEXT[lane["availability"]], _owner_cell(lane),
         ))
-    return _table(("Lane", "Kind", "API level", "Purpose", "Required for", "Availability", "Owning issues"), rows)
+    return _table(("Lane", "Kind", "API level", "Configuration", "Purpose", "Required for", "Availability", "Owning issues"), rows)
+
+
+def _bullets(items):
+    return "\n".join(f"- {item}" for item in items) + "\n"
+
+
+def render_accessibility_block(strategy):
+    """Section 10 rendered from the data: target, gate, mechanisms, configurations, named checks, walkthrough."""
+    accessibility = strategy["accessibility"]
+    parts = [
+        f"**{CONFORMANCE_STATEMENT}** Standard `{accessibility['standard']}`, version `{accessibility['version']}`, level `{accessibility['level']}`.\n",
+        f"**Automated gate (web and admin):** {accessibility['automated_gate']}.\n",
+        _table(
+            ("Surface", "Target", "Automated mechanism"),
+            [(surface, accessibility["surfaces"][surface], accessibility["automated_mechanisms"][surface]) for surface in ("web", "admin", "android")],
+        ),
+        "**Browser configurations (web and admin core journeys):**\n" + _bullets(accessibility["browser_configurations"]),
+        "**WCAG 2.2 criteria that need a named check or a recorded manual step:**\n" + _bullets(accessibility["wcag_2_2_criteria_requiring_named_checks"]),
+        "**Other WCAG criteria that need a named check, automated where the ruleset can decide them and otherwise a recorded manual step:**\n" + _bullets(accessibility["wcag_criteria_requiring_named_checks"]),
+        "**Manual walkthrough:**\n" + _bullets(accessibility["manual_walkthrough"]),
+        "**Client state taxonomy states asserted on every core journey:** " + ", ".join(f"`{state}`" for state in accessibility["taxonomy_states"]) + ".\n",
+        f"**Not claimed:** {accessibility['not_claimed']}.\n",
+    ]
+    return "\n".join(parts)
 
 
 def render_fixture_table(strategy):
@@ -699,25 +907,30 @@ def render_document_blocks(strategy):
         "deliverables": render_deliverable_table(strategy),
         "change_classes": render_change_class_table(strategy),
         "packages": render_package_table(strategy),
+        "mutation_enforcement_gaps": render_mutation_gap_table(strategy),
         "flake_policy": render_flake_table(strategy),
         "numbers": render_numbers_table(strategy),
         "performance_budgets": render_budget_table(strategy),
+        "accessibility": render_accessibility_block(strategy),
         "device_matrix": render_device_table(strategy),
         "fixture_families": render_fixture_table(strategy),
         "definition_of_ready": render_checklist(strategy["definition_of_ready"]),
         "definition_of_done": render_checklist(strategy["definition_of_done"]),
+        "not_asserted": _bullets(strategy["not_asserted"]),
     }
 
 
 def _check_document(strategy, document):
     for name, block in render_document_blocks(strategy).items():
         if block not in document:
-            raise ValueError(f"Document does not carry the {name} table rendered from the data verbatim; run --render")
+            raise ValueError(f"Document does not carry the {name} block rendered from the data verbatim; run --render")
     mentions = [
         (CONFORMANCE_STATEMENT, "the accessibility conformance target as an explicit statement"),
         (STRATEGY, f"data file {STRATEGY}"), (SCHEMA, f"schema file {SCHEMA}"),
         (INVENTORY, f"inventory file {INVENTORY}"), (REFRESH_COMMAND, "the inventory refresh command"),
         (strategy["strategy_version"], f"strategy version {strategy['strategy_version']}"),
+        (DELIVERY_PLAN, f"the canonical Definition of Ready and Done in {DELIVERY_PLAN}"),
+        (TAXONOMY_DOCUMENT, f"the client state taxonomy document {TAXONOMY_DOCUMENT}"),
     ]
     for needle, label in mentions:
         if needle not in document:
@@ -726,8 +939,15 @@ def _check_document(strategy, document):
 
 # --- entry points -------------------------------------------------------------------------------
 
-def check_strategy(strategy, inventory, document):
-    """Enforce the acceptance criteria of PenniLogic/docs#22; return a short summary."""
+def check_strategy(strategy, inventory, document, taxonomy=None):
+    """Enforce the acceptance criteria of PenniLogic/docs#22; return a short summary.
+
+    `taxonomy` is the client state taxonomy data (product/client-state-taxonomy.json); it supplies the
+    state identifiers and gate assertions this strategy must cover. Defaults to the published file.
+    """
+    taxonomy = load_json(ROOT / TAXONOMY_DATA) if taxonomy is None else taxonomy
+    taxonomy_states = [state["id"] for state in taxonomy["states"]]
+    taxonomy_assertions = [assertion["id"] for assertion in taxonomy["adoption"]["coverage_assertions"]]
     index = validate_inventory(inventory)
     if strategy.get("schema_version") != 1:
         raise ValueError("Strategy schema_version must be 1")
@@ -739,13 +959,13 @@ def check_strategy(strategy, inventory, document):
     if strategy.get("reference_format") != REFERENCE.pattern:
         raise ValueError("Strategy reference_format must publish the exact owner reference pattern the check enforces")
     resolve_owner(strategy.get("source_issue"), index, "Strategy source_issue")
-    categories, owners = _check_categories(strategy, index)
+    categories, owners = _check_categories(strategy, index, taxonomy_assertions)
     _check_deliverables(strategy, index)
     _check_change_classes(strategy, categories)
-    packages, money_count = _check_packages(strategy)
+    packages, money_count, gaps = _check_packages(strategy, categories)
     _check_flake_policy(strategy["flake_policy"])
     _check_budgets(strategy, categories)
-    _check_accessibility(strategy["accessibility"])
+    _check_accessibility(strategy["accessibility"], taxonomy_states)
     _check_device_matrix(strategy, index)
     _check_test_data_policy(strategy["test_data_policy"], index)
     _check_definitions(strategy, index)
@@ -759,6 +979,7 @@ def check_strategy(strategy, inventory, document):
         "owner_repositories": len({reference.split("#")[0] for reference in owners}),
         "packages": len(packages),
         "money_path_packages": money_count,
+        "mutation_enforcement_gaps": len(gaps),
         "issues": len(index),
         "snapshot_at": inventory["snapshot_at"],
     }
@@ -770,7 +991,8 @@ def validate_strategy(root):
     load_check("check_client_states").validate_schema(strategy, schema)
     inventory = load_json(root / INVENTORY)
     document = (root / DOCUMENT).read_text(encoding="utf-8")
-    return check_strategy(strategy, inventory, document)
+    taxonomy = load_json(root / TAXONOMY_DATA)
+    return check_strategy(strategy, inventory, document, taxonomy)
 
 
 def child_environment(environ=None):
@@ -785,10 +1007,17 @@ def redact(text):
 
 def gh(args, payload=None, runner=subprocess.run, environ=None):
     """Run `gh` process-locally as the stored personal credential; never touch a token."""
-    process = runner(
-        ["gh", *args], input=None if payload is None else json.dumps(payload), capture_output=True,
-        text=True, encoding="utf-8", env=child_environment(environ), timeout=180,
-    )
+    try:
+        process = runner(
+            ["gh", *args], input=None if payload is None else json.dumps(payload), capture_output=True,
+            text=True, encoding="utf-8", env=child_environment(environ), timeout=GH_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as error:
+        # The timeout carries the child's stderr; it must pass through redact() like every other failure.
+        stderr = error.stderr.decode("utf-8", "replace") if isinstance(error.stderr, bytes) else (error.stderr or "")
+        raise RuntimeError(
+            f"gh {' '.join(args[:2])} timed out after {GH_TIMEOUT_SECONDS} s: {redact(stderr.strip())[:600]}"
+        ) from None
     if process.returncode != 0:
         raise RuntimeError(f"gh {' '.join(args[:2])} failed: {redact(process.stderr.strip())[:600]}")
     return json.loads(process.stdout) if process.stdout.strip() else None
@@ -883,13 +1112,14 @@ def main(argv=None):
                 print(f"<!-- {name} -->\n{block}")
             return 0
         summary = validate_strategy(ROOT)
-    except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
-        print(f"Test strategy check failed: {error}", file=sys.stderr)
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.SubprocessError) as error:
+        print(f"Test strategy check failed: {redact(str(error))}", file=sys.stderr)
         return 1
     print(
         f"Test strategy {summary['strategy_version']} valid: {summary['categories']} categories owned by "
         f"{summary['owners']} public issues across {summary['owner_repositories']} repositories, "
-        f"{summary['packages']} packages with floors ({summary['money_path_packages']} money-path), "
+        f"{summary['packages']} packages with floors ({summary['money_path_packages']} money-path, "
+        f"{summary['mutation_enforcement_gaps']} recorded mutation enforcement gap(s)), "
         f"inventory of {summary['issues']} issues snapshotted {summary['snapshot_at']}; "
         "no harness, coverage or acceptance implied."
     )

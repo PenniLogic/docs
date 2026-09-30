@@ -42,7 +42,7 @@
     "floor_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["money_path_minimum", "other_minimum", "money_path_ratchet", "unlisted_package_rule", "renaming_rule"],
+      "required": ["money_path_minimum", "other_minimum", "money_path_ratchet", "unlisted_package_rule", "renaming_rule", "mutation_enforcement_rule", "mutation_enforcement_gaps"],
       "properties": {
         "money_path_minimum": {
           "type": "object",
@@ -65,7 +65,14 @@
         },
         "money_path_ratchet": { "const": true },
         "unlisted_package_rule": { "$ref": "#/definitions/text" },
-        "renaming_rule": { "$ref": "#/definitions/text" }
+        "renaming_rule": { "$ref": "#/definitions/text" },
+        "mutation_enforcement_rule": { "$ref": "#/definitions/text" },
+        "mutation_enforcement_gaps": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Repositories whose money-path packages have no mutation_testing owner in that repository; each gap is an honest record, not an exemption, and the check fails a stale or missing entry.",
+          "items": { "$ref": "#/definitions/mutation_enforcement_gap" }
+        }
       }
     },
     "packages": {
@@ -124,15 +131,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "standard", "version", "level", "conformance_target", "surfaces", "ruleset_named_and_pinned",
-        "undecidable_rules_route_to_manual_walkthrough", "manual_walkthrough",
-        "wcag_2_2_criteria_requiring_named_checks", "not_claimed"
+        "standard", "version", "level", "conformance_target", "automated_gate", "surfaces", "automated_mechanisms",
+        "browser_configurations", "ruleset_named_and_pinned", "undecidable_rules_route_to_manual_walkthrough",
+        "manual_walkthrough", "taxonomy_states", "wcag_2_2_criteria_requiring_named_checks",
+        "wcag_criteria_requiring_named_checks", "not_claimed"
       ],
       "properties": {
         "standard": { "const": "WCAG" },
         "version": { "const": "2.2" },
         "level": { "const": "AA" },
         "conformance_target": { "const": "WCAG 2.2 AA" },
+        "automated_gate": {
+          "$ref": "#/definitions/text",
+          "description": "The automated bar for web and admin; the check pins it to zero violations for WCAG-tagged Level A and AA rules, never a critical-only threshold."
+        },
         "surfaces": {
           "type": "object",
           "additionalProperties": false,
@@ -143,10 +155,30 @@
             "android": { "$ref": "#/definitions/text" }
           }
         },
+        "automated_mechanisms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["web", "admin", "android"],
+          "description": "The named automated check per surface, version-pinned in the gate configuration.",
+          "properties": {
+            "web": { "$ref": "#/definitions/text" },
+            "admin": { "$ref": "#/definitions/text" },
+            "android": { "$ref": "#/definitions/text" }
+          }
+        },
+        "browser_configurations": { "$ref": "#/definitions/statements" },
         "ruleset_named_and_pinned": { "const": true },
         "undecidable_rules_route_to_manual_walkthrough": { "const": true },
         "manual_walkthrough": { "$ref": "#/definitions/statements" },
+        "taxonomy_states": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Exactly the client state taxonomy's state identifiers; the check compares them with product/client-state-taxonomy.json.",
+          "items": { "$ref": "#/definitions/identifier" }
+        },
         "wcag_2_2_criteria_requiring_named_checks": { "$ref": "#/definitions/statements" },
+        "wcag_criteria_requiring_named_checks": { "$ref": "#/definitions/statements" },
         "not_claimed": { "$ref": "#/definitions/text" }
       }
     },
@@ -284,7 +316,27 @@
         "evidence": {
           "$ref": "#/definitions/text",
           "description": "How the pass or fail signal is observed in CI or release evidence."
+        },
+        "taxonomy_assertion": {
+          "$ref": "#/definitions/identifier",
+          "description": "The client state taxonomy coverage assertion (adoption.coverage_assertions[].id) this category is the executable owner of; every assertion the taxonomy publishes must be claimed by exactly one category."
         }
+      }
+    },
+    "mutation_enforcement_gap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "packages", "reason", "resolution"],
+      "properties": {
+        "repository": { "$ref": "#/definitions/repository" },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" }
+        },
+        "reason": { "$ref": "#/definitions/text" },
+        "resolution": { "$ref": "#/definitions/text" }
       }
     },
     "deliverable": {
@@ -358,7 +410,7 @@
     "device_lane": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "kind", "purpose", "required_for", "availability", "owners"],
+      "required": ["id", "kind", "configuration", "purpose", "required_for", "availability", "owners"],
       "properties": {
         "id": { "$ref": "#/definitions/identifier" },
         "kind": { "type": "string", "enum": ["emulator", "managed_device", "physical"] },
@@ -376,6 +428,10 @@
             "country": { "type": "string", "pattern": "^[A-Z]{2}$" }
           }
         },
+        "configuration": {
+          "$ref": "#/definitions/text",
+          "description": "Text size, assistive technology, memory profile or OEM build the lane runs with."
+        },
         "purpose": { "$ref": "#/definitions/text" },
         "required_for": {
           "type": "array",
@@ -383,7 +439,11 @@
           "uniqueItems": true,
           "items": { "type": "string", "enum": ["pull_request", "release_candidate"] }
         },
-        "availability": { "type": "string", "enum": ["available_in_ci", "required_not_yet_available"] },
+        "availability": {
+          "type": "string",
+          "enum": ["provisionable_in_ci", "required_not_yet_available"],
+          "description": "No lane is recorded as running: emulator lanes are provisionable on the hosted runner until the Android gate wires them; hardware lanes are required until procured."
+        },
         "procurement": { "$ref": "#/definitions/owner" },
         "owners": { "$ref": "#/definitions/owners" }
       }

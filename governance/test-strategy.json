@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "strategy_version": "1.0.0",
+  "strategy_version": "1.1.0",
   "source_issue": {
     "reference": "PenniLogic/docs#22",
     "identity": "PenniLogic-old/docs#21"
@@ -84,6 +84,10 @@
         {
           "reference": "PenniLogic/api#22",
           "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/api#16",
+          "identity": "PenniLogic-old/api#16"
         }
       ],
       "evidence": "Oracle comparison report per run; any disagreement fails the api build and names the case"
@@ -155,7 +159,7 @@
     {
       "id": "integration_tests",
       "name": "Service integration tests",
-      "layer": "api, ai-service",
+      "layer": "api",
       "approach": "Service tests against a real PostgreSQL instance from the idempotent local bootstrap, exercising database policies and migrations directly",
       "owners": [
         {
@@ -171,13 +175,13 @@
           "identity": "PenniLogic-old/infra#2"
         }
       ],
-      "evidence": "Integration job in the api and ai-service pull request gates using the bootstrap database; a failure names the service and the query"
+      "evidence": "Integration job in the api pull request gate using the bootstrap database; a failure names the service and the query"
     },
     {
       "id": "android_unit_instrumented",
       "name": "Android unit and instrumented journeys",
       "layer": "Android",
-      "approach": "Unit tests plus instrumented critical journeys on the device matrix in this file: the oldest supported (API 31) and current releases on every pull request, low-memory, OEM and physical lanes at release candidate",
+      "approach": "Unit tests plus instrumented critical journeys on the device matrix in this file: the API 31, current-release and large-text emulator lanes are required on every pull request and the TalkBack, low-memory, OEM and physical lanes at release candidate, once the Android gate wires them; no emulator lane runs in android CI at publication",
       "owners": [
         {
           "reference": "PenniLogic/android#15",
@@ -220,7 +224,7 @@
       "id": "accessibility_conformance",
       "name": "Accessibility conformance",
       "layer": "Web, admin, Android",
-      "approach": "WCAG 2.2 AA on web and admin with a named, pinned automated ruleset plus keyboard-only and screen-reader walkthroughs; Android meets the Material accessibility baseline and every applicable WCAG 2.2 AA outcome",
+      "approach": "WCAG 2.2 AA on web and admin: a named, pinned WCAG-tagged automated ruleset with zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core journeys (best-practice rules that are not WCAG success criteria are advisory; an exception requires a recorded reason and an expiry on the pull request), run in every browser configuration in this file, plus keyboard-only and screen-reader walkthroughs; Android runs Accessibility Test Framework checks in the instrumented suite and Android Lint accessibility rules with pinned versions, meets the Material accessibility baseline and every applicable WCAG 2.2 AA outcome, and is walked through with TalkBack and Switch Access; every applicable client state taxonomy state on each core journey is asserted against client-state-taxonomy section 8 (announced once with the published politeness, focus target, no re-announcement on return, recovery action reachable by keyboard and switch, disabled controls exposing their reason)",
       "owners": [
         {
           "reference": "PenniLogic/web#7",
@@ -235,7 +239,7 @@
           "identity": "T-QA-13"
         }
       ],
-      "evidence": "Automated scan with zero critical violations on core journeys plus attached walkthrough evidence per release; a planted unlabeled control, undersized target or contrast failure fails the gate"
+      "evidence": "Automated scan with zero violations at any impact level for WCAG-tagged Level A and AA rules on core journeys in every browser configuration, Android Accessibility Test Framework and Lint results, and attached walkthrough evidence per release covering every applicable taxonomy state; a planted unlabeled control, undersized target, contrast failure, unannounced state or focus that does not move on an error fails the gate"
     },
     {
       "id": "performance_budgets",
@@ -266,11 +270,23 @@
       "id": "security_negative_tests",
       "name": "Security negative tests",
       "layer": "Security",
-      "approach": "Tests that actively attempt violations: cross-tenant reads, broken object authorization, mass assignment, authentication bypass and replay from inside the code and against the running service, plus the AI request-forgery and operator red-team suites",
+      "approach": "Tests that actively attempt violations from inside the code and against the running service: cross-tenant reads, broken object authorization, mass assignment, authentication bypass and token replay; entitlement tampering by a client claiming a feature its plan lacks, with absence of an entitlement denying per gated feature; rate limiting, lockout and credential stuffing; step-up bypass and step-up token replay on export, deletion and sharing invitations; sharing-grant default deny with absent or expired grants, aggregate-versus-detail separation and differencing attacks; plus the AI request-forgery and operator red-team suites",
       "owners": [
         {
           "reference": "PenniLogic/api#23",
           "identity": "T-QA-03"
+        },
+        {
+          "reference": "PenniLogic/api#29",
+          "identity": "T-BIL-01"
+        },
+        {
+          "reference": "PenniLogic/api#40",
+          "identity": "T-SEC-04"
+        },
+        {
+          "reference": "PenniLogic/api#34",
+          "identity": "T-FAM-01"
         },
         {
           "reference": "PenniLogic/ai-service#3",
@@ -281,7 +297,32 @@
           "identity": "T-ADM-12"
         }
       ],
-      "evidence": "Attack suite and object-level authorization coverage report on every api, ai-service and admin pull request; a deliberately weakened fixture must make the suite fail"
+      "evidence": "Attack suite and object-level authorization coverage report on every api, ai-service and admin pull request, with a negative test per gated feature and per grant scope, and throttling, lockout and step-up replay attempts rejected and audited; a deliberately weakened fixture must make the suite fail"
+    },
+    {
+      "id": "log_redaction_gate",
+      "name": "Log and evidence redaction gate",
+      "layer": "Backend logging and evidence artifacts",
+      "approach": "Structured logging with a published field allowlist; a static rule that fails the build when a money or personal-data type is logged; a runtime scan of sampled emitted records in CI with a planted money value; fail-closed scrubbing that drops a record rather than emitting it raw, on error paths and exception messages as well as the happy path; failure screenshots and recorded evidence artifacts scrubbed of money values, raw message text and personal data before upload",
+      "owners": [
+        {
+          "reference": "PenniLogic/api#21",
+          "identity": "T-PLT-04"
+        },
+        {
+          "reference": "PenniLogic/android#18",
+          "identity": "T-CMP-03"
+        },
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ],
+      "evidence": "Static rule and runtime scan results on every api pull request, and scrubbed-artifact confirmation in each client gate; a planted money value in an emitted record or an uploaded artifact fails the pipeline"
     },
     {
       "id": "static_dependency_secret_gates",
@@ -471,7 +512,7 @@
       "id": "client_state_coverage",
       "name": "Client state coverage",
       "layer": "Android, web, admin surfaces",
-      "approach": "Every registered surface handles every applicable identifier of the published client state taxonomy, proven with a planted omission",
+      "approach": "Every registered surface handles every applicable identifier of the published client state taxonomy with the canonical copy and exactly one recovery action, proven with a planted omission (taxonomy coverage assertion client_state_coverage)",
       "owners": [
         {
           "reference": "PenniLogic/docs#1",
@@ -490,7 +531,34 @@
           "identity": "T-QA-13"
         }
       ],
-      "evidence": "Coverage assertion in each client gate against the taxonomy data file; a planted omission fails"
+      "evidence": "Coverage assertion in each client gate against the taxonomy data file at the pinned taxonomy_version, extended with the section 8 semantics assertion for each rendered state (announced once, focus target, no re-announcement on return, recovery action operable by keyboard and switch); a planted omission or an unannounced state fails",
+      "taxonomy_assertion": "client_state_coverage"
+    },
+    {
+      "id": "client_state_taxonomy_first",
+      "name": "Client state taxonomy first",
+      "layer": "Android, web, admin surfaces",
+      "approach": "The client's state enumeration is a subset of the identifiers in the taxonomy data file at the pinned taxonomy_version; a new state is added to the taxonomy first and only then to any client (taxonomy coverage assertion taxonomy_first)",
+      "owners": [
+        {
+          "reference": "PenniLogic/docs#1",
+          "identity": "T-UX-01"
+        },
+        {
+          "reference": "PenniLogic/web#7",
+          "identity": "T-QA-06"
+        },
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        },
+        {
+          "reference": "PenniLogic/admin#3",
+          "identity": "T-QA-13"
+        }
+      ],
+      "evidence": "Subset assertion in each client gate against the identifiers at the pinned taxonomy_version; a planted unlisted identifier fails",
+      "taxonomy_assertion": "taxonomy_first"
     },
     {
       "id": "internationalization_checks",
@@ -629,11 +697,15 @@
     {
       "id": "independent_model_harness",
       "name": "Independent-model verification harness",
-      "description": "A second, independently written implementation of debt, budgeting and allocation arithmetic used as the oracle for every money-path result, wired to the per-package floors in this file",
+      "description": "A second, independently written implementation of debt, budgeting and allocation arithmetic used as the oracle for every money-path result, wired to the per-package floors in this file; the debt-mathematics reference schedules and fixed mutation catalogue are owned by the independent verification suite ticket",
       "owners": [
         {
           "reference": "PenniLogic/api#22",
           "identity": "T-QA-01"
+        },
+        {
+          "reference": "PenniLogic/api#16",
+          "identity": "PenniLogic-old/api#16"
         }
       ]
     },
@@ -714,7 +786,8 @@
         "domain_ledger_property",
         "debt_maths_independent_model",
         "mutation_testing",
-        "integration_tests"
+        "integration_tests",
+        "log_redaction_gate"
       ],
       "manual_evidence": [
         "Money review role recorded in the pull request"
@@ -753,7 +826,8 @@
         "integration_tests",
         "api_contract",
         "security_negative_tests",
-        "static_dependency_secret_gates"
+        "static_dependency_secret_gates",
+        "log_redaction_gate"
       ],
       "manual_evidence": []
     },
@@ -765,7 +839,8 @@
         "security_negative_tests",
         "static_dependency_secret_gates",
         "security_regression_smoke",
-        "threat_model_refresh"
+        "threat_model_refresh",
+        "log_redaction_gate"
       ],
       "manual_evidence": [
         "Security review role; the epic's threat-model refresh record is cited"
@@ -780,11 +855,12 @@
         "accessibility_conformance",
         "performance_budgets",
         "client_state_coverage",
+        "client_state_taxonomy_first",
         "internationalization_checks",
         "privacy_traffic_inspection"
       ],
       "manual_evidence": [
-        "TalkBack walkthrough evidence on the core journeys",
+        "TalkBack and Switch Access walkthrough evidence on the core journeys",
         "Physical-device permission journey once the device lane is available"
       ]
     },
@@ -797,6 +873,7 @@
         "accessibility_conformance",
         "performance_budgets",
         "client_state_coverage",
+        "client_state_taxonomy_first",
         "internationalization_checks"
       ],
       "manual_evidence": [
@@ -812,6 +889,7 @@
         "accessibility_conformance",
         "performance_budgets",
         "client_state_coverage",
+        "client_state_taxonomy_first",
         "insider_risk_controls"
       ],
       "manual_evidence": [
@@ -840,7 +918,8 @@
         "billing_webhook_replay",
         "mutation_testing",
         "integration_tests",
-        "security_negative_tests"
+        "security_negative_tests",
+        "log_redaction_gate"
       ],
       "manual_evidence": [
         "Money review role recorded in the pull request"
@@ -910,7 +989,19 @@
     },
     "money_path_ratchet": true,
     "unlisted_package_rule": "A package present in a repository build but absent from this inventory fails that repository's harness; a package listed here without a line, branch or (on money paths) mutation number fails this check. Neither case is an exemption.",
-    "renaming_rule": "Renaming, adding or removing a package is a pull request to this file with Core and QA review; the harness never infers a floor for an unknown name."
+    "renaming_rule": "Renaming, adding or removing a package is a pull request to this file with Core and QA review; the harness never infers a floor for an unknown name.",
+    "mutation_enforcement_rule": "Every repository that carries a money-path package must have a mutation_testing owner in that repository; a repository without one is recorded here as an enforcement gap with its packages, a reason and a resolution, and its floors stand as requirements that no harness is yet chartered to enforce.",
+    "mutation_enforcement_gaps": [
+      {
+        "repository": "PenniLogic/android",
+        "packages": [
+          "android.ledger",
+          "android.parsers"
+        ],
+        "reason": "The only mutation_testing owner, PenniLogic/api#22 (T-QA-01), keeps its harness and gate configuration in api by its parallel boundary; no PenniLogic/android issue scopes mutation testing, and PenniLogic/android#15 (T-QA-08) covers instrumented journeys, accessibility, performance, internationalization and client state coverage only.",
+        "resolution": "An Android money-path mutation owner is requested from the coordinator as a new issue or a scope change agreed with the T-QA-08 owner. Until it exists the Definition of Done item mutation_floor_met cannot be evidenced for these two packages and this gap entry must remain; the check fails if the entry is removed without an owner or kept after one exists."
+      }
+    ]
   },
   "packages": [
     {
@@ -1412,20 +1503,44 @@
     "version": "2.2",
     "level": "AA",
     "conformance_target": "WCAG 2.2 AA",
+    "automated_gate": "zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core journeys; best-practice rules that are not WCAG success criteria are advisory; an exception requires a recorded reason and an expiry on the pull request",
     "surfaces": {
-      "web": "WCAG 2.2 AA is the minimum for customer web: a named, pinned automated ruleset with zero critical violations on the core journeys plus keyboard-only and screen-reader walkthrough evidence",
-      "admin": "WCAG 2.2 AA is the minimum for the operator console, with the same named, pinned ruleset and keyboard-only walkthrough evidence",
-      "android": "Material accessibility baseline (TalkBack order and labels, 48dp touch targets, contrast, reduced motion, largest supported font scale) plus every applicable WCAG 2.2 AA content criterion"
+      "web": "WCAG 2.2 AA is the minimum for customer web: a named, pinned WCAG-tagged automated ruleset with zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the core journeys in every browser configuration in this file, plus keyboard-only and screen-reader walkthrough evidence covering every applicable client state",
+      "admin": "WCAG 2.2 AA is the minimum for the operator console: the same named, pinned WCAG-tagged ruleset with zero violations at any impact level for rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA on the operator journeys in every browser configuration in this file, plus keyboard-only operator walkthrough evidence",
+      "android": "Material accessibility baseline (TalkBack order and labels, 48dp touch targets, contrast, reduced motion, largest supported font scale) plus every applicable WCAG 2.2 AA content criterion, checked by Accessibility Test Framework checks in the instrumented suite and Android Lint accessibility rules with pinned versions on the large-text and TalkBack lanes, and walked through with TalkBack and Switch Access"
     },
+    "automated_mechanisms": {
+      "web": "A WCAG-tagged automated ruleset named and version-pinned in the web gate configuration (the rules tagged WCAG 2.0, 2.1 and 2.2 Level A and AA), run on every core journey in every browser configuration; a rule the scanner cannot decide is routed to the manual walkthrough",
+      "admin": "The same WCAG-tagged automated ruleset, named and version-pinned in the admin gate configuration, run on every operator journey in every browser configuration",
+      "android": "Accessibility Test Framework checks enabled in the instrumented suite (or Compose semantics assertions for label, role, traversal order and 48dp targets) and Android Lint accessibility rules, versions pinned, run on the large-text and TalkBack emulator lanes"
+    },
+    "browser_configurations": [
+      "Default desktop viewport",
+      "Representative mobile viewport",
+      "200 percent zoom",
+      "prefers-reduced-motion: reduce",
+      "forced-colors: active"
+    ],
     "ruleset_named_and_pinned": true,
     "undecidable_rules_route_to_manual_walkthrough": true,
     "manual_walkthrough": [
-      "Screen reader on every core journey, every monetary value announced with its meaning",
-      "Keyboard-only or switch access completing every core journey",
-      "200 percent text scaling and zoom without truncation or overlap",
-      "High-contrast mode",
-      "Reduced motion",
-      "State never conveyed by colour alone"
+      "Screen reader on every core journey and every applicable client state on it, every monetary value announced with its meaning",
+      "Keyboard-only (web, admin) and Switch Access (Android) completing every core journey and reaching every recovery action",
+      "200 percent text scaling and zoom without truncation or overlap; headlines wrap rather than clip",
+      "High-contrast and forced-colors mode",
+      "Reduced motion; no state depends on animation",
+      "State never conveyed by colour or icon alone",
+      "Client-state-taxonomy section 8 on each applicable state: entering the state is announced once with the published politeness (polite for loading, offline, stale and degraded; focus to the headline or an assertive announcement for error, permission_denied and quota_exceeded; focus to the rejected field for a validation error), a region-scope denial or quota state present on a later return is not re-announced and does not take focus, non-blocking notices never move focus, the recovery action is reachable by keyboard and switch, and controls disabled by a state expose the disabled state and its reason"
+    ],
+    "taxonomy_states": [
+      "empty",
+      "loading",
+      "error",
+      "offline",
+      "stale",
+      "permission_denied",
+      "quota_exceeded",
+      "degraded"
     ],
     "wcag_2_2_criteria_requiring_named_checks": [
       "2.4.11 Focus Not Obscured (Minimum)",
@@ -1435,6 +1550,14 @@
       "3.3.7 Redundant Entry",
       "3.3.8 Accessible Authentication (Minimum)"
     ],
+    "wcag_criteria_requiring_named_checks": [
+      "1.4.3 Contrast (Minimum)",
+      "1.4.4 Resize Text",
+      "2.4.3 Focus Order",
+      "3.3.1 Error Identification",
+      "4.1.2 Name, Role, Value",
+      "4.1.3 Status Messages"
+    ],
     "not_claimed": "AAA criteria such as 2.4.13 Focus Appearance are covered by the manual walkthrough as an enhancement and are not part of the conformance claim"
   },
   "device_matrix": [
@@ -1442,12 +1565,13 @@
       "id": "emulator_api_31",
       "kind": "emulator",
       "android_api_level": 31,
+      "configuration": "Default text size, no assistive technology",
       "purpose": "Oldest supported release: permission and restricted-settings behaviour baseline",
       "required_for": [
         "pull_request",
         "release_candidate"
       ],
-      "availability": "available_in_ci",
+      "availability": "provisionable_in_ci",
       "owners": [
         {
           "reference": "PenniLogic/android#15",
@@ -1463,11 +1587,12 @@
       "id": "emulator_api_33",
       "kind": "emulator",
       "android_api_level": 33,
+      "configuration": "Default text size, no assistive technology",
       "purpose": "Notification runtime permission and restricted-settings introduction",
       "required_for": [
         "release_candidate"
       ],
-      "availability": "available_in_ci",
+      "availability": "provisionable_in_ci",
       "owners": [
         {
           "reference": "PenniLogic/android#35",
@@ -1483,12 +1608,13 @@
       "id": "emulator_current",
       "kind": "emulator",
       "android_api_level": "current",
+      "configuration": "Default text size, no assistive technology",
       "purpose": "Current stable release (API 36 at publication), tracked by the behaviour-baseline ticket",
       "required_for": [
         "pull_request",
         "release_candidate"
       ],
-      "availability": "available_in_ci",
+      "availability": "provisionable_in_ci",
       "owners": [
         {
           "reference": "PenniLogic/android#15",
@@ -1501,8 +1627,44 @@
       ]
     },
     {
+      "id": "emulator_large_text",
+      "kind": "emulator",
+      "android_api_level": "current",
+      "configuration": "Font scale at the largest the platform offers, display size largest, reduced motion on",
+      "purpose": "Largest supported text scale without truncation or overlap, 48dp targets and reduced-motion behaviour on every core screen and state",
+      "required_for": [
+        "pull_request",
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ]
+    },
+    {
+      "id": "emulator_talkback",
+      "kind": "emulator",
+      "android_api_level": "current",
+      "configuration": "TalkBack enabled; traversal order, label, announcement and focus assertions from the Accessibility Test Framework",
+      "purpose": "Screen-reader traversal of every core screen and applicable client state: announced once, focus target, monetary values announced with their meaning",
+      "required_for": [
+        "release_candidate"
+      ],
+      "availability": "provisionable_in_ci",
+      "owners": [
+        {
+          "reference": "PenniLogic/android#15",
+          "identity": "T-QA-08"
+        }
+      ]
+    },
+    {
       "id": "managed_low_memory",
       "kind": "managed_device",
+      "configuration": "Minimum-supported low-memory profile",
       "purpose": "Minimum-supported low-memory profile: cold start, 10000-row timeline, offline queue and background capture budgets",
       "required_for": [
         "release_candidate"
@@ -1522,6 +1684,7 @@
     {
       "id": "managed_oem_variant_a",
       "kind": "managed_device",
+      "configuration": "OEM build with aggressive background restrictions",
       "purpose": "First representative OEM variant with aggressive background restrictions: capture and recovery",
       "required_for": [
         "release_candidate"
@@ -1537,6 +1700,7 @@
     {
       "id": "managed_oem_variant_b",
       "kind": "managed_device",
+      "configuration": "Second OEM build with aggressive background restrictions",
       "purpose": "Second representative OEM variant with aggressive background restrictions: capture and recovery",
       "required_for": [
         "release_candidate"
@@ -1553,6 +1717,7 @@
       "id": "physical_mid_range_indian_sim",
       "kind": "physical",
       "tier": "mid-range",
+      "configuration": "Mid-range device, Indian SIM, synthetic test account, wiped between campaigns",
       "sim": {
         "required": true,
         "country": "IN"
@@ -1588,7 +1753,8 @@
       "A newly observed real format is transcribed into synthetic structure; the real message is never pasted, attached or quoted",
       "Fixtures carry provenance (generator or transcription review) and a version, so a golden case is traceable without the original",
       "Automated privacy scans with planted identifiers run over corpora and fixtures; a real-looking account number, name, message identifier or personal amount pattern fails",
-      "Fixture families are owned: a repository reuses the governed builder or golden case rather than inventing incompatible data"
+      "Fixture families are owned: a repository reuses the governed builder or golden case rather than inventing incompatible data",
+      "Logs, failure screenshots and evidence artifacts are scrubbed of money values, raw message text and personal data before they leave the process or are uploaded; the scrubber is fail-closed"
     ],
     "fixture_families": [
       {
@@ -1848,6 +2014,9 @@
   },
   "not_asserted": [
     "No harness, gate, coverage, mutation, accessibility, load or device result is claimed by this file; every number is a requirement its owning issue must meet, and the check proves ownership and shape, not execution",
-    "Delivery-protocol enforcement in CI (contract-first metadata, migration lock, dependency validation) has no migrated owning issue in the public inventory and is therefore not asserted as a category until one exists"
+    "Delivery-protocol enforcement in CI (contract-first metadata, migration lock, dependency validation) has no migrated owning issue in the public inventory and is therefore not asserted as a category until one exists",
+    "No emulator lane exists in PenniLogic/android CI at publication: the emulator lanes are provisionable on GitHub-hosted runners and become gates only when PenniLogic/android#15 (T-QA-08) wires them; until then any lane evidence is produced locally and attached to the pull request",
+    "Android money-path mutation enforcement for android.ledger and android.parsers has no owning issue; the floors are published requirements and the gap is recorded in floor_policy.mutation_enforcement_gaps until an owner exists",
+    "The ai-service integration job has no owning issue; integration_tests is scoped to api and no ai-service integration gate is asserted"
   ]
 }

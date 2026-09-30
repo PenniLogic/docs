@@ -7,8 +7,10 @@ published data, schema, inventory snapshot and document; they are not a harness 
 mutation, accessibility, load or device result.
 """
 
+import contextlib
 import copy
 import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -26,6 +28,7 @@ spec.loader.exec_module(module)
 STRATEGY = module.load_json(ROOT / module.STRATEGY)
 SCHEMA = module.load_json(ROOT / module.SCHEMA)
 INVENTORY = module.load_json(ROOT / module.INVENTORY)
+TAXONOMY = module.load_json(ROOT / module.TAXONOMY_DATA)
 DOCUMENT = (ROOT / module.DOCUMENT).read_text(encoding="utf-8")
 CATEGORIES = {category["id"]: category for category in STRATEGY["categories"]}
 PACKAGES = {package["id"]: package for package in STRATEGY["packages"]}
@@ -55,7 +58,9 @@ def issue(data, reference):
 def check(data=None, snapshot=None, document=None):
     data = STRATEGY if data is None else data
     module.load_check("check_client_states").validate_schema(data, SCHEMA)
-    return module.check_strategy(data, INVENTORY if snapshot is None else snapshot, DOCUMENT if document is None else document)
+    return module.check_strategy(
+        data, INVENTORY if snapshot is None else snapshot, DOCUMENT if document is None else document, TAXONOMY,
+    )
 
 
 class PublishedFilesTests(unittest.TestCase):
@@ -133,10 +138,30 @@ class AcceptanceCriteriaTests(unittest.TestCase):
                 self.assertEqual(resolved["reference"], owner["reference"])
 
     def test_owner_references_use_public_identifiers_only(self):
-        for item in STRATEGY["categories"] + STRATEGY["deliverables"] + STRATEGY["device_matrix"]:
-            for owner in item["owners"]:
-                self.assertRegex(owner["reference"], module.REFERENCE)
+        # Every owner-bearing collection, including procurement and the checklist items that carry owners.
+        bearers = list(STRATEGY["categories"]) + list(STRATEGY["deliverables"]) + list(STRATEGY["device_matrix"])
+        bearers += list(STRATEGY["test_data_policy"]["fixture_families"])
+        bearers += [item for item in STRATEGY["definition_of_ready"] + STRATEGY["definition_of_done"] if "owners" in item]
+        self.assertGreaterEqual(len(bearers), 60)
+        owners = [owner for item in bearers for owner in item["owners"]]
+        owners += [lane["procurement"] for lane in STRATEGY["device_matrix"] if "procurement" in lane]
+        owners.append(STRATEGY["source_issue"])
+        for owner in owners:
+            self.assertRegex(owner["reference"], module.REFERENCE)
+            self.assertNotRegex(owner["reference"], r"^[a-z.-]+#")
         self.assertEqual(STRATEGY["reference_format"], module.REFERENCE.pattern)
+
+    def test_review_round_one_owners_are_named(self):
+        """Owners the independent reviewers verified live (S1, S2, F3) and their identities."""
+        security = {owner["identity"] for owner in CATEGORIES["security_negative_tests"]["owners"]}
+        self.assertTrue({"T-QA-03", "T-BIL-01", "T-SEC-04", "T-FAM-01", "T-AI-03", "T-ADM-12"} <= security)
+        self.assertEqual(CATEGORIES["log_redaction_gate"]["owners"][0], {"reference": "PenniLogic/api#21", "identity": "T-PLT-04"})
+        debt = {owner["reference"] for owner in CATEGORIES["debt_maths_independent_model"]["owners"]}
+        self.assertEqual(debt, {"PenniLogic/api#22", "PenniLogic/api#16"})
+        harness = next(item for item in STRATEGY["deliverables"] if item["id"] == "independent_model_harness")
+        self.assertIn({"reference": "PenniLogic/api#16", "identity": "PenniLogic-old/api#16"}, harness["owners"])
+        self.assertEqual(CATEGORIES["integration_tests"]["layer"], "api")
+        self.assertNotIn("ai-service", CATEGORIES["integration_tests"]["evidence"])
 
     def test_test_data_policy_is_synthetic_only(self):
         policy = STRATEGY["test_data_policy"]
@@ -156,6 +181,26 @@ class AcceptanceCriteriaTests(unittest.TestCase):
         self.assertEqual(LANES["emulator_api_31"]["android_api_level"], 31)
         self.assertEqual(LANES["emulator_current"]["android_api_level"], "current")
         self.assertIn("the device does not exist yet", DOCUMENT)
+
+    def test_no_device_lane_is_recorded_as_running(self):
+        """S4: emulator lanes are provisionable, not running; android CI has no emulator step."""
+        for lane in STRATEGY["device_matrix"]:
+            self.assertIn(lane["availability"], module.LANE_AVAILABILITY, lane["id"])
+            self.assertNotEqual(lane["availability"], "available_in_ci", lane["id"])
+        self.assertIn("No emulator lane exists in PenniLogic/android CI at publication", " ".join(STRATEGY["not_asserted"]))
+        self.assertIn("**No lane runs anywhere yet.**", DOCUMENT)
+
+    def test_device_matrix_has_large_text_and_talkback_lanes(self):
+        """A1: the accessibility promises have executable lanes owned by the Android gate."""
+        large = LANES["emulator_large_text"]
+        self.assertIn("pull_request", large["required_for"])
+        self.assertIn("Font scale", large["configuration"])
+        self.assertIn("reduced motion", large["configuration"])
+        self.assertEqual(large["owners"], [{"reference": "PenniLogic/android#15", "identity": "T-QA-08"}])
+        talkback = LANES["emulator_talkback"]
+        self.assertIn("TalkBack enabled", talkback["configuration"])
+        self.assertIn("release_candidate", talkback["required_for"])
+        self.assertEqual(talkback["owners"], [{"reference": "PenniLogic/android#15", "identity": "T-QA-08"}])
 
     def test_coverage_floors_are_per_package_with_mutation_on_money_paths(self):
         for item in STRATEGY["packages"]:
@@ -196,6 +241,79 @@ class AcceptanceCriteriaTests(unittest.TestCase):
         self.assertIn("**The conformance target is WCAG 2.2 AA.**", DOCUMENT)
         for surface in ("web", "admin", "android"):
             self.assertIn("WCAG 2.2 AA", accessibility["surfaces"][surface])
+
+    def test_accessibility_gate_is_conformance_not_critical_only(self):
+        """A3: zero violations for WCAG-tagged A and AA rules; the phrase 'critical violations' is gone."""
+        accessibility = STRATEGY["accessibility"]
+        self.assertEqual(accessibility["automated_gate"], module.AUTOMATED_GATE_STATEMENT)
+        for surface in ("web", "admin"):
+            self.assertIn(module.AUTOMATED_GATE_PHRASE, accessibility["surfaces"][surface])
+        self.assertIn(module.AUTOMATED_GATE_PHRASE, CATEGORIES["accessibility_conformance"]["approach"])
+        self.assertNotIn("critical violations", json.dumps(STRATEGY).lower())
+        self.assertNotIn("critical violations", DOCUMENT.lower())
+
+    def test_accessibility_names_android_mechanism_and_makes_switch_access_mandatory(self):
+        """A4."""
+        accessibility = STRATEGY["accessibility"]
+        self.assertIn("Accessibility Test Framework", accessibility["automated_mechanisms"]["android"])
+        self.assertIn("Lint", accessibility["automated_mechanisms"]["android"])
+        self.assertTrue(any("Switch Access (Android)" in item for item in accessibility["manual_walkthrough"]))
+        self.assertNotIn("keyboard-only or switch", json.dumps(STRATEGY).lower())
+        self.assertNotIn("or switch access", DOCUMENT.lower())
+
+    def test_accessibility_is_tied_to_the_taxonomy_per_state_rules(self):
+        """A2: taxonomy section 8 semantics, 4.1.3 and 3.3.1 named checks, states read from the taxonomy."""
+        accessibility = STRATEGY["accessibility"]
+        taxonomy = module.load_json(ROOT / module.TAXONOMY_DATA)
+        self.assertEqual(sorted(accessibility["taxonomy_states"]), sorted(state["id"] for state in taxonomy["states"]))
+        self.assertIn("4.1.3 Status Messages", accessibility["wcag_criteria_requiring_named_checks"])
+        self.assertIn("3.3.1 Error Identification", accessibility["wcag_criteria_requiring_named_checks"])
+        self.assertTrue(any("section 8" in item for item in accessibility["manual_walkthrough"]))
+        self.assertIn("section 8", CATEGORIES["accessibility_conformance"]["approach"])
+        self.assertIn("section 8", CATEGORIES["client_state_coverage"]["evidence"])
+        for configuration in module.REQUIRED_BROWSER_CONFIGURATIONS:
+            self.assertIn(configuration, accessibility["browser_configurations"])
+
+    def test_taxonomy_gate_assertions_are_both_categories(self):
+        """Q4: client_state_coverage and taxonomy_first each have a category, mandatory for every client class."""
+        taxonomy = module.load_json(ROOT / module.TAXONOMY_DATA)
+        expected = {assertion["id"] for assertion in taxonomy["adoption"]["coverage_assertions"]}
+        claimed = {item["taxonomy_assertion"]: item["id"] for item in STRATEGY["categories"] if "taxonomy_assertion" in item}
+        self.assertEqual(set(claimed), expected)
+        self.assertEqual(claimed["taxonomy_first"], "client_state_taxonomy_first")
+        classes = {item["id"]: item for item in STRATEGY["change_classes"]}
+        for class_id in ("android_client", "web_client", "admin_console"):
+            self.assertIn("client_state_taxonomy_first", classes[class_id]["mandatory_categories"])
+        owners = {owner["identity"] for owner in CATEGORIES["client_state_taxonomy_first"]["owners"]}
+        self.assertEqual(owners, {"T-UX-01", "T-QA-06", "T-QA-08", "T-QA-13"})
+
+    def test_security_negative_tests_name_every_attack_class(self):
+        """S1."""
+        approach = CATEGORIES["security_negative_tests"]["approach"].lower()
+        for phrase in module.REQUIRED_CATEGORY_PHRASES["security_negative_tests"]["approach"]:
+            self.assertIn(phrase.lower(), approach)
+        self.assertIn("negative test per gated feature", CATEGORIES["security_negative_tests"]["evidence"])
+
+    def test_log_redaction_gate_is_a_mandatory_category(self):
+        """S2."""
+        classes = {item["id"]: item for item in STRATEGY["change_classes"]}
+        for class_id in ("api_service", "money_path", "billing", "security_boundary"):
+            self.assertIn("log_redaction_gate", classes[class_id]["mandatory_categories"])
+        self.assertTrue(any("scrubbed of money values" in rule for rule in STRATEGY["test_data_policy"]["rules"]))
+        self.assertIn("fail-closed", CATEGORIES["log_redaction_gate"]["approach"])
+
+    def test_mutation_enforcement_gap_is_recorded_for_android(self):
+        """F1: the android money-path floors have no owner; the gap is explicit and rendered."""
+        gaps = STRATEGY["floor_policy"]["mutation_enforcement_gaps"]
+        self.assertEqual([gap["repository"] for gap in gaps], ["PenniLogic/android"])
+        self.assertEqual(sorted(gaps[0]["packages"]), ["android.ledger", "android.parsers"])
+        self.assertIn("### 7.1 Mutation enforcement ownership per repository", DOCUMENT)
+        self.assertIn("mutation_floor_met", " ".join(STRATEGY["not_asserted"]) + gaps[0]["resolution"])
+
+    def test_definitions_cross_reference_the_canonical_delivery_plan(self):
+        """Q3."""
+        self.assertIn("section 5 of\n`product/03-delivery-plan.md`", DOCUMENT)
+        self.assertIn("PenniLogic/docs#48", DOCUMENT)
 
     def test_red_team_scenarios_and_independent_model_harness_are_owned_deliverables(self):
         deliverables = {item["id"]: item for item in STRATEGY["deliverables"]}
@@ -267,12 +385,14 @@ class PlantedDefectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "carries identity T-QA-05.*, not 'T-QA-01'"):
             check(data)
 
-    def test_owner_closed_as_not_planned_owns_nothing(self):
-        snapshot = inventory()
-        record = issue(snapshot, "PenniLogic/infra#29")
-        record["state"], record["state_reason"] = "closed", "not_planned"
-        with self.assertRaisesRegex(ValueError, "closed as not_planned and owns nothing"):
-            check(snapshot=snapshot)
+    def test_owner_closed_as_not_planned_or_duplicate_owns_nothing(self):
+        for reason in module.UNOWNED_REASONS:
+            with self.subTest(reason=reason):
+                snapshot = inventory()
+                record = issue(snapshot, "PenniLogic/infra#29")
+                record["state"], record["state_reason"] = "closed", reason
+                with self.assertRaisesRegex(ValueError, f"closed as {reason} and owns nothing"):
+                    check(snapshot=snapshot)
 
     def test_owner_closed_as_completed_still_owns(self):
         snapshot = inventory()
@@ -325,6 +445,144 @@ class PlantedDefectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "No money-path package carries the split domain"):
             check(data)
 
+    def test_money_path_floor_without_mutation_owner_or_gap_fails(self):
+        """F1: a floor in a repository with no mutation owner needs an explicit gap record."""
+        data = strategy()
+        data["floor_policy"]["mutation_enforcement_gaps"] = []
+        with self.assertRaisesRegex(ValueError, "PenniLogic/android has no mutation_testing owner and no recorded enforcement gap"):
+            check(data)
+
+    def test_money_path_package_in_new_repository_without_owner_fails(self):
+        data = strategy()
+        data["packages"].append({
+            "id": "web.settlement", "repository": "PenniLogic/web", "domain": "split",
+            "description": "Planted money-path package in a repository with no mutation owner", "money_path": True,
+            "line_coverage_floor_percent": 95, "branch_coverage_floor_percent": 90, "mutation_score_floor_percent": 85,
+        })
+        with self.assertRaisesRegex(ValueError, "web.settlement carry mutation floors but PenniLogic/web has no mutation_testing owner"):
+            check(data)
+
+    def test_stale_mutation_enforcement_gap_fails(self):
+        data = strategy()
+        data["floor_policy"]["mutation_enforcement_gaps"].append({
+            "repository": "PenniLogic/api", "packages": ["api.ledger"], "reason": "planted", "resolution": "planted",
+        })
+        with self.assertRaisesRegex(ValueError, "stale: a mutation_testing owner exists there"):
+            check(data)
+
+    def test_mutation_enforcement_gap_must_list_exactly_its_packages(self):
+        data = strategy()
+        data["floor_policy"]["mutation_enforcement_gaps"][0]["packages"] = ["android.ledger"]
+        with self.assertRaisesRegex(ValueError, "must list exactly its money-path packages"):
+            check(data)
+
+    def test_dropped_security_attack_class_fails(self):
+        """S1: the pinned attack classes cannot be quietly removed."""
+        data = strategy()
+        item = category(data, "security_negative_tests")
+        item["approach"] = item["approach"].replace("entitlement tampering", "plan checks")
+        with self.assertRaisesRegex(ValueError, "security_negative_tests approach must keep the phrase 'entitlement tampering'"):
+            check(data)
+
+    def test_missing_log_redaction_gate_fails(self):
+        """S2."""
+        data = strategy()
+        data["categories"] = [item for item in data["categories"] if item["id"] != "log_redaction_gate"]
+        with self.assertRaisesRegex(ValueError, "Missing required verification category: log_redaction_gate"):
+            check(data)
+
+    def test_change_class_dropping_log_redaction_fails(self):
+        data = strategy()
+        money = next(item for item in data["change_classes"] if item["id"] == "money_path")
+        money["mandatory_categories"].remove("log_redaction_gate")
+        with self.assertRaisesRegex(ValueError, "Change class money_path must make log_redaction_gate mandatory"):
+            check(data)
+
+    def test_unclaimed_taxonomy_assertion_fails(self):
+        """Q4: every taxonomy coverage assertion must be a category."""
+        data = strategy()
+        del category(data, "client_state_taxonomy_first")["taxonomy_assertion"]
+        with self.assertRaisesRegex(ValueError, "Taxonomy coverage assertion 'taxonomy_first' is not covered by any category"):
+            check(data)
+
+    def test_taxonomy_assertion_claimed_twice_fails(self):
+        data = strategy()
+        category(data, "client_state_taxonomy_first")["taxonomy_assertion"] = "client_state_coverage"
+        with self.assertRaisesRegex(ValueError, "claimed by both"):
+            check(data)
+
+    def test_unknown_taxonomy_assertion_fails(self):
+        data = strategy()
+        category(data, "client_state_taxonomy_first")["taxonomy_assertion"] = "planted_assertion"
+        with self.assertRaisesRegex(ValueError, "unknown taxonomy assertion"):
+            check(data)
+
+    def test_weakened_accessibility_gate_fails(self):
+        """A3: a critical-only bar is rejected wherever it appears."""
+        data = strategy()
+        data["accessibility"]["automated_gate"] = "zero critical violations on the core journeys"
+        with self.assertRaisesRegex(ValueError, "automated_gate must be the published conformance bar"):
+            check(data)
+        data = strategy()
+        data["accessibility"]["surfaces"]["web"] = "WCAG 2.2 AA is the minimum with zero critical violations"
+        with self.assertRaisesRegex(ValueError, "must not contain the phrase 'critical violations'"):
+            check(data)
+
+    def test_optional_switch_access_fails(self):
+        """A4."""
+        data = strategy()
+        walkthrough = data["accessibility"]["manual_walkthrough"]
+        walkthrough[1] = "Keyboard-only or switch access completing every core journey"
+        with self.assertRaisesRegex(ValueError, "must not contain the phrase 'keyboard-only or switch'"):
+            check(data)
+
+    def test_unnamed_android_mechanism_fails(self):
+        data = strategy()
+        data["accessibility"]["automated_mechanisms"]["android"] = "Material accessibility baseline"
+        with self.assertRaisesRegex(ValueError, "automated_mechanisms.android must keep the phrase 'accessibility test framework'"):
+            check(data)
+
+    def test_missing_status_message_check_fails(self):
+        """A2."""
+        data = strategy()
+        data["accessibility"]["wcag_criteria_requiring_named_checks"].remove("4.1.3 Status Messages")
+        with self.assertRaisesRegex(ValueError, "must include '4.1.3 Status Messages'"):
+            check(data)
+
+    def test_taxonomy_states_must_match_the_taxonomy(self):
+        data = strategy()
+        data["accessibility"]["taxonomy_states"].remove("quota_exceeded")
+        with self.assertRaisesRegex(ValueError, "exactly the client state taxonomy's state identifiers"):
+            check(data)
+
+    def test_missing_browser_configuration_fails(self):
+        """A1 (web and admin half)."""
+        data = strategy()
+        data["accessibility"]["browser_configurations"].remove("forced-colors: active")
+        with self.assertRaisesRegex(ValueError, "must include 'forced-colors: active'"):
+            check(data)
+
+    def test_missing_large_text_or_talkback_lane_fails(self):
+        """A1 (Android half)."""
+        for lane_id in ("emulator_large_text", "emulator_talkback"):
+            data = strategy()
+            data["device_matrix"] = [lane for lane in data["device_matrix"] if lane["id"] != lane_id]
+            with self.assertRaisesRegex(ValueError, f"Missing required device lane: {lane_id}"):
+                check(data)
+
+    def test_lane_recorded_as_available_in_ci_fails(self):
+        """S4: no lane may claim to run."""
+        data = strategy()
+        next(lane for lane in data["device_matrix"] if lane["id"] == "emulator_api_31")["availability"] = "available_in_ci"
+        with self.assertRaisesRegex(ValueError, "is not one of|must state its availability"):
+            check(data)
+
+    def test_emulator_lane_recorded_as_hardware_fails(self):
+        data = strategy()
+        next(lane for lane in data["device_matrix"] if lane["id"] == "emulator_api_31")["availability"] = "required_not_yet_available"
+        with self.assertRaisesRegex(ValueError, "is an emulator lane and must be recorded as provisionable_in_ci"):
+            check(data)
+
     def test_percent_out_of_range_fails(self):
         data = strategy()
         package(data, "web.app")["line_coverage_floor_percent"] = 101
@@ -351,8 +609,8 @@ class PlantedDefectTests(unittest.TestCase):
 
     def test_physical_device_cannot_be_recorded_as_available(self):
         data = strategy()
-        next(lane for lane in data["device_matrix"] if lane["id"] == "physical_mid_range_indian_sim")["availability"] = "available_in_ci"
-        with self.assertRaisesRegex(ValueError, "not recorded as available"):
+        next(lane for lane in data["device_matrix"] if lane["id"] == "physical_mid_range_indian_sim")["availability"] = "provisionable_in_ci"
+        with self.assertRaisesRegex(ValueError, "needs hardware and must be recorded as required_not_yet_available|not recorded as available"):
             check(data)
 
     def test_physical_device_requires_indian_sim(self):
@@ -371,11 +629,12 @@ class PlantedDefectTests(unittest.TestCase):
     def test_document_drift_from_data_fails(self):
         data = strategy()
         package(data, "api.ledger")["line_coverage_floor_percent"] = 96
-        with self.assertRaisesRegex(ValueError, "does not carry the packages table rendered from the data verbatim"):
+        with self.assertRaisesRegex(ValueError, "does not carry the packages block rendered from the data verbatim"):
             check(data)
 
     def test_document_without_conformance_statement_fails(self):
-        with self.assertRaisesRegex(ValueError, "accessibility conformance target as an explicit statement"):
+        # The statement lives in the rendered accessibility block and in the prose; dropping it anywhere fails.
+        with self.assertRaisesRegex(ValueError, "accessibility block rendered from the data|accessibility conformance target"):
             check(document=DOCUMENT.replace(module.CONFORMANCE_STATEMENT, "The conformance target is WCAG."))
 
     def test_inventory_reference_disagreeing_with_number_fails(self):
@@ -482,6 +741,45 @@ class RefreshTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 1, stdout="", stderr="HTTP 401 ghp_" + "c" * 36)
         with self.assertRaisesRegex(RuntimeError, r"gh api user failed: HTTP 401 \[redacted\]"):
             module.gh(["api", "user"], runner=runner, environ={"GH_TOKEN": "secret", "PATH": "p"})
+
+    def test_gh_timeout_is_redacted_and_reported_as_failure(self):
+        """S3: the timeout path passes through redact() and main() returns 1, never a traceback."""
+        token = "ghp_" + "d" * 36
+
+        def runner(command, **kwargs):
+            raise subprocess.TimeoutExpired(cmd=command, timeout=kwargs["timeout"], stderr="HTTP 401 " + token)
+
+        with self.assertRaisesRegex(RuntimeError, r"gh api user timed out after 180 s: HTTP 401 \[redacted\]") as caught:
+            module.gh(["api", "user"], runner=runner, environ={"PATH": "p"})
+        self.assertNotIn(token, str(caught.exception))
+        self.assertIsNone(caught.exception.__cause__)
+
+        original_fetch = module.fetch_inventory
+        module.fetch_inventory = lambda: module.gh(["api", "user"], runner=runner, environ={"PATH": "p"})
+        stderr = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(stderr):
+                self.assertEqual(module.main(["--refresh-inventory"]), 1)
+        finally:
+            module.fetch_inventory = original_fetch
+        self.assertIn("[redacted]", stderr.getvalue())
+        self.assertNotIn("ghp_", stderr.getvalue())
+
+    def test_main_reports_a_raw_subprocess_error_without_a_traceback(self):
+        original_fetch = module.fetch_inventory
+
+        def raise_timeout():
+            raise subprocess.TimeoutExpired(cmd=["gh"], timeout=1, stderr="ghp_" + "e" * 36)
+
+        module.fetch_inventory = raise_timeout
+        stderr = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(stderr):
+                self.assertEqual(module.main(["--refresh-inventory"]), 1)
+        finally:
+            module.fetch_inventory = original_fetch
+        self.assertIn("Test strategy check failed", stderr.getvalue())
+        self.assertNotIn("ghp_", stderr.getvalue())
 
     def test_published_snapshot_has_source_identity_for_every_migrated_issue(self):
         migrated = [item for item in INVENTORY["issues"] if item["source"]]
