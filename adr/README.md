@@ -243,10 +243,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-020
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-ADMIN-06` |
-| Status | PENDING |
+| Source | <a id="adr-020--administrative-boundary-separate-deployable-database-role-and-three-audit-streams"></a> [ADR-020.md](ADR-020.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-ADMIN-06 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-020 -->
@@ -267,10 +267,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-022
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-AIEGRESS-08` |
+| Source | <a id="adr-022--ai-egress-runtime-platform-and-mode-c-custom-endpoints"></a> [ADR-022.md](ADR-022.md) |
 | Status | PENDING |
 | Ticket | T-ADR-AIEGRESS-08 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-022 -->
@@ -349,7 +349,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-ADMIN-06` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Administrative boundary: deployment separation, database role, and how the foundational audit trail, the chained administrative log and the subject-visible transparency stream relate - stores, and single or dual write |
 | Blocks | Admin console (E13), audit and insider-risk controls, transparency surfaces |
 <!-- SLOT END ADR-020 -->
