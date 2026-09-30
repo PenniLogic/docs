@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E10",
+  "title": "Notification capture",
+  "issue": "PenniLogic/docs#11",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}

@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "epic": "E31",
+  "title": "Program governance and delivery protocol",
+  "issue": null,
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "note": "No public epic issue exists for E31: planning/source/epics.json carries it as In Progress (Sprint 01) but it was not published to PenniLogic/docs, and its tickets (.github#1, infra#37, docs#141 and the follow-up docs#146) have no native parent. Reported to the coordinator on 2026-09-30. The refresh below was recorded the same day, after independent core review of PenniLogic/docs#144 found the epic in implementation without one; its tickets had already started, so this is a Definition of Ready refresh recorded late, not before the first ticket, and the record says so rather than pretending otherwise.",
+  "refreshes": [
+    {
+      "date": "2026-09-30",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
+        "role": "pennilogic-developer"
+      },
+      "scope": "The delivery protocol itself and the tooling that enforces it: the canonical governance generator in PenniLogic/infra whose output every repository consumes as read-only generated files, the managed pre-commit hook that scripts/setup.py installs and the native-hook runner that provisions a virtual environment and runs the validators on the developer machine (infra#37), the shared agent profiles in PenniLogic/.github that every AI session reads as its instructions (.github#1, closed), the delivery policy in governance/DELIVERY.md and the generated agent policy, the ADR layout generator and validator (docs#141, closed; follow-ups in docs#146), and the scripts that read and write the Delivery Project as basiltt under the paginate-before-write rule in planning/README.md. Trust boundaries: canonical source in infra to eight consumer repositories; repository-supplied hook code executing on the one machine that holds the write credential; model providers behind the Copilot sessions; the public GitHub surface that anyone can write to and that sessions read. Recorded after the epic's tickets started (see note); E01 already carries the pipeline findings E01-F03, E01-F04 and E01-F05, so this refresh covers what E31 owns and hands to the same tickets where the surface is shared.",
+      "tickets_in_scope": [
+        "PenniLogic/.github#1",
+        "PenniLogic/infra#37",
+        "PenniLogic/docs#141",
+        "PenniLogic/docs#146"
+      ],
+      "sources": [
+        "governance/DELIVERY.md",
+        ".github/agent-policy.json",
+        ".github/copilot-instructions.md",
+        "planning/README.md (GraphQL paginate-before-write rule and the recorded truncation incidents)",
+        "adr/LAYOUT.md (generator and validator contract)",
+        "scripts/check_repository.py (committed-file secret patterns)",
+        "PenniLogic/infra#37 (confirmed defect: timeout leaves native-command descendants alive)",
+        "PenniLogic/docs#146 (accepted-record integrity rules deferred from the docs#141 pull request)",
+        "planning/source/epics.json (E31 entry: In Progress, Sprint 01)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Owner and session identifiers, local file-system paths, machine details and process evidence that delivery tooling and sessions write into public issues, pull requests and hand-off comments",
+          "subjects": [
+            "contributors"
+          ],
+          "purpose_ref": "Public delivery coordination under the owner's migration decision (governance/DELIVERY.md); the sprint protocol asks for factual evidence in issues, which is where these details come from",
+          "retention": "Indefinite in public issue and pull-request history",
+          "erasure_path": "Comment and body edits only; nothing removes a detail that another session or a mirror has already read",
+          "children": "Not subjects: the adult owner and AI sessions acting under the owner's account",
+          "processors": [
+            "GitHub (issues, pull requests, Projects, Actions)",
+            "AI model providers behind the Copilot sessions that read the same content"
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "accepted",
+          "analysis": "Identity claims inside the protocol are self-reported: a session states its role (pennilogic-developer, pennilogic-core-reviewer) and its identifier in a pull-request body, and a generated file states in its header that the generator produced it. Nothing binds a review attestation to the profile that supposedly performed it, because every session acts under the same GitHub account; the organisation has written this down as procedural rather than cryptographic separation. The generated-file claim is made checkable by the conformance regeneration E01 handed to infra#22 (E01-F05), so it is not repeated here.",
+          "evidence": [
+            "governance/DELIVERY.md: independent review is recorded procedurally with session, commit, role, findings and evidence; not two-human review or verified attestation provenance",
+            ".github/agent-policy.json: review_identity and github_approving_review_count 0",
+            "PenniLogic/infra#22: regenerate every governed file in CI and fail on any difference (E01-F05)"
+          ],
+          "findings": []
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Two assets decide what every downstream repository and ticket treats as authoritative: the governance generator's templates, whose output lands in eight repositories, and the accepted decision records under adr/. Generator drift is caught by the regeneration check E01 handed to infra#22. Accepted records are not yet protected: the validator delivered by docs#141 checks layout, migration pins and generated slots, but does not yet require status, acceptance date, deciding session and proving tests on an accepted record, nor refuse an undated in-place edit of an accepted body, so a decision can be changed without a supersession and the index will not reveal it (E31-F03; the same rule E26-F16 asks for from the decision side).",
+          "evidence": [
+            "adr/LAYOUT.md: generator and validator contract",
+            "PenniLogic/infra#22: conformance regeneration of generated files (E01-F05)"
+          ],
+          "findings": [
+            "E31-F03"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "accepted",
+          "analysis": "Every Project field write, issue edit, publication and merge is attributed to the one account; which session performed it is known only from what that session wrote in the issue or pull request. The organisation accepts this and requires the written record instead: reviewer session, reviewed commit, role, findings and evidence in the pull request, and factual issue comments at each hand-off. planning/README.md adds the rule that a Project write must follow a complete paginated read, after two incidents in which a truncated read produced a confidently wrong report that had to be retracted in writing.",
+          "evidence": [
+            "governance/DELIVERY.md: recorded procedural review, not two-human approval",
+            "planning/README.md: paginate-before-write rule and the recorded incidents"
+          ],
+          "findings": []
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Two channels. Credentials: the tool process of every session carries GH_TOKEN, GITHUB_TOKEN and GIT_CONFIG_PARAMETERS, the protocol relies on each session removing them before touching GitHub and never printing them, and the committed-file secret scan in scripts/check_repository.py does not see issue comments or command output, so a token echoed by a mistaken command lands in a public comment with no check between (E31-F02). Machine details: hand-off comments and issue bodies carry local paths, session identifiers and process evidence about the owner's machine, which is accepted as the cost of factual public evidence and is inventoried in data_flows, but it also tells an attacker where the credential lives (E31-F02).",
+          "evidence": [
+            "scripts/check_repository.py: SECRET_PATTERNS apply to committed files and workflow text only"
+          ],
+          "findings": [
+            "E31-F02"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "The managed hook is on the path of every commit on the one machine that does all the committing. infra#37 confirmed that on Windows the native-hook runner kills only its direct process on timeout: descendants stay alive, a copied executable stays undeletable, inherited pipes delay the return, and the virtual-environment provisioning step has a 600-second budget. A hung or orphaned hook run blocks commits, locks files and consumes the machine until someone finds the processes (E31-F04). Runner-minute and API-rate exhaustion for the organisation are E01-F02 (infra#24).",
+          "evidence": [
+            "PenniLogic/infra#37: confirmed defect reproduction with descendants alive and an undeletable copied executable"
+          ],
+          "findings": [
+            "E31-F04"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "Agent profiles are the protocol's privilege model: a profile declares the tools a role may use, and the separation between implementer, producer and reviewer rests on those declarations plus the rule that a session never reviews its own work. .github#1 (closed) repaired the Developer and Producer capability mismatch; the durable rule that no profile may gain blanket tool access, reviewer authority outside the reviewer profiles or the right to launch sub-agents is not yet published where every session reads it, and E01-F03's control asks for per-ticket credential scoping in the same place (E31-F05). Repository-supplied hook code executing on the credential-holding machine is part of E31-F02.",
+          "evidence": [
+            "governance/DELIVERY.md: implementers never review their own change as an independent agent"
+          ],
+          "findings": [
+            "E31-F05"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No payment, plan or entitlement exists in the delivery protocol; nothing here moves money or grants paid capability.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "not_applicable",
+          "analysis": "No product entitlement or quota state exists here. The only entitlement-like state is a profile's declared capabilities, reviewed under elevation of privilege (E31-F05).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "accepted",
+          "analysis": "The protocol depends on a third-party AI service: every implementer and reviewer session is a model behind the Copilot account, so a compromised, substituted or steered model produces code, reviews and issue text under the owner's identity. The organisation accepts the dependency and bounds it the same way it bounds a mistaken session: protected main with the required CI job, separate non-author review sessions, and a written record of what each session did. Manipulation of a session through content it reads is prompt injection (E31-F01), not this category.",
+          "evidence": [
+            "governance/DELIVERY.md: PR-only current-base integration, native CI job, separate non-author review, empty bypass list",
+            ".github/agent-policy.json: required_native_check CI and no_bypass true"
+          ],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "not_applicable",
+          "analysis": "The protocol runs no server and fetches no user-supplied URL on anyone's behalf: scripts call GitHub's API at fixed hosts, and a session following a link planted in an issue is a prompt-injection outcome covered by E31-F01.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "finding",
+          "analysis": "The agent profiles and repository instructions are the system prompt of the delivery pipeline, and they do not yet say what is instruction and what is data. Sessions read issue bodies, comments, pull-request descriptions and diffs from a public organisation; instruction-shaped text from a non-owner account, or planted in a fork's diff, steers a session that holds a write-capable credential. E01 raised the pipeline-side finding (E01-F03); E31 owns the profiles and instructions where the rule must live (E31-F01, same owner ticket).",
+          "evidence": [],
+          "findings": [
+            "E31-F01"
+          ]
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "No shared ledger, group or settlement exists in the delivery protocol.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "The protocol's enforcement points, rulesets, the required check, the generator's merges, the Project and the agent profiles, are administered by the same single account they constrain, from one machine that also stores the write credential in environment variables and executes repository-supplied hook code at every commit. E01-F04 raised the account baseline; E31 adds the credential-in-environment and hook-execution surface that the same baseline must cover: token removal that depends on discipline, no redaction between a mistaken command and a public comment, and a hook that runs whatever the checked-out branch's scripts/setup.py installs (E31-F02).",
+          "evidence": [],
+          "findings": [
+            "E31-F02"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E31-F01",
+          "category": "prompt_injection",
+          "severity": "high",
+          "title": "Agent profiles and repository instructions do not define untrusted content or per-ticket credential scope",
+          "attack_path": "A non-owner comment, body edit or fork pull-request diff carries instruction-shaped text; a session reading it as part of its task follows it because no profile or instruction file tells it that only the owner's published issue body and the coordinator's messages are instructions, and the session's credential lets it comment, edit, delete branches, change the Project or merge.",
+          "recommended_control": "State in the shared agent profiles and the generated repository instructions that content from any account other than the owner, and the file content of any pull request the owner did not open, is data to report and never instruction; require author confirmation before acting on instruction-like text; scope each session's credential to its ticket; add a profile lint that fails a profile without the rule (the same work E01-F03 handed to this ticket).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/.github#4",
+          "resolution": null
+        },
+        {
+          "id": "E31-F02",
+          "category": "administrative_identity_compromise",
+          "severity": "critical",
+          "title": "The credential-holding machine runs repository hook code and carries tokens in the process environment with no redaction before public output",
+          "attack_path": "A session runs a command that echoes its environment or a token, or pastes tool output into a public issue comment; nothing between the command and GitHub redacts it, and the committed-file scan never sees comments. Separately, checking out a branch and running scripts/setup.py installs and executes whatever that branch's hook code does, on the machine that holds the write credential for the whole organisation.",
+          "recommended_control": "Make the owner-account and credential baseline cover the machine and the process: credentials supplied through the gh credential helper rather than environment tokens where possible, an output-redaction step or wrapper for every command that can reach GitHub, tokens scoped per session and short-lived, the hook installed only from a reviewed main checkout, and a rehearsed revocation that invalidates every session's credential (extends E01-F04 handed to this ticket).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#43",
+          "resolution": null
+        },
+        {
+          "id": "E31-F03",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "The ADR validator does not yet protect accepted records against undated in-place edits",
+          "attack_path": "An accepted decision record is edited to change the chosen option, the rejected alternatives or the migration consequence without a date change or a superseding record; the validator passes because layout, pins and generated slots are intact, and downstream tickets implement different versions of the same decision.",
+          "recommended_control": "The validator requires a status line and date, the deciding session or reviewer attestation reference and the proving tests on every accepted record, and fails a change to an accepted record's body bytes that comes without a date change or a superseding record, with a planted negative in the committed suite.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#146",
+          "resolution": null
+        },
+        {
+          "id": "E31-F04",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "A timed-out native hook run leaves descendants alive and blocks the machine that does all the committing",
+          "attack_path": "The hook runner's provisioning or validation step exceeds its budget on Windows; the runner kills its direct process only, descendants keep running and hold files, the copied executable cannot be deleted, inherited pipes delay the return, and every later commit waits or fails until the processes are found by hand.",
+          "recommended_control": "Own the whole process tree (a job object on Windows), verify that every owned handle has exited and every owned file is deleted before returning to the setup caller, bound each step's budget separately from the 600-second provisioning budget, and keep the regression contracts that failed on the unchanged code as the proof.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#37",
+          "resolution": null
+        },
+        {
+          "id": "E31-F05",
+          "category": "elevation_of_privilege",
+          "severity": "medium",
+          "title": "The least-privilege rule for agent profile capabilities is not published where sessions read it",
+          "attack_path": "A future profile repair grants a Developer or Producer profile blanket tool access, reviewer authority or the right to launch sub-agents; an implementer session then reviews or approves its own change, or spawns a reviewer whose output it counts as approval, and the separation the delivery policy depends on collapses without any check noticing.",
+          "recommended_control": "Publish in the shared profiles that each role holds only the native capabilities its duties need, that no implementer or producer profile may hold reviewer authority or launch sub-agents, and that a session never counts a reviewer it invoked as approval; enforce it with the same profile lint that carries the untrusted-content rule, so a profile that widens a capability fails review.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/.github#4",
+          "resolution": null
+        }
+      ]
+    }
+  ]
+}

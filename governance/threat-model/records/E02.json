@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "epic": "E02",
+  "title": "Contracts and domain model",
+  "issue": "PenniLogic/docs#3",
+  "owner": {
+    "accountable": "basiltt"
+  },
+  "refreshes": []
+}
