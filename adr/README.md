@@ -183,10 +183,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-015
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-MONEY-01` |
-| Status | PENDING |
+| Source | <a id="adr-015--money-wire-format-time-and-idempotency-conventions"></a> [ADR-015.md](ADR-015.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-MONEY-01 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-015 -->
@@ -299,7 +299,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-MONEY-01` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Money wire format, time representation and idempotency: the exact JSON form of an amount, UTC instants plus an explicit user time zone, idempotency key scope, lifetime and conflict behaviour, and the Kotlin, TypeScript and Python wrapper types with their serialisation seams |
 | Blocks | Contracts, generated clients, every financial write path |
 <!-- SLOT END ADR-015 -->
