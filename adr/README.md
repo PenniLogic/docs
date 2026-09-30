@@ -207,10 +207,10 @@ Source status/date remain the recorded decision metadata. The index derives effe
 ### ADR-017
 | Field | Value |
 |---|---|
-| Source | reserved for `T-ADR-LEDGER-03` |
-| Status | PENDING |
+| Source | <a id="adr-017--ledger-currency-foreign-exchange-reservation-and-derived-debt-balances"></a> [ADR-017.md](ADR-017.md) |
+| Status | ACCEPTED |
 | Ticket | T-ADR-LEDGER-03 |
-| Date | — |
+| Date | 2026-09-30 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-017 -->
@@ -319,7 +319,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-LEDGER-03` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | Ledger currency, foreign-exchange reservation, and how a debt balance is derived rather than cached |
 | Blocks | Ledger schema, debt engine, multi-currency (E30) |
 <!-- SLOT END ADR-017 -->
