@@ -1,8 +1,10 @@
 """Tests for the shared client state taxonomy (T-UX-01, PenniLogic/docs#1).
 
 Each acceptance criterion of the ticket maps to a named test below, and every check is proven to
-bite with a planted defect. These tests prove the published data, schema and document; they are
-not a client build and claim no client coverage.
+bite with a planted defect. Version 1.1.0 (PenniLogic/docs#139) adds the reviewer follow-ups of
+PR #138, the seven Android capture-health reason identifiers of PenniLogic/android#57 and the
+ADR-021 / ADR-023 wording, each with its own planted negative. These tests prove the published
+data, schema and document; they are not a client build and claim no client coverage.
 """
 
 import copy
@@ -23,7 +25,64 @@ spec.loader.exec_module(module)
 DATA = module.load_json(ROOT / module.DATA)
 SCHEMA = module.load_json(ROOT / module.SCHEMA)
 DOCUMENT = (ROOT / module.DOCUMENT).read_text(encoding="utf-8")
+# The document hard-wraps prose; phrase assertions run against the whitespace-collapsed text.
+PLAIN_DOCUMENT = re.sub(r"\s+", " ", DOCUMENT)
 STATES = {state["id"]: state for state in DATA["states"]}
+CONDITIONS = {item["id"]: item for item in DATA["contract_conditions"]}
+RENDERINGS = {item["id"]: item for item in DATA.get("content_renderings", [])}
+
+# The identifier surface published as 1.0.0 (6eb4da65). Removing or renaming any of it is a major
+# change under section 13.2, so 1.1.0 must still carry every entry byte for byte.
+PUBLISHED_1_0_0 = {
+    "states": {"empty", "loading", "error", "offline", "stale", "permission_denied", "quota_exceeded", "degraded"},
+    "recovery_actions": {
+        "empty": "primary_action", "loading": "cancel", "error": "retry", "offline": "retry",
+        "stale": "refresh", "permission_denied": "review_access", "quota_exceeded": "view_usage",
+        "degraded": "retry",
+    },
+    "labels": {
+        "empty": "{primary_action}", "loading": "Cancel", "error": "Try again", "offline": "Try again",
+        "stale": "Refresh", "permission_denied": "Review access", "quota_exceeded": "See usage and plans",
+        "degraded": "Try again",
+    },
+    "label_by_cause": {
+        "device": "Allow {permission}", "plan": "See plans", "sharing": "See what's shared with you",
+        "role": "Request access",
+    },
+    "causes": {"device", "plan", "sharing", "role"},
+    "conditions": {
+        "entitlement_denied", "grant_not_active", "offline_lease_elapsed", "device_permission_not_granted",
+        "role_capability_denied", "quota_exhausted", "rate_limited", "dependency_unavailable",
+        "request_failed", "validation_rejected", "capture_paused_by_platform", "capture_blocked_by_setting",
+        "resource_pressure",
+    },
+    "placeholders": {
+        "item", "attempt", "capability", "permission", "last_updated", "limit", "resets_at",
+        "still_available", "primary_action", "what_appears_here", "field_guidance",
+    },
+    "headlines": {
+        "empty": "Nothing here yet", "loading": "Still loading", "error": "Couldn't {attempt}",
+        "offline": "You're offline", "stale": "Last updated {last_updated}",
+        "permission_denied": "You don't have access to this right now",
+        "quota_exceeded": "You've reached this period's limit of {limit}",
+        "degraded": "{capability} isn't available right now",
+    },
+    "variants": {
+        "error": {"validation"}, "permission_denied": {"device", "plan", "sharing", "role"},
+        "quota_exceeded": {"with_reset", "rate_limited"},
+    },
+}
+
+# PenniLogic/android#57, docs/platform/capture-health-identifiers.json at android main ff15e94e
+# (blob affe6d7f): the reason identifiers exactly as the client implements them.
+ANDROID_57_REASONS = {
+    "capture_paused_by_platform": (
+        "force_stopped", "private_space_paused", "standby_bucket_restricted", "background_restricted",
+    ),
+    "capture_blocked_by_setting": (
+        "listener_access_not_granted", "restricted_setting_locked", "capture_permission_not_granted",
+    ),
+}
 
 
 def taxonomy():
@@ -32,6 +91,18 @@ def taxonomy():
 
 def state(data, state_id):
     return next(item for item in data["states"] if item["id"] == state_id)
+
+
+def condition(data, condition_id):
+    return next(item for item in data["contract_conditions"] if item["id"] == condition_id)
+
+
+def reason(data, reason_id):
+    for item in data["contract_conditions"]:
+        for candidate in item.get("reasons", []):
+            if candidate["id"] == reason_id:
+                return item, candidate
+    raise KeyError(reason_id)
 
 
 def validate(data, document=DOCUMENT, schema=SCHEMA):
@@ -44,6 +115,8 @@ class PublishedFilesTests(unittest.TestCase):
         summary = module.validate_taxonomy(ROOT)
         self.assertEqual(summary["states"], 8)
         self.assertEqual(summary["worked_examples"], 3)
+        self.assertEqual(summary["reasons"], 7)
+        self.assertEqual(summary["content_renderings"], 5)
         self.assertEqual(summary["taxonomy_version"], DATA["taxonomy_version"])
 
     def test_main_reports_success(self):
@@ -279,6 +352,184 @@ class IndependentReviewFixTests(unittest.TestCase):
         self.assertIn("without naming any denied item", behaviour)
 
 
+class Docs139FollowUpTests(unittest.TestCase):
+    """Version 1.1.0 (PenniLogic/docs#139): reviewer notes N1-N6 and N-1..N-5 of PR #138,
+    PenniLogic/android#57, ADR-021 and ADR-023 stay applied."""
+
+    def test_version_is_1_1_0_with_schema_version_1(self):
+        self.assertEqual(DATA["taxonomy_version"], "1.1.0")
+        self.assertEqual(DATA["schema_version"], 1)
+        self.assertEqual(SCHEMA["properties"]["schema_version"], {"const": 1})
+        self.assertIn("version 1.1.0", DOCUMENT)
+
+    def test_every_1_0_0_identifier_and_canonical_string_survives(self):
+        # No removal or rename: the change is additive, so 1.1.0 is a minor bump (section 13.2).
+        self.assertLessEqual(PUBLISHED_1_0_0["states"], set(STATES))
+        for state_id, action_id in PUBLISHED_1_0_0["recovery_actions"].items():
+            self.assertEqual(STATES[state_id]["recovery_action"]["id"], action_id)
+            self.assertEqual(STATES[state_id]["recovery_action"]["label"], PUBLISHED_1_0_0["labels"][state_id])
+            self.assertEqual(STATES[state_id]["copy"]["headline"], PUBLISHED_1_0_0["headlines"][state_id])
+        self.assertEqual(
+            STATES["permission_denied"]["recovery_action"]["label_by_cause"], PUBLISHED_1_0_0["label_by_cause"]
+        )
+        self.assertEqual({cause["id"] for cause in STATES["permission_denied"]["causes"]}, PUBLISHED_1_0_0["causes"])
+        self.assertLessEqual(PUBLISHED_1_0_0["conditions"], set(CONDITIONS))
+        self.assertLessEqual(PUBLISHED_1_0_0["placeholders"], {item["id"] for item in DATA["placeholders"]})
+        for state_id, keys in PUBLISHED_1_0_0["variants"].items():
+            self.assertLessEqual(keys, set(STATES[state_id]["copy"]["variants"]))
+        for state_id, item in STATES.items():
+            self.assertEqual(item["signal"], "client_state." + state_id)
+
+    def test_n5_n_1_submit_control_keeps_its_registered_label(self):
+        error = STATES["error"]
+        self.assertEqual(error["recovery_action"]["label_by_variant"], {"validation": "{submit_label}"})
+        self.assertEqual(error["recovery_action"]["label"], "Try again")
+        self.assertIn("keeps its registered label", error["recovery_action"]["behaviour"])
+        self.assertIn("under its registered label", error["copy"]["variants"]["validation"]["when"])
+        placeholder = next(item for item in DATA["placeholders"] if item["id"] == "submit_label")
+        self.assertEqual(placeholder["source"], "surface_registration")
+        registration = SCHEMA["definitions"]["surface_registration"]
+        self.assertIn("submit_label", registration["properties"])
+        self.assertNotIn("submit_label", registration["required"])
+        self.assertIn("keeps its registered label", PLAIN_DOCUMENT)
+
+    def test_n_5_registration_shape_carries_still_available(self):
+        registration = SCHEMA["definitions"]["surface_registration"]
+        self.assertIn("still_available", registration["properties"])
+        self.assertNotIn("still_available", registration["required"])
+        self.assertEqual(registration["required"], ["surface_id", "client", "applicable_states", "item", "attempt"])
+        self.assertIn("`still_available`", DOCUMENT)
+
+    def test_n_2_stale_marker_is_associated_with_the_group_of_figures(self):
+        # A1 of the #166 accessibility review: the association is a region-level description or an
+        # addition to the region's own name, never a replacement, worded identically everywhere.
+        phrase = "group of figures it qualifies"
+        precision = "or appended to the region's own accessible name, never replacing it"
+        self.assertIn(phrase, DATA["data_display_values"]["shown_marked"])
+        self.assertIn(precision, DATA["data_display_values"]["shown_marked"])
+        self.assertIn("one text marker per region", DATA["data_display_values"]["shown_marked"])
+        stale_line = next(line for line in STATES["stale"]["required_content"] if phrase in line)
+        self.assertIn(precision, stale_line)
+        rule = next(rule for rule in DATA["accessibility_rules"] if phrase in rule)
+        self.assertIn(precision, rule)
+        self.assertNotIn("every figure it qualifies", json.dumps(DATA))
+        self.assertNotIn("every figure it qualifies", PLAIN_DOCUMENT)
+        self.assertNotIn("accessible name or description", json.dumps(DATA))
+        self.assertNotIn("accessible name or description", PLAIN_DOCUMENT)
+        self.assertGreaterEqual(PLAIN_DOCUMENT.count(phrase), 4)
+        self.assertEqual(PLAIN_DOCUMENT.count(precision), 3)
+
+    def test_n_3_no_notification_after_access_ends_and_lease_drop_is_local(self):
+        required = " ".join(STATES["permission_denied"]["required_content"])
+        self.assertIn("no notification is issued for an item the viewer can no longer access", required.lower())
+        self.assertIn("issued while the grant was active", required)
+        example = next(item for item in DATA["worked_examples"] if item["id"] == "shared_balance_stale")
+        blob = " ".join(example["transitions"] + example["privacy_notes"])
+        self.assertIn("may still be active server-side", blob)
+        self.assertEqual(blob.count("next confirmed refresh while the grant is still active"), 2)
+        self.assertIn("not a revocation signal", blob)
+        self.assertIn("no notification is issued for an item the viewer can no longer access", PLAIN_DOCUMENT.lower())
+        self.assertEqual(PLAIN_DOCUMENT.count("next confirmed refresh while the grant is still active"), 2)
+
+    def test_n_4_rate_limited_condition_does_not_dictate_the_contract_shape(self):
+        description = CONDITIONS["rate_limited"]["description"]
+        self.assertIn("should state the limit, its window and when it lifts", description)
+        self.assertNotIn("must state", description)
+        self.assertIn("omitted when absent", description)
+        self.assertIsNone(module.CODE_LIKE.search(description))
+        self.assertIn("the shape should state the limit", PLAIN_DOCUMENT)
+
+    def test_n6_version_history_records_the_first_published_version(self):
+        history = DATA["version_history"]
+        self.assertEqual(history[0]["version"], "1.0.0")
+        self.assertEqual(history[0]["bump"], "initial")
+        self.assertIn("6eb4da65", history[0]["change"])
+        self.assertIn("not a versioning event", history[0]["change"])
+        self.assertEqual(history[-1]["version"], "1.1.0")
+        self.assertEqual(history[-1]["bump"], "minor")
+        for reference in ("PenniLogic/docs#139", "PenniLogic/android#57", "PenniLogic/docs#41", "PenniLogic/docs#47"):
+            self.assertTrue(any(reference in item for item in history[-1]["references"]), reference)
+        self.assertIn("### 13.2 Versioning rule", DOCUMENT)
+        self.assertIn("### 13.3 Version history", DOCUMENT)
+        self.assertIn("*required* schema property", PLAIN_DOCUMENT)
+        self.assertIn("was not a versioning event", PLAIN_DOCUMENT)
+
+    def test_n2_accepted_limit_is_recorded_in_section_14(self):
+        self.assertIn("**Accepted limit (N2 of the #138 review).**", DOCUMENT)
+        self.assertIn("substring", DOCUMENT.split("**Accepted limit (N2 of the #138 review).**")[1][:400])
+
+    def test_android_57_reason_identifiers_are_published_byte_for_byte(self):
+        self.assertEqual(module.REQUIRED_REASONS, ANDROID_57_REASONS)
+        for condition_id, reason_ids in ANDROID_57_REASONS.items():
+            published = tuple(item["id"] for item in CONDITIONS[condition_id]["reasons"])
+            self.assertEqual(published, reason_ids)
+            for item in CONDITIONS[condition_id]["reasons"]:
+                self.assertEqual(item["client"], "android")
+                self.assertIn("PenniLogic/android#57", item["published_by"])
+                self.assertIn("ff15e94e", item["published_by"])
+                self.assertIsNone(module.CODE_LIKE.search(json.dumps(item)), item["id"])
+            self.assertIs(CONDITIONS[condition_id]["contract_level"], False)
+        self.assertEqual(CONDITIONS["capture_paused_by_platform"]["binds_to"], "degraded")
+        self.assertEqual(CONDITIONS["capture_blocked_by_setting"]["binds_to"], "permission_denied")
+        self.assertEqual(CONDITIONS["capture_blocked_by_setting"]["cause"], "device")
+        _, force_stopped = reason(DATA, "force_stopped")
+        self.assertIn("cannot be told apart from a swipe", force_stopped["limitation"])
+        _, private_space = reason(DATA, "private_space_paused")
+        self.assertIn("never joined to an account identifier", private_space["privacy"])
+        # C5 of the #166 core review: the android source says "not exported by this baseline".
+        self.assertIn("not exported by this baseline", private_space["privacy"])
+        self.assertIn("not exported by this baseline", PLAIN_DOCUMENT)
+        _, locked = reason(DATA, "restricted_setting_locked")
+        self.assertIn("App info page", locked["recovery_destination"])
+        self.assertIn("this version adds none", locked["recovery_destination"])
+        for reason_id in sum(ANDROID_57_REASONS.values(), ()):
+            self.assertIn(f"| `{reason_id}` |", DOCUMENT)
+
+    def test_android_57_placeholder_values_are_confirmed(self):
+        placeholders = {item["id"]: item["description"] for item in DATA["placeholders"]}
+        self.assertIn("'Automatic capture'", placeholders["capability"])
+        self.assertIn("confirmed for PenniLogic/android#57", placeholders["permission"])
+        self.assertIn("user-facing name", placeholders["permission"])
+        attribute = next(item for item in DATA["signals"]["attributes"] if item["id"] == "permission")
+        self.assertIn("not the user-facing name", attribute["description"])
+        self.assertIn("A reason is not a signal attribute", DATA["reason_rule"])
+        self.assertEqual(
+            [item["id"] for item in DATA["signals"]["attributes"]],
+            ["client", "surface_id", "scope", "cause", "permission", "recovery_action_taken", "taxonomy_version"],
+        )
+
+    def test_adr_023_own_key_wording(self):
+        condition_text = STATES["quota_exceeded"]["triggering_condition"]
+        self.assertIn("its tokens are never charged against plan quota and never produce this state", condition_text)
+        self.assertIn("request allowance still applies and can", condition_text)
+        self.assertNotIn("does not produce this state", condition_text)
+        example = next(item for item in DATA["worked_examples"] if item["id"] == "ai_surface_quota_exceeded")
+        self.assertTrue(any("request allowance still applies" in line for line in example["transitions"]))
+        self.assertFalse(any("so this state does not appear" in line for line in example["transitions"]))
+        self.assertTrue(any("never resets" in line for line in STATES["quota_exceeded"]["required_content"]))
+        self.assertIn("request allowance still applies and can", PLAIN_DOCUMENT)
+
+    def test_adr_021_renderings_are_ordinary_states_naming_no_person(self):
+        self.assertEqual(
+            set(RENDERINGS),
+            {"erased_member_placeholder", "redacted_description", "redacted_note", "pseudonymised_viewer", "partial_total"},
+        )
+        denied_copy = set(module.canonical_strings(STATES["permission_denied"]))
+        for item in RENDERINGS.values():
+            self.assertEqual(item["rendered_in"], "content")
+            self.assertNotIn(item["id"], STATES)
+            label = item["copy"]["label"]
+            self.assertFalse(module.PLACEHOLDER.search(label), label)
+            self.assertNotIn(label, denied_copy)
+            self.assertIsNone(module.forbidden_term(label, DATA["forbidden_terms"]), label)
+            self.assertLessEqual(len(label), 60)
+            self.assertIn("ADR-021", item["source"])
+            self.assertIn(f'"{label}"', DOCUMENT)
+        self.assertIn("never permission_denied", DATA["content_rendering_rule"])
+        self.assertIn("adds no state identifier", DATA["content_rendering_rule"])
+        self.assertIn("### 9.2 Content renderings", DOCUMENT)
+
+
 class PlantedDefectTests(unittest.TestCase):
     """Each check must fail when the corresponding defect is planted."""
 
@@ -287,6 +538,23 @@ class PlantedDefectTests(unittest.TestCase):
         data["states"] = [item for item in data["states"] if item["id"] != "degraded"]
         data["precedence"].remove("degraded")
         with self.assertRaisesRegex(ValueError, "fewer than 8 items"):
+            validate(data)
+
+    def test_duplicate_state_identifier_is_rejected(self):
+        # uniqueItems cannot cover object arrays, so _unique_ids is the only guard (N4).
+        data = taxonomy()
+        duplicate = copy.deepcopy(state(data, "offline"))
+        duplicate["definition"] = "A second definition of the same identifier."
+        data["states"].append(duplicate)
+        with self.assertRaisesRegex(ValueError, "Duplicate state identifier"):
+            validate(data)
+
+    def test_duplicate_contract_condition_identifier_is_rejected(self):
+        data = taxonomy()
+        duplicate = copy.deepcopy(condition(data, "request_failed"))
+        duplicate["binds_to"] = "offline"
+        data["contract_conditions"].append(duplicate)
+        with self.assertRaisesRegex(ValueError, "Duplicate contract condition identifier"):
             validate(data)
 
     def test_renamed_identifier_is_rejected(self):
@@ -411,6 +679,24 @@ class PlantedDefectTests(unittest.TestCase):
         variant["headline"] = "{item} isn't shared with you"
         with self.assertRaisesRegex(ValueError, "sharing-cause copy must not contain placeholders"):
             validate(data)
+
+    def test_sharing_cause_label_with_a_placeholder_is_rejected(self):
+        # P1 of the #166 privacy review: the sharing label is rendered beside the sharing copy.
+        data = taxonomy()
+        state(data, "permission_denied")["recovery_action"]["label_by_cause"]["sharing"] = "See {item} shared with you"
+        with self.assertRaisesRegex(ValueError, "sharing-cause label_by_cause label must not contain placeholders"):
+            validate(data)
+
+    def test_sharing_variant_label_with_a_placeholder_is_rejected(self):
+        data = taxonomy()
+        state(data, "permission_denied")["recovery_action"]["label_by_variant"] = {"sharing": "Ask about {item}"}
+        with self.assertRaisesRegex(ValueError, "sharing-cause label_by_variant label must not contain placeholders"):
+            validate(data)
+
+    def test_sharing_variant_label_without_a_placeholder_is_accepted(self):
+        data = taxonomy()
+        state(data, "permission_denied")["recovery_action"]["label_by_variant"] = {"sharing": "See what's shared with you"}
+        validate(data)
 
     def test_quota_exceeded_without_remaining_availability_is_rejected(self):
         data = taxonomy()
@@ -630,6 +916,411 @@ class PlantedDefectTests(unittest.TestCase):
         schema["properties"]["precedence_rule"] = {"$ref": "#/definitions/does_not_exist"}
         with self.assertRaisesRegex(module.SchemaError, "Unknown definition"):
             validate(taxonomy(), schema=schema)
+
+    # --- 1.1.0 (PenniLogic/docs#139): N1, N3 and the new identifier checks ---
+
+    def test_duplicate_state_section_hiding_a_paraphrase_is_rejected(self):
+        # N1: a second `### 3.n \`offline\`` section carrying the canonical copy must not let the
+        # first section paraphrase it; the duplicate heading itself is the error.
+        marker = '- **Copy.** Headline "You\'re offline". Body "Try again when you\'re back online."'
+        self.assertEqual(DOCUMENT.count(marker), 1)
+        paraphrased = DOCUMENT.replace(marker, marker.replace("You're offline", "No connection"))
+        duplicate = "\n### 3.9 `offline`\n\n" + marker + "\n- **Recovery action `retry`.** Label \"Try again\".\n"
+        document = paraphrased.replace("\n## 4. Precedence and composition", duplicate + "\n## 4. Precedence and composition")
+        self.assertIn("### 3.9 `offline`", document)
+        with self.assertRaisesRegex(ValueError, "duplicate section for state offline"):
+            validate(taxonomy(), document)
+
+    def test_duplicate_state_section_alone_is_rejected(self):
+        document = DOCUMENT.replace("### 3.8 `degraded`", "### 3.8 `degraded`\n\n### 3.9 `degraded`")
+        with self.assertRaisesRegex(ValueError, "duplicate section for state degraded"):
+            validate(taxonomy(), document)
+
+    def test_cause_bound_example_rendering_another_causes_label_is_rejected(self):
+        # N3: a device example must render the device label, not any label_by_cause value.
+        data = taxonomy()
+        data["worked_examples"][0]["copy_rendered"]["action"] = "See plans"
+        with self.assertRaisesRegex(ValueError, "not the recovery action of permission_denied for cause 'device'"):
+            validate(data)
+
+    def test_cause_bound_example_rendering_another_causes_copy_is_rejected(self):
+        data = taxonomy()
+        rendered = data["worked_examples"][0]["copy_rendered"]
+        rendered["headline"] = "Not included in your plan"
+        rendered["body"] = "Everything in your current plan keeps working."
+        with self.assertRaisesRegex(ValueError, "canonical copy of permission_denied for cause 'device'"):
+            validate(data)
+
+    def test_cause_bound_example_rendering_its_own_cause_is_accepted(self):
+        data = taxonomy()
+        rendered = data["worked_examples"][0]["copy_rendered"]
+        rendered["headline"] = "Automatic capture needs notification access"
+        rendered["action"] = "Allow notification access"
+        validate(data)
+
+    def _add_fifth_cause(self, data, with_variant, with_label):
+        # C1 of the #166 core review: a cause without a variant or label must not fall open to
+        # the other causes' copy and labels.
+        denied = state(data, "permission_denied")
+        denied["causes"].append({
+            "id": "integrity",
+            "description": "Planted: an adverse integrity verdict denied the operation.",
+            "contract_level": True,
+            "client_determined": False,
+        })
+        if with_variant:
+            denied["copy"]["variants"]["integrity"] = {
+                "when": "Planted.",
+                "headline": "Not available on this device right now",
+                "body": "Everything else keeps working.",
+            }
+        if with_label:
+            denied["recovery_action"]["label_by_cause"]["integrity"] = "See device status"
+        attribute = next(item for item in data["signals"]["attributes"] if item["id"] == "cause")
+        attribute["values"].append("integrity")
+        example = data["worked_examples"][0]
+        example["cause"] = "integrity"
+        example["signal_recorded"]["attributes"]["cause"] = "integrity"
+        example["copy_rendered"] = {
+            "headline": "Not included in your plan",
+            "body": "Everything in your current plan keeps working.",
+            "action": "See plans",
+        }
+        return example
+
+    def test_example_naming_a_cause_without_a_variant_fails_closed(self):
+        data = taxonomy()
+        self._add_fifth_cause(data, with_variant=False, with_label=True)
+        with self.assertRaisesRegex(ValueError, "permission_denied has no copy variant for cause 'integrity'"):
+            validate(data)
+
+    def test_example_naming_a_cause_without_a_label_fails_closed(self):
+        data = taxonomy()
+        self._add_fifth_cause(data, with_variant=True, with_label=False)
+        with self.assertRaisesRegex(ValueError, "permission_denied has no recovery label for cause 'integrity'"):
+            validate(data)
+
+    def test_example_naming_a_fully_defined_cause_is_still_bound_to_it(self):
+        data = taxonomy()
+        example = self._add_fifth_cause(data, with_variant=True, with_label=True)
+        with self.assertRaisesRegex(ValueError, "canonical copy of permission_denied for cause 'integrity'"):
+            validate(data)
+        example["copy_rendered"]["headline"] = "Not available on this device right now"
+        example["copy_rendered"]["body"] = "Everything else keeps working."
+        with self.assertRaisesRegex(ValueError, "not the recovery action of permission_denied for cause 'integrity'"):
+            validate(data)
+        example["copy_rendered"]["action"] = "See device status"
+        document = DOCUMENT.replace("### 3.7 `quota_exceeded`", "Not available on this device right now See device status\n\n### 3.7 `quota_exceeded`")
+        validate(data, document)
+
+    def test_label_by_variant_naming_unknown_variant_is_rejected(self):
+        data = taxonomy()
+        state(data, "error")["recovery_action"]["label_by_variant"]["timeout"] = "Wait"
+        with self.assertRaisesRegex(ValueError, "label_by_variant names unknown variant 'timeout'"):
+            validate(data)
+
+    def test_label_by_variant_with_undeclared_placeholder_is_rejected(self):
+        data = taxonomy()
+        state(data, "error")["recovery_action"]["label_by_variant"]["validation"] = "{button_text}"
+        with self.assertRaisesRegex(ValueError, "undeclared placeholder {button_text}"):
+            validate(data)
+
+    def test_label_by_variant_offering_two_actions_is_rejected(self):
+        data = taxonomy()
+        state(data, "error")["recovery_action"]["label_by_variant"]["validation"] = "Save or discard"
+        with self.assertRaisesRegex(ValueError, "exactly one action"):
+            validate(data)
+
+    def test_document_omitting_the_variant_label_is_rejected(self):
+        self.assertEqual(DOCUMENT.count("`{submit_label}`"), 4)
+        section = DOCUMENT[DOCUMENT.index("### 3.3 `error`"):DOCUMENT.index("### 3.4 `offline`")]
+        document = DOCUMENT.replace(section, section.replace("`{submit_label}`", "its own label"))
+        with self.assertRaisesRegex(ValueError, "Section 3.n `error` does not carry the canonical copy '{submit_label}'"):
+            validate(taxonomy(), document)
+
+    def test_registration_may_carry_still_available_and_submit_label(self):
+        data = taxonomy()
+        registration = data["adoption"]["illustrative_surface_registration"]
+        registration["still_available"] = "Saved answers and everything outside AI"
+        registration["submit_label"] = "Add"
+        validate(data)
+        registration["banner_text"] = "Free trial"
+        with self.assertRaisesRegex(ValueError, "unexpected property 'banner_text'"):
+            validate(data)
+
+    def test_missing_published_reason_is_rejected(self):
+        data = taxonomy()
+        item, _ = reason(data, "force_stopped")
+        item["reasons"] = [entry for entry in item["reasons"] if entry["id"] != "force_stopped"]
+        with self.assertRaisesRegex(ValueError, "Missing published reason identifier force_stopped under capture_paused_by_platform"):
+            validate(data)
+
+    def test_renamed_published_reason_is_rejected(self):
+        data = taxonomy()
+        _, entry = reason(data, "background_restricted")
+        entry["id"] = "background_limited"
+        with self.assertRaisesRegex(ValueError, "Missing published reason identifier background_restricted"):
+            validate(data)
+
+    def test_reason_moved_to_the_other_condition_in_data_is_rejected(self):
+        data = taxonomy()
+        blocked, entry = reason(data, "listener_access_not_granted")
+        blocked["reasons"].remove(entry)
+        condition(data, "capture_paused_by_platform")["reasons"].append(entry)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Reason listener_access_not_granted is published under capture_paused_by_platform; "
+            "the published identifier belongs under capture_blocked_by_setting",
+        ):
+            validate(data)
+
+    def test_reason_under_the_wrong_condition_in_document_is_rejected(self):
+        row = "| `listener_access_not_granted` | `capture_blocked_by_setting` |"
+        self.assertEqual(DOCUMENT.count(row), 1)
+        document = DOCUMENT.replace(row, "| `listener_access_not_granted` | `capture_paused_by_platform` |")
+        with self.assertRaisesRegex(
+            ValueError,
+            "Document places reason `listener_access_not_granted` under `capture_paused_by_platform` "
+            "but the data file publishes it under `capture_blocked_by_setting`",
+        ):
+            validate(taxonomy(), document)
+
+    def test_reason_absent_from_document_is_rejected(self):
+        lines = DOCUMENT.splitlines(keepends=True)
+        document = "".join(line for line in lines if not line.startswith("| `standby_bucket_restricted` |"))
+        self.assertNotEqual(document, DOCUMENT)
+        with self.assertRaisesRegex(ValueError, "Document does not list reason `standby_bucket_restricted`"):
+            validate(taxonomy(), document)
+
+    def test_reason_in_document_but_not_in_data_is_rejected(self):
+        row = "| `force_stopped` | `capture_paused_by_platform` |"
+        extra = "| `screen_locked` | `capture_paused_by_platform` | android | Planted. | Planted. |\n"
+        document = DOCUMENT.replace(row, extra + row)
+        with self.assertRaisesRegex(ValueError, "Document lists reason `screen_locked` that the data file does not publish"):
+            validate(taxonomy(), document)
+
+    def test_reason_listed_twice_in_document_is_rejected(self):
+        row = "| `force_stopped` | `capture_paused_by_platform` |"
+        document = DOCUMENT.replace(row, row + " x | x | x |\n" + row)
+        with self.assertRaisesRegex(ValueError, "Document lists reason `force_stopped` twice"):
+            validate(taxonomy(), document)
+
+    def test_document_without_a_reason_table_is_rejected(self):
+        document = DOCUMENT.replace("### 9.1 Reason identifiers", "### 9.1 Reasons")
+        with self.assertRaisesRegex(ValueError, "Document has no section headed ### n.m Reason identifiers"):
+            validate(taxonomy(), document)
+
+    def test_additional_reason_is_accepted_when_documented(self):
+        data = taxonomy()
+        condition(data, "capture_paused_by_platform")["reasons"].append({
+            "id": "doze_deferred",
+            "client": "android",
+            "description": "Planted extension: the platform deferred background work.",
+            "clears_when": "Capture health is restored.",
+            "published_by": "Planted test.",
+        })
+        row = "| `force_stopped` | `capture_paused_by_platform` |"
+        document = DOCUMENT.replace(row, "| `doze_deferred` | `capture_paused_by_platform` | android | Planted. | Planted. |\n" + row)
+        self.assertEqual(validate(data, document)["reasons"], 8)
+
+    def test_duplicate_reason_identifier_is_rejected(self):
+        data = taxonomy()
+        _, entry = reason(data, "force_stopped")
+        condition(data, "capture_blocked_by_setting")["reasons"].append(copy.deepcopy(entry))
+        with self.assertRaisesRegex(ValueError, "Duplicate reason identifier 'force_stopped'"):
+            validate(data)
+
+    def test_reason_under_contract_level_condition_is_rejected(self):
+        data = taxonomy()
+        _, entry = reason(data, "force_stopped")
+        condition(data, "quota_exhausted")["reasons"] = [dict(entry, id="daily_window_used")]
+        with self.assertRaisesRegex(ValueError, "quota_exhausted: reasons are published only for client-determined conditions"):
+            validate(data)
+
+    def test_reason_with_code_like_token_is_rejected(self):
+        data = taxonomy()
+        _, entry = reason(data, "standby_bucket_restricted")
+        entry["description"] = "The bucket is STANDBY_BUCKET_RESTRICTED."
+        with self.assertRaisesRegex(ValueError, "Reason standby_bucket_restricted: names a code-like token 'STANDBY_BUCKET_RESTRICTED'"):
+            validate(data)
+
+    def test_reason_colliding_with_a_state_identifier_is_rejected(self):
+        data = taxonomy()
+        condition(data, "capture_paused_by_platform")["reasons"].append({
+            "id": "offline",
+            "client": "android",
+            "description": "Planted.",
+            "clears_when": "Planted.",
+            "published_by": "Planted.",
+        })
+        with self.assertRaisesRegex(ValueError, "Reason identifier 'offline' collides"):
+            validate(data)
+
+    def test_reason_without_required_fields_is_rejected_by_schema(self):
+        data = taxonomy()
+        _, entry = reason(data, "force_stopped")
+        del entry["clears_when"]
+        with self.assertRaisesRegex(ValueError, "missing required property 'clears_when'"):
+            validate(data)
+
+    def test_content_rendering_copy_with_placeholder_is_rejected(self):
+        data = taxonomy()
+        data["content_renderings"][0]["copy"]["label"] = "Former member {item}"
+        with self.assertRaisesRegex(ValueError, "erased_member_placeholder copy must not contain placeholders"):
+            validate(data)
+
+    def test_content_rendering_with_forbidden_term_is_rejected(self):
+        data = taxonomy()
+        data["content_renderings"][1]["copy"]["label"] = "Description removed because the author left"
+        with self.assertRaisesRegex(ValueError, "redacted_description: forbidden term 'because'"):
+            validate(data)
+
+    def test_content_rendering_copy_paraphrased_in_document_is_rejected(self):
+        document = DOCUMENT.replace('"Former member"', '"Previous member"')
+        with self.assertRaisesRegex(ValueError, "Content renderings does not carry the canonical copy 'Former member' verbatim"):
+            validate(taxonomy(), document)
+
+    def test_content_rendering_copy_changed_in_data_only_is_rejected(self):
+        data = taxonomy()
+        data["content_renderings"][4]["copy"]["label"] = "Incomplete total"
+        with self.assertRaisesRegex(ValueError, "does not carry the canonical copy 'Incomplete total' verbatim"):
+            validate(data)
+
+    def test_content_rendering_absent_from_document_is_rejected(self):
+        lines = DOCUMENT.splitlines(keepends=True)
+        document = "".join(line for line in lines if not line.startswith("| `pseudonymised_viewer` |"))
+        with self.assertRaisesRegex(ValueError, "Document does not list content rendering `pseudonymised_viewer`"):
+            validate(taxonomy(), document)
+
+    def test_content_rendering_in_document_but_not_in_data_is_rejected(self):
+        row = "| `partial_total` |"
+        document = DOCUMENT.replace(row, "| `hidden_balance` | Planted. | \"Planted\" |\n" + row)
+        with self.assertRaisesRegex(ValueError, "Document lists content rendering `hidden_balance` that the data file does not publish"):
+            validate(taxonomy(), document)
+
+    def test_content_rendering_colliding_with_a_state_is_rejected(self):
+        data = taxonomy()
+        data["content_renderings"][0]["id"] = "empty"
+        with self.assertRaisesRegex(ValueError, "Content rendering empty collides with a state, condition, reason or cause identifier"):
+            validate(data)
+
+    def test_content_rendering_colliding_with_a_condition_reason_or_cause_is_rejected(self):
+        # C2/Q2 of the #166 reviews: the same reserved set as for reasons.
+        for taken in ("rate_limited", "force_stopped", "device"):
+            data = taxonomy()
+            data["content_renderings"][0]["id"] = taken
+            with self.assertRaisesRegex(ValueError, f"Content rendering {taken} collides with"):
+                validate(data)
+
+    def test_reason_colliding_with_a_condition_or_cause_identifier_is_rejected(self):
+        for taken in ("rate_limited", "device"):
+            data = taxonomy()
+            condition(data, "capture_paused_by_platform")["reasons"].append({
+                "id": taken,
+                "client": "android",
+                "description": "Planted.",
+                "clears_when": "Planted.",
+                "published_by": "Planted.",
+            })
+            with self.assertRaisesRegex(ValueError, f"Reason identifier '{taken}' collides"):
+                validate(data)
+
+    def test_content_rendering_copy_over_sixty_characters_is_rejected(self):
+        # Q1 of the #166 QA review: the plain_language limit is enforced for rendering copy.
+        data = taxonomy()
+        long_label = "Former member whose details are no longer available on this shared record"
+        self.assertGreater(len(long_label), 60)
+        data["content_renderings"][0]["copy"]["label"] = long_label
+        with self.assertRaisesRegex(ValueError, "erased_member_placeholder: copy is longer than 60 characters"):
+            validate(data)
+
+    def test_content_rendering_copy_of_exactly_sixty_characters_is_accepted(self):
+        data = taxonomy()
+        label = "Former member of this group whose account is no longer here."
+        self.assertEqual(len(label), 60)
+        data["content_renderings"][0]["copy"]["label"] = label
+        document = DOCUMENT.replace('"Former member"', f'"{label}"')
+        validate(data, document)
+
+    def test_duplicate_content_rendering_is_rejected(self):
+        data = taxonomy()
+        data["content_renderings"].append(copy.deepcopy(data["content_renderings"][0]))
+        with self.assertRaisesRegex(ValueError, "Duplicate content rendering identifier"):
+            validate(data)
+
+    def test_content_rendering_claiming_a_state_is_rejected_by_schema(self):
+        data = taxonomy()
+        data["content_renderings"][0]["rendered_in"] = "permission_denied"
+        with self.assertRaisesRegex(ValueError, "expected constant 'content'"):
+            validate(data)
+
+    def test_version_history_ending_elsewhere_is_rejected(self):
+        data = taxonomy()
+        data["taxonomy_version"] = "1.2.0"
+        document = DOCUMENT.replace("version 1.1.0", "version 1.2.0")
+        with self.assertRaisesRegex(ValueError, "version_history must end with the current taxonomy_version"):
+            validate(data, document)
+
+    def test_version_history_with_wrong_bump_kind_is_rejected(self):
+        data = taxonomy()
+        data["version_history"][-1]["bump"] = "patch"
+        with self.assertRaisesRegex(ValueError, "1.1.0 is not a patch bump from 1.0.0"):
+            validate(data)
+
+    def test_version_history_not_starting_at_first_published_version_is_rejected(self):
+        data = taxonomy()
+        data["version_history"] = data["version_history"][1:]
+        with self.assertRaisesRegex(ValueError, "must start with the first published version 1.0.0"):
+            validate(data)
+
+    def test_empty_version_history_is_rejected_by_schema_and_tolerated_by_the_rules(self):
+        # C4 of the #166 core review: the schema rejects an empty history; the rules alone skip it
+        # instead of raising an IndexError.
+        data = taxonomy()
+        data["version_history"] = []
+        with self.assertRaisesRegex(ValueError, "fewer than 1 items"):
+            validate(data)
+        module.check_taxonomy(data, DOCUMENT)
+
+    def test_version_history_entry_absent_from_document_is_rejected(self):
+        document = DOCUMENT.replace("1.0.0", "1.0.x")
+        with self.assertRaisesRegex(ValueError, "Document does not mention version history entry 1.0.0"):
+            validate(taxonomy(), document)
+
+    def test_document_omitting_a_placeholder_is_rejected(self):
+        # {item} appears in no canonical string, so the placeholder mention check is its only guard.
+        self.assertEqual(DOCUMENT.count("`{item}`"), 1)
+        document = DOCUMENT.replace("`{item}`", "`{items}`")
+        with self.assertRaisesRegex(ValueError, "Document does not mention placeholder `{item}`"):
+            validate(taxonomy(), document)
+        document = DOCUMENT.replace("`{last_updated}`", "`{last-updated}`")
+        with self.assertRaisesRegex(ValueError, "does not carry the canonical copy 'Last updated {last_updated}'"):
+            validate(taxonomy(), document)
+
+    def test_optional_1_1_0_blocks_may_be_absent(self):
+        # Every 1.1.0 addition other than the pinned reason identifiers is optional: a data file
+        # without version_history, renderings, label_by_variant or submit_label still validates
+        # against the new schema and rules with a matching document.
+        data = taxonomy()
+        for key in ("version_history", "reason_rule", "content_renderings", "content_rendering_rule"):
+            del data[key]
+        del state(data, "error")["recovery_action"]["label_by_variant"]
+        data["placeholders"] = [item for item in data["placeholders"] if item["id"] != "submit_label"]
+        summary = validate(data)
+        self.assertEqual((summary["reasons"], summary["content_renderings"]), (7, 0))
+
+    def test_data_file_shaped_like_1_0_0_fails_only_on_the_pinned_reasons(self):
+        # The published reason identifiers are required like the eight states: a data file that
+        # drops them (the 1.0.0 shape) is rejected by name, so a removal needs a major bump.
+        data = taxonomy()
+        for key in ("version_history", "reason_rule", "content_renderings", "content_rendering_rule"):
+            del data[key]
+        for item in data["contract_conditions"]:
+            item.pop("reasons", None)
+        del state(data, "error")["recovery_action"]["label_by_variant"]
+        data["placeholders"] = [item for item in data["placeholders"] if item["id"] != "submit_label"]
+        with self.assertRaisesRegex(ValueError, "Missing published reason identifier force_stopped under capture_paused_by_platform"):
+            validate(data)
 
 
 class SchemaValidatorTests(unittest.TestCase):
