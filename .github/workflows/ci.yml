@@ -43,7 +43,7 @@
         },
         {
           "name": "Run checks",
-          "run": "python scripts/check_repository.py\npython scripts/check_docs.py\npython -m unittest discover -s scripts/tests"
+          "run": "python scripts/check_repository.py\npython scripts/check_docs.py\npython scripts/check_test_strategy.py\npython -m unittest discover -s scripts/tests"
         }
       ]
     }

@@ -33,6 +33,7 @@ cannot approve its own PR. Never invent another GitHub reviewer.
 python scripts/setup.py
 python scripts/check_repository.py
 python scripts/check_docs.py
+python scripts/check_test_strategy.py
 python -m unittest discover -s scripts/tests
 ```
 

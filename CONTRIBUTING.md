@@ -9,6 +9,7 @@ Install Python 3.14, Git, then run:
 python scripts/setup.py
 python scripts/check_repository.py
 python scripts/check_docs.py
+python scripts/check_test_strategy.py
 python -m unittest discover -s scripts/tests
 ```
 
