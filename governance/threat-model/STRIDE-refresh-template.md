@@ -227,4 +227,6 @@ open finding needs a ticket, which is a correct result to report, not something 
 the per-ticket gate: it passes only when the ticket is listed in `tickets_in_scope` of the epic's
 latest refresh and that refresh is current, so a ticket added to an epic after its refresh, or one
 that introduces a new data class, trust boundary, external party, AI capability, sharing path or
-money flow, needs a `scope_changed` refresh that lists it before it is Ready.
+money flow, needs a `scope_changed` refresh that lists it before it is Ready. `tickets_in_scope` names
+the epic's own child tickets, never the tickets its findings were handed to; if several epics' latest
+refreshes list one ticket, the gate without `--epic` requires all of them to be current.

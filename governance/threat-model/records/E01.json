@@ -16,7 +16,7 @@
         "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
         "role": "pennilogic-developer"
       },
-      "scope": "Engineering baseline delivered or in flight under PenniLogic/docs#2: the required native CI job and protected main on the eight public repositories, generated governance files from PenniLogic/infra, the local docker-compose bootstrap (infra#2), the six scaffolds (web#1, admin#1, ai-service#1, android#1, api#75, contracts#2), reusable workflows and the eight-repository conformance check (infra#24, infra#22), secret scanning and the SDK allowlist (infra#23), the migration runner and reversible migrations (api#55, api#20), the Android 16 baseline (android#57), the client state taxonomy (docs#1) and the test strategy (docs#22). Trust boundaries: the owner and several AI sessions acting through one GitHub account; GitHub-hosted runners with a read-only workflow token; developer machines running the local bootstrap; public repositories readable and commentable by anyone.",
+      "scope": "Engineering baseline delivered or in flight under PenniLogic/docs#2: the required native CI job and protected main on the eight public repositories, generated governance files from PenniLogic/infra, the local docker-compose bootstrap (infra#2), the six scaffolds (web#1, admin#1, ai-service#1, android#1, api#75, contracts#2), reusable workflows and the eight-repository conformance check (infra#24, infra#22), secret scanning and the SDK allowlist (infra#23), the migration runner and reversible migrations (api#55, api#20), the Android 16 baseline (android#57), the client state taxonomy (docs#1), the test strategy (docs#22), and the two children created on 2026-09-30 from findings E01-F03 and E01-F04 and reconciled into this refresh the same day: the untrusted-content rule for agent profiles and repository instructions (.github#4) and the owner-account and credential hardening baseline (infra#43). Trust boundaries: the owner and several AI sessions acting through one GitHub account; GitHub-hosted runners with a read-only workflow token; developer machines running the local bootstrap; public repositories readable and commentable by anyone.",
       "tickets_in_scope": [
         "PenniLogic/docs#1",
         "PenniLogic/infra#2",
@@ -32,7 +32,9 @@
         "PenniLogic/docs#22",
         "PenniLogic/infra#22",
         "PenniLogic/infra#23",
-        "PenniLogic/infra#24"
+        "PenniLogic/infra#24",
+        "PenniLogic/.github#4",
+        "PenniLogic/infra#43"
       ],
       "sources": [
         "architecture/02-security-architecture.md#1-threat-model-stride",

@@ -16,7 +16,7 @@
         "session": "copilot-session:2e62d111-f3f0-4115-bafa-e9f277ebb919",
         "role": "pennilogic-developer"
       },
-      "scope": "The architecture decision gates under PenniLogic/docs#29: money wire format, time and idempotency (docs#35), the category model (docs#36), ledger currency, foreign exchange and debt-balance derivation (docs#37), encryption scope, searchable fields and row-level security (docs#38), authentication, passkeys, provider, relying-party identifier and recovery (docs#39), the administrative boundary, database role and audit stream (docs#40), shared-data erasure and cross-user key access (docs#41), AI egress, runtime platform and Mode C custom endpoints (docs#42), the entitlement and quota model (docs#47), credit bureau integration (docs#52) and persisted embeddings (docs#56), plus the per-decision file layout with its generated index (docs#70, validator delivered by docs#141 and its follow-ups in docs#146). The threat surface is twofold: the decisions fix the controls every later epic inherits, so a decision that stays silent on a threat propagates that silence into implementation; and the decision process itself (acceptance by one account, supersession in place, a generated index) can be tampered with or repudiated. Each finding below states what a record must decide; none implements anything. The decision records themselves hold no personal data; the data flows listed are the ones the records decide the rules for.",
+      "scope": "The architecture decision gates under PenniLogic/docs#29: money wire format, time and idempotency (docs#35), the category model (docs#36), ledger currency, foreign exchange and debt-balance derivation (docs#37), encryption scope, searchable fields and row-level security (docs#38), authentication, passkeys, provider, relying-party identifier and recovery (docs#39), the administrative boundary, database role and audit stream (docs#40), shared-data erasure and cross-user key access (docs#41), AI egress, runtime platform and Mode C custom endpoints (docs#42), the entitlement and quota model (docs#47), credit bureau integration (docs#52) and persisted embeddings (docs#56), plus the per-decision file layout with its generated index (docs#70). The ADR layout validator that protects the records (delivered by docs#141, follow-ups in docs#146) is E31's tooling and is considered here as a control the decision process depends on, not as a child of this epic. The threat surface is twofold: the decisions fix the controls every later epic inherits, so a decision that stays silent on a threat propagates that silence into implementation; and the decision process itself (acceptance by one account, supersession in place, a generated index) can be tampered with or repudiated. Each finding below states what a record must decide; none implements anything. The decision records themselves hold no personal data; the data flows listed are the ones the records decide the rules for.",
       "tickets_in_scope": [
         "PenniLogic/docs#35",
         "PenniLogic/docs#36",
@@ -29,9 +29,7 @@
         "PenniLogic/docs#47",
         "PenniLogic/docs#52",
         "PenniLogic/docs#56",
-        "PenniLogic/docs#70",
-        "PenniLogic/docs#141",
-        "PenniLogic/docs#146"
+        "PenniLogic/docs#70"
       ],
       "sources": [
         "architecture/02-security-architecture.md (sections 1 to 8, ownership table)",

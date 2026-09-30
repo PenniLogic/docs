@@ -547,31 +547,45 @@ def format_summary(summary):
 
 def gate(summary, epic=None, ticket=None):
     """Apply the Definition of Ready gate; return (exit code, message)."""
-    evaluation = None
+    if ticket is not None and not PUBLIC_ISSUE.match(ticket):
+        return 1, f"Threat-model check failed: {ticket!r} is not a public issue identifier (PenniLogic/<repo>#N)"
+    if epic is not None:
+        judged = [e for e in summary["epics"] if e["epic"] == epic]
+        if not judged:
+            return 1, f"Threat-model check failed: unknown epic {epic}"
+    else:
+        judged = list(summary["epics"])
     if ticket is not None:
-        if not PUBLIC_ISSUE.match(ticket):
-            return 1, f"Threat-model check failed: {ticket!r} is not a public issue identifier (PenniLogic/<repo>#N)"
-        listing = [e for e in summary["epics"] if ticket in e["tickets_in_scope"]]
-        if epic is not None:
-            listing = [e for e in listing if e["epic"] == epic]
-        if not listing:
+        judged = [e for e in judged if ticket in e["tickets_in_scope"]]
+        if not judged:
             where = f"the latest refresh of {epic}" if epic else "any epic's latest refresh"
             return 1, (
                 f"Definition of Ready not met for {ticket}: it is not in tickets_in_scope of {where}. "
                 "Record or extend a refresh that considers this ticket (a scope_changed refresh if it "
                 "adds a data class, trust boundary, external party, AI capability, sharing path or money flow)."
             )
-        evaluation = listing[0]
-    elif epic is not None:
-        evaluation = next((e for e in summary["epics"] if e["epic"] == epic), None)
-        if evaluation is None:
-            return 1, f"Threat-model check failed: unknown epic {epic}"
-    if evaluation["status"] != "current":
+    # Every judged epic must be current. A ticket normally has one parent epic; when several epics'
+    # latest refreshes list it and no --epic narrows the question, all of them must be current, so the
+    # verdict never depends on the order the records are read in.
+    failing = [e for e in judged if e["status"] != "current"]
+    if failing and len(judged) > 1:
+        return 1, (
+            f"Definition of Ready not met for {ticket}: listed by {', '.join(e['epic'] for e in judged)}, "
+            "and every listing epic must be current; "
+            + "; ".join(f"{e['epic']} is {e['status']} ({'; '.join(e['reasons'])})" for e in failing)
+            + ". Pass --epic to judge the ticket's own epic."
+        )
+    if failing:
+        evaluation = failing[0]
         return 1, (
             f"Definition of Ready not met for {evaluation['epic']}: {evaluation['status']} "
             f"({'; '.join(evaluation['reasons'])}). Owner who must record the refresh: {evaluation['owner']}."
         )
-    scope = f" {ticket} is in scope of the latest ({evaluation['latest_trigger']}) refresh." if ticket else ""
+    scope = ""
+    if ticket is not None:
+        listed = ", ".join(f"{e['epic']} ({e['latest_trigger']})" for e in judged)
+        scope = f" {ticket} is in scope of the latest refresh of {listed}."
+    evaluation = judged[0]
     return 0, (
         f"{evaluation['epic']} current: refreshed {evaluation['latest_refresh']}, next refresh due "
         f"{evaluation['next_refresh_due']}, {evaluation['findings']} finding(s) all owned or closed.{scope}"
@@ -583,7 +597,8 @@ def main(argv=None):
     parser.add_argument("--epic", help="exit 1 unless this epic has a current refresh (the Definition of Ready gate)")
     parser.add_argument(
         "--ticket", metavar="PenniLogic/<repo>#N",
-        help="exit 1 unless this ticket is in tickets_in_scope of a current refresh (with --epic: of that epic)",
+        help="exit 1 unless this ticket is in tickets_in_scope of a current refresh; with --epic, of that "
+             "epic's; without it, every epic whose latest refresh lists the ticket must be current",
     )
     parser.add_argument(
         "--today",

@@ -1,8 +1,10 @@
 """Tests for the per-epic STRIDE threat-model refresh (T-QA-14, PenniLogic/docs#48).
 
 Each acceptance criterion and each test the ticket names maps to a test below, and every rule is
-proven to bite with a planted defect. The clock for tests over the published records is derived from
-the latest recorded refresh, so appending a refresh never turns the suite red. These tests prove the
+proven to bite with a planted defect. Tests over the published records derive their clocks and their
+expectations from the data (a record is judged the day after its own latest refresh), so appending a
+refresh that follows the rules does not turn the suite red; a refresh that breaks a rule should, and
+the message names the rule. Boundary tests build their own fixtures and dates. These tests prove the
 published model, records, schema, checker and documents; they implement no mitigation and claim
 nothing about T-GOV-04, which does not exist yet.
 """
@@ -31,9 +33,10 @@ RECORDS = {p.stem: module.load_json(p) for p in sorted((ROOT / module.RECORDS).g
 AGENT_POLICY = module.load_json(ROOT / ".github" / "agent-policy.json")
 BASE_EPIC = "E33"  # a published record whose only refresh is current with every finding handed off
 CONTROLLED_EPIC, CONTROLLED_CATEGORY = "E01", "spoofing"  # a published review whose disposition is controlled
-# The clock for tests over the published records is derived from the data, so recording a new refresh
-# never turns this suite red: the day after the latest refresh is within the future tolerance of every
-# refresh and inside the cadence of the newest one. Boundary tests compute their own dates.
+# Tests over the published records derive their clocks from the data: a record is judged the day after
+# its own latest refresh (inside every tolerance and its cadence), and the whole inventory the day after
+# the newest refresh anywhere. Appending a rule-following refresh to any record therefore changes no
+# expectation here; boundary tests build their own fixtures and dates.
 LATEST = max(
     datetime.date.fromisoformat(refresh["date"]) for rec in RECORDS.values() for refresh in rec["refreshes"]
 )
@@ -47,8 +50,33 @@ def record(epic=BASE_EPIC):
     return copy.deepcopy(RECORDS[epic])
 
 
+def unrefreshed(epic):
+    """A record for the epic with no refresh, whatever the published record holds."""
+    rec = record(epic)
+    rec["refreshes"] = []
+    rec.pop("note", None)
+    if rec["issue"] is None:
+        rec["note"] = "Synthetic unrefreshed record for a test; the published record explains the missing issue."
+    return rec
+
+
 def latest(rec):
     return rec["refreshes"][-1]
+
+
+def clock(rec):
+    """The day after the record's latest refresh, or the inventory clock when it has none."""
+    if not rec["refreshes"]:
+        return TODAY
+    return datetime.date.fromisoformat(latest(rec)["date"]) + datetime.timedelta(days=1)
+
+
+def align(rec, to_date):
+    """Shift every refresh of rec by the same number of days so its latest refresh falls on to_date."""
+    delta = to_date - datetime.date.fromisoformat(latest(rec)["date"])
+    for refresh in rec["refreshes"]:
+        refresh["date"] = (datetime.date.fromisoformat(refresh["date"]) + delta).isoformat()
+    return rec
 
 
 def review(refresh, category_id):
@@ -63,13 +91,15 @@ def validate_record(rec):
     module.validate_schema(rec, module.definition(SCHEMA, "record"))
 
 
-def problems(rec, epic=BASE_EPIC, model=MODEL, today=TODAY):
+def problems(rec, epic=BASE_EPIC, model=MODEL, today=None):
     validate_record(rec)
+    today = clock(rec) if today is None else today
     epic_issues = {r["issue"] for r in RECORDS.values() if r["issue"]}
     return module.check_record(rec, epic, model, today, epic_issues)
 
 
-def evaluate(rec, epic=BASE_EPIC, model=MODEL, today=TODAY):
+def evaluate(rec, epic=BASE_EPIC, model=MODEL, today=None):
+    today = clock(rec) if today is None else today
     return module.evaluate_epic(rec, epic, model, today, problems(rec, epic, model, today))
 
 
@@ -120,26 +150,45 @@ class PublishedDataTests(TempRootMixin, unittest.TestCase):
 
     def test_every_epic_entering_implementation_has_a_dated_refresh_naming_owner_and_categories(self):
         """AC: every epic entering implementation has a dated record naming its owner and categories."""
-        required = module.required_categories(MODEL, MODEL["model_version"])
-        self.assertEqual(REFRESHED, ("E01", "E07", "E25", "E26", "E31", "E33", "E34"))
+        self.assertTrue(set(REFRESHED) >= {"E01", "E07", "E25", "E26", "E31", "E33", "E34"}, REFRESHED)
         for epic in REFRESHED:
-            refresh = latest(RECORDS[epic])
-            datetime.date.fromisoformat(refresh["date"])
-            self.assertEqual(refresh["trigger"], "definition_of_ready", epic)
-            self.assertIn(refresh["performed_by"]["accountable"], MODEL["accountable_owners"], epic)
-            self.assertRegex(refresh["performed_by"]["session"], r"^copilot-session:", epic)
-            self.assertEqual({item["id"] for item in refresh["categories"]}, required, epic)
-            self.assertTrue(refresh["tickets_in_scope"], epic)
-            self.assertTrue(refresh["data_flows"], epic)
+            refreshes = RECORDS[epic]["refreshes"]
+            self.assertEqual(refreshes[0]["trigger"], "definition_of_ready", epic)
+            for refresh in refreshes:
+                datetime.date.fromisoformat(refresh["date"])
+                self.assertIn(refresh["performed_by"]["accountable"], MODEL["accountable_owners"], epic)
+                self.assertRegex(refresh["performed_by"]["session"], r"^copilot-session:", epic)
+                required = module.required_categories(MODEL, refresh["model_version"])
+                self.assertEqual({item["id"] for item in refresh["categories"]}, required, epic)
+                if refresh["trigger"] == "definition_of_ready":
+                    self.assertTrue(refresh["tickets_in_scope"], epic)
+                if review(refresh, "information_disclosure")["disposition"] != "not_applicable":
+                    self.assertTrue(refresh["data_flows"], epic)
 
     def test_unrefreshed_epics_carry_an_explicit_not_refreshed_record(self):
         for epic, rec in RECORDS.items():
             if epic not in REFRESHED:
                 self.assertEqual(rec["refreshes"], [], epic)
                 self.assertEqual(rec["owner"]["accountable"], "basiltt", epic)
-        self.assertIsNone(RECORDS["E31"]["issue"])
-        self.assertIn("No public epic issue", RECORDS["E31"]["note"])
-        self.assertIn("recorded late", RECORDS["E31"]["note"])
+        if RECORDS["E31"]["issue"] is None:
+            self.assertIn("No public epic issue", RECORDS["E31"]["note"])
+            self.assertIn("recorded late", RECORDS["E31"]["note"])
+
+    def test_tickets_in_scope_are_the_epics_own_children_not_hand_off_targets(self):
+        """Q2: a finding's owner ticket that belongs to another epic is not pulled into this epic's scope."""
+        listing = {}
+        for epic in REFRESHED:
+            for ticket in latest(RECORDS[epic])["tickets_in_scope"]:
+                listing.setdefault(ticket, set()).add(epic)
+        for epic in REFRESHED:
+            refresh = latest(RECORDS[epic])
+            for item in refresh["findings"]:
+                owner = item["owner_ticket"]
+                if owner in refresh["tickets_in_scope"] and listing[owner] - {epic}:
+                    self.fail(f"{epic} lists hand-off target {owner}, a child of {sorted(listing[owner] - {epic})}")
+        self.assertNotIn("PenniLogic/docs#146", latest(RECORDS["E26"])["tickets_in_scope"])
+        self.assertIn("PenniLogic/docs#146", {f["owner_ticket"] for f in latest(RECORDS["E26"])["findings"]})
+        self.assertIn("PenniLogic/docs#146", latest(RECORDS["E31"])["tickets_in_scope"])
 
     def test_no_published_review_calls_a_planned_ticket_a_control(self):
         """controlled means a control exists today; a ticket that will build one is a finding."""
@@ -182,8 +231,12 @@ class PublishedDataTests(TempRootMixin, unittest.TestCase):
                     self.assertNotIn(item["owner_ticket"], {r["issue"] for r in RECORDS.values()})
                 else:
                     self.assertTrue(item["resolution"])
-        blocked = {e["epic"] for e in summary["epics"] if e["status"] == "blocked"}
-        self.assertEqual(blocked, {epic for epic, _ in reported})
+        # An epic with an open finding is blocked, or stale if its refresh has also aged; never current.
+        for evaluation in summary["epics"]:
+            if evaluation["epic"] in {epic for epic, _ in reported}:
+                self.assertIn(evaluation["status"], ("blocked", "stale"), evaluation["epic"])
+            elif evaluation["status"] == "blocked":
+                self.fail(f"{evaluation['epic']} is blocked without a reported unowned finding")
 
     def test_records_cover_exactly_the_epics_in_the_planning_inventory(self):
         self.assertEqual(set(module.inventory(ROOT)), set(RECORDS))
@@ -232,51 +285,92 @@ class PublishedDataTests(TempRootMixin, unittest.TestCase):
         self.assertIn("of 38 epics", out)
 
     def test_main_gate_mode_passes_a_current_epic_and_fails_the_others(self):
-        summary = module.run(ROOT, TODAY)
-        by_status = {}
-        for evaluation in summary["epics"]:
-            by_status.setdefault(evaluation["status"], evaluation["epic"])
-        code, out, _ = self.run_main(ROOT, ["--epic", by_status["current"], "--today", TODAY.isoformat()])
+        base = record()
+        root = self.temp_root({BASE_EPIC: base, "E05": unrefreshed("E05")})
+        today = clock(base).isoformat()
+        code, out, _ = self.run_main(root, ["--epic", BASE_EPIC, "--today", today])
         self.assertEqual(code, 0)
-        self.assertIn("current", out)
-        code, _, err = self.run_main(ROOT, ["--epic", by_status["not_refreshed"], "--today", TODAY.isoformat()])
+        self.assertIn(f"{BASE_EPIC} current", out)
+        code, _, err = self.run_main(root, ["--epic", "E05", "--today", today])
         self.assertEqual(code, 1)
         self.assertIn("not_refreshed", err)
         self.assertIn("basiltt", err)
-        code, _, err = self.run_main(ROOT, ["--epic", "E99", "--today", TODAY.isoformat()])
+        code, _, err = self.run_main(root, ["--epic", "E99", "--today", today])
         self.assertEqual(code, 1)
         self.assertIn("unknown epic", err)
 
     def test_ticket_gate_passes_only_a_ticket_listed_by_a_current_refresh(self):
         """P5: a ticket is Ready only when a current refresh of its epic considered it."""
-        listed = latest(RECORDS["E07"])["tickets_in_scope"]
-        self.assertIn("PenniLogic/api#82", listed, "the ticket created from E07-F05 is in E07's scope")
-        code, out, _ = self.run_main(ROOT, ["--ticket", "PenniLogic/api#82", "--today", TODAY.isoformat()])
-        self.assertEqual(code, 0)
-        self.assertIn("PenniLogic/api#82 is in scope of the latest (definition_of_ready) refresh", out)
-        code, out, _ = self.run_main(ROOT, ["--ticket", "PenniLogic/api#82", "--epic", "E07", "--today", TODAY.isoformat()])
-        self.assertEqual(code, 0)
-        code, _, err = self.run_main(ROOT, ["--ticket", "PenniLogic/api#82", "--epic", "E01", "--today", TODAY.isoformat()])
+        e07 = record("E07")
+        self.assertIn("PenniLogic/api#82", latest(e07)["tickets_in_scope"], "the ticket created from E07-F05 is in E07's scope")
+        self.assertNotIn("PenniLogic/api#82", latest(RECORDS["E01"])["tickets_in_scope"])
+        root = self.temp_root({"E07": e07, "E01": record("E01")})
+        today = max(clock(e07), clock(RECORDS["E01"])).isoformat()
+        code, out, _ = self.run_main(root, ["--ticket", "PenniLogic/api#82", "--today", today])
+        self.assertEqual(code, 0, out)
+        self.assertIn(f"PenniLogic/api#82 is in scope of the latest refresh of E07 ({latest(e07)['trigger']})", out)
+        code, out, _ = self.run_main(root, ["--ticket", "PenniLogic/api#82", "--epic", "E07", "--today", today])
+        self.assertEqual(code, 0, out)
+        code, _, err = self.run_main(root, ["--ticket", "PenniLogic/api#82", "--epic", "E01", "--today", today])
         self.assertEqual(code, 1)
         self.assertIn("not in tickets_in_scope of the latest refresh of E01", err)
-        code, _, err = self.run_main(ROOT, ["--ticket", "PenniLogic/api#1", "--today", TODAY.isoformat()])
+        code, _, err = self.run_main(root, ["--ticket", "PenniLogic/api#1", "--today", today])
         self.assertEqual(code, 1)
         self.assertIn("not in tickets_in_scope of any epic's latest refresh", err)
         self.assertIn("scope_changed", err)
-        code, _, err = self.run_main(ROOT, ["--ticket", "api#82", "--today", TODAY.isoformat()])
+        code, _, err = self.run_main(root, ["--ticket", "api#82", "--today", today])
         self.assertEqual(code, 1)
         self.assertIn("not a public issue identifier", err)
 
     def test_ticket_gate_fails_when_the_listing_refresh_is_stale(self):
-        code, _, err = self.run_main(ROOT, ["--ticket", "PenniLogic/api#82", "--today", PAST_CADENCE.isoformat()])
+        e07 = record("E07")
+        root = self.temp_root({"E07": e07})
+        stale_day = clock(e07) + datetime.timedelta(weeks=MODEL["cadence_weeks"])
+        code, _, err = self.run_main(root, ["--ticket", "PenniLogic/api#82", "--today", stale_day.isoformat()])
         self.assertEqual(code, 1)
         self.assertIn("stale", err)
+
+    def test_ticket_gate_requires_every_listing_epic_to_be_current_in_either_order(self):
+        """Q2/S11: a ticket listed by several epics is not admitted or denied by sort order."""
+        ticket = "PenniLogic/docs#146"
+
+        def root_with(stale_epic):
+            first, second = record("E26"), record("E31")
+            for rec in (first, second):
+                latest(rec)["tickets_in_scope"] = sorted(set(latest(rec)["tickets_in_scope"]) | {ticket})
+            for rec in (first, second):
+                if rec["epic"] == stale_epic:
+                    for refresh in rec["refreshes"]:
+                        refresh["date"] = (
+                            datetime.date.fromisoformat(refresh["date"]) - datetime.timedelta(weeks=MODEL["cadence_weeks"] + 1)
+                        ).isoformat()
+            today = max(clock(first), clock(second)).isoformat()
+            return self.temp_root({"E26": first, "E31": second}), today
+
+        for stale_epic, current_epic in (("E26", "E31"), ("E31", "E26")):
+            root, today = root_with(stale_epic)
+            code, _, err = self.run_main(root, ["--ticket", ticket, "--today", today])
+            self.assertEqual(code, 1, f"stale {stale_epic} must not be masked by current {current_epic}")
+            self.assertIn("listed by E26, E31", err)
+            self.assertIn(f"{stale_epic} is stale", err)
+            self.assertIn("every listing epic must be current", err)
+            self.assertIn("Pass --epic", err)
+            # Narrowing to the ticket's own epic judges that epic alone.
+            code, out, _ = self.run_main(root, ["--ticket", ticket, "--epic", current_epic, "--today", today])
+            self.assertEqual(code, 0, out)
+            code, _, err = self.run_main(root, ["--ticket", ticket, "--epic", stale_epic, "--today", today])
+            self.assertEqual(code, 1)
+            self.assertIn(f"{stale_epic}: stale", err)
+        root, today = root_with(stale_epic=None)
+        code, out, _ = self.run_main(root, ["--ticket", ticket, "--today", today])
+        self.assertEqual(code, 0, out)
+        self.assertIn("is in scope of the latest refresh of E26 (definition_of_ready), E31 (definition_of_ready)", out)
 
     def test_ticket_gate_names_an_invalid_record_rather_than_a_missing_ticket(self):
         broken = record("E07")
         latest(broken)["categories"][0]["analysis"] = "-"
         root = self.temp_root({"E07": broken})
-        code, _, err = self.run_main(root, ["--ticket", "PenniLogic/api#82", "--today", TODAY.isoformat()])
+        code, _, err = self.run_main(root, ["--ticket", "PenniLogic/api#82", "--today", clock(broken).isoformat()])
         self.assertEqual(code, 1)
         self.assertIn("E07: invalid", err)
         self.assertIn("analysis is shorter than 40", err)
@@ -453,6 +547,7 @@ class InvalidRefreshTests(unittest.TestCase):
         self.assertTrue(any("analysis is shorter than 40" in p for p in found), found)
         self.assertEqual(evaluate(rec)["status"], "invalid")
         rec = record()
+        latest(rec)["trigger"] = "definition_of_ready"
         latest(rec)["tickets_in_scope"] = []
         self.assertTrue(any("definition_of_ready refresh names no ticket in scope" in p for p in problems(rec)))
         latest(rec)["trigger"] = "cadence"
@@ -524,11 +619,11 @@ class InvalidRefreshTests(unittest.TestCase):
     def test_refreshes_must_be_chronological_and_the_latest_is_effective(self):
         rec = record()
         older = copy.deepcopy(latest(rec))
-        older["date"] = (LATEST - datetime.timedelta(weeks=1)).isoformat()
+        older["date"] = (datetime.date.fromisoformat(latest(rec)["date"]) - datetime.timedelta(weeks=1)).isoformat()
         rec["refreshes"].append(older)
         self.assertTrue(any("ascending date order" in p for p in problems(rec)))
         rec = record()
-        rec["refreshes"].insert(0, older)
+        rec["refreshes"].insert(len(rec["refreshes"]) - 1, older)
         self.assertEqual(evaluate(rec)["latest_refresh"], latest(record())["date"])
         self.assertEqual(evaluate(rec)["status"], "current")
 
@@ -607,13 +702,15 @@ class OwnerlessFindingTests(TempRootMixin, unittest.TestCase):
         self.assertIn("E33-F03", evaluation["reasons"][0])
 
     def test_gate_mode_rejects_an_epic_with_an_unowned_finding_and_names_the_owner(self):
-        root = self.temp_root({BASE_EPIC: self.open_finding(record())})
-        code, _, err = self.run_main(root, ["--epic", BASE_EPIC, "--today", TODAY.isoformat()])
+        rec = self.open_finding(record())
+        root = self.temp_root({BASE_EPIC: rec})
+        today = clock(rec).isoformat()
+        code, _, err = self.run_main(root, ["--epic", BASE_EPIC, "--today", today])
         self.assertEqual(code, 1)
         self.assertIn("blocked", err)
         self.assertIn("E33-F03", err)
         self.assertIn("basiltt", err)
-        code, out, _ = self.run_main(root, ["--today", TODAY.isoformat()])
+        code, out, _ = self.run_main(root, ["--today", today])
         self.assertEqual(code, 0, "an honest open finding is reported, not a data error")
         self.assertIn("unowned finding E33-F03 (E33) needs a ticket; owner basiltt", out)
 
@@ -685,11 +782,12 @@ class StalenessTests(TempRootMixin, unittest.TestCase):
         self.assertEqual(evaluation["next_refresh_due"], last_day.isoformat())
 
     def test_gate_mode_treats_a_stale_refresh_as_missing_with_the_clock_advanced(self):
-        root = self.temp_root({BASE_EPIC: record()})
+        rec = record()
+        root = self.temp_root({BASE_EPIC: rec})
         code, _, err = self.run_main(root, ["--epic", BASE_EPIC, "--today", PAST_CADENCE.isoformat()])
         self.assertEqual(code, 1)
         self.assertIn("stale", err)
-        code, out, _ = self.run_main(root, ["--epic", BASE_EPIC, "--today", TODAY.isoformat()])
+        code, out, _ = self.run_main(root, ["--epic", BASE_EPIC, "--today", clock(rec).isoformat()])
         self.assertEqual(code, 0, out)
 
     def test_stale_epic_still_lists_its_unowned_findings(self):
@@ -723,8 +821,9 @@ class StalenessTests(TempRootMixin, unittest.TestCase):
         })
         self.assertEqual(evaluate(rec, model=model)["status"], "current")
         # The whole-repository run agrees, once the template covers the new category.
-        root = self.temp_root({BASE_EPIC: record()}, model=model, template_suffix="\n### `new_category`\n")
-        summary = module.run(root, TODAY)
+        base = record()
+        root = self.temp_root({BASE_EPIC: base}, model=model, template_suffix="\n### `new_category`\n")
+        summary = module.run(root, clock(base))
         self.assertEqual(summary["counts"]["stale"], 1)
 
 
@@ -746,12 +845,14 @@ class InventoryTests(TempRootMixin, unittest.TestCase):
             module.run(root, TODAY)
 
     def test_schema_failure_in_one_record_is_reported_as_invalid_for_that_epic_only(self):
+        base = record()
         broken = record("E34")
         del broken["owner"]
         impossible = record("E26")
         latest(impossible)["date"] = "2026-02-30"
-        root = self.temp_root({BASE_EPIC: record(), "E34": broken, "E26": impossible})
-        summary = module.run(root, TODAY)
+        root = self.temp_root({BASE_EPIC: base, "E34": broken, "E26": impossible})
+        today = clock(base)
+        summary = module.run(root, today)
         statuses = {e["epic"]: e["status"] for e in summary["epics"]}
         self.assertEqual(statuses, {"E33": "current", "E34": "invalid", "E26": "invalid"})
         reasons = {e["epic"]: e["reasons"] for e in summary["epics"]}
@@ -759,9 +860,9 @@ class InventoryTests(TempRootMixin, unittest.TestCase):
         self.assertIn("not a calendar date", reasons["E26"][0])
         self.assertEqual(reasons["E33"], [])
         self.assertEqual({e["owner"] for e in summary["epics"]}, {"basiltt"})
-        code, _, _ = self.run_main(root, ["--today", TODAY.isoformat()])
+        code, _, _ = self.run_main(root, ["--today", today.isoformat()])
         self.assertEqual(code, 1, "invalid data fails the repository check")
-        code, _, _ = self.run_main(root, ["--epic", BASE_EPIC, "--today", TODAY.isoformat()])
+        code, _, _ = self.run_main(root, ["--epic", BASE_EPIC, "--today", today.isoformat()])
         self.assertEqual(code, 0, "the gate for a valid epic is not coupled to another epic's record")
 
     def test_inventory_reads_epics_from_the_preserved_board_and_source_files(self):
@@ -775,14 +876,15 @@ class ObservabilityTests(TempRootMixin, unittest.TestCase):
     """AC: counts of epics with a current, stale and no refresh without opening the board."""
 
     def test_summary_counts_and_lists_every_state(self):
-        stale = record("E34")
-        latest(stale)["date"] = (LATEST - datetime.timedelta(weeks=MODEL["cadence_weeks"] + 4)).isoformat()
-        blocked = record("E26")
+        base = record()
+        today = clock(base)
+        stale = align(record("E34"), today - datetime.timedelta(weeks=MODEL["cadence_weeks"] + 4))
+        blocked = align(record("E26"), today - datetime.timedelta(days=1))
         finding(latest(blocked), "E26-F01").update({"status": "open", "owner_ticket": None, "resolution": None})
         root = self.temp_root({
-            "E33": record(), "E34": stale, "E26": blocked, "E05": record("E05"),
+            "E33": base, "E34": stale, "E26": blocked, "E05": unrefreshed("E05"),
         })
-        summary = module.run(root, TODAY)
+        summary = module.run(root, today)
         self.assertEqual(summary["counts"], {"current": 1, "stale": 1, "blocked": 1, "not_refreshed": 1, "invalid": 0})
         self.assertEqual(summary["unowned_findings"], [{"epic": "E26", "finding": "E26-F01", "owner": "basiltt"}])
         text = module.format_summary(summary)

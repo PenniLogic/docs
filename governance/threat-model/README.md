@@ -62,6 +62,13 @@ an epic after its refresh, or one that introduces a new data class, trust bounda
 AI capability, sharing path or money flow, needs a `scope_changed` refresh that lists it. A stale
 refresh or an invalid record blocks Ready for every ticket in the epic.
 
+`tickets_in_scope` lists the epic's own child tickets (the ones whose native parent is the epic)
+that the refresh considered, not the tickets its findings were handed to: a hand-off target lives in
+its own epic's record. A ticket therefore normally appears in one epic's latest refresh. When several
+epics' latest refreshes list the same ticket and the gate is run without `--epic`, every listing epic
+must be `current`, so the verdict cannot depend on the order the records are read in; pass `--epic`
+to judge the ticket's own epic alone.
+
 The gate runs against the runner's clock. `--today` exists for tests and what-if runs only; a
 workflow that implements the gate must never forward a value a pull request controls into `--today`,
 because a caller-supplied clock can un-stale any record and moves the one-day future tolerance with
@@ -127,7 +134,7 @@ runner clock and use the exit codes (`--json` for the full inventory). Field sum
 | `refreshes[].model_version` | integer | The `categories.json` version reviewed; determines the required category set. |
 | `refreshes[].performed_by` | object | `accountable` (login), `session` (`copilot-session:<uuid>` or `github:<login>`), `role` (`pennilogic-*`). |
 | `refreshes[].scope` | string | What was in scope, including trust boundaries; at least 40 characters. |
-| `refreshes[].tickets_in_scope[]` | `PenniLogic/<repo>#N` | Child tickets considered; non-empty for a `definition_of_ready` refresh. The `--ticket` gate reads this list. |
+| `refreshes[].tickets_in_scope[]` | `PenniLogic/<repo>#N` | The epic's own child tickets considered (native parent is the epic); hand-off targets belong to their own epic's record. Non-empty for a `definition_of_ready` refresh. The `--ticket` gate reads this list. |
 | `refreshes[].sources[]` | string | Documents, decision records and issues read. |
 | `refreshes[].data_flows[]` | object | Personal-data inventory: `data_class`, `subjects[]` (enumerated), `purpose_ref`, `retention`, `erasure_path`, `children`, `processors[]`. Non-empty unless `information_disclosure` is `not_applicable`. |
 | `refreshes[].categories[]` | object | Exactly the required categories, each with `id`, `disposition` (`controlled`, `accepted`, `finding`, `not_applicable`), `analysis` (at least 40 characters), `evidence[]` (required for `controlled` and `accepted`; every item names a public ticket, `ADR-nnn`, a repository path or a `test_` name) and `findings[]` (required for `finding`; may cross-reference a finding whose primary category differs). |
@@ -139,7 +146,8 @@ runner clock and use the exit codes (`--json` for the full inventory). Field sum
 python scripts/check_threat_model.py                       validate the model, every record and these documents; print the summary
 python scripts/check_threat_model.py --epic E01            exit 0 only if E01 is current (the epic gate)
 python scripts/check_threat_model.py --ticket PenniLogic/api#82
-                                                           exit 0 only if a current refresh lists that ticket (the ticket gate)
+                                                           exit 0 only if a current refresh lists that ticket (the ticket gate);
+                                                           listed by several epics: all must be current, or add --epic
 python scripts/check_threat_model.py --today 2027-01-15 --json
                                                            what-if run against another clock; never a gate
 ```
