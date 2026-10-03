@@ -287,6 +287,18 @@ Source status/date remain the recorded decision metadata. The index derives effe
 | Superseded by | — |
 <!-- SLOT END ADR-023 -->
 
+<!-- SLOT START ADR-024 -->
+### ADR-024
+| Field | Value |
+|---|---|
+| Source | <a id="adr-024--credit-bureau-integration-declined-for-the-current-release"></a> [ADR-024.md](ADR-024.md) |
+| Status | ACCEPTED |
+| Ticket | T-ADR-BUREAU-11 |
+| Date | 2026-10-04 |
+| Supersedes | — |
+| Superseded by | — |
+<!-- SLOT END ADR-024 -->
+
 <!-- END GENERATED ACCEPTED INDEX -->
 
 Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recorded date and effective replacement state are generated from the records; allocation metadata is not rewritten when a decision lands.
@@ -383,6 +395,16 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Question the record must settle | Entitlement and quota model: plan and feature identity, request and token quota dimensions, per-plan model allowlist and unlisted-model refusal, BYOK quota treatment, event-sourced usage versus materialized counters, and the reset boundary and its time zone. **Supersedes** the conflicting sketches in `architecture/01-domain-model.md` §5 and `architecture/03-stack-and-monetization.md` §8 |
 | Blocks | Quota contract (`T-CON-03`), billing (`T-BIL-01`, `T-BIL-02`), AI gateway (`T-AI-01`) |
 <!-- SLOT END ADR-023 -->
+
+<!-- SLOT START ADR-024 -->
+### ADR-024
+| Field | Value |
+|---|---|
+| Ticket | `T-ADR-BUREAU-11` |
+| State | ACCEPTED |
+| Question the record must settle | Credit bureau integration or explicit current-release non-goal: data, consent, cost, erasure, sharing, advice and measurable reopening conditions |
+| Blocks | Nothing while declined; no implementation tickets |
+<!-- SLOT END ADR-024 -->
 
 <!-- END GENERATED PENDING GATE ADRS -->
 

@@ -63,6 +63,13 @@
       "state": "PENDING",
       "question": "Entitlement and quota model: plan and feature identity, request and token quota dimensions, per-plan model allowlist and unlisted-model refusal, BYOK quota treatment, event-sourced usage versus materialized counters, and the reset boundary and its time zone. **Supersedes** the conflicting sketches in `architecture/01-domain-model.md` \u00a75 and `architecture/03-stack-and-monetization.md` \u00a78",
       "blocks": "Quota contract (`T-CON-03`), billing (`T-BIL-01`, `T-BIL-02`), AI gateway (`T-AI-01`)"
+    },
+    {
+      "number": "ADR-024",
+      "ticket": "T-ADR-BUREAU-11",
+      "state": "PENDING",
+      "question": "Credit bureau integration or explicit current-release non-goal: data, consent, cost, erasure, sharing, advice and measurable reopening conditions",
+      "blocks": "Nothing while declined; no implementation tickets"
     }
   ]
 }

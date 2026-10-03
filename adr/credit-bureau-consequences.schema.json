@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/blob/main/adr/credit-bureau-consequences.schema.json",
+  "title": "ADR-024 current-release credit bureau non-goal consequences",
+  "description": "Decision metadata, not a score collection schema. Closed declined-only contract using the existing stdlib draft-07 subset in scripts/check_client_states.py. Reopening requires a new explicit decision and consequences version, not an ALLOWED value in this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "consequences_version", "artifact_id", "record", "ticket",
+    "source_issue", "schema", "decision_date", "effective_on", "scope", "release_scope",
+    "authority", "allowed", "data", "provider", "sharing", "advice", "delivery",
+    "reopening", "future_implementation"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "consequences_version": { "type": "string", "const": "1.0.0" },
+    "artifact_id": { "const": "adr-024-bureau-consequences" },
+    "record": { "const": "ADR-024" },
+    "ticket": { "const": "T-ADR-BUREAU-11" },
+    "source_issue": { "const": "https://github.com/PenniLogic/docs/issues/52" },
+    "schema": { "const": "adr/credit-bureau-consequences.schema.json" },
+    "decision_date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "effective_on": { "const": "PROTECTED_MERGE" },
+    "scope": { "const": "DECLINED" },
+    "release_scope": { "const": "CURRENT_RELEASE" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selection", "basis", "specific_owner_bureau_attestation"],
+      "properties": {
+        "selection": { "const": "COORDINATOR_SELECTED_DEFAULT" },
+        "basis": { "const": "DELEGATED_AUTONOMOUS_DELIVERY" },
+        "specific_owner_bureau_attestation": { "$ref": "#/definitions/false" }
+      }
+    },
+    "allowed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collection_channels", "endpoints", "schema_fields", "wire_fields",
+        "storage_objects", "sharing_categories", "score_narratives", "score_improvement_advice"
+      ],
+      "properties": {
+        "collection_channels": { "$ref": "#/definitions/empty_allowlist" },
+        "endpoints": { "$ref": "#/definitions/empty_allowlist" },
+        "schema_fields": { "$ref": "#/definitions/empty_allowlist" },
+        "wire_fields": { "$ref": "#/definitions/empty_allowlist" },
+        "storage_objects": { "$ref": "#/definitions/empty_allowlist" },
+        "sharing_categories": { "$ref": "#/definitions/empty_allowlist" },
+        "score_narratives": { "$ref": "#/definitions/empty_allowlist" },
+        "score_improvement_advice": { "$ref": "#/definitions/empty_allowlist" }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collect", "import", "fetch", "store", "cache", "derive",
+        "retention_status", "retention_period_days", "crypto_shredding"
+      ],
+      "properties": {
+        "collect": { "$ref": "#/definitions/prohibited" },
+        "import": { "$ref": "#/definitions/prohibited" },
+        "fetch": { "$ref": "#/definitions/prohibited" },
+        "store": { "$ref": "#/definitions/prohibited" },
+        "cache": { "$ref": "#/definitions/prohibited" },
+        "derive": { "$ref": "#/definitions/prohibited" },
+        "retention_status": { "$ref": "#/definitions/not_applicable" },
+        "retention_period_days": { "type": "null" },
+        "crypto_shredding": { "$ref": "#/definitions/not_applicable" }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name", "contract", "consent_basis", "controller_or_processor",
+        "refresh_cadence", "per_user_cost", "fetch_cost_metric", "unit_economics_check"
+      ],
+      "properties": {
+        "name": { "type": "null" },
+        "contract": { "$ref": "#/definitions/not_applicable" },
+        "consent_basis": { "$ref": "#/definitions/not_applicable" },
+        "controller_or_processor": { "$ref": "#/definitions/not_applicable" },
+        "refresh_cadence": { "$ref": "#/definitions/not_applicable" },
+        "per_user_cost": { "$ref": "#/definitions/not_applicable" },
+        "fetch_cost_metric": { "$ref": "#/definitions/not_applicable" },
+        "unit_economics_check": { "$ref": "#/definitions/not_applicable" }
+      }
+    },
+    "sharing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category_status", "default", "family_access", "consent_override_allowed"],
+      "properties": {
+        "category_status": { "const": "NOT_AVAILABLE" },
+        "default": { "const": "DENY" },
+        "family_access": { "const": "NONE" },
+        "consent_override_allowed": { "$ref": "#/definitions/false" }
+      }
+    },
+    "advice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score_movement_narrative", "score_improvement_claims",
+        "bureau_score_inference_from_debt_progress", "lending", "loan_brokering", "credit_referral"
+      ],
+      "properties": {
+        "score_movement_narrative": { "const": "NONE" },
+        "score_improvement_claims": { "$ref": "#/definitions/prohibited" },
+        "bureau_score_inference_from_debt_progress": { "$ref": "#/definitions/prohibited" },
+        "lending": { "$ref": "#/definitions/prohibited" },
+        "loan_brokering": { "$ref": "#/definitions/prohibited" },
+        "credit_referral": { "$ref": "#/definitions/prohibited" }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blocking_tickets", "implementation_tickets", "follow_up_creation",
+        "future_sprint_assignment_changed", "runtime_enforcement_claimed"
+      ],
+      "properties": {
+        "blocking_tickets": { "$ref": "#/definitions/empty_allowlist" },
+        "implementation_tickets": { "$ref": "#/definitions/empty_allowlist" },
+        "follow_up_creation": { "$ref": "#/definitions/not_applicable" },
+        "future_sprint_assignment_changed": { "$ref": "#/definitions/false" },
+        "runtime_enforcement_claimed": { "$ref": "#/definitions/false" }
+      }
+    },
+    "reopening": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_set_version", "automatic", "all_evidence_required",
+        "new_explicit_superseding_decision_required", "consequences_version_bump_required",
+        "evidence_status", "required_evidence"
+      ],
+      "properties": {
+        "gate_set_version": { "const": "bureau-reopening-v1" },
+        "automatic": { "$ref": "#/definitions/false" },
+        "all_evidence_required": { "$ref": "#/definitions/true" },
+        "new_explicit_superseding_decision_required": { "$ref": "#/definitions/true" },
+        "consequences_version_bump_required": { "$ref": "#/definitions/true" },
+        "evidence_status": { "const": "NOT_PERFORMED_WHILE_DECLINED" },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "acceptance"],
+            "properties": {
+              "id": {
+                "enum": [
+                  "REOPEN-NEED", "REOPEN-PROVIDER-LEGAL", "REOPEN-CONSENT-ROLE",
+                  "REOPEN-ECONOMICS", "REOPEN-SECURITY-ERASURE", "REOPEN-SHARING", "REOPEN-ADVICE"
+                ]
+              },
+              "acceptance": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "future_implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "created_only_after_new_merged_decision", "default", "activation_gate_id",
+        "reopening_alone_enables_nothing", "acceptance_status", "required_activation_checks"
+      ],
+      "properties": {
+        "created_only_after_new_merged_decision": { "$ref": "#/definitions/true" },
+        "default": { "const": "OFF" },
+        "activation_gate_id": { "const": "BUREAU-DEFAULT-OFF-ACCEPTANCE" },
+        "reopening_alone_enables_nothing": { "$ref": "#/definitions/true" },
+        "acceptance_status": { "const": "NOT_PERFORMED_WHILE_DECLINED" },
+        "required_activation_checks": {
+          "type": "array",
+          "const": [
+            "NEW_MERGED_DECISION_AND_VERSIONED_CONSEQUENCES",
+            "EXPLICIT_APPROVED_SPEND_CAP",
+            "SERVER_DEFAULT_OFF_AND_ENTITLEMENTS",
+            "DENIED_OR_WITHDRAWN_CONSENT_NO_FETCH",
+            "PERMITTED_SCHEMA_ONLY_AND_PROVIDER_FAILURE_DENIAL",
+            "RETENTION_ERASURE_AND_BACKUP_RESTORE",
+            "SHARING_DEFAULT_DENY_AND_REVOCATION",
+            "NO_SCORE_IMPROVEMENT_ADVICE_OR_CREDIT_REFERRAL",
+            "MEASURED_COST_WITHIN_APPROVED_ECONOMIC_LIMITS",
+            "INDEPENDENT_CORE_QA_AND_AFFECTED_SPECIALIST_REVIEW"
+          ]
+        }
+      }
+    }
+  },
+  "definitions": {
+    "empty_allowlist": { "type": "array", "maxItems": 0 },
+    "prohibited": { "type": "string", "const": "PROHIBITED" },
+    "not_applicable": { "type": "string", "const": "NOT_APPLICABLE" },
+    "false": { "type": "boolean", "const": false },
+    "true": { "type": "boolean", "const": true }
+  }
+}
