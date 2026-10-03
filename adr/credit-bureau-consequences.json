@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "consequences_version": "1.0.0",
+  "artifact_id": "adr-024-bureau-consequences",
+  "record": "ADR-024",
+  "ticket": "T-ADR-BUREAU-11",
+  "source_issue": "https://github.com/PenniLogic/docs/issues/52",
+  "schema": "adr/credit-bureau-consequences.schema.json",
+  "decision_date": "2026-10-04",
+  "effective_on": "PROTECTED_MERGE",
+  "scope": "DECLINED",
+  "release_scope": "CURRENT_RELEASE",
+  "authority": {
+    "selection": "COORDINATOR_SELECTED_DEFAULT",
+    "basis": "DELEGATED_AUTONOMOUS_DELIVERY",
+    "specific_owner_bureau_attestation": false
+  },
+  "allowed": {
+    "collection_channels": [],
+    "endpoints": [],
+    "schema_fields": [],
+    "wire_fields": [],
+    "storage_objects": [],
+    "sharing_categories": [],
+    "score_narratives": [],
+    "score_improvement_advice": []
+  },
+  "data": {
+    "collect": "PROHIBITED",
+    "import": "PROHIBITED",
+    "fetch": "PROHIBITED",
+    "store": "PROHIBITED",
+    "cache": "PROHIBITED",
+    "derive": "PROHIBITED",
+    "retention_status": "NOT_APPLICABLE",
+    "retention_period_days": null,
+    "crypto_shredding": "NOT_APPLICABLE"
+  },
+  "provider": {
+    "name": null,
+    "contract": "NOT_APPLICABLE",
+    "consent_basis": "NOT_APPLICABLE",
+    "controller_or_processor": "NOT_APPLICABLE",
+    "refresh_cadence": "NOT_APPLICABLE",
+    "per_user_cost": "NOT_APPLICABLE",
+    "fetch_cost_metric": "NOT_APPLICABLE",
+    "unit_economics_check": "NOT_APPLICABLE"
+  },
+  "sharing": {
+    "category_status": "NOT_AVAILABLE",
+    "default": "DENY",
+    "family_access": "NONE",
+    "consent_override_allowed": false
+  },
+  "advice": {
+    "score_movement_narrative": "NONE",
+    "score_improvement_claims": "PROHIBITED",
+    "bureau_score_inference_from_debt_progress": "PROHIBITED",
+    "lending": "PROHIBITED",
+    "loan_brokering": "PROHIBITED",
+    "credit_referral": "PROHIBITED"
+  },
+  "delivery": {
+    "blocking_tickets": [],
+    "implementation_tickets": [],
+    "follow_up_creation": "NOT_APPLICABLE",
+    "future_sprint_assignment_changed": false,
+    "runtime_enforcement_claimed": false
+  },
+  "reopening": {
+    "gate_set_version": "bureau-reopening-v1",
+    "automatic": false,
+    "all_evidence_required": true,
+    "new_explicit_superseding_decision_required": true,
+    "consequences_version_bump_required": true,
+    "evidence_status": "NOT_PERFORMED_WHILE_DECLINED",
+    "required_evidence": [
+      {
+        "id": "REOPEN-NEED",
+        "acceptance": "A reproducible comparison against debt-balance/payoff progress records the study protocol, sample, metrics and go/no-go thresholds set before measurement; results meet those thresholds without a score-improvement promise."
+      },
+      {
+        "id": "REOPEN-PROVIDER-LEGAL",
+        "acceptance": "Current qualified licensed legal review confirms the named provider's eligible access route and signed use/licensing terms, including display and downstream restrictions, without lending, brokering, credit referrals or mandatory marketing."
+      },
+      {
+        "id": "REOPEN-CONSENT-ROLE",
+        "acceptance": "Approved provider-specific purpose, lawful consent/withdrawal and transfer terms explicitly identify controller versus processor responsibilities, permitted processing, rights handling and each party's retention/erasure obligations."
+      },
+      {
+        "id": "REOPEN-ECONOMICS",
+        "acceptance": "An approved dated provider quote and reproducible integer-minor-unit/currency cost model include pull cadence, retries, failures, minimum commitments and all incremental costs; the current published margin model's approved go/no-go thresholds and spend caps are met without credit-referral revenue."
+      },
+      {
+        "id": "REOPEN-SECURITY-ERASURE",
+        "acceptance": "Security and Privacy review approve a minimal field/copy inventory, ADR-018 protection, sourced retention periods and ADR-021-compatible erasure/restore design covering primary data, client/server caches, logs, analytics, backups and provider obligations; no third-party erasure is assumed from first-party crypto-shredding."
+      },
+      {
+        "id": "REOPEN-SHARING",
+        "acceptance": "Privacy/abuse and contract review confirm licensed sharing rights, any explicitly admitted category and levels, default-deny grants, denial and revocation bounds and erasure tests; family membership never grants score access implicitly."
+      },
+      {
+        "id": "REOPEN-ADVICE",
+        "acceptance": "Compliance/advice-boundary review and synthetic negative cases approve any precisely bounded future display/copy; credit-score improvement advice, causal payoff-to-score promises, lending, loan brokering and credit referral remain prohibited."
+      }
+    ]
+  },
+  "future_implementation": {
+    "created_only_after_new_merged_decision": true,
+    "default": "OFF",
+    "activation_gate_id": "BUREAU-DEFAULT-OFF-ACCEPTANCE",
+    "reopening_alone_enables_nothing": true,
+    "acceptance_status": "NOT_PERFORMED_WHILE_DECLINED",
+    "required_activation_checks": [
+      "NEW_MERGED_DECISION_AND_VERSIONED_CONSEQUENCES",
+      "EXPLICIT_APPROVED_SPEND_CAP",
+      "SERVER_DEFAULT_OFF_AND_ENTITLEMENTS",
+      "DENIED_OR_WITHDRAWN_CONSENT_NO_FETCH",
+      "PERMITTED_SCHEMA_ONLY_AND_PROVIDER_FAILURE_DENIAL",
+      "RETENTION_ERASURE_AND_BACKUP_RESTORE",
+      "SHARING_DEFAULT_DENY_AND_REVOCATION",
+      "NO_SCORE_IMPROVEMENT_ADVICE_OR_CREDIT_REFERRAL",
+      "MEASURED_COST_WITHIN_APPROVED_ECONOMIC_LIMITS",
+      "INDEPENDENT_CORE_QA_AND_AFFECTED_SPECIALIST_REVIEW"
+    ]
+  }
+}
