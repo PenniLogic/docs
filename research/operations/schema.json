@@ -1,0 +1,235 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Research operations metadata, not a participant store or approval",
+  "definitions": {
+    "study_id": {"type": "string", "pattern": "^T-[A-Z]{2,4}-[0-9]{2}$"},
+    "code": {"type": "string", "pattern": "^P-[a-f0-9]{32}$"},
+    "timestamp": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+    "optional_timestamp": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+    "origin": {"type": "string", "enum": ["synthetic_fixture", "restricted_live"]},
+    "preference": {"type": "string", "enum": ["debt", "expense", "equal", "neither", "unsure", "skipped"]},
+    "count": {"type": "integer", "minimum": 0, "maximum": 16},
+    "optional_count": {"type": ["integer", "null"], "minimum": 0, "maximum": 16},
+    "limitation_code": {
+      "type": "string",
+      "enum": ["small_purposive_sample", "unmeasured_financial_diversity", "coverage_unmet", "language_support_pending", "hypothetical_intent", "price_terms_incomplete", "order_and_attrition", "unrun"]
+    },
+    "limitation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["code", "status", "effect"],
+      "properties": {
+        "code": {"$ref": "#/definitions/limitation_code"},
+        "status": {"type": "string", "const": "known_before_study"},
+        "effect": {"type": "string", "enum": ["no_population_inference", "no_financial_stratum_claim", "no_coverage_claim", "no_unreviewed_translation", "not_observed_behavior", "not_a_checkout_offer", "order_check_required", "no_findings"]}
+      }
+    },
+    "research_plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "version", "study_id", "source_base", "source_status", "execution_state", "contact_allowed", "market", "target_sample", "minimum_analyzable", "field_window_days", "withdrawal_days_after_field_window", "synthesis_days", "method", "planned_orders", "exclusions", "recordings_allowed", "raw_notes_allowed", "retention_hours", "pricing_source", "dependency", "unmet_prerequisites", "limitations"],
+      "properties": {
+        "kind": {"type": "string", "const": "research_plan"},
+        "version": {"type": "string", "const": "1.0.0"},
+        "study_id": {"type": "string", "const": "T-RES-01"},
+        "source_base": {"type": "string", "const": "3e4afcb9575badf8669a50136da69fcc6f634500"},
+        "source_status": {"type": "string", "const": "source_only"},
+        "execution_state": {"type": "string", "const": "UNRUN"},
+        "contact_allowed": {"type": "boolean", "const": false},
+        "market": {"type": "string", "const": "India"},
+        "target_sample": {"type": "integer", "const": 16},
+        "minimum_analyzable": {"type": "integer", "const": 12},
+        "field_window_days": {"type": "integer", "const": 14},
+        "withdrawal_days_after_field_window": {"type": "integer", "const": 14},
+        "synthesis_days": {"type": "integer", "const": 7},
+        "method": {"type": "string", "const": "moderated_counterbalanced_concept_comparison"},
+        "planned_orders": {"type": "array", "minItems": 16, "maxItems": 16, "items": {"type": "string", "enum": ["DE", "ED"]}},
+        "exclusions": {
+          "type": "array", "uniqueItems": true, "minItems": 5,
+          "items": {"type": "string", "enum": ["eligibility_not_affirmed", "withdrawal", "incomplete_two_card_exposure", "material_protocol_failure", "safety_failure"]}
+        },
+        "recordings_allowed": {"type": "boolean", "const": false},
+        "raw_notes_allowed": {"type": "boolean", "const": false},
+        "retention_hours": {
+          "type": "object", "additionalProperties": false,
+          "required": ["identity", "consent", "coded_evidence", "anonymous_audit"],
+          "properties": {
+            "identity": {"type": "integer", "const": 168},
+            "consent": {"type": "integer", "const": 840},
+            "coded_evidence": {"type": "integer", "const": 840},
+            "anonymous_audit": {"type": "integer", "const": 2160}
+          }
+        },
+        "pricing_source": {"type": "string", "const": "product/01-product-spec.md#4.1-and-4.3"},
+        "dependency": {
+          "type": "object", "additionalProperties": false,
+          "required": ["issue", "accepted", "observed_on"],
+          "properties": {
+            "issue": {"type": "string", "const": "PenniLogic/docs#64"},
+            "accepted": {"type": "boolean", "const": false},
+            "observed_on": {"type": "string", "const": "2026-10-05"}
+          }
+        },
+        "unmet_prerequisites": {
+          "type": "array", "uniqueItems": true, "minItems": 12,
+          "items": {"type": "string", "enum": ["docs64_accepted", "docs65_accepted", "qualified_reviews", "actual_responsible_people", "lawful_independent_route", "accessible_consent", "private_withdrawal_route", "approved_retention", "controlled_storage_drill", "method_frozen_and_reviewed", "language_and_access_support", "genuine_eligible_participants"]}
+        },
+        "limitations": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/definitions/limitation"}}
+      }
+    },
+    "participant_code": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "data_origin", "study_id", "participant_code", "eligibility", "consent_version", "consent_state", "consented_at", "consent_expires_at", "withdrawal_until", "withdrawn_at"],
+      "properties": {
+        "kind": {"type": "string", "const": "participant_code"},
+        "data_origin": {"$ref": "#/definitions/origin"},
+        "study_id": {"$ref": "#/definitions/study_id"},
+        "participant_code": {"$ref": "#/definitions/code"},
+        "eligibility": {"type": "string", "enum": ["pending", "eligible", "ineligible"]},
+        "consent_version": {"type": "string", "const": "1.0.0"},
+        "consent_state": {"type": "string", "enum": ["pending", "granted", "withdrawn"]},
+        "consented_at": {"$ref": "#/definitions/optional_timestamp"},
+        "consent_expires_at": {"$ref": "#/definitions/optional_timestamp"},
+        "withdrawal_until": {"$ref": "#/definitions/optional_timestamp"},
+        "withdrawn_at": {"$ref": "#/definitions/optional_timestamp"}
+      }
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "data_origin", "study_id", "participant_code", "collected_at", "expires_at", "state", "order", "preference", "post_disclosure_preference", "price_choice", "sms_reaction", "reason_codes"],
+      "properties": {
+        "kind": {"type": "string", "const": "coded_reaction"},
+        "data_origin": {"$ref": "#/definitions/origin"},
+        "study_id": {"$ref": "#/definitions/study_id"},
+        "participant_code": {"$ref": "#/definitions/code"},
+        "collected_at": {"$ref": "#/definitions/timestamp"},
+        "expires_at": {"$ref": "#/definitions/timestamp"},
+        "state": {"type": "string", "enum": ["active", "withdrawn", "deleted"]},
+        "order": {"type": "string", "enum": ["DE", "ED"]},
+        "preference": {"$ref": "#/definitions/preference"},
+        "post_disclosure_preference": {"$ref": "#/definitions/preference"},
+        "price_choice": {"type": "string", "enum": ["free", "pro_monthly", "pro_annual", "pro_plus_monthly", "pro_plus_annual", "byok_monthly", "byok_annual", "neither", "unsure", "skipped"]},
+        "sms_reaction": {"type": "string", "enum": ["allow", "deny", "unsure", "skipped"]},
+        "reason_codes": {
+          "type": "array", "uniqueItems": true, "minItems": 1,
+          "items": {"type": "string", "enum": ["debt_focus", "spend_focus", "both", "neither", "unclear", "manual_entry", "sms_scope", "price_terms", "access_need", "not_coded"]}
+        }
+      }
+    },
+    "access_grant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["data_origin", "study_id", "role", "resource", "issued_at", "expires_at", "revoked"],
+      "properties": {
+        "data_origin": {"$ref": "#/definitions/origin"},
+        "study_id": {"$ref": "#/definitions/study_id"},
+        "role": {"type": "string", "enum": ["moderator", "analyst", "recruiter", "designer", "privacy_reviewer", "legal_reviewer", "auditor", "custodian"]},
+        "resource": {"type": "string", "const": "coded_evidence"},
+        "issued_at": {"$ref": "#/definitions/timestamp"},
+        "expires_at": {"$ref": "#/definitions/timestamp"},
+        "revoked": {"type": "boolean"}
+      }
+    },
+    "recruitment_check": {
+      "type": "object", "additionalProperties": false,
+      "required": ["data_origin", "study_kind", "reviewed_route", "private_opt_in", "private_channel", "private_context", "stop_available", "personal_network", "household_referral", "shared_contact", "paired_session", "household_disclosure_requested", "specialist_reviewed"],
+      "properties": {
+        "data_origin": {"type": "string", "const": "synthetic_fixture"},
+        "study_kind": {"type": "string", "enum": ["concept", "household_coercion"]},
+        "reviewed_route": {"type": "boolean"},
+        "private_opt_in": {"type": "boolean"},
+        "private_channel": {"type": "boolean"},
+        "private_context": {"type": "boolean"},
+        "stop_available": {"type": "boolean"},
+        "personal_network": {"type": "boolean"},
+        "household_referral": {"type": "boolean"},
+        "shared_contact": {"type": "boolean"},
+        "paired_session": {"type": "boolean"},
+        "household_disclosure_requested": {"type": "boolean"},
+        "specialist_reviewed": {"type": "boolean"}
+      }
+    },
+    "preference_counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["debt", "expense", "equal", "neither", "unsure", "skipped"],
+      "properties": {
+        "debt": {"$ref": "#/definitions/count"}, "expense": {"$ref": "#/definitions/count"},
+        "equal": {"$ref": "#/definitions/count"}, "neither": {"$ref": "#/definitions/count"},
+        "unsure": {"$ref": "#/definitions/count"}, "skipped": {"$ref": "#/definitions/count"}
+      }
+    },
+    "price_counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["paid", "free", "neither", "unsure", "skipped"],
+      "properties": {
+        "paid": {"$ref": "#/definitions/count"}, "free": {"$ref": "#/definitions/count"},
+        "neither": {"$ref": "#/definitions/count"}, "unsure": {"$ref": "#/definitions/count"},
+        "skipped": {"$ref": "#/definitions/count"}
+      }
+    },
+    "sms_counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["allow", "deny", "unsure", "skipped"],
+      "properties": {
+        "allow": {"$ref": "#/definitions/count"}, "deny": {"$ref": "#/definitions/count"},
+        "unsure": {"$ref": "#/definitions/count"}, "skipped": {"$ref": "#/definitions/count"}
+      }
+    },
+    "finding_disposition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "direction", "area", "decision", "reason_code", "issue_reference"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^F-[0-9]{3}$"},
+        "direction": {"type": "string", "enum": ["contradictory", "supporting", "mixed"]},
+        "area": {"type": "string", "enum": ["debt_wedge", "pricing", "sms", "inclusion", "order", "safety"]},
+        "decision": {"type": "string", "enum": ["pending", "ticketed", "declined", "stop", "retest"]},
+        "reason_code": {"type": "string", "enum": ["review_pending", "preference_evidence", "permission_concern", "price_rejection", "access_gap", "order_sensitive", "safety_failure", "insufficient_evidence", "outside_scope"]},
+        "issue_reference": {"type": ["string", "null"], "pattern": "^PenniLogic/docs#[1-9][0-9]*$"}
+      }
+    },
+    "aggregate_report": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "version", "study_id", "execution_state", "data_origin", "participant_count", "preference", "pricing", "sms", "withheld_tables", "order_effect_status", "coverage_status", "withdrawal_count", "evidence_age_days", "undispositioned_finding_count", "limitations", "finding_dispositions", "decision"],
+      "properties": {
+        "kind": {"type": "string", "const": "aggregate_report"},
+        "version": {"type": "string", "const": "1.0.0"},
+        "study_id": {"type": "string", "const": "T-RES-01"},
+        "execution_state": {"type": "string", "enum": ["UNRUN", "REPORTED"]},
+        "data_origin": {"type": "string", "enum": ["pending", "genuine_sessions", "synthetic_fixture"]},
+        "participant_count": {"$ref": "#/definitions/optional_count"},
+        "preference": {
+          "type": ["object", "null"], "additionalProperties": false,
+          "required": ["debt", "expense", "equal", "neither", "unsure", "skipped"],
+          "properties": {
+            "debt": {"$ref": "#/definitions/count"}, "expense": {"$ref": "#/definitions/count"},
+            "equal": {"$ref": "#/definitions/count"}, "neither": {"$ref": "#/definitions/count"},
+            "unsure": {"$ref": "#/definitions/count"}, "skipped": {"$ref": "#/definitions/count"}
+          }
+        },
+        "pricing": {
+          "type": ["object", "null"], "additionalProperties": false,
+          "required": ["paid", "free", "neither", "unsure", "skipped"],
+          "properties": {
+            "paid": {"$ref": "#/definitions/count"}, "free": {"$ref": "#/definitions/count"},
+            "neither": {"$ref": "#/definitions/count"}, "unsure": {"$ref": "#/definitions/count"},
+            "skipped": {"$ref": "#/definitions/count"}
+          }
+        },
+        "sms": {
+          "type": ["object", "null"], "additionalProperties": false,
+          "required": ["allow", "deny", "unsure", "skipped"],
+          "properties": {
+            "allow": {"$ref": "#/definitions/count"}, "deny": {"$ref": "#/definitions/count"},
+            "unsure": {"$ref": "#/definitions/count"}, "skipped": {"$ref": "#/definitions/count"}
+          }
+        },
+        "withheld_tables": {"type": "array", "uniqueItems": true, "items": {"type": "string", "enum": ["preference", "pricing", "sms"]}},
+        "order_effect_status": {"type": "string", "enum": ["pending", "not_assessable", "order_sensitive", "no_detected_order_sensitivity"]},
+        "coverage_status": {"type": "string", "enum": ["pending", "incomplete", "purposive_targets_met"]},
+        "withdrawal_count": {"$ref": "#/definitions/optional_count"},
+        "evidence_age_days": {"type": ["integer", "null"], "minimum": 0, "maximum": 35},
+        "undispositioned_finding_count": {"type": ["integer", "null"], "minimum": 0},
+        "limitations": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/limitation_code"}},
+        "finding_dispositions": {"type": "array", "items": {"$ref": "#/definitions/finding_disposition"}},
+        "decision": {"type": "string", "enum": ["pending", "revise", "retest", "stop", "no_change"]}
+      }
+    }
+  }
+}
