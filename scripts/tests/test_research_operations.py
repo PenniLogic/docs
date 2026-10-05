@@ -5,7 +5,12 @@ import copy
 import datetime
 import importlib.util
 import io
+import os
 from pathlib import Path
+import py_compile
+import subprocess
+import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -73,7 +78,15 @@ def reported_fixture():
         sms={"allow": 8, "deny": 8, "unsure": 0, "skipped": 0},
         order_effect_status="no_detected_order_sensitivity", coverage_status="incomplete",
         withdrawal_count=0, evidence_age_days=14, undispositioned_finding_count=0,
-        limitations=["small_purposive_sample", "hypothetical_intent"], decision="retest",
+        limitations=[
+            "small_purposive_sample", "unmeasured_financial_diversity", "hypothetical_intent",
+            "price_terms_incomplete", "coverage_unmet",
+        ],
+        finding_dispositions=[{
+            "id": "F-001", "direction": "mixed", "area": "debt_wedge", "decision": "retest",
+            "reason_code": "insufficient_evidence", "issue_reference": None,
+        }],
+        decision="retest",
     )
     return report
 
@@ -260,18 +273,18 @@ class AcceptedDesignProviderTests(unittest.TestCase):
                 ops.load_design_provider(plan)
 
     def test_each_missing_or_changed_provider_source_is_refused(self):
-        read_blob = ops.design.git_blob
-        for target in (ops.design.DATA, ops.design.SCHEMA, ops.design.DOCUMENT, "scripts/check_design_gates.py"):
+        read_bytes = Path.read_bytes
+        for target in ops.PROVIDER_FILES:
             for missing in (False, True):
-                def changed(commit, path):
-                    if path == target:
+                def changed(path):
+                    if path == ops.ROOT / target:
                         if missing:
-                            raise ops.design.Refused("evidence.blob_unavailable")
+                            raise OSError("Synthetic missing source")
                         return b"Synthetic altered provider; not accepted source.\n"
-                    return read_blob(commit, path)
+                    return read_bytes(path)
 
                 with self.subTest(path=target, missing=missing):
-                    with mock.patch.object(ops.design, "git_blob", side_effect=changed):
+                    with mock.patch.object(Path, "read_bytes", autospec=True, side_effect=changed):
                         with self.assertRaises(ops.Refused):
                             ops.load_design_provider(self.plan)
 
@@ -416,6 +429,373 @@ class AcceptedDesignProviderTests(unittest.TestCase):
             participant["consent_state"] = consent
             with self.subTest(consent=consent), self.assertRaises(ops.Refused):
                 ops.require_evidence_access(participant, evidence, grant, NOW)
+
+
+class ProviderBootstrapTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temporary = tempfile.TemporaryDirectory(prefix="pennilogic-research-bootstrap-")
+        cls.addClassCleanup(cls.temporary.cleanup)
+        directory = Path(cls.temporary.name)
+        cls.repo = directory / "source"
+        home = directory / "home"
+        home.mkdir()
+        cls.env = {
+            key: value for key, value in os.environ.items()
+            if key.upper() in {"PATH", "SYSTEMROOT", "WINDIR", "PATHEXT", "COMSPEC"}
+        }
+        cls.env.update(
+            HOME=str(home), USERPROFILE=str(home), TEMP=str(directory), TMP=str(directory),
+            GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, GIT_TERMINAL_PROMPT="0",
+            GIT_NO_LAZY_FETCH="1", GIT_NO_REPLACE_OBJECTS="1",
+        )
+        subprocess.run(
+            ["git", "-c", "init.templateDir=", "clone", "--quiet", "--no-local", "--no-checkout",
+             str(ops.ROOT), str(cls.repo)],
+            cwd=ops.ROOT, env=cls.env, capture_output=True, timeout=90, check=True,
+        )
+        paths = (*ops.PROVIDER_FILES, "research/operations/check.py", "research/operations/schema.json",
+                 "research/operations/concept-study.plan.json", "research/operations/concept-study.report.json")
+        cls.baseline = {path: (ops.ROOT / path).read_bytes().replace(b"\r\n", b"\n") for path in paths}
+        cls.check = cls.repo / "research" / "operations" / "check.py"
+        cls.marker = b'\nprint("SYNTHETIC_IMPORT_EXECUTED")\n'
+
+    def setUp(self):
+        self.restore_sources()
+
+    def restore_sources(self):
+        for path, raw in self.baseline.items():
+            destination = self.repo / path
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(raw)
+
+    def child(self, code=None):
+        arguments = [str(self.check)] if code is None else ["-c", code]
+        return subprocess.run(
+            [sys.executable, "-I", "-B", *arguments], cwd=self.repo, env=self.env,
+            capture_output=True, text=True, encoding="utf-8", timeout=30,
+        )
+
+    def assert_bootstrap_refused(self, result):
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("Research preparation refused: Accepted design provider", result.stderr)
+        self.assertNotIn("SYNTHETIC_IMPORT_EXECUTED", result.stdout + result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertNotIn("source valid", result.stdout)
+
+    def test_pristine_actual_git_bootstrap_control(self):
+        result = self.child()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("contact BLOCKED, study UNRUN, participant_count null", result.stdout)
+
+    def test_changed_provider_and_both_executable_helpers_are_never_executed(self):
+        for path in ops.PROVIDER_CODE:
+            self.restore_sources()
+            (self.repo / path).write_bytes(self.baseline[path] + self.marker)
+            with self.subTest(path=path):
+                self.assert_bootstrap_refused(self.child())
+
+    def test_changed_provider_cannot_supply_its_own_integrity_evidence(self):
+        path = "scripts/check_design_gates.py"
+        override = (
+            b"\ndef git_blob(commit, path):\n"
+            b"    return (ROOT / path).read_bytes().replace(b'\\r\\n', b'\\n')\n"
+        )
+        (self.repo / path).write_bytes(self.baseline[path] + override)
+        self.assert_bootstrap_refused(self.child())
+
+    def test_missing_source_in_the_fixed_import_closure_fails_before_execution(self):
+        for path in ops.PROVIDER_FILES:
+            self.restore_sources()
+            (self.repo / path).unlink()
+            with self.subTest(path=path):
+                self.assert_bootstrap_refused(self.child())
+
+    def test_unverified_bytecode_is_not_used_in_place_of_verified_source(self):
+        for path in ops.PROVIDER_CODE:
+            target = self.repo / path
+            target.write_bytes(self.baseline[path] + self.marker)
+            py_compile.compile(
+                str(target), doraise=True, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH,
+            )
+            target.write_bytes(self.baseline[path])
+        result = self.child()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("SYNTHETIC_IMPORT_EXECUTED", result.stdout + result.stderr)
+        self.assertIn("contact BLOCKED", result.stdout)
+
+    def test_executable_snapshot_is_not_reread_after_verification(self):
+        for path in ops.PROVIDER_CODE:
+            self.restore_sources()
+            code = f"""
+from pathlib import Path
+import importlib.util
+target = Path({str(self.repo / path)!r})
+read_bytes = Path.read_bytes
+changed = []
+def race(path):
+    raw = read_bytes(path)
+    if path == target and not changed:
+        path.write_bytes(raw + {self.marker!r})
+        changed.append(True)
+    return raw
+Path.read_bytes = race
+spec = importlib.util.spec_from_file_location("snapshot_consumer", {str(self.check)!r})
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+assert changed and {self.marker!r} in read_bytes(target)
+print("VERIFIED_EXECUTABLE_SNAPSHOT")
+"""
+            with self.subTest(path=path):
+                result = self.child(code)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("VERIFIED_EXECUTABLE_SNAPSHOT", result.stdout)
+                self.assertNotIn("SYNTHETIC_IMPORT_EXECUTED", result.stdout + result.stderr)
+
+    def test_policy_snapshot_is_not_reread_after_verification(self):
+        code = f"""
+from pathlib import Path
+import importlib.util
+spec = importlib.util.spec_from_file_location("snapshot_consumer", {str(self.check)!r})
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+plan = module.load_json(module.HERE / "concept-study.plan.json")
+target = Path({str(self.repo / "governance" / "design-gates.json")!r})
+read_bytes = Path.read_bytes
+changed = []
+def race(path):
+    raw = read_bytes(path)
+    if path == target and not changed:
+        path.write_bytes(b"INVALID SYNTHETIC POLICY")
+        changed.append(True)
+    return raw
+Path.read_bytes = race
+policy, schema = module.load_design_provider(plan)
+assert changed and policy["contract_version"] == "1.0.0"
+print("VERIFIED_POLICY_SNAPSHOT")
+"""
+        result = self.child(code)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("VERIFIED_POLICY_SNAPSHOT", result.stdout)
+
+
+class SourceTargetBindingTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.references = {}
+        env = {**os.environ, "GIT_NO_LAZY_FETCH": "1", "GIT_NO_REPLACE_OBJECTS": "1"}
+        commit = subprocess.run(
+            ["git", "--no-pager", "rev-parse", "--verify", "HEAD^{commit}"], cwd=ops.ROOT,
+            env=env, capture_output=True, check=True, timeout=30,
+        ).stdout.decode("ascii").strip()
+        for name, path in (
+            ("research_plan", "research/operations/concept-study.plan.json"),
+            ("research_synthesis", "research/operations/concept-study.report.json"),
+            ("evidence", "research/operations/README.md"),
+        ):
+            raw = subprocess.run(
+                ["git", "--no-pager", "cat-file", "blob", f"{commit}:{path}"], cwd=ops.ROOT,
+                capture_output=True, check=True, timeout=30,
+                env=env,
+            ).stdout
+            cls.references[name] = {"commit": commit, "path": path, "sha256": ops.design.digest(raw)}
+
+    def fixture(self, artifact, disposition):
+        fixture = SourceRightsFixture(artifact)
+        target = copy.deepcopy(self.references[artifact])
+        fixture.entry.update(
+            disposition=disposition, base_sha256=target["sha256"],
+            reason=copy.deepcopy(self.references["evidence"]),
+        )
+        fixture.entry["proposals"][0]["source"] = target
+        for assignment in fixture.assignments:
+            assignment["evidence"] = copy.deepcopy(self.references["evidence"])
+        return fixture
+
+    def evaluate(self, fixture):
+        return ops.research_disposition(
+            ops.load_json(HERE / "concept-study.plan.json"), [], fixture.entry,
+            ops.design.ZERO, fixture.assignments, NOW,
+        )
+
+    def test_all_dispositions_for_both_classes_bind_actual_immutable_git_targets(self):
+        for artifact in ("research_plan", "research_synthesis"):
+            for disposition in ("accept", "revise", "decline", "defer"):
+                fixture = self.fixture(artifact, disposition)
+                before = copy.deepcopy((fixture.entry, fixture.assignments))
+                with self.subTest(artifact=artifact, disposition=disposition):
+                    result = self.evaluate(fixture)
+                    self.assertEqual(result[-1]["disposition"], disposition)
+                    self.assertEqual(result[-1]["base_sha256"], self.references[artifact]["sha256"])
+                    self.assertEqual((fixture.entry, fixture.assignments), before)
+
+    def test_empty_ambiguous_or_unbound_targets_are_refused_for_every_disposition(self):
+        for artifact in ("research_plan", "research_synthesis"):
+            for disposition in ("accept", "revise", "decline", "defer"):
+                for change in ("empty", "multiple", "zero_base", "different_base"):
+                    fixture = self.fixture(artifact, disposition)
+                    if change == "empty":
+                        fixture.entry["proposals"] = []
+                    elif change == "multiple":
+                        fixture.entry["proposals"].append(copy.deepcopy(fixture.entry["proposals"][0]))
+                    else:
+                        fixture.entry["base_sha256"] = (
+                            "sha256:" + "0" * 64 if change == "zero_base"
+                            else self.references["evidence"]["sha256"]
+                        )
+                    with self.subTest(artifact=artifact, disposition=disposition, change=change):
+                        with self.assertRaises(ops.Refused):
+                            self.evaluate(fixture)
+
+    def test_matching_digest_strings_do_not_replace_existing_target_bytes(self):
+        for change in ("missing_commit", "missing_path", "wrong_digest"):
+            fixture = self.fixture("research_plan", "accept")
+            target = fixture.entry["proposals"][0]["source"]
+            if change == "missing_commit":
+                target["commit"] = "0" * 40
+            elif change == "missing_path":
+                target["path"] = "research/operations/SYNTHETIC-NOT-A-SOURCE.json"
+            else:
+                target["sha256"] = "sha256:" + "0" * 64
+            fixture.entry["base_sha256"] = target["sha256"]
+            with self.subTest(change=change), self.assertRaises(ops.Refused):
+                self.evaluate(fixture)
+
+
+class CanonicalRecordTests(unittest.TestCase):
+    def test_participant_and_study_ids_reject_control_aliases_without_normalizing(self):
+        ops.require_evidence_access(*fixtures(), NOW)
+        for field, indexes in (("participant_code", (0, 1)), ("study_id", (0, 1, 2))):
+            for control in ("\n", "\r", "\r\n", "\t", "\0", "\x85", "\u2028", "\u2029", " "):
+                for placement in ("before", "inside", "after"):
+                    records = fixtures()
+                    for index in indexes:
+                        value = records[index][field]
+                        records[index][field] = {
+                            "before": control + value, "inside": value[:2] + control + value[2:],
+                            "after": value + control,
+                        }[placement]
+                    saved = copy.deepcopy(records)
+                    with self.subTest(field=field, control=repr(control), placement=placement):
+                        with self.assertRaises(ops.Refused):
+                            ops.require_evidence_access(*records, NOW)
+                        self.assertEqual(records, saved)
+
+    def test_timestamp_schema_rejects_terminal_controls_before_calendar_parsing(self):
+        for definition in ("timestamp", "optional_timestamp"):
+            ops.validate(definition, stamp(NOW))
+            for control in ("\n", "\r", "\r\n", "\t", "\0", "\u2028", "\u2029", " "):
+                with self.subTest(definition=definition, control=repr(control)):
+                    with self.assertRaises(ops.Refused):
+                        ops.validate(definition, stamp(NOW) + control)
+        ops.validate("optional_timestamp", None)
+        with self.assertRaises(ops.Refused):
+            ops.timestamp("2000-02-30T00:00:00Z")
+
+    def test_finding_and_ticket_aliases_cannot_evade_the_duplicate_register(self):
+        report = reported_fixture()
+        report["decision"] = "revise"
+        finding = report["finding_dispositions"][0]
+        finding.update(decision="ticketed", reason_code="preference_evidence", issue_reference="PenniLogic/docs#53")
+        ops.validate_report(report, allow_synthetic=True)
+        for field in ("id", "issue_reference"):
+            for control in ("\n", "\r", "\r\n", "\t", "\0", "\u2028", "\u2029", " "):
+                altered = copy.deepcopy(report)
+                altered["finding_dispositions"][0][field] += control
+                with self.subTest(field=field, control=repr(control)), self.assertRaises(ops.Refused):
+                    ops.validate_report(altered, allow_synthetic=True)
+        report["finding_dispositions"].append(copy.deepcopy(finding))
+        with self.assertRaises(ops.Refused):
+            ops.validate_report(report, allow_synthetic=True)
+        report["finding_dispositions"][-1]["id"] += "\n"
+        with self.assertRaises(ops.Refused):
+            ops.validate_report(report, allow_synthetic=True)
+        report["finding_dispositions"][-1]["id"] = "F-002"
+        ops.validate_report(report, allow_synthetic=True)
+
+
+class ReportCompletenessTests(unittest.TestCase):
+    def test_terminal_reports_require_a_nonempty_primary_finding_register(self):
+        for decision in ("no_change", "revise", "retest", "stop"):
+            report = reported_fixture()
+            report.update(decision=decision, finding_dispositions=[], undispositioned_finding_count=0)
+            with self.subTest(decision=decision), self.assertRaises(ops.Refused):
+                ops.validate_report(report, allow_synthetic=True)
+            report["finding_dispositions"] = [{
+                "id": "F-001", "direction": "mixed", "area": "sms", "decision": "declined",
+                "reason_code": "permission_concern", "issue_reference": None,
+            }]
+            with self.subTest(decision=decision, primary="absent"), self.assertRaises(ops.Refused):
+                ops.validate_report(report, allow_synthetic=True)
+        ops.validate_report(ops.load_json(HERE / "concept-study.report.json"))
+
+    def test_terminal_reason_count_and_product_decision_must_agree(self):
+        for decision, disposition in (("no_change", "declined"), ("revise", "ticketed"),
+                                      ("retest", "retest"), ("stop", "stop")):
+            report = reported_fixture()
+            report["decision"] = decision
+            finding = report["finding_dispositions"][0]
+            finding.update(
+                decision=disposition, reason_code="preference_evidence",
+                issue_reference="PenniLogic/docs#53" if disposition == "ticketed" else None,
+            )
+            with self.subTest(decision=decision):
+                ops.validate_report(report, allow_synthetic=True)
+                for change in ("reason", "count", "pending", "incompatible"):
+                    altered = copy.deepcopy(report)
+                    item = altered["finding_dispositions"][0]
+                    if change == "reason":
+                        item["reason_code"] = "review_pending"
+                    elif change == "count":
+                        altered["undispositioned_finding_count"] = 1
+                    elif change == "pending":
+                        item.update(decision="pending", reason_code="review_pending", issue_reference=None)
+                        altered["undispositioned_finding_count"] = 1
+                    else:
+                        item.update(decision="stop" if disposition != "stop" else "retest", issue_reference=None)
+                    with self.subTest(change=change), self.assertRaises(ops.Refused):
+                        ops.validate_report(altered, allow_synthetic=True)
+
+    def test_reported_pending_is_not_a_terminal_approval(self):
+        report = reported_fixture()
+        report.update(decision="pending", finding_dispositions=[])
+        ops.validate_report(report, allow_synthetic=True)
+        report["finding_dispositions"] = [{
+            "id": "F-001", "direction": "mixed", "area": "debt_wedge", "decision": "pending",
+            "reason_code": "review_pending", "issue_reference": None,
+        }]
+        report["undispositioned_finding_count"] = 1
+        ops.validate_report(report, allow_synthetic=True)
+
+    def test_irreducible_method_and_incomplete_coverage_limits_cannot_be_removed(self):
+        report = reported_fixture()
+        ops.validate_report(report, allow_synthetic=True)
+        for code in report["limitations"]:
+            altered = copy.deepcopy(report)
+            altered["limitations"].remove(code)
+            with self.subTest(code=code), self.assertRaises(ops.Refused):
+                ops.validate_report(altered, allow_synthetic=True)
+        report["limitations"] = []
+        with self.assertRaises(ops.Refused):
+            ops.validate_report(report, allow_synthetic=True)
+
+    def test_order_limitations_follow_status_without_permanent_prospective_gaps(self):
+        for status in ("not_assessable", "order_sensitive"):
+            report = reported_fixture()
+            report["order_effect_status"] = status
+            with self.subTest(status=status):
+                with self.assertRaises(ops.Refused):
+                    ops.validate_report(report, allow_synthetic=True)
+                report["limitations"].append("order_and_attrition")
+                ops.validate_report(report, allow_synthetic=True)
+        report = reported_fixture()
+        report["coverage_status"] = "purposive_targets_met"
+        report["limitations"].remove("coverage_unmet")
+        self.assertNotIn("language_support_pending", report["limitations"])
+        ops.validate_report(report, allow_synthetic=True)
+        report["limitations"].remove("unmeasured_financial_diversity")
+        with self.assertRaises(ops.Refused):
+            ops.validate_report(report, allow_synthetic=True)
 
 
 class DataBoundaryTests(unittest.TestCase):
@@ -673,6 +1053,7 @@ class AggregateTests(unittest.TestCase):
 
     def test_findings_require_disposition_without_fabricating_tickets(self):
         report = reported_fixture()
+        report["decision"] = "pending"
         finding = {
             "id": "F-001", "direction": "contradictory", "area": "sms", "decision": "pending",
             "reason_code": "review_pending", "issue_reference": None,

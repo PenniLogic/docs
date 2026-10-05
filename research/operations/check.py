@@ -1,28 +1,114 @@
 """Offline #65 preparation and synthetic policy checks; no store, contact or approval."""
 
+import builtins
 import datetime
 import importlib.util
+import io
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
+from types import SimpleNamespace
 
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-spec = importlib.util.spec_from_file_location(
-    "research_schema_subset", ROOT / "scripts" / "check_threat_model.py"
+ACCEPTED_PROVIDER = "29741b431124f27751cb2bd4bd0f0dd4c94d6f3d"
+PROVIDER_CODE = (
+    "scripts/check_threat_model.py", "scripts/check_client_states.py", "scripts/check_design_gates.py",
 )
-schema_subset = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(schema_subset)
-spec = importlib.util.spec_from_file_location(
-    "research_design_provider", ROOT / "scripts" / "check_design_gates.py"
+PROVIDER_FILES = (
+    "governance/design-gates.json", "governance/design-gates.schema.json",
+    "governance/design-operations.md", *PROVIDER_CODE,
 )
-design = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(design)
 
 
 class Refused(ValueError):
     """A fixed rule message that never includes rejected participant content."""
+
+
+def verified_provider_sources():
+    """Read the fixed accepted import closure without executing repository Python."""
+    queries = [ACCEPTED_PROVIDER, *(f"{ACCEPTED_PROVIDER}:{path}" for path in PROVIDER_FILES)]
+    try:
+        result = subprocess.run(
+            ["git", "--no-pager", "cat-file", "--batch"], cwd=ROOT,
+            input=("\n".join(queries) + "\n").encode("ascii"), capture_output=True, timeout=30,
+            env={**os.environ, "GIT_NO_LAZY_FETCH": "1", "GIT_NO_REPLACE_OBJECTS": "1"},
+        )
+        if result.returncode:
+            raise Refused("Accepted design provider objects are unavailable.")
+        stream, sources = io.BytesIO(result.stdout), {}
+        for path in (None, *PROVIDER_FILES):
+            header = stream.readline().split()
+            kind = b"commit" if path is None else b"blob"
+            if len(header) != 3 or header[1] != kind or not header[2].isdigit():
+                raise Refused("Accepted design provider objects are unavailable.")
+            size = int(header[2])
+            committed = stream.read(size)
+            if len(committed) != size or stream.read(1) != b"\n":
+                raise Refused("Accepted design provider objects are incomplete.")
+            if path is not None:
+                installed = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+                if installed != committed:
+                    raise Refused("Accepted design provider changed; review before use.")
+                sources[path] = committed
+        if stream.read():
+            raise Refused("Accepted design provider objects are invalid.")
+        return sources
+    except (OSError, subprocess.TimeoutExpired):
+        raise Refused("Accepted design provider is unavailable.") from None
+
+
+class VerifiedLoader:
+    """Supply the provider's fixed file-based helper import from the same verified snapshot."""
+
+    def __init__(self, path, sources):
+        self.path, self.sources = path, sources
+
+    def create_module(self, spec):
+        return None
+
+    def exec_module(self, module):
+        def import_verified(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "importlib.util" and level == 0:
+                return SimpleNamespace(util=SimpleNamespace(
+                    spec_from_file_location=lambda name, path: verified_module_spec(name, path, self.sources),
+                    module_from_spec=importlib.util.module_from_spec,
+                ))
+            return builtins.__import__(name, globals, locals, fromlist, level)
+
+        module.__dict__["__builtins__"] = {**vars(builtins), "__import__": import_verified}
+        exec(compile(self.sources[self.path], str(ROOT / self.path), "exec"), module.__dict__)
+
+
+def verified_module_spec(name, path, sources):
+    try:
+        relative = Path(path).relative_to(ROOT).as_posix()
+    except ValueError:
+        raise Refused("Design provider import is outside the verified closure.") from None
+    if relative not in PROVIDER_CODE:
+        raise Refused("Design provider import is outside the verified closure.")
+    return importlib.util.spec_from_file_location(name, path, loader=VerifiedLoader(relative, sources))
+
+
+def load_verified_module(name, path, sources):
+    spec = verified_module_spec(name, ROOT / path, sources)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+try:
+    sources = verified_provider_sources()
+    schema_subset = load_verified_module("research_schema_subset", "scripts/check_threat_model.py", sources)
+    design = load_verified_module("research_design_provider", "scripts/check_design_gates.py", sources)
+except Refused as error:
+    if __name__ == "__main__":
+        print(f"Research preparation refused: {error}", file=sys.stderr)
+        sys.exit(1)
+    raise
 
 
 def load_json(path):
@@ -67,19 +153,15 @@ def load_design_provider(plan):
     """Bind the installed source interface to the accepted prerequisite, not live rights."""
     validate("research_plan", plan)
     dependency = plan["dependency"]
-    paths = (design.DATA, design.SCHEMA, design.DOCUMENT, "scripts/check_design_gates.py")
+    sources = verified_provider_sources()
     try:
-        for path in paths:
-            committed = design.git_blob(dependency["accepted_commit"], path)
-            installed = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
-            if installed != committed:
-                raise Refused("Accepted design provider changed; review and repin before use.")
-        policy = load_json(ROOT / design.DATA)
-        schema = load_json(ROOT / design.SCHEMA)
-        design.validate_policy(policy, schema, (ROOT / design.DOCUMENT).read_text(encoding="utf-8"))
-    except (OSError, design.Refused):
+        policy = json.loads(sources["governance/design-gates.json"])
+        schema = json.loads(sources["governance/design-gates.schema.json"])
+        design.validate_policy(policy, schema, sources["governance/design-operations.md"].decode("utf-8"))
+    except (ValueError, UnicodeError):
         raise Refused("Accepted design provider is unavailable or invalid.") from None
-    if policy["contract_version"] != dependency["contract_version"]:
+    if (dependency["accepted_commit"] != ACCEPTED_PROVIDER
+            or policy["contract_version"] != dependency["contract_version"]):
         raise Refused("Accepted design provider version mismatch.")
     return policy, schema
 
@@ -91,6 +173,14 @@ def research_disposition(plan, history, entry, expected_head, assignments, now):
         raise Refused("Only a Research source disposition is in scope.")
     try:
         checker = design.Checker(policy, schema, assignments, now, read_blob=design.git_blob)
+        proposals = entry.get("proposals")
+        if not isinstance(proposals, list) or len(proposals) != 1:
+            raise Refused("Research disposition requires one immutable target proposal.")
+        design.shape(proposals[0], schema, "proposal")
+        target = proposals[0]["source"]
+        checker.source(target)
+        if entry.get("base_sha256") != target["sha256"]:
+            raise Refused("Research disposition base must match the immutable target source.")
         return checker.append_decision(history, entry, expected_head)
     except design.Refused as error:
         raise Refused(f"Research source disposition refused: {error}") from None
@@ -225,6 +315,16 @@ def validate_report(report, *, allow_synthetic=False):
         raise Refused("Reported and unrun states conflict.")
     if report["order_effect_status"] == "pending" or report["coverage_status"] == "pending":
         raise Refused("Reported evidence must state order and coverage limitations.")
+    required_limitations = {
+        "small_purposive_sample", "unmeasured_financial_diversity",
+        "hypothetical_intent", "price_terms_incomplete",
+    }
+    if report["coverage_status"] == "incomplete":
+        required_limitations.add("coverage_unmet")
+    if report["order_effect_status"] in {"not_assessable", "order_sensitive"}:
+        required_limitations.add("order_and_attrition")
+    if not required_limitations <= set(report["limitations"]):
+        raise Refused("Reported evidence omits a required method or status limitation.")
     for table, kind in (("preference", "preference_counts"), ("pricing", "price_counts"), ("sms", "sms_counts")):
         counts = report[table]
         if counts is None:
@@ -254,8 +354,14 @@ def validate_report(report, *, allow_synthetic=False):
     pending = sum(finding["decision"] == "pending" for finding in findings)
     if report["undispositioned_finding_count"] != pending:
         raise Refused("Undispositioned finding count disagrees with the register.")
-    if report["decision"] == "no_change" and pending:
-        raise Refused("No-change cannot silently ignore pending findings.")
+    decision = report["decision"]
+    if decision != "pending":
+        if not any(finding["area"] == "debt_wedge" for finding in findings) or pending:
+            raise Refused("A terminal report needs a resolved primary finding and complete dispositions.")
+        required = {"revise": "ticketed", "retest": "retest", "stop": "stop", "no_change": "declined"}[decision]
+        dispositions = {finding["decision"] for finding in findings}
+        if required not in dispositions or (decision == "no_change" and dispositions != {"declined"}):
+            raise Refused("The terminal product decision disagrees with its finding dispositions.")
 
 
 def check_preparation(plan, report):

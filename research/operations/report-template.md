@@ -69,6 +69,13 @@ and within-debt diversity, unmet language/access/device/connectivity coverage,
 hypothetical payment and SMS reactions, unresolved published BYOK/annual terms,
 order effects/attrition, no usability or longitudinal-retention evidence and
 suppressed results. Separate planned limitations from problems actually observed.
+The structured report always retains `small_purposive_sample`,
+`unmeasured_financial_diversity` and `hypothetical_intent`. The unchanged
+protocol's published-price stimulus also retains `price_terms_incomplete`.
+Incomplete coverage requires `coverage_unmet`; unassessable or sensitive order
+requires `order_and_attrition`. A prospectively missing language/format support
+may later be resolved and reported honestly, but resolving it does not remove
+the method's irreducible limits or prove representativeness.
 
 ## Finding disposition and product decision
 
@@ -85,3 +92,11 @@ No-change requires addressing each contradiction, not just counting supportive
 answers. Record the number of still-undispositioned findings; unresolved critical
 findings block a validation claim. Merge/date the real finding and reference it
 from the product record through Root's reviewed integration, not from this draft.
+
+A terminal structured decision needs a nonempty register including the primary
+`debt_wedge` finding, reasons for every resolved item and no pending dispositions.
+`no_change` requires explicit reasoned declines rather than an empty register;
+`revise`, `retest` and `stop` must include the corresponding ticketed, retest or
+stop disposition. A reported register still awaiting disposition remains
+`pending`, with its unresolved count stated. The actual UNRUN template stays
+empty and is not populated to satisfy these guards.

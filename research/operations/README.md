@@ -44,10 +44,17 @@ remain unmet. #53's empty native blocker list does not waive its owner-published
 Consume [design-gates.json](../../governance/design-gates.json) and its
 [schema](../../governance/design-gates.schema.json), with
 [design operations section 4](../../governance/design-operations.md#4-t-uxr-06-and-research-disposition-interface).
-`check.py` compares the installed policy, schema, prose and checker to their
-local Git blobs at the accepted commit before using the provider. Missing
-objects or changed bytes fail; the check never fetches evidence or trusts a
-mutable provider branch.
+Before executing repository-local dependencies, `check.py` independently reads
+the fixed accepted Git objects and compares the installed policy, schema, prose,
+checker and both executable schema helpers (`check_client_states.py` and
+`check_threat_model.py`). It then executes the verified byte snapshot, including
+the provider's helper import, without re-reading mutable Python files or using
+bytecode caches. Later policy checks also parse the verified data snapshot.
+Missing objects or changed bytes fail; the check never fetches evidence or
+lets the provider supply its own integrity check. Only Git CRLF normalization
+is allowed. This bounded import-closure check trusts the consumer, Git, Python
+and its standard library; it is not a host sandbox or general Python
+authentication mechanism.
 
 The `research_disposition` function in `check.py` delegates to the accepted
 `Checker.append_decision` rather than inventing another rights vocabulary,
@@ -58,6 +65,11 @@ contexts, including consumed evidence authors, must be disclosed; this pack's
 author cannot act as its own independent Research decision maker or Privacy
 verifier. Assignments, scope, immutable source/reason references, expiry,
 independence and history must satisfy the provider.
+Each disposition identifies exactly one immutable target in `proposals`, whose
+actual Git bytes must match both its reference digest and `base_sha256`.
+Alternative interpretations belong in the referenced reason; different target
+sources need separate scoped decisions. This rule covers all four dispositions
+and both Research artifact classes without changing the generic provider.
 
 Root must supply the complete, current evidence/comment inventory, separately
 verified actual assignments and trusted clock; the provider cannot discover
@@ -133,8 +145,13 @@ The checker reuses the repository's strict JSON Schema subset. Its exceptions
 report fixed rule text, not rejected keys or values. No live participant file
 is accepted as a CLI argument; only the source plan/report and accepted local
 provider sources are read.
+IDs, issue references and timestamps must match their complete canonical
+formats, including the actual string end; control-character aliases are
+refused, never trimmed. Reported metadata retains the frozen method's minimum
+limitations and requires a reasoned primary finding before a terminal decision.
 The tests create marked synthetic metadata in memory, including deliberately
-invalid money/credential fields. They do not contact or simulate research
+invalid money/credential fields; provider bootstrap tests use fresh processes
+and owned temporary copies backed by actual local Git objects. They do not contact or simulate research
 participants, issue a grant, store a recording or erase a device.
 
 Passing proves source shape and the tested policy decisions only. The access
