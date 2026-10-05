@@ -78,6 +78,52 @@ def reported_fixture():
     return report
 
 
+class SourceRightsFixture:
+    """In-memory software records, not real assignments, review evidence or decisions."""
+
+    def __init__(self, artifact_class="research_plan"):
+        self.blobs = {}
+        author, actor, verifier = (
+            f"{number:08x}-0000-4000-8000-000000000000" for number in range(1, 4)
+        )
+        self.assignments = [
+            {
+                "context_id": context, "runtime": "synthetic-test-not-a-role-appointment",
+                "login": "basiltt", "roles": [role],
+                "artifact_ids": ["T-RES-01-plan", "T-RES-01-synthesis"],
+                "issued_at": stamp(NOW - datetime.timedelta(hours=1)),
+                "expires_at": stamp(NOW + datetime.timedelta(hours=6)),
+                "evidence": self.source("assignment_" + role),
+            }
+            for context, role in ((actor, "research"), (verifier, "privacy"))
+        ]
+        proposal = self.source("proposal")
+        self.entry = {
+            "id": "SYNTHETIC_DECISION", "artifact_id": (
+                "T-RES-01-plan" if artifact_class == "research_plan" else "T-RES-01-synthesis"
+            ),
+            "artifact_class": artifact_class, "kind": "research_disposition", "disposition": "accept",
+            "author_contexts": [author], "actor_context_id": actor, "actor_role": "research",
+            "verifier_context_id": verifier, "verifier_role": "privacy",
+            "base_sha256": proposal["sha256"], "target_version": "1.1.0",
+            "proposals": [{
+                "squad": "research", "branch": "T-RES-01__research__synthetic-source", "source": proposal,
+            }],
+            "result": None, "reason": self.source("reason"), "related_decisions": [],
+            "occurred_at": stamp(NOW - datetime.timedelta(minutes=30)),
+            "expires_at": stamp(NOW + datetime.timedelta(hours=4)),
+        }
+
+    def source(self, name):
+        key = "1" * 40, f"fixtures/synthetic_research_{name}.txt"
+        data = f"Synthetic software fixture only: {name}\n".encode("ascii")
+        self.blobs[key] = data
+        return {"commit": key[0], "path": key[1], "sha256": ops.design.digest(data)}
+
+    def read_blob(self, commit, path):
+        return self.blobs[(commit, path)]
+
+
 class PreparationTests(unittest.TestCase):
     def setUp(self):
         self.plan = ops.load_json(HERE / "concept-study.plan.json")
@@ -106,7 +152,7 @@ class PreparationTests(unittest.TestCase):
             with self.assertRaises(ops.Refused):
                 ops.check_preparation(altered, self.report)
         altered = copy.deepcopy(self.plan)
-        altered["dependency"]["accepted"] = True
+        altered["dependency"]["accepted"] = False
         with self.assertRaises(ops.Refused):
             ops.check_preparation(altered, self.report)
 
@@ -155,6 +201,221 @@ class PreparationTests(unittest.TestCase):
         ]
         self.assertTrue(all(heading in text for heading in headings))
         self.assertLess(text.index(headings[0]), text.index(headings[1]))
+
+
+class AcceptedDesignProviderTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.provider = ops.load_design_provider(ops.load_json(HERE / "concept-study.plan.json"))
+
+    def setUp(self):
+        self.plan = ops.load_json(HERE / "concept-study.plan.json")
+        self.report = ops.load_json(HERE / "concept-study.report.json")
+
+    def evaluate(self, fixture, history=None, expected_head=None, now=NOW):
+        history = [] if history is None else history
+        expected_head = ops.design.ZERO if expected_head is None else expected_head
+        with mock.patch.object(ops, "load_design_provider", return_value=copy.deepcopy(self.provider)):
+            with mock.patch.object(ops.design, "git_blob", side_effect=fixture.read_blob):
+                return ops.research_disposition(
+                    self.plan, history, fixture.entry, expected_head, fixture.assignments, now,
+                )
+
+    def test_accepted_provider_allocates_research_and_independent_privacy_only(self):
+        policy, schema = ops.load_design_provider(self.plan)
+        self.assertEqual(policy["contract_version"], self.plan["dependency"]["contract_version"])
+        self.assertTrue(self.plan["dependency"]["accepted"])
+        self.assertNotIn("docs64_accepted", self.plan["unmet_prerequisites"])
+        self.assertEqual(len(self.plan["unmet_prerequisites"]), 11)
+        artifacts = {item["id"]: item for item in policy["artifact_classes"]}
+        for name in ("research_plan", "research_synthesis"):
+            self.assertEqual(artifacts[name]["accountable"], "research")
+            self.assertEqual(artifacts[name]["responsible"], ["research"])
+            self.assertEqual(artifacts[name]["verifiers"], ["privacy"])
+        self.assertEqual(artifacts["research_access"]["accountable"], "research_store_owner")
+        self.assertTrue({"legal", "accessibility", "research_store_owner"} <=
+                        set(artifacts["research_plan"]["consulted"]))
+        self.assertEqual(len(policy["gates"]), 10)
+        self.assertIn("snapshot", schema["definitions"])
+        for flag in ("participant_contact_enabled", "figma_access_verified", "figma_publishing_enabled",
+                     "role_rights_approved"):
+            self.assertFalse(policy["workspace"][flag])
+        self.assertFalse(policy["access"]["external_sharing_enabled"])
+        self.assertFalse(policy["access"]["public_links_enabled"])
+
+    def test_obsolete_or_unaccepted_provider_pins_fail_closed(self):
+        for key, value in (
+            ("accepted", False), ("accepted_commit", "4485333ac1355695f020230e9df8ecb681a0daa7"),
+            ("accepted_tree", "0" * 40), ("contract_version", "2.0.0"),
+        ):
+            plan = copy.deepcopy(self.plan)
+            plan["dependency"][key] = value
+            with self.subTest(field=key), self.assertRaises(ops.Refused):
+                ops.load_design_provider(plan)
+        for key, value in (("version", "1.0.0"), ("protocol_version", "1.1.0"),
+                           ("source_base", "3e4afcb9575badf8669a50136da69fcc6f634500")):
+            plan = copy.deepcopy(self.plan)
+            plan[key] = value
+            with self.subTest(field=key), self.assertRaises(ops.Refused):
+                ops.load_design_provider(plan)
+
+    def test_each_missing_or_changed_provider_source_is_refused(self):
+        read_blob = ops.design.git_blob
+        for target in (ops.design.DATA, ops.design.SCHEMA, ops.design.DOCUMENT, "scripts/check_design_gates.py"):
+            for missing in (False, True):
+                def changed(commit, path):
+                    if path == target:
+                        if missing:
+                            raise ops.design.Refused("evidence.blob_unavailable")
+                        return b"Synthetic altered provider; not accepted source.\n"
+                    return read_blob(commit, path)
+
+                with self.subTest(path=target, missing=missing):
+                    with mock.patch.object(ops.design, "git_blob", side_effect=changed):
+                        with self.assertRaises(ops.Refused):
+                            ops.load_design_provider(self.plan)
+
+    def test_preparation_and_source_disposition_both_require_the_bound_provider(self):
+        fixture = SourceRightsFixture()
+        with mock.patch.object(ops, "load_design_provider", side_effect=ops.Refused("Provider unavailable.")):
+            with self.assertRaises(ops.Refused):
+                ops.check_preparation(self.plan, self.report)
+            with self.assertRaises(ops.Refused):
+                ops.research_disposition(
+                    self.plan, [], fixture.entry, ops.design.ZERO, fixture.assignments, NOW,
+                )
+
+    def test_four_dispositions_use_provider_history_without_activating_research(self):
+        before = copy.deepcopy((self.plan, self.report, self.provider))
+        for artifact in ("research_plan", "research_synthesis"):
+            for disposition in ("accept", "revise", "decline", "defer"):
+                fixture = SourceRightsFixture(artifact)
+                fixture.entry["disposition"] = disposition
+                original = copy.deepcopy((fixture.entry, fixture.assignments))
+                with self.subTest(artifact=artifact, disposition=disposition):
+                    result = self.evaluate(fixture)
+                    self.assertEqual(len(result), 1)
+                    self.assertEqual(result[0]["disposition"], disposition)
+                    self.assertEqual(ops.design.validate_history(result, self.provider[1]), result[0]["sha256"])
+                    self.assertIsNone(result[0]["result"])
+                    self.assertEqual((fixture.entry, fixture.assignments), original)
+        self.assertEqual((self.plan, self.report, self.provider), before)
+        self.assertFalse(self.plan["contact_allowed"])
+        self.assertEqual(self.plan["execution_state"], "UNRUN")
+        self.assertEqual(self.plan["source_status"], "source_only")
+        self.assertIsNone(self.report["participant_count"])
+
+    def test_nonresearch_kinds_and_classes_cannot_use_the_research_interface(self):
+        for kind in ("source_change", "freeze", "material_exception", "conflict"):
+            fixture = SourceRightsFixture()
+            fixture.entry["kind"] = kind
+            with self.subTest(kind=kind), self.assertRaises(ops.Refused):
+                self.evaluate(fixture)
+        for artifact in ("research_access", "components"):
+            fixture = SourceRightsFixture()
+            fixture.entry["artifact_class"] = artifact
+            with self.subTest(artifact=artifact), self.assertRaises(ops.Refused):
+                self.evaluate(fixture)
+
+    def test_authority_and_non_author_verification_cannot_be_bypassed(self):
+        for change in ("actor_role", "verifier_role", "same_context", "actor_is_author", "verifier_is_author"):
+            fixture = SourceRightsFixture()
+            entry = fixture.entry
+            if change == "actor_role":
+                entry["actor_role"] = "product_owner"
+            elif change == "verifier_role":
+                entry["verifier_role"] = "research"
+            elif change == "same_context":
+                entry["verifier_context_id"] = entry["actor_context_id"]
+            elif change == "actor_is_author":
+                entry["author_contexts"].append(entry["actor_context_id"])
+            else:
+                entry["author_contexts"].append(entry["verifier_context_id"])
+            with self.subTest(change=change), self.assertRaises(ops.Refused):
+                self.evaluate(fixture)
+
+    def test_actual_assignments_must_be_present_scoped_and_current(self):
+        for index in (0, 1):
+            for change in ("missing", "scope", "role", "expired", "not_yet_assigned", "outlived"):
+                fixture = SourceRightsFixture()
+                assignment = fixture.assignments[index]
+                if change == "missing":
+                    del fixture.assignments[index]
+                elif change == "scope":
+                    assignment["artifact_ids"] = ["unrelated_source"]
+                elif change == "role":
+                    assignment["roles"] = ["systems"]
+                elif change == "expired":
+                    assignment["expires_at"] = stamp(NOW)
+                elif change == "not_yet_assigned":
+                    assignment["issued_at"] = stamp(NOW)
+                else:
+                    assignment["expires_at"] = stamp(NOW + datetime.timedelta(hours=1))
+                with self.subTest(index=index, change=change), self.assertRaises(ops.Refused):
+                    self.evaluate(fixture)
+
+    def test_source_decision_expiry_and_trusted_clock_fail_closed(self):
+        for key, value in (
+            ("expires_at", stamp(NOW)),
+            ("expires_at", stamp(NOW + datetime.timedelta(hours=25))),
+            ("occurred_at", stamp(NOW + datetime.timedelta(minutes=1))),
+            ("occurred_at", stamp(NOW) + "\n"),
+        ):
+            fixture = SourceRightsFixture()
+            fixture.entry[key] = value
+            with self.subTest(field=key, value=value), self.assertRaises(ops.Refused):
+                self.evaluate(fixture)
+        for clock in (None, NOW.replace(tzinfo=None), NOW.astimezone(datetime.timezone(datetime.timedelta(hours=1)))):
+            with self.subTest(clock=clock), self.assertRaises(ops.Refused):
+                self.evaluate(SourceRightsFixture(), now=clock)
+
+    def test_pinned_reason_proposal_and_assignment_evidence_must_exist_and_match(self):
+        for field in ("reason", "proposal", "assignment"):
+            for change in ("missing", "digest", "unsafe_path"):
+                fixture = SourceRightsFixture()
+                source = {
+                    "reason": fixture.entry["reason"],
+                    "proposal": fixture.entry["proposals"][0]["source"],
+                    "assignment": fixture.assignments[0]["evidence"],
+                }[field]
+                if change == "missing":
+                    del fixture.blobs[(source["commit"], source["path"])]
+                elif change == "digest":
+                    source["sha256"] = "sha256:" + "0" * 64
+                else:
+                    source["path"] = "../SYNTHETIC_DO_NOT_ECHO.txt"
+                with self.subTest(field=field, change=change):
+                    with self.assertRaises(ops.Refused) as refused:
+                        self.evaluate(fixture)
+                    self.assertNotIn("SYNTHETIC_DO_NOT_ECHO", str(refused.exception))
+
+    def test_source_history_is_append_only_and_rejects_stale_or_altered_heads(self):
+        fixture = SourceRightsFixture()
+        history = self.evaluate(fixture)
+        saved = copy.deepcopy(history)
+        fixture.entry.update(id="SYNTHETIC_REVISION", disposition="revise")
+        result = self.evaluate(fixture, history, history[-1]["sha256"])
+        self.assertEqual(history, saved)
+        self.assertEqual(result[:-1], saved)
+        self.assertEqual(result[-1]["previous_sha256"], history[-1]["sha256"])
+        with self.assertRaises(ops.Refused):
+            self.evaluate(fixture, history, ops.design.ZERO)
+        history[0]["disposition"] = "decline"
+        with self.assertRaises(ops.Refused):
+            self.evaluate(fixture, history, saved[-1]["sha256"])
+
+    def test_source_acceptance_neither_grants_data_access_nor_supplies_consent(self):
+        self.evaluate(SourceRightsFixture())
+        for role in ("research", "privacy", "research_store_owner"):
+            participant, evidence, grant = fixtures()
+            grant["role"] = role
+            with self.subTest(role=role), self.assertRaises(ops.Refused):
+                ops.require_evidence_access(participant, evidence, grant, NOW)
+        for consent in ("pending", "withdrawn"):
+            participant, evidence, grant = fixtures()
+            participant["consent_state"] = consent
+            with self.subTest(consent=consent), self.assertRaises(ops.Refused):
+                ops.require_evidence_access(participant, evidence, grant, NOW)
 
 
 class DataBoundaryTests(unittest.TestCase):

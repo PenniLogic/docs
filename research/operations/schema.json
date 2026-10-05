@@ -25,12 +25,13 @@
     },
     "research_plan": {
       "type": "object", "additionalProperties": false,
-      "required": ["kind", "version", "study_id", "source_base", "source_status", "execution_state", "contact_allowed", "market", "target_sample", "minimum_analyzable", "field_window_days", "withdrawal_days_after_field_window", "synthesis_days", "method", "planned_orders", "exclusions", "recordings_allowed", "raw_notes_allowed", "retention_hours", "pricing_source", "dependency", "unmet_prerequisites", "limitations"],
+      "required": ["kind", "version", "protocol_version", "study_id", "source_base", "source_status", "execution_state", "contact_allowed", "market", "target_sample", "minimum_analyzable", "field_window_days", "withdrawal_days_after_field_window", "synthesis_days", "method", "planned_orders", "exclusions", "recordings_allowed", "raw_notes_allowed", "retention_hours", "pricing_source", "dependency", "unmet_prerequisites", "limitations"],
       "properties": {
         "kind": {"type": "string", "const": "research_plan"},
-        "version": {"type": "string", "const": "1.0.0"},
+        "version": {"type": "string", "const": "1.1.0"},
+        "protocol_version": {"type": "string", "const": "1.0.0"},
         "study_id": {"type": "string", "const": "T-RES-01"},
-        "source_base": {"type": "string", "const": "3e4afcb9575badf8669a50136da69fcc6f634500"},
+        "source_base": {"type": "string", "const": "29741b431124f27751cb2bd4bd0f0dd4c94d6f3d"},
         "source_status": {"type": "string", "const": "source_only"},
         "execution_state": {"type": "string", "const": "UNRUN"},
         "contact_allowed": {"type": "boolean", "const": false},
@@ -61,16 +62,19 @@
         "pricing_source": {"type": "string", "const": "product/01-product-spec.md#4.1-and-4.3"},
         "dependency": {
           "type": "object", "additionalProperties": false,
-          "required": ["issue", "accepted", "observed_on"],
+          "required": ["issue", "accepted", "accepted_commit", "accepted_tree", "contract_version", "observed_on"],
           "properties": {
             "issue": {"type": "string", "const": "PenniLogic/docs#64"},
-            "accepted": {"type": "boolean", "const": false},
+            "accepted": {"type": "boolean", "const": true},
+            "accepted_commit": {"type": "string", "const": "29741b431124f27751cb2bd4bd0f0dd4c94d6f3d"},
+            "accepted_tree": {"type": "string", "const": "83d8f5befb0a73e1e0172b54bfaf8a73b9e3df02"},
+            "contract_version": {"type": "string", "const": "1.0.0"},
             "observed_on": {"type": "string", "const": "2026-10-05"}
           }
         },
         "unmet_prerequisites": {
-          "type": "array", "uniqueItems": true, "minItems": 12,
-          "items": {"type": "string", "enum": ["docs64_accepted", "docs65_accepted", "qualified_reviews", "actual_responsible_people", "lawful_independent_route", "accessible_consent", "private_withdrawal_route", "approved_retention", "controlled_storage_drill", "method_frozen_and_reviewed", "language_and_access_support", "genuine_eligible_participants"]}
+          "type": "array", "uniqueItems": true, "minItems": 11,
+          "items": {"type": "string", "enum": ["docs65_accepted", "qualified_reviews", "actual_responsible_people", "lawful_independent_route", "accessible_consent", "private_withdrawal_route", "approved_retention", "controlled_storage_drill", "method_frozen_and_reviewed", "language_and_access_support", "genuine_eligible_participants"]}
         },
         "limitations": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/definitions/limitation"}}
       }

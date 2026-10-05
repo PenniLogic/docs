@@ -1,8 +1,9 @@
 {
   "kind": "research_plan",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "protocol_version": "1.0.0",
   "study_id": "T-RES-01",
-  "source_base": "3e4afcb9575badf8669a50136da69fcc6f634500",
+  "source_base": "29741b431124f27751cb2bd4bd0f0dd4c94d6f3d",
   "source_status": "source_only",
   "execution_state": "UNRUN",
   "contact_allowed": false,
@@ -19,9 +20,15 @@
   "raw_notes_allowed": false,
   "retention_hours": {"identity": 168, "consent": 840, "coded_evidence": 840, "anonymous_audit": 2160},
   "pricing_source": "product/01-product-spec.md#4.1-and-4.3",
-  "dependency": {"issue": "PenniLogic/docs#64", "accepted": false, "observed_on": "2026-10-05"},
+  "dependency": {
+    "issue": "PenniLogic/docs#64",
+    "accepted": true,
+    "accepted_commit": "29741b431124f27751cb2bd4bd0f0dd4c94d6f3d",
+    "accepted_tree": "83d8f5befb0a73e1e0172b54bfaf8a73b9e3df02",
+    "contract_version": "1.0.0",
+    "observed_on": "2026-10-05"
+  },
   "unmet_prerequisites": [
-    "docs64_accepted",
     "docs65_accepted",
     "qualified_reviews",
     "actual_responsible_people",

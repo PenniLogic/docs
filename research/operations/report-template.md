@@ -9,8 +9,8 @@ withdrawal processing and the required independent privacy/method review.
 
 | Field | Current value / requirement |
 | --- | --- |
-| Issue and protocol | #53 / T-RES-01; proposed 1.0.0; [protocol](debt-first-protocol.md) |
-| Accepted pack / protocol commit | Pending; #64 and #65 remain unaccepted |
+| Issue and protocol | #53 / T-RES-01; proposed protocol 1.0.0, source plan 1.1.0; [protocol](debt-first-protocol.md) |
+| Accepted pack / protocol commit | #64 source prerequisite accepted at `29741b431124f27751cb2bd4bd0f0dd4c94d6f3d`; #65 pack and study protocol acceptance still pending |
 | Study dates / report date | Pending, not the template preparation date |
 | Participant count | `null` (target 16 is a plan, not a result) |
 | Recruitment / exclusions | Pending; state independent route, eligibility, nonresponse, withdrawals and incomplete exposures safely |

@@ -14,6 +14,11 @@ spec = importlib.util.spec_from_file_location(
 )
 schema_subset = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(schema_subset)
+spec = importlib.util.spec_from_file_location(
+    "research_design_provider", ROOT / "scripts" / "check_design_gates.py"
+)
+design = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(design)
 
 
 class Refused(ValueError):
@@ -56,6 +61,39 @@ def validate(kind, value):
     except ValueError:
         # The shared validator's diagnostic can contain the rejected value.
         raise Refused("Research metadata violates its closed schema.") from None
+
+
+def load_design_provider(plan):
+    """Bind the installed source interface to the accepted prerequisite, not live rights."""
+    validate("research_plan", plan)
+    dependency = plan["dependency"]
+    paths = (design.DATA, design.SCHEMA, design.DOCUMENT, "scripts/check_design_gates.py")
+    try:
+        for path in paths:
+            committed = design.git_blob(dependency["accepted_commit"], path)
+            installed = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+            if installed != committed:
+                raise Refused("Accepted design provider changed; review and repin before use.")
+        policy = load_json(ROOT / design.DATA)
+        schema = load_json(ROOT / design.SCHEMA)
+        design.validate_policy(policy, schema, (ROOT / design.DOCUMENT).read_text(encoding="utf-8"))
+    except (OSError, design.Refused):
+        raise Refused("Accepted design provider is unavailable or invalid.") from None
+    if policy["contract_version"] != dependency["contract_version"]:
+        raise Refused("Accepted design provider version mismatch.")
+    return policy, schema
+
+
+def research_disposition(plan, history, entry, expected_head, assignments, now):
+    """Evaluate source decisions only; Root supplies trusted assignments and complete evidence."""
+    policy, schema = load_design_provider(plan)
+    if not isinstance(entry, dict) or entry.get("kind") != "research_disposition":
+        raise Refused("Only a Research source disposition is in scope.")
+    try:
+        checker = design.Checker(policy, schema, assignments, now, read_blob=design.git_blob)
+        return checker.append_decision(history, entry, expected_head)
+    except design.Refused as error:
+        raise Refused(f"Research source disposition refused: {error}") from None
 
 
 def timestamp(value):
@@ -235,6 +273,7 @@ def check_preparation(plan, report):
     validate_report(report)
     if report["execution_state"] != "UNRUN" or set(report["limitations"]) != expected:
         raise Refused("The committed preparation report must stay unrun with its limitations.")
+    load_design_provider(plan)
 
 
 def main():
