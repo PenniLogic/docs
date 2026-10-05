@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/PenniLogic/docs/blob/main/adr/ai-egress-consequences.schema.json",
-  "title": "ADR-022 source-only AI egress consequences 1.0.0",
+  "title": "ADR-022 source-only AI egress consequences 1.1.0",
   "description": "Closed decision contract, not a live destination registry or runtime attestation. Uses the repository's strict stdlib draft-07 subset. Runtime configuration is derived from this pinned artifact plus separately reviewed complete inventory and evidence, never by flipping source claims to enabled.",
   "type": "object",
   "additionalProperties": false,
@@ -10,11 +10,11 @@
     "schema", "decision_date", "effective_on", "evidence_scope", "authority", "policy_version",
     "runtime", "enablement", "wire", "proxy_authorization", "normalization", "address_policy",
     "pinning", "redirects", "transport", "registration", "enums", "state_denials", "kill_switch",
-    "privacy", "observability", "runtime_gates", "source_normalization_vectors", "delivery"
+    "privacy", "audit_evidence", "observability", "runtime_gates", "source_normalization_vectors", "delivery"
   ],
   "properties": {
     "schema_version": {"type": "integer", "const": 1},
-    "consequences_version": {"const": "1.0.0"},
+    "consequences_version": {"const": "1.1.0"},
     "artifact_id": {"const": "adr-022-ai-egress-consequences"},
     "record": {"const": "ADR-022"},
     "ticket": {"const": "T-ADR-AIEGRESS-08"},
@@ -24,7 +24,7 @@
     "effective_on": {"const": "PROTECTED_MERGE"},
     "evidence_scope": {"const": "SOURCE_ONLY_NOT_RUNTIME_ENFORCEMENT"},
     "authority": {"const": "OWNER_DELEGATED_TECHNICAL_SELECTION_NO_DEPLOYMENT_OR_SPEND"},
-    "policy_version": {"const": "2026-10-05.1"},
+    "policy_version": {"const": "2026-10-05.2"},
     "runtime": {
       "type": "object",
       "additionalProperties": false,
@@ -466,7 +466,91 @@
         "durable_pre_egress_audit_required": {"$ref": "#/definitions/true"},
         "emergency_off_blocked_by_audit_outage": {"$ref": "#/definitions/false"},
         "metrics": {"const": "BOUNDED_CLASS_MODE_REASON_ONLY_NO_HOST_ADDRESS_SUBJECT_OR_DESTINATION_LABELS"},
-        "restricted_audit": {"const": "ADR020_ACCESS_AND_RETENTION_NO_KEYS_PROMPTS_RAW_LOCATION_OR_RESPONSE_BODY"}
+        "restricted_audit": {"const": "ADR020_OPAQUE_STREAMS_SEPARATE_CLASSIFIED_ADDRESS_EVIDENCE"}
+      }
+    },
+    "audit_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority_record", "authority_sha256", "implementation_state", "owner",
+        "foundational_event", "address_evidence", "custody_owners", "retention_owners",
+        "runtime_evidence_owners", "consumer_obligation"
+      ],
+      "properties": {
+        "authority_record": {"const": "ADR-020"},
+        "authority_sha256": {"const": "1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"},
+        "implementation_state": {"const": "FUTURE_NOT_IMPLEMENTED"},
+        "owner": {"const": "T-SEC-03"},
+        "foundational_event": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "store", "existing_fields", "schema", "reference_field", "resource_type",
+            "reference_kind", "address_values", "prohibited_evidence_forms", "origin",
+            "writer_bindings", "customer_actions", "system_actions", "system_writer_scope",
+            "projection", "erasure"
+          ],
+          "properties": {
+            "store": {"const": "audit.event"},
+            "existing_fields": {"const": ["audit_event_id", "occurred_at", "actor_class", "actor_principal_id", "subject_id", "action", "resource", "outcome", "reason_code", "policy_version", "data_classes", "origin", "related_event_id"]},
+            "schema": {"const": "ADR020_COMPLETE_TYPED_SCHEMA_NO_NEW_PAYLOAD_OR_ADDRESS_COLUMN"},
+            "reference_field": {"const": "resource.id"},
+            "resource_type": {"const": "ai_egress_evidence"},
+            "reference_kind": {"const": "SERVER_RANDOM_UUID_V4_NOT_VALUE_DERIVED"},
+            "address_values": {"const": "FORBIDDEN_IN_TRAIL_CHAIN_TRANSPARENCY_AND_COPIES"},
+            "prohibited_evidence_forms": {"const": ["ADDRESS_HOST_URL_DNS_ANSWER", "ADDRESS_HASH_OR_HMAC", "ADDRESS_CIPHERTEXT", "EVIDENCE_PLAINTEXT_DIGEST", "PACKET_OR_PROVIDER_PAYLOAD"]},
+            "origin": {"const": "ADR020_OPAQUE_OPERATOR_ORIGIN_NOT_DESTINATION"},
+            "writer_bindings": {"const": {"consent.*": "pennilogic_app", "audit.*": "chain_verifier", "admin.*": "admin_api_owner", "redaction.*": "redaction_service", "broker.*": "T-PLT-05"}},
+            "customer_actions": {"const": "CONSENT_EGRESS_LIFECYCLE_WITH_REAL_OWNER_AUTHORITY"},
+            "system_actions": {"const": "AUDIT_VERIFICATION_EGRESS_WITH_SYSTEM_ACTOR_AND_VERIFIED_JOB"},
+            "system_writer_scope": {"const": "VERIFICATION_EVENT_ONLY_NO_DOMAIN_STATE_OR_CIPHERTEXT_WRITE"},
+            "projection": {"const": "ADR020_EXISTING_NAMESPACE_SCOPE_NO_EVIDENCE_DEREFERENCE"},
+            "erasure": {"const": "TRAIL_CHAIN_UNCHANGED_ONLY_ADR020_TRANSPARENCY_ERASURE_STEP"}
+          }
+        },
+        "address_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "store", "authority", "classification", "constrained_columns", "encrypted_values",
+            "payloads", "customer_key_scope", "system_key_scope", "system_key_originator_months",
+            "system_rows", "intake",
+            "maintenance_sealing", "write_order", "phase_order", "orphan_stage",
+            "value_read_access", "rls", "retention", "retention_profile_fields",
+            "missing_retention_profile", "expiry", "erasure", "restore", "missing_evidence"
+          ],
+          "properties": {
+            "store": {"const": "ai_egress_evidence"},
+            "authority": {"const": "NONAUTHORITATIVE_ERASABLE_EVIDENCE_NOT_FOURTH_AUDIT_STREAM"},
+            "classification": {"const": "PERSONAL_DESTINATION_NETWORK_METADATA_NOT_ANONYMOUS"},
+            "constrained_columns": {"const": ["evidence_id", "audit_event_id", "owner_id", "created_at", "expires_at", "retention_profile_version", "phase", "key_id"]},
+            "encrypted_values": {"const": ["REQUEST_JOB_DESTINATION_RESOLUTION_LINKS", "CANONICAL_HOST_AND_COMPLETE_ADDRESS_SET", "AUTHORIZED_PIN_AND_OBSERVED_SOCKET_PEER", "TLS_IDENTITY_AND_VERDICT", "NAMESPACE_RULE_PATH_AND_SYNTHETIC_SINK_OBSERVATIONS", "BYTE_STATUS_TIMING_AND_LAST_BYTE_CONFIRMED_CLOSE_EVIDENCE"]},
+            "payloads": {"const": "NO_KEYS_HEADERS_PROMPTS_RAW_LOCATION_RESPONSE_OR_PACKET_PAYLOAD"},
+            "customer_key_scope": {"const": "ADR018_OWNER_DEK_AND_AAD_NO_PLATFORM_REWRAP"},
+            "system_key_scope": {"const": "DEPLOYMENT_ONLY_SEPARATE_CUSTODIAN_WRAPPED_DEK_NO_CUSTOMER_LINKS"},
+            "system_key_originator_months": {"type": "integer", "const": 12},
+            "system_rows": {"const": "NO_CUSTOMER_OWNER_OR_LINKS_VERIFIED_DEPLOYMENT_JOB_ONLY"},
+            "intake": {"const": "AUTHENTICATED_TYPED_CORE_INTAKE_NO_GATEWAY_DATABASE_ROLE"},
+            "maintenance_sealing": {"const": "EVIDENCE_ONLY_VERIFIED_OWNER_KEYOPS_JOB_NO_USER_DELEGATION_OR_VERIFIER_UNWRAP"},
+            "write_order": {"const": "DURABLE_EVIDENCE_STAGE_THEN_EXISTING_WRITER_EVENT_COMMIT_BEFORE_ADMISSION"},
+            "phase_order": {"const": "COMMITTED_INTENT_BEFORE_NETWORK_OBSERVATIONS_AFTER_PHASE_NO_NEXT_PHASE_ON_RECORD_FAILURE"},
+            "orphan_stage": {"const": "NO_ADMISSION_RECEIPT_EXPIRE_AND_DELETE_NEVER_REUSE_REFERENCE"},
+            "value_read_access": {"const": "ADR020_RECORDED_CHAIN_CONFIRMED_REDACTION_PATH_NO_AUDIT_READER_DECRYPT"},
+            "rls": {"const": "FORCED_OWNER_OR_RECORDED_SUBJECT_SCOPE_NO_CROSS_OWNER_OR_ADMIN_CIPHERTEXT"},
+            "retention": {"const": "TCMP01_COUNSEL_APPROVED_INDEPENDENT_FINITE_EVIDENCE_AND_RESOLUTION_PROFILE"},
+            "retention_profile_fields": {"const": ["live_evidence_period", "post_revocation_evidence_period", "uncommitted_stage_period", "resolution_link_period", "backup_expiry_bound"]},
+            "missing_retention_profile": {"const": "DENY_NEW_EGRESS_KEEP_EMERGENCY_OFF_AVAILABLE"},
+            "expiry": {"const": "DELETE_EVIDENCE_AND_RESOLUTION_LINKS_AND_DERIVED_COPIES"},
+            "erasure": {"const": "ADR021_DELETE_EVIDENCE_AND_RESOLUTION_LINKS_SHRED_OWNER_DEK"},
+            "restore": {"const": "REPLAY_ERASURE_AND_EXPIRY_BEFORE_ACCESS_NO_RESOLUTION_OR_ACTIVE_STATE_RESURRECTION"},
+            "missing_evidence": {"const": "REPORT_EXPIRED_ERASED_OR_UNAVAILABLE_NEVER_RECONSTRUCT_OR_CLAIM_PROOF"}
+          }
+        },
+        "custody_owners": {"const": ["T-PLT-03", "T-PLT-02", "T-PLT-05"]},
+        "retention_owners": {"const": ["T-CMP-01", "T-CMP-04"]},
+        "runtime_evidence_owners": {"const": ["T-AI-01", "T-AI-02", "T-AI-03", "T-PLT-01"]},
+        "consumer_obligation": {"const": "VERSION_FORWARD_TYPED_EVENTS_AND_CRYPTO_ERASURE_INVENTORIES_NO_RUNTIME_COMPLETION_CLAIM"}
       }
     },
     "observability": {
@@ -520,7 +604,7 @@
         "prerequisites": {"const": ["PenniLogic/docs#141", "PenniLogic/docs#70", "PenniLogic/infra#3"]},
         "epics": {"const": ["PenniLogic/docs#29", "PenniLogic/docs#18", "PenniLogic/docs#19", "PenniLogic/docs#27"]},
         "consumers": {
-          "type": "array", "minItems": 30, "maxItems": 30, "uniqueItems": true,
+          "type": "array", "minItems": 31, "maxItems": 31, "uniqueItems": true,
           "items": {
             "type": "object", "additionalProperties": false, "required": ["identity", "issue"],
             "properties": {

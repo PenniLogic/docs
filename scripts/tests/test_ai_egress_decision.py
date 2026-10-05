@@ -28,7 +28,7 @@ CONSUMERS = {
     "T-AI-06", "T-AI-07", "T-CON-EGRESS-01", "T-SCA-CON-01", "T-QA-02", "T-CON-06",
     "T-CON-03", "T-CON-12", "T-CON-04", "T-FAM-01", "T-CON-09", "T-CMP-01", "T-CMP-04",
     "T-ADM-08", "T-PLT-03", "T-PLT-02", "T-PLT-05", "T-PLT-04", "T-AIP-04", "T-UXA-11",
-    "T-UXW-08", "T-QA-09", "T-ADR-ENT-09",
+    "T-UXW-08", "T-QA-09", "T-ADR-ENT-09", "T-SEC-03",
 }
 # Existing coordinator-created follow-ups postdate the unchanged offline issue inventory.
 LATER_CONSUMERS = {
@@ -37,8 +37,69 @@ LATER_CONSUMERS = {
 }
 
 
+def validate_audit_boundary(data, authority_bytes=None):
+    """Check the source mapping against accepted ADR-020, not a running audit service."""
+    boundary = data.get("audit_evidence")
+    if not isinstance(boundary, dict):
+        raise ValueError("ADR-020 requires an opaque audit link and separate address evidence")
+    if authority_bytes is None:
+        authority_bytes = (ROOT / "adr" / "ADR-020.md").read_bytes()
+    if hashlib.sha256(authority_bytes).hexdigest() != boundary["authority_sha256"]:
+        raise ValueError("Audit authority differs from the accepted ADR-020 binding")
+    authority = authority_bytes.decode("utf-8")
+    if "No stream holds a name, address, value," not in authority:
+        raise ValueError("The accepted opaque-stream invariant is missing")
+    event_schema = authority.split("1. **Audit event schema**", 1)[1].split(
+        "2. **Administrative contract**", 1
+    )[0]
+    event = boundary["foundational_event"]
+    if not set(event["existing_fields"]) <= set(re.findall(r"`([^`]+)`", event_schema)):
+        raise ValueError("Egress audit must use ADR-020's existing typed event fields")
+    writer_rule = authority.split("per writer:", 1)[1].split(
+        "There is no admitting policy", 1
+    )[0]
+    accepted_writers = {}
+    for group in writer_rule.split(";"):
+        namespaces, role = group.split("\u2192", 1)
+        writer = re.findall(r"`([^`]+)`", role)[0]
+        accepted_writers.update({
+            namespace: writer for namespace in re.findall(r"`([^`]+\.\*)`", namespaces)
+        })
+    if any(accepted_writers.get(namespace) != writer
+           for namespace, writer in event["writer_bindings"].items()):
+        raise ValueError("Egress event writers must preserve ADR-020's namespace bindings")
+    if event["system_writer_scope"] != "VERIFICATION_EVENT_ONLY_NO_DOMAIN_STATE_OR_CIPHERTEXT_WRITE":
+        raise ValueError("The audit verifier must not acquire domain-state or ciphertext writes")
+    if (event["reference_field"], event["resource_type"], event["reference_kind"]) != (
+        "resource.id", "ai_egress_evidence", "SERVER_RANDOM_UUID_V4_NOT_VALUE_DERIVED",
+    ):
+        raise ValueError("The immutable audit link must be opaque, not an address or digest")
+    if event["address_values"] != "FORBIDDEN_IN_TRAIL_CHAIN_TRANSPARENCY_AND_COPIES":
+        raise ValueError("Address evidence cannot enter an immutable audit stream")
+    evidence = boundary["address_evidence"]
+    if evidence["store"] != "ai_egress_evidence" or evidence["store"] == event["store"]:
+        raise ValueError("Address evidence needs a separate erasable non-stream store")
+    if evidence["erasure"] != "ADR021_DELETE_EVIDENCE_AND_RESOLUTION_LINKS_SHRED_OWNER_DEK":
+        raise ValueError("Erasure must unlink address evidence without rewriting audit")
+    if not {
+        "CANONICAL_HOST_AND_COMPLETE_ADDRESS_SET",
+        "AUTHORIZED_PIN_AND_OBSERVED_SOCKET_PEER",
+        "NAMESPACE_RULE_PATH_AND_SYNTHETIC_SINK_OBSERVATIONS",
+        "BYTE_STATUS_TIMING_AND_LAST_BYTE_CONFIRMED_CLOSE_EVIDENCE",
+    } <= set(evidence["encrypted_values"]):
+        raise ValueError("Separate evidence must retain the required network observations")
+    if boundary["owner"] != "T-SEC-03":
+        raise ValueError("The foundational audit consumer must own this mapping")
+    if "T-SEC-03" not in {item["identity"] for item in data["delivery"]["consumers"]}:
+        raise ValueError("The original audit consumer is missing")
+    for gate in data["runtime_gates"]:
+        if gate["id"] in {"T14", "T17"} and boundary["owner"] not in gate["owners"]:
+            raise ValueError("Audit projection and erasure gates need the audit consumer")
+
+
 def validate_data(data, schema):
     schema_check.validate_schema(data, schema)
+    validate_audit_boundary(data)
     gates = [item["id"] for item in data["runtime_gates"]]
     if len(set(gates)) != len(gates) or set(gates) != GATES:
         raise ValueError("Every runtime gate T1 through T20 must occur exactly once")
@@ -103,6 +164,15 @@ def validate_record(document, data_bytes, schema_bytes):
             raise ValueError(f"Missing original consumer in record: {item['identity']}")
     if "source-only" not in document or "H1" not in document or "H2" not in document:
         raise ValueError("Source-only scope and real implementation gaps must be explicit")
+    boundary = data["audit_evidence"]
+    event = boundary["foundational_event"]
+    for binding in (
+        f'`{event["store"]}.resource.type = {event["resource_type"]}`',
+        f'`{event["store"]}.{event["reference_field"]} = evidence_id`',
+        f'`{boundary["address_evidence"]["store"]}`',
+    ):
+        if binding not in document:
+            raise ValueError("The record must name the opaque audit and separate evidence mapping")
 
 
 def literal_host(host):
@@ -255,7 +325,8 @@ class ContradictoryEgressSourceTests(unittest.TestCase):
     def test_forged_versions_status_runtime_and_spend_are_rejected(self):
         for key, value in (
             ("schema_version", True), ("schema_version", 2), ("consequences_version", "0.9.0"),
-            ("consequences_version", "1.0.1"), ("record", "ADR-023"),
+            ("consequences_version", "1.0.0"), ("consequences_version", "1.0.1"),
+            ("consequences_version", "1.1.1"), ("record", "ADR-023"),
             ("effective_on", "LOCAL_TEST_PASS"), ("evidence_scope", "RUNTIME_ENFORCED"),
         ):
             with self.subTest(key=key, value=value):
@@ -403,6 +474,127 @@ class ContradictoryEgressSourceTests(unittest.TestCase):
             with self.subTest(change=changed[:80]):
                 with self.assertRaises(ValueError):
                     validate_record(changed, DATA.read_bytes(), SCHEMA.read_bytes())
+
+
+class AuditEvidenceSourceTests(unittest.TestCase):
+    def setUp(self):
+        self.data = adr.load_json_document(DATA)
+
+    def test_coupled_accepted_audit_boundary(self):
+        validate_audit_boundary(self.data)
+
+    def test_raw_address_digest_payload_and_stream_storage_regressions_fail(self):
+        for target, field, value in (
+            ("foundational_event", "reference_field", "canonical_pinned_address"),
+            ("foundational_event", "reference_kind", "SHA256_ADDRESS"),
+            ("foundational_event", "reference_kind", "HMAC_ADDRESS"),
+            ("foundational_event", "address_values", "RESTRICTED_AUDIT_ONLY"),
+            ("foundational_event", "existing_fields", ["payload"]),
+            ("address_evidence", "store", "audit.event"),
+            ("address_evidence", "store", "chain.record"),
+            ("address_evidence", "erasure", "PSEUDONYMIZE_OWNER_KEEP_ADDRESS"),
+        ):
+            with self.subTest(target=target, field=field, value=value):
+                changed = copy.deepcopy(self.data)
+                changed["audit_evidence"][target][field] = value
+                with self.assertRaises(ValueError):
+                    validate_audit_boundary(changed)
+
+    def test_accepted_authority_cannot_be_relaxed_to_keep_addresses(self):
+        raw = (ROOT / "adr" / "ADR-020.md").read_bytes()
+        weakened = raw.replace(
+            b"No stream holds a name, address, value,",
+            b"A restricted stream may hold a name, address, value,",
+        )
+        self.assertNotEqual(raw, weakened)
+        with self.assertRaisesRegex(ValueError, "accepted ADR-020 binding"):
+            validate_audit_boundary(self.data, weakened)
+
+    def test_namespace_writer_cannot_be_reassigned_or_invented(self):
+        for namespace, writer in (
+            ("audit.*", "pennilogic_app"),
+            ("consent.*", "audit_relay"),
+            ("egress.*", "pennilogic_app"),
+            ("redaction.*", "admin_api_owner"),
+        ):
+            with self.subTest(namespace=namespace, writer=writer):
+                changed = copy.deepcopy(self.data)
+                changed["audit_evidence"]["foundational_event"]["writer_bindings"][namespace] = writer
+                with self.assertRaisesRegex(ValueError, "namespace bindings"):
+                    validate_audit_boundary(changed)
+        changed = copy.deepcopy(self.data)
+        changed["audit_evidence"]["foundational_event"]["system_writer_scope"] = "UPDATE_FLAGS_AND_EVIDENCE"
+        with self.assertRaisesRegex(ValueError, "domain-state or ciphertext writes"):
+            validate_audit_boundary(changed)
+
+    def test_separating_evidence_cannot_drop_pin_packet_or_stop_observations(self):
+        evidence = self.data["audit_evidence"]["address_evidence"]
+        for value in (
+            "CANONICAL_HOST_AND_COMPLETE_ADDRESS_SET",
+            "AUTHORIZED_PIN_AND_OBSERVED_SOCKET_PEER",
+            "NAMESPACE_RULE_PATH_AND_SYNTHETIC_SINK_OBSERVATIONS",
+            "BYTE_STATUS_TIMING_AND_LAST_BYTE_CONFIRMED_CLOSE_EVIDENCE",
+        ):
+            with self.subTest(value=value):
+                changed = copy.deepcopy(self.data)
+                changed["audit_evidence"]["address_evidence"]["encrypted_values"] = [
+                    item for item in evidence["encrypted_values"] if item != value
+                ]
+                with self.assertRaisesRegex(ValueError, "required network observations"):
+                    validate_audit_boundary(changed)
+
+    def test_original_audit_consumer_and_coupled_gates_cannot_be_removed(self):
+        changed = copy.deepcopy(self.data)
+        changed["delivery"]["consumers"] = [
+            item for item in changed["delivery"]["consumers"] if item["identity"] != "T-SEC-03"
+        ]
+        with self.assertRaisesRegex(ValueError, "audit consumer is missing"):
+            validate_audit_boundary(changed)
+        for gate_id in ("T14", "T17"):
+            changed = copy.deepcopy(self.data)
+            gate = next(item for item in changed["runtime_gates"] if item["id"] == gate_id)
+            gate["owners"].remove("T-SEC-03")
+            with self.assertRaisesRegex(ValueError, "need the audit consumer"):
+                validate_audit_boundary(changed)
+
+    def test_value_access_retention_restore_and_runtime_claims_are_closed(self):
+        schema = adr.load_json_document(SCHEMA)
+        for field, value in (
+            ("classification", "NONPERSONAL_LOG_DATA"),
+            ("customer_key_scope", "PERMANENT_PLATFORM_AUDIT_KEY"),
+            ("system_key_scope", "SYSTEM_KEY_WITH_CUSTOMER_ADDRESS_COPIES"),
+            ("system_key_originator_months", 24),
+            ("system_key_originator_months", True),
+            ("system_rows", "NULL_OWNER_ADMITS_EVERYONE"),
+            ("maintenance_sealing", "VERIFIER_UNWRAPS_ACCOUNT_DEK"),
+            ("write_order", "ADMIT_BEFORE_AUDIT_COMMIT"),
+            ("phase_order", "OBSERVATIONS_CLAIMED_IN_PRE_OPERATION_INTENT"),
+            ("orphan_stage", "AUDIT_FAILURE_IS_SUCCESS"),
+            ("value_read_access", "ANY_AUDIT_READER"),
+            ("retention", "INHERIT_IMMUTABLE_CHAIN_LOCK"),
+            ("missing_retention_profile", "UNBOUNDED_RETENTION"),
+            ("erasure", "KEEP_ADDRESS_AND_PSEUDONYMIZE_SUBJECT"),
+            ("restore", "REBUILD_MAPPING_FROM_AUDIT"),
+        ):
+            with self.subTest(field=field, value=value):
+                changed = copy.deepcopy(self.data)
+                changed["audit_evidence"]["address_evidence"][field] = value
+                with self.assertRaises(ValueError):
+                    validate_data(changed, schema)
+        changed = copy.deepcopy(self.data)
+        changed["audit_evidence"]["implementation_state"] = "DEPLOYED"
+        with self.assertRaises(ValueError):
+            validate_data(changed, schema)
+
+    def test_record_cannot_point_the_evidence_reference_back_to_an_address(self):
+        document = RECORD.read_text(encoding="utf-8")
+        changed = document.replace(
+            "`audit.event.resource.id = evidence_id`",
+            "`audit.event.resource.id = canonical_pinned_address`",
+        )
+        self.assertNotEqual(document, changed)
+        with self.assertRaisesRegex(ValueError, "opaque audit and separate evidence mapping"):
+            validate_record(changed, DATA.read_bytes(), SCHEMA.read_bytes())
 
 
 class AddressPolicySourceTests(unittest.TestCase):

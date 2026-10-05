@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "consequences_version": "1.0.0",
+  "consequences_version": "1.1.0",
   "artifact_id": "adr-022-ai-egress-consequences",
   "record": "ADR-022",
   "ticket": "T-ADR-AIEGRESS-08",
@@ -10,7 +10,7 @@
   "effective_on": "PROTECTED_MERGE",
   "evidence_scope": "SOURCE_ONLY_NOT_RUNTIME_ENFORCEMENT",
   "authority": "OWNER_DELEGATED_TECHNICAL_SELECTION_NO_DEPLOYMENT_OR_SPEND",
-  "policy_version": "2026-10-05.1",
+  "policy_version": "2026-10-05.2",
   "runtime": {
     "id": "R4_LINUX_DOCKER_NFTABLES",
     "state": "FUTURE_NOT_DEPLOYED",
@@ -343,7 +343,86 @@
     "durable_pre_egress_audit_required": true,
     "emergency_off_blocked_by_audit_outage": false,
     "metrics": "BOUNDED_CLASS_MODE_REASON_ONLY_NO_HOST_ADDRESS_SUBJECT_OR_DESTINATION_LABELS",
-    "restricted_audit": "ADR020_ACCESS_AND_RETENTION_NO_KEYS_PROMPTS_RAW_LOCATION_OR_RESPONSE_BODY"
+    "restricted_audit": "ADR020_OPAQUE_STREAMS_SEPARATE_CLASSIFIED_ADDRESS_EVIDENCE"
+  },
+  "audit_evidence": {
+    "authority_record": "ADR-020",
+    "authority_sha256": "1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8",
+    "implementation_state": "FUTURE_NOT_IMPLEMENTED",
+    "owner": "T-SEC-03",
+    "foundational_event": {
+      "store": "audit.event",
+      "existing_fields": [
+        "audit_event_id", "occurred_at", "actor_class", "actor_principal_id",
+        "subject_id", "action", "resource", "outcome", "reason_code",
+        "policy_version", "data_classes", "origin", "related_event_id"
+      ],
+      "schema": "ADR020_COMPLETE_TYPED_SCHEMA_NO_NEW_PAYLOAD_OR_ADDRESS_COLUMN",
+      "reference_field": "resource.id",
+      "resource_type": "ai_egress_evidence",
+      "reference_kind": "SERVER_RANDOM_UUID_V4_NOT_VALUE_DERIVED",
+      "address_values": "FORBIDDEN_IN_TRAIL_CHAIN_TRANSPARENCY_AND_COPIES",
+      "prohibited_evidence_forms": [
+        "ADDRESS_HOST_URL_DNS_ANSWER", "ADDRESS_HASH_OR_HMAC", "ADDRESS_CIPHERTEXT",
+        "EVIDENCE_PLAINTEXT_DIGEST", "PACKET_OR_PROVIDER_PAYLOAD"
+      ],
+      "origin": "ADR020_OPAQUE_OPERATOR_ORIGIN_NOT_DESTINATION",
+      "writer_bindings": {
+        "consent.*": "pennilogic_app",
+        "audit.*": "chain_verifier",
+        "admin.*": "admin_api_owner",
+        "redaction.*": "redaction_service",
+        "broker.*": "T-PLT-05"
+      },
+      "customer_actions": "CONSENT_EGRESS_LIFECYCLE_WITH_REAL_OWNER_AUTHORITY",
+      "system_actions": "AUDIT_VERIFICATION_EGRESS_WITH_SYSTEM_ACTOR_AND_VERIFIED_JOB",
+      "system_writer_scope": "VERIFICATION_EVENT_ONLY_NO_DOMAIN_STATE_OR_CIPHERTEXT_WRITE",
+      "projection": "ADR020_EXISTING_NAMESPACE_SCOPE_NO_EVIDENCE_DEREFERENCE",
+      "erasure": "TRAIL_CHAIN_UNCHANGED_ONLY_ADR020_TRANSPARENCY_ERASURE_STEP"
+    },
+    "address_evidence": {
+      "store": "ai_egress_evidence",
+      "authority": "NONAUTHORITATIVE_ERASABLE_EVIDENCE_NOT_FOURTH_AUDIT_STREAM",
+      "classification": "PERSONAL_DESTINATION_NETWORK_METADATA_NOT_ANONYMOUS",
+      "constrained_columns": [
+        "evidence_id", "audit_event_id", "owner_id", "created_at", "expires_at",
+        "retention_profile_version", "phase", "key_id"
+      ],
+      "encrypted_values": [
+        "REQUEST_JOB_DESTINATION_RESOLUTION_LINKS",
+        "CANONICAL_HOST_AND_COMPLETE_ADDRESS_SET",
+        "AUTHORIZED_PIN_AND_OBSERVED_SOCKET_PEER",
+        "TLS_IDENTITY_AND_VERDICT",
+        "NAMESPACE_RULE_PATH_AND_SYNTHETIC_SINK_OBSERVATIONS",
+        "BYTE_STATUS_TIMING_AND_LAST_BYTE_CONFIRMED_CLOSE_EVIDENCE"
+      ],
+      "payloads": "NO_KEYS_HEADERS_PROMPTS_RAW_LOCATION_RESPONSE_OR_PACKET_PAYLOAD",
+      "customer_key_scope": "ADR018_OWNER_DEK_AND_AAD_NO_PLATFORM_REWRAP",
+      "system_key_scope": "DEPLOYMENT_ONLY_SEPARATE_CUSTODIAN_WRAPPED_DEK_NO_CUSTOMER_LINKS",
+      "system_key_originator_months": 12,
+      "system_rows": "NO_CUSTOMER_OWNER_OR_LINKS_VERIFIED_DEPLOYMENT_JOB_ONLY",
+      "intake": "AUTHENTICATED_TYPED_CORE_INTAKE_NO_GATEWAY_DATABASE_ROLE",
+      "maintenance_sealing": "EVIDENCE_ONLY_VERIFIED_OWNER_KEYOPS_JOB_NO_USER_DELEGATION_OR_VERIFIER_UNWRAP",
+      "write_order": "DURABLE_EVIDENCE_STAGE_THEN_EXISTING_WRITER_EVENT_COMMIT_BEFORE_ADMISSION",
+      "phase_order": "COMMITTED_INTENT_BEFORE_NETWORK_OBSERVATIONS_AFTER_PHASE_NO_NEXT_PHASE_ON_RECORD_FAILURE",
+      "orphan_stage": "NO_ADMISSION_RECEIPT_EXPIRE_AND_DELETE_NEVER_REUSE_REFERENCE",
+      "value_read_access": "ADR020_RECORDED_CHAIN_CONFIRMED_REDACTION_PATH_NO_AUDIT_READER_DECRYPT",
+      "rls": "FORCED_OWNER_OR_RECORDED_SUBJECT_SCOPE_NO_CROSS_OWNER_OR_ADMIN_CIPHERTEXT",
+      "retention": "TCMP01_COUNSEL_APPROVED_INDEPENDENT_FINITE_EVIDENCE_AND_RESOLUTION_PROFILE",
+      "retention_profile_fields": [
+        "live_evidence_period", "post_revocation_evidence_period",
+        "uncommitted_stage_period", "resolution_link_period", "backup_expiry_bound"
+      ],
+      "missing_retention_profile": "DENY_NEW_EGRESS_KEEP_EMERGENCY_OFF_AVAILABLE",
+      "expiry": "DELETE_EVIDENCE_AND_RESOLUTION_LINKS_AND_DERIVED_COPIES",
+      "erasure": "ADR021_DELETE_EVIDENCE_AND_RESOLUTION_LINKS_SHRED_OWNER_DEK",
+      "restore": "REPLAY_ERASURE_AND_EXPIRY_BEFORE_ACCESS_NO_RESOLUTION_OR_ACTIVE_STATE_RESURRECTION",
+      "missing_evidence": "REPORT_EXPIRED_ERASED_OR_UNAVAILABLE_NEVER_RECONSTRUCT_OR_CLAIM_PROOF"
+    },
+    "custody_owners": ["T-PLT-03", "T-PLT-02", "T-PLT-05"],
+    "retention_owners": ["T-CMP-01", "T-CMP-04"],
+    "runtime_evidence_owners": ["T-AI-01", "T-AI-02", "T-AI-03", "T-PLT-01"],
+    "consumer_obligation": "VERSION_FORWARD_TYPED_EVENTS_AND_CRYPTO_ERASURE_INVENTORIES_NO_RUNTIME_COMPLETION_CLAIM"
   },
   "observability": {
     "revocation_measure": "AUTHORITATIVE_CHANGE_TO_ALL_AFFECTED_CONNECTIONS_CLOSED_AND_NO_BYTES_EITHER_DIRECTION",
@@ -367,10 +446,10 @@
     {"id": "T11", "evidence": "TLS_FAILURES_AND_BODYLESS_NONTUNNEL_REGISTRATION_PROBES", "owners": ["T-AI-03", "T-AI-02"]},
     {"id": "T12", "evidence": "SELF_PUBLIC_PRIVATE_IPV6_INVENTORY_AND_STARTUP_DENIAL", "owners": ["T-AI-03", "T-PLT-01"]},
     {"id": "T13", "evidence": "REGISTRATION_ABUSE_RACE_COOLING_AND_COARSE_ERRORS", "owners": ["T-AI-03"]},
-    {"id": "T14", "evidence": "CAPTURED_EGRESS_RAW_IDENTIFIER_KEY_AND_SHARED_DATA_HYGIENE", "owners": ["T-AI-05", "T-AI-01", "T-AI-03", "T-FAM-01"]},
+    {"id": "T14", "evidence": "CAPTURED_EGRESS_RAW_IDENTIFIER_KEY_SHARED_DATA_AND_OPAQUE_AUDIT_PROJECTION_HYGIENE", "owners": ["T-AI-05", "T-AI-01", "T-AI-03", "T-FAM-01", "T-SEC-03"]},
     {"id": "T15", "evidence": "HEADER_KEY_OWNER_AUDIENCE_AND_REDIRECT_ISOLATION", "owners": ["T-AI-01", "T-AI-03", "T-AI-07"]},
     {"id": "T16", "evidence": "CLASS_ALLOWLIST_AND_NO_MANAGED_FALLBACK", "owners": ["T-AI-02", "T-AI-03", "T-ADM-08"]},
-    {"id": "T17", "evidence": "REVOCATION_RECOVERY_ERASURE_RESTORE_AND_STREAM_BOUND", "owners": ["T-AI-03", "T-AI-01", "T-PLT-02"]},
+    {"id": "T17", "evidence": "REVOCATION_RECOVERY_EVIDENCE_UNLINK_ERASURE_RESTORE_AND_STREAM_BOUND", "owners": ["T-AI-03", "T-AI-01", "T-PLT-02", "T-SEC-03"]},
     {"id": "T18", "evidence": "DECOMPRESSION_SLOW_STREAM_GLOBAL_AND_CROSS_ACCOUNT_CAPS", "owners": ["T-AI-03"]},
     {"id": "T19", "evidence": "CLOSED_STARTUP_DOCKER_CRASH_NFTABLES_CONNTRACK_AND_LEASES", "owners": ["T-AI-02", "T-PLT-01"]},
     {"id": "T20", "evidence": "ACTUAL_CONSUMER_PIPELINE_DIGEST_AND_DEPLOYMENT_GATE_ENFORCEMENT", "owners": ["T-AI-02", "T-PLT-01", "T-QA-02", "T-AI-06"]}
@@ -394,6 +473,7 @@
     "consumers": [
       {"identity": "T-AI-01", "issue": "PenniLogic/ai-service#2"},
       {"identity": "T-AUTH-DLG-01", "issue": "PenniLogic/api#87"},
+      {"identity": "T-SEC-03", "issue": "PenniLogic/api#39"},
       {"identity": "T-AI-02", "issue": "PenniLogic/infra#30"},
       {"identity": "T-PLT-01", "issue": "PenniLogic/infra#25"},
       {"identity": "T-AI-03", "issue": "PenniLogic/ai-service#3"},
