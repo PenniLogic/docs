@@ -172,6 +172,15 @@ and `work`; consumers must not infer active approvals from the policy data. `clo
 target scope, earliest effective `expires_at` and number of recursively checked artifacts, or raises
 a static `Refused` rule. This is an offline evidence check, not a side-effecting gate closer.
 
+Context IDs must be complete lowercase hyphenated UUIDs; artifact, decision-target and archive
+versions use exactly `MAJOR.MINOR.PATCH` with no leading zeroes. Their schema patterns require the
+actual end of the value, not the position before a final newline. The same exact-end rule covers
+identifiers, digests, commit IDs and UTC timestamp lexemes. Leading, embedded or trailing whitespace
+and control-character aliases are rejected, never trimmed or normalized into an accepted identity
+or version. This applies to producer, assignment, review, resolution, decision, grant and queue
+contexts before identity comparisons. The shared validator retains JSON Schema's pattern-search
+semantics, and consumed input-version labels remain opaque text rather than being forced to SemVer.
+
 Source references use portable Git tree paths (`governance/example.json`), a full commit ID and
 `sha256:` plus 64 lowercase hex digits. They are not host paths. Evidence bodies, research content
 and comments stay out of the snapshot; only safe references enter it. Referenced documents must

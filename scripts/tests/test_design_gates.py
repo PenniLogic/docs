@@ -6,7 +6,10 @@ from datetime import datetime, timedelta, timezone
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -996,6 +999,290 @@ class InputBoundaryTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as result:
             module.main(["--snapshot", "candidate.json"])
         self.assertEqual(result.exception.code, 2)
+
+
+LEXEME_AFFIXES = (
+    "\n", "\r\n", "\r", " ", "\t", "\x00", "\v", "\f", "\x7f", "\x85",
+    "\u00a0", "\u200b", "\u2028", "\u2029", "\ufeff", "\n\n",
+)
+
+
+def research_decision(fixture):
+    state = fixture.state()
+    state.update(artifact_id="research_synthesis", artifact_class="research_synthesis")
+    entry = fixture.decision(state, kind="research_disposition")
+    entry.update(
+        actor_context_id=fixture.contexts["research"], actor_role="research",
+        verifier_context_id=fixture.contexts["privacy"], verifier_role="privacy",
+    )
+    return entry
+
+
+class CanonicalLexemeTests(unittest.TestCase):
+    def test_canonical_context_version_and_related_lexemes(self):
+        samples = {
+            "id": "Artifact_1",
+            "context": context(0xabcdefab),
+            "version": "10.20.30",
+            "digest": module.ZERO,
+            "timestamp": stamp(NOW),
+        }
+        for definition, value in samples.items():
+            module.shape(value, SCHEMA, definition)
+            for affix in LEXEME_AFFIXES:
+                for alias in (value + affix, affix + value, value[:1] + affix + value[1:]):
+                    with self.subTest(definition=definition, alias=alias):
+                        with self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                            module.shape(alias, SCHEMA, definition)
+        for value in ("0.0.0", "1.2.3", "10.20.30"):
+            module.shape(value, SCHEMA, "version")
+            self.assertEqual(module.version(value), tuple(map(int, value.split("."))))
+        for value in (context(0xabcdefab).upper(), "{" + context(0) + "}", context(0).replace("-", "")):
+            with self.subTest(context=value), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                module.shape(value, SCHEMA, "context")
+        for value in ("01.0.0", "1.02.0", "1.2.03", "+1.2.3", "v1.2.3"):
+            with self.subTest(version=value), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                module.shape(value, SCHEMA, "version")
+
+    def test_gate_terminal_lf_alias_cannot_hide_approver_or_verifier_authorship(self):
+        for purpose in ("approval", "verification"):
+            fixture = Fixture()
+            fixture.close()
+            record = fixture.snapshot["records"][0]
+            reviewer = next(item["context_id"] for item in record["reviews"] if item["purpose"] == purpose)
+            assignments = copy.deepcopy(fixture.assignments)
+            record["author_contexts"] = [reviewer]
+            fixture.resign()
+            with self.assertRaisesRegex(module.Refused, "review.author_is_reviewer"):
+                fixture.close()
+            record["author_contexts"] = [reviewer + "\n"]
+            fixture.resign()
+            before = copy.deepcopy(record)
+            with self.subTest(purpose=purpose), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                fixture.close()
+            self.assertEqual(record, before)
+            self.assertEqual(fixture.assignments, assignments)
+
+    def test_research_terminal_lf_alias_cannot_hide_actor_or_verifier_authorship(self):
+        for field in ("actor_context_id", "verifier_context_id"):
+            fixture = Fixture()
+            entry = research_decision(fixture)
+            fixture.checker().append_decision([], entry, module.ZERO)
+            assignments = copy.deepcopy(fixture.assignments)
+            entry["author_contexts"] = [entry[field]]
+            with self.assertRaisesRegex(module.Refused, "decision.author_is_reviewer"):
+                fixture.checker().append_decision([], entry, module.ZERO)
+            entry["author_contexts"] = [entry[field] + "\n"]
+            before = copy.deepcopy(entry)
+            with self.subTest(field=field), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                fixture.checker().append_decision([], entry, module.ZERO)
+            self.assertEqual(entry, before)
+            self.assertEqual(fixture.assignments, assignments)
+
+    def test_all_context_consumers_reject_control_and_whitespace_aliases(self):
+        fixture = Fixture()
+        comment = fixture.comment(resolved=True)
+        record = fixture.snapshot["records"][0]
+        decision = fixture.checker().append_decision([], research_decision(fixture), module.ZERO)[0]
+        work = {
+            "id": "A0", "squad": "fixture", "phase": "review", "review_role": "design_qa",
+            "review_context_id": fixture.contexts["design_qa"],
+            "submitted_at": stamp(NOW - timedelta(hours=1)), "acknowledged_at": None,
+        }
+        samples = [
+            ("assignment", fixture.assignments[0], "context_id"),
+            ("gate_record", record, "author_contexts"),
+            ("review", record["reviews"][0], "context_id"),
+            ("comment", comment, "author_context_id"),
+            ("resolution", comment["resolution"], "context_id"),
+            ("decision", decision, "author_contexts"),
+            ("decision", decision, "actor_context_id"),
+            ("decision", decision, "verifier_context_id"),
+            ("grant", fixture.grant(), "context_id"),
+            ("work", work, "review_context_id"),
+        ]
+        for definition, original, field in samples:
+            module.shape(original, SCHEMA, definition)
+            for affix in LEXEME_AFFIXES:
+                candidate = copy.deepcopy(original)
+                value = candidate[field]
+                candidate[field] = [value[0] + affix] if isinstance(value, list) else value + affix
+                with self.subTest(definition=definition, field=field, affix=affix):
+                    with self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                        module.shape(candidate, SCHEMA, definition)
+
+    def test_noncanonical_gate_and_research_versions_fail_after_rescoping(self):
+        for affix in LEXEME_AFFIXES:
+            fixture = Fixture()
+            record = fixture.snapshot["records"][0]
+            record["version"] += affix
+            fixture.resign()
+            with self.subTest(surface="gate", affix=affix), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                fixture.close()
+            entry = research_decision(fixture)
+            entry["target_version"] += affix
+            with self.subTest(surface="research", affix=affix), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                fixture.checker().append_decision([], entry, module.ZERO)
+
+    def test_source_and_archive_versions_fail_before_state_change(self):
+        for field in ("version", "archived", "target_version"):
+            for affix in LEXEME_AFFIXES:
+                fixture = Fixture()
+                state = fixture.state()
+                entry = fixture.decision(state)
+                if field == "target_version":
+                    entry[field] += affix
+                elif field == "archived":
+                    state["archived"] = [{"version": "0.9.0" + affix, "source": copy.deepcopy(state["source"])}]
+                else:
+                    state[field] += affix
+                before = copy.deepcopy(state)
+                with self.subTest(field=field, affix=affix), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                    fixture.checker().source_change(state, entry, module.digest(state))
+                self.assertEqual(state, before)
+
+    def test_commits_and_nullable_timestamps_have_exact_lexeme_boundaries(self):
+        fixture = Fixture()
+        source = fixture.source("canonical_commit")
+        result_schema = SCHEMA["definitions"]["decision"]["properties"]["result"]
+        timestamp_schema = SCHEMA["definitions"]["work"]["properties"]["acknowledged_at"]
+        module.support.validate_schema(None, timestamp_schema, SCHEMA)
+        for affix in LEXEME_AFFIXES:
+            candidate = {**source, "commit": source["commit"] + affix}
+            with self.subTest(surface="source_commit", affix=affix), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                module.shape(candidate, SCHEMA, "source")
+            with self.subTest(surface="result_commit", affix=affix), self.assertRaises(ValueError):
+                module.support.validate_schema(candidate, result_schema, SCHEMA)
+            with self.subTest(surface="nullable_timestamp", affix=affix), self.assertRaises(ValueError):
+                module.support.validate_schema(stamp(NOW) + affix, timestamp_schema, SCHEMA)
+
+    def test_history_alias_refused_even_with_a_recomputed_hash(self):
+        fixture = Fixture()
+        history = fixture.checker().append_decision([], research_decision(fixture), module.ZERO)
+        for field in ("actor_context_id", "verifier_context_id", "target_version"):
+            corrupted = copy.deepcopy(history)
+            corrupted[0][field] += "\n"
+            corrupted[0]["sha256"] = module.digest({
+                key: value for key, value in corrupted[0].items() if key != "sha256"
+            })
+            with self.subTest(field=field), self.assertRaisesRegex(module.Refused, "schema.invalid"):
+                module.validate_history(corrupted, SCHEMA)
+
+    def test_exact_lexemes_do_not_change_generic_schema_pattern_or_opaque_input_versions(self):
+        module.support.validate_schema("prefix needle suffix", {"type": "string", "pattern": "needle"})
+        module.support.validate_schema("needle\n", {"type": "string", "pattern": "^needle$"})
+        with self.assertRaises(ValueError):
+            module.support.validate_schema("unrelated", {"type": "string", "pattern": "needle"})
+        fixture = Fixture()
+        self.assertEqual(fixture.snapshot["records"][0]["inputs"][0]["version"], "fixture-contract-1")
+        fixture.close()
+
+
+class CanonicalCliTests(unittest.TestCase):
+    def setUp(self):
+        self.fixture = Fixture()
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        source = {
+            "commit": BASE, "path": "governance/DELIVERY.md",
+            "sha256": module.digest(module.git_blob(BASE, "governance/DELIVERY.md")),
+        }
+        times = {
+            "issued_at": stamp(now - timedelta(hours=1)),
+            "observed_at": stamp(now - timedelta(minutes=30)),
+            "decided_at": stamp(now - timedelta(minutes=10)),
+            "expires_at": stamp(now + timedelta(hours=1)),
+        }
+
+        # These are synthetic shape/reader fixtures, not actual approvals of the referenced prose.
+        def pin(value):
+            if isinstance(value, dict):
+                if set(value) == {"commit", "path", "sha256"}:
+                    value.update(source)
+                else:
+                    for key, item in value.items():
+                        if key in times:
+                            value[key] = times[key]
+                        else:
+                            pin(item)
+            elif isinstance(value, list):
+                for item in value:
+                    pin(item)
+
+        pin(self.fixture.snapshot)
+        pin(self.fixture.assignments)
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.folder = Path(folder.name)
+        self.assignment_path = self.folder / "assignments.json"
+        self.assignment_bytes = json.dumps(self.fixture.assignments).encode("utf-8")
+        self.assignment_path.write_bytes(self.assignment_bytes)
+
+    def run_cli(self, snapshot, expected, refusal=None):
+        for record in snapshot["records"]:
+            scope = module.scope_digest(record)
+            for review in record["reviews"]:
+                review["scope_sha256"] = scope
+        candidate = self.folder / "candidate.json"
+        candidate.write_text(json.dumps(snapshot), encoding="utf-8")
+        env = os.environ.copy()
+        for name in ("GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"):
+            env.pop(name, None)
+        result = subprocess.run(
+            [
+                sys.executable, str(ROOT / "scripts/check_design_gates.py"),
+                "--snapshot", str(candidate), "--assignments", str(self.assignment_path),
+            ],
+            cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=30, env=env,
+        )
+        self.assertEqual(self.assignment_path.read_bytes(), self.assignment_bytes)
+        evidence = (
+            f"assignment_sha256={module.digest(self.assignment_bytes)}; "
+            f"stdout={result.stdout!r}; stderr={result.stderr!r}"
+        )
+        self.assertEqual(result.returncode, expected, evidence)
+        if expected == 0:
+            output = json.loads(result.stdout)
+            self.assertEqual(set(output), {"checked_artifacts", "expires_at", "scope_sha256"})
+            self.assertEqual(output["checked_artifacts"], 1)
+            self.assertEqual(output["scope_sha256"], module.scope_digest(snapshot["records"][0]))
+            self.assertEqual(result.stderr, "")
+        else:
+            self.assertEqual(result.stdout, "")
+            self.assertEqual(result.stderr.strip(), "Design check refused: " + refusal)
+
+    def test_cli_canonical_and_terminal_lf_context_controls(self):
+        self.run_cli(copy.deepcopy(self.fixture.snapshot), 0)
+        for purpose in ("approval", "verification"):
+            canonical = copy.deepcopy(self.fixture.snapshot)
+            record = canonical["records"][0]
+            record["author_contexts"] = [
+                next(item["context_id"] for item in record["reviews"] if item["purpose"] == purpose)
+            ]
+            self.run_cli(canonical, 1, "review.author_is_reviewer")
+            alias = copy.deepcopy(canonical)
+            alias["records"][0]["author_contexts"][0] += "\n"
+            with self.subTest(purpose=purpose):
+                self.run_cli(alias, 1, "schema.invalid")
+
+    def test_cli_canonical_and_terminal_lf_version_controls(self):
+        self.run_cli(copy.deepcopy(self.fixture.snapshot), 0)
+        malformed = copy.deepcopy(self.fixture.snapshot)
+        malformed["records"][0]["version"] = "01.0.0"
+        self.run_cli(malformed, 1, "schema.invalid")
+        malformed["records"][0]["version"] = "1.0.0\n"
+        self.run_cli(malformed, 1, "schema.invalid")
+
+    def test_cli_other_control_and_whitespace_aliases_are_not_trimmed(self):
+        for affix in LEXEME_AFFIXES[1:]:
+            for field in ("author_contexts", "version"):
+                candidate = copy.deepcopy(self.fixture.snapshot)
+                record = candidate["records"][0]
+                if field == "author_contexts":
+                    record[field] = [record["reviews"][0]["context_id"] + affix]
+                else:
+                    record[field] += affix
+                with self.subTest(field=field, affix=affix):
+                    self.run_cli(candidate, 1, "schema.invalid")
 
 
 if __name__ == "__main__":
