@@ -39,7 +39,7 @@ The existing edge is evidence of dependency wiring, not dependency satisfaction.
 | [schema.json](schema.json) | Closed research-plan, participant-code, evidence, limitation, finding-disposition and aggregate-report shapes |
 | [report-template.md](report-template.md) and [concept-study.report.json](concept-study.report.json) | Empty product-record templates; dissent and uncertainty are not subordinate to support |
 | [household-tabletop.md](household-tabletop.md) | No-contact safe-recruitment tabletop and its negative-test mapping |
-| [check.py](check.py) and [tests](tests) | Offline source, planted-data, expiry, access, consent, order and recruitment checks |
+| [check.py](check.py) and [native tests](../../scripts/tests/test_research_operations.py) | Offline source, planted-data, expiry, access, consent, order and recruitment checks |
 
 ## Conditions that remain unmet
 
@@ -72,12 +72,16 @@ From the repository root on Windows:
 
 ```text
 python research\operations\check.py
-python -m unittest discover -s research\operations\tests -p test_*.py
 python scripts\check_repository.py
 python scripts\check_docs.py
 python scripts\check_test_strategy.py
 python -m unittest discover -s scripts\tests
 ```
+
+The existing native discovery command runs all 28 research-operations regression
+cases in `scripts\tests\test_research_operations.py` alongside the other repository
+tests. To run only these cases, use
+`python -m unittest discover -s scripts\tests -p test_research_operations.py`.
 
 The checker reuses the repository's strict JSON Schema subset. Its exceptions
 report fixed rule text, not rejected keys or values. No live participant file
@@ -91,7 +95,9 @@ predicate is **not authentication or a storage service**. Real encryption,
 revocation, automatic expiry, backup unreadability and deletion receipts require
 separate operational evidence. The no-contact source check deliberately refuses
 to turn this draft into an accepted pack or to populate its pending report.
-These tests are a separate local command; no generated CI wiring is claimed.
+The existing `CI` job already runs native discovery; no generated workflow,
+command or profile was changed. Local execution proves test discovery and
+behavior, not a hosted CI result or research acceptance.
 
 Reviewers receive this source and synthetic tests. Designers receive only
 independently privacy-reviewed anonymous aggregate findings later, never coded

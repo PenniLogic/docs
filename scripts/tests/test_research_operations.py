@@ -10,7 +10,7 @@ import unittest
 from unittest import mock
 
 
-HERE = Path(__file__).resolve().parents[1]
+HERE = Path(__file__).resolve().parents[2] / "research" / "operations"
 spec = importlib.util.spec_from_file_location("research_operations", HERE / "check.py")
 ops = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ops)

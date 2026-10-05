@@ -2,7 +2,8 @@
 
 **Source exercise, not a rehearsal with people; specialist review pending.**
 No messages are sent, persons represented or accounts/devices operated. This
-table specifies decisions tested with synthetic booleans by `test_operations.py`.
+table specifies decisions tested with synthetic booleans by
+[`test_research_operations.py`](../../scripts/tests/test_research_operations.py).
 The human/specialist tabletop and real storage/scheduling drill remain required
 before any relevant contact; passing these cases does not supply that approval.
 
