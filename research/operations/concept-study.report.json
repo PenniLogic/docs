@@ -1,0 +1,20 @@
+{
+  "kind": "aggregate_report",
+  "version": "1.0.0",
+  "study_id": "T-RES-01",
+  "execution_state": "UNRUN",
+  "data_origin": "pending",
+  "participant_count": null,
+  "preference": null,
+  "pricing": null,
+  "sms": null,
+  "withheld_tables": [],
+  "order_effect_status": "pending",
+  "coverage_status": "pending",
+  "withdrawal_count": null,
+  "evidence_age_days": null,
+  "undispositioned_finding_count": null,
+  "limitations": ["small_purposive_sample", "unmeasured_financial_diversity", "coverage_unmet", "language_support_pending", "hypothetical_intent", "price_terms_incomplete", "order_and_attrition", "unrun"],
+  "finding_dispositions": [],
+  "decision": "pending"
+}
