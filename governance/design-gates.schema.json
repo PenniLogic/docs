@@ -1,0 +1,280 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/blob/main/governance/design-gates.schema.json",
+  "title": "Design operations vocabulary and offline decision records",
+  "description": "T-UXR-01 source contract for T-UXR-06. Definitions also describe consumer snapshots, separately trusted assignments, decisions and access grants. Numeric bounds, UTC timestamps, references and independence are checked by check_design_gates.py using the existing strict draft-07 subset. This is not SaaS authorization or authenticated attestation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "contract_version", "source_issue", "consumer_plan_id", "artifact_statuses", "cdo_equivalent_scopes", "reopen_on", "roles", "artifact_classes", "gates", "workspace", "flow_control", "topology", "access", "observability"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "contract_version": {"const": "1.0.0"},
+    "source_issue": {"const": "PenniLogic/docs#64"},
+    "consumer_plan_id": {"const": "T-UXR-06"},
+    "artifact_statuses": {"$ref": "#/definitions/ids"},
+    "cdo_equivalent_scopes": {"$ref": "#/definitions/ids"},
+    "reopen_on": {"$ref": "#/definitions/ids"},
+    "roles": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/role"}},
+    "artifact_classes": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/raci"}},
+    "gates": {"type": "array", "minItems": 10, "maxItems": 10, "items": {"$ref": "#/definitions/gate"}},
+    "workspace": {
+      "type": "object", "additionalProperties": false,
+      "required": ["current", "figma_access_verified", "figma_publishing_enabled", "participant_contact_enabled", "role_rights_approved"],
+      "properties": {
+        "current": {"const": "controlled_git"},
+        "figma_access_verified": {"type": "boolean", "const": false},
+        "figma_publishing_enabled": {"type": "boolean", "const": false},
+        "participant_contact_enabled": {"type": "boolean", "const": false},
+        "role_rights_approved": {"type": "boolean", "const": false}
+      }
+    },
+    "flow_control": {
+      "type": "object", "additionalProperties": false,
+      "required": ["wip_per_squad", "wip_per_verifier", "wip_coordinator", "acknowledge_hours", "disposition_hours", "escalate_hours", "exception_hours", "assignment_hours", "access_hours"],
+      "properties": {
+        "wip_per_squad": {"type": "integer"},
+        "wip_per_verifier": {"type": "integer"},
+        "wip_coordinator": {"type": "integer"},
+        "acknowledge_hours": {"type": "integer"},
+        "disposition_hours": {"type": "integer"},
+        "escalate_hours": {"type": "integer"},
+        "exception_hours": {"type": "integer"},
+        "assignment_hours": {"type": "integer"},
+        "access_hours": {"type": "integer"}
+      }
+    },
+    "topology": {
+      "type": "object", "additionalProperties": false,
+      "required": ["project", "branch_pattern", "controlled_pages", "files"],
+      "properties": {
+        "project": {"const": "PenniLogic - Experience"},
+        "branch_pattern": {"$ref": "#/definitions/text"},
+        "controlled_pages": {"$ref": "#/definitions/texts"},
+        "files": {"type": "array", "minItems": 10, "maxItems": 10, "items": {"$ref": "#/definitions/file"}}
+      }
+    },
+    "access": {
+      "type": "object", "additionalProperties": false,
+      "required": ["classifications", "public_links_enabled", "external_sharing_enabled", "offboarding"],
+      "properties": {
+        "classifications": {"$ref": "#/definitions/ids"},
+        "public_links_enabled": {"type": "boolean", "const": false},
+        "external_sharing_enabled": {"type": "boolean", "const": false},
+        "offboarding": {"$ref": "#/definitions/text"}
+      }
+    },
+    "observability": {"$ref": "#/definitions/ids"}
+  },
+  "definitions": {
+    "text": {"type": "string", "minLength": 1},
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"},
+    "ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/id"}},
+    "texts": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/text"}},
+    "optional_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/id"}},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$(?![\\s\\S])"},
+    "version": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"},
+    "timestamp": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$(?![\\s\\S])"},
+    "context": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$(?![\\s\\S])"},
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["commit", "path", "sha256"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/definitions/digest"}
+      }
+    },
+    "role": {
+      "type": "object", "additionalProperties": false, "required": ["id", "responsibility"],
+      "properties": {"id": {"$ref": "#/definitions/id"}, "responsibility": {"$ref": "#/definitions/text"}}
+    },
+    "raci": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "includes", "responsible", "accountable", "consulted", "informed", "verifiers"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "includes": {"$ref": "#/definitions/text"},
+        "responsible": {"$ref": "#/definitions/ids"}, "accountable": {"$ref": "#/definitions/id"},
+        "consulted": {"$ref": "#/definitions/ids"}, "informed": {"$ref": "#/definitions/ids"},
+        "verifiers": {"$ref": "#/definitions/ids"}
+      }
+    },
+    "gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "artifact_classes", "required_evidence", "required_gates", "approver", "ttl_hours"],
+      "properties": {
+        "id": {"enum": ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9"]},
+        "name": {"$ref": "#/definitions/text"}, "artifact_classes": {"$ref": "#/definitions/ids"},
+        "required_evidence": {"$ref": "#/definitions/ids"}, "required_gates": {"$ref": "#/definitions/optional_ids"},
+        "approver": {"$ref": "#/definitions/id"}, "ttl_hours": {"type": "integer"}
+      }
+    },
+    "file": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "owner_role", "squad", "kind", "pages"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "name": {"$ref": "#/definitions/text"},
+        "owner_role": {"$ref": "#/definitions/id"}, "squad": {"$ref": "#/definitions/id"},
+        "kind": {"enum": ["evidence", "library", "product", "archive"]}, "pages": {"$ref": "#/definitions/texts"}
+      }
+    },
+    "assignment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context_id", "runtime", "login", "roles", "artifact_ids", "issued_at", "expires_at", "evidence"],
+      "properties": {
+        "context_id": {"$ref": "#/definitions/context"}, "runtime": {"$ref": "#/definitions/text"},
+        "login": {"const": "basiltt"}, "roles": {"$ref": "#/definitions/ids"},
+        "artifact_ids": {"$ref": "#/definitions/ids"},
+        "issued_at": {"$ref": "#/definitions/timestamp"}, "expires_at": {"$ref": "#/definitions/timestamp"},
+        "evidence": {"$ref": "#/definitions/source"}
+      }
+    },
+    "assignments": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/assignment"}},
+    "evidence": {
+      "type": "object", "additionalProperties": false, "required": ["id", "source", "observed_at", "expires_at"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "source": {"$ref": "#/definitions/source"},
+        "observed_at": {"$ref": "#/definitions/timestamp"}, "expires_at": {"$ref": "#/definitions/timestamp"}
+      }
+    },
+    "input": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version", "source"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "version": {"$ref": "#/definitions/text"},
+        "source": {"$ref": "#/definitions/source"}
+      }
+    },
+    "review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "context_id", "purpose", "decision", "scope_sha256", "decided_at", "expires_at", "evidence"],
+      "properties": {
+        "role": {"$ref": "#/definitions/id"}, "context_id": {"$ref": "#/definitions/context"},
+        "purpose": {"enum": ["approval", "verification"]}, "decision": {"enum": ["approved", "rejected"]},
+        "scope_sha256": {"$ref": "#/definitions/digest"},
+        "decided_at": {"$ref": "#/definitions/timestamp"}, "expires_at": {"$ref": "#/definitions/timestamp"},
+        "evidence": {"$ref": "#/definitions/source"}
+      }
+    },
+    "resolution": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "required": ["context_id", "role", "scope_sha256", "resolved_at", "evidence"],
+      "properties": {
+        "context_id": {"$ref": "#/definitions/context"}, "role": {"$ref": "#/definitions/id"},
+        "scope_sha256": {"$ref": "#/definitions/digest"}, "resolved_at": {"$ref": "#/definitions/timestamp"},
+        "evidence": {"$ref": "#/definitions/source"}
+      }
+    },
+    "comment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "blocking", "author_context_id", "evidence", "resolution"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "blocking": {"type": "boolean"},
+        "author_context_id": {"$ref": "#/definitions/context"}, "evidence": {"$ref": "#/definitions/source"},
+        "resolution": {"$ref": "#/definitions/resolution"}
+      }
+    },
+    "dependency": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "gate_id", "scope_sha256"],
+      "properties": {
+        "artifact_id": {"$ref": "#/definitions/id"}, "gate_id": {"$ref": "#/definitions/id"},
+        "scope_sha256": {"$ref": "#/definitions/digest"}
+      }
+    },
+    "gate_record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "artifact_class", "squad", "version", "source", "author_contexts", "status", "gate_id", "change_kind", "inputs", "evidence", "dependencies", "comments", "reviews"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "artifact_class": {"$ref": "#/definitions/id"},
+        "squad": {"$ref": "#/definitions/id"}, "version": {"$ref": "#/definitions/version"},
+        "source": {"$ref": "#/definitions/source"}, "author_contexts": {"$ref": "#/definitions/contexts"},
+        "status": {"enum": ["draft", "in_review", "blocked", "approved", "reopened", "superseded", "archived"]},
+        "gate_id": {"$ref": "#/definitions/id"},
+        "change_kind": {"enum": ["standard", "shared_system_major", "material_exception"]},
+        "inputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/input"}},
+        "evidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/evidence"}},
+        "dependencies": {"type": "array", "items": {"$ref": "#/definitions/dependency"}},
+        "comments": {"type": "array", "items": {"$ref": "#/definitions/comment"}},
+        "reviews": {"type": "array", "minItems": 2, "items": {"$ref": "#/definitions/review"}}
+      }
+    },
+    "contexts": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/context"}},
+    "snapshot": {
+      "type": "object", "additionalProperties": false, "required": ["contract_version", "target", "records"],
+      "properties": {
+        "contract_version": {"const": "1.0.0"}, "target": {"$ref": "#/definitions/id"},
+        "records": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/gate_record"}}
+      }
+    },
+    "proposal": {
+      "type": "object", "additionalProperties": false, "required": ["squad", "branch", "source"],
+      "properties": {
+        "squad": {"$ref": "#/definitions/id"}, "branch": {"$ref": "#/definitions/text"},
+        "source": {"$ref": "#/definitions/source"}
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "artifact_id", "artifact_class", "kind", "disposition", "author_contexts", "actor_context_id", "actor_role", "verifier_context_id", "verifier_role", "base_sha256", "target_version", "proposals", "result", "reason", "related_decisions", "occurred_at", "expires_at", "previous_sha256", "sha256"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "artifact_id": {"$ref": "#/definitions/id"},
+        "artifact_class": {"$ref": "#/definitions/id"},
+        "kind": {"enum": ["source_change", "conflict", "shared_system_major", "material_exception", "research_disposition", "freeze", "restore"]},
+        "disposition": {"enum": ["accept", "revise", "decline", "defer"]},
+        "author_contexts": {"$ref": "#/definitions/contexts"},
+        "actor_context_id": {"$ref": "#/definitions/context"}, "actor_role": {"$ref": "#/definitions/id"},
+        "verifier_context_id": {"$ref": "#/definitions/context"}, "verifier_role": {"$ref": "#/definitions/id"},
+        "base_sha256": {"$ref": "#/definitions/digest"}, "target_version": {"$ref": "#/definitions/version"},
+        "proposals": {"type": "array", "items": {"$ref": "#/definitions/proposal"}},
+        "result": {
+          "type": ["object", "null"], "additionalProperties": false, "required": ["commit", "path", "sha256"],
+          "properties": {
+            "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"},
+            "path": {"$ref": "#/definitions/text"}, "sha256": {"$ref": "#/definitions/digest"}
+          }
+        },
+        "reason": {"$ref": "#/definitions/source"}, "related_decisions": {"$ref": "#/definitions/optional_ids"},
+        "occurred_at": {"$ref": "#/definitions/timestamp"}, "expires_at": {"$ref": "#/definitions/timestamp"},
+        "previous_sha256": {"$ref": "#/definitions/digest"}, "sha256": {"$ref": "#/definitions/digest"}
+      }
+    },
+    "source_state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "artifact_class", "version", "source", "history", "archived", "publishing_frozen", "status"],
+      "properties": {
+        "artifact_id": {"$ref": "#/definitions/id"}, "artifact_class": {"$ref": "#/definitions/id"},
+        "version": {"$ref": "#/definitions/version"}, "source": {"$ref": "#/definitions/source"},
+        "history": {"type": "array", "items": {"$ref": "#/definitions/decision"}},
+        "archived": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false, "required": ["version", "source"],
+            "properties": {"version": {"$ref": "#/definitions/version"}, "source": {"$ref": "#/definitions/source"}}
+          }
+        },
+        "publishing_frozen": {"type": "boolean"},
+        "status": {"enum": ["draft", "reopened", "approved", "archived"]}
+      }
+    },
+    "grant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context_id", "role", "artifact_id", "file_ids", "permissions", "classification", "external", "revoked", "issued_at", "expires_at", "audit"],
+      "properties": {
+        "context_id": {"$ref": "#/definitions/context"}, "role": {"$ref": "#/definitions/id"},
+        "artifact_id": {"$ref": "#/definitions/id"}, "file_ids": {"$ref": "#/definitions/ids"},
+        "permissions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["view", "comment", "edit"]}},
+        "classification": {"enum": ["synthetic", "redacted_nonparticipant"]},
+        "external": {"type": "boolean"}, "revoked": {"type": "boolean"},
+        "issued_at": {"$ref": "#/definitions/timestamp"}, "expires_at": {"$ref": "#/definitions/timestamp"},
+        "audit": {"$ref": "#/definitions/source"}
+      }
+    },
+    "work": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "squad", "phase", "review_role", "review_context_id", "submitted_at", "acknowledged_at"],
+      "properties": {
+        "id": {"$ref": "#/definitions/id"}, "squad": {"$ref": "#/definitions/id"},
+        "phase": {"enum": ["draft", "review", "blocked"]}, "review_role": {"$ref": "#/definitions/id"},
+        "review_context_id": {"$ref": "#/definitions/context"},
+        "submitted_at": {"$ref": "#/definitions/timestamp"},
+        "acknowledged_at": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$(?![\\s\\S])"}
+      }
+    }
+  }
+}

@@ -1,9 +1,14 @@
 # PenniLogic experience design and SDLC plan
 
 **Status:** design-first operating plan
-**Owner:** Chief Design Officer (CDO)
+**Accountable product owner:** basiltt; delegated design coordination is defined below
 **Applies to:** native Android, customer web, admin/operator product, shared design system
 **Source of item-level truth:** `../planning-automation/backlog-v2/`
+
+Current design decision rights, D18 and the single-account/multiple-independent-agent operating
+model are specified in [design operations](../governance/design-operations.md). CDO below denotes
+that bounded decision responsibility, not a claim of a staffed human post. Role-rights acceptance
+and live Figma access remain unverified; source proposals are not current approvals.
 
 ## 1. Decision
 
@@ -29,8 +34,9 @@ the operating model; the registry proves coverage.
 
 ## 2. Planning assumptions
 
-The user confirmed a large dedicated design and UX organization. The plan therefore assumes these
-parallel capacity pools:
+The historical plan modeled a large dedicated design and UX organization with these parallel
+capacity pools. These are planning assumptions, not current staffing or evidence that discipline
+roles have been appointed in the single-account operating model:
 
 | Pool | Planned capacity | Work |
 |---|---:|---|
@@ -38,16 +44,15 @@ parallel capacity pools:
 | Quality Assurance | 4 lanes x 20 points per sprint | Independent UX research validation, design QA, accessibility, comprehension, parity, UAT and release conformance |
 | Engineering | 3 lanes x 20 points per sprint | Existing implementation plan; design and QA capacity is not charged to engineering |
 
-The CDO is an approval authority, not a seventh production lane. Design-lead reviews may run in
-parallel; CDO approval is reserved for product principles, visual direction, shared system releases,
-platform readiness and material post-freeze changes. Capacity arithmetic never substitutes for a
-qualified approver.
+The CDO-equivalent coordinator is an approval responsibility, not a seventh production lane.
+Its approval is limited to D2, D6, D8, shared-system major releases and material exceptions.
+Capacity arithmetic never substitutes for an actual qualified, independently evidenced approver.
 
 ## 3. Design organization
 
 | Role/team | Accountable outcomes | Cannot delegate |
 |---|---|---|
-| Chief Design Officer | Experience principles, visual direction, cross-platform coherence, design-system release, platform design-readiness and design release approval | Final D2, D6 and D8 decisions |
+| CDO-equivalent decision coordinator | D2 direction, D6 readiness, D8 release design evidence, shared-system major releases and material exceptions | Those bounded decisions; does not replace Product, Security or qualified Legal authority |
 | Design Program Director / DesignOps | Plan, staffing, Figma topology, artifact versioning, review SLAs, dependency health, design debt and decision log | Evidence integrity and stale-artifact reporting |
 | UX Research Lead | Research ethics, recruitment, sampling, consent, repository, synthesis quality and limitations | Research-method approval and participant-data controls |
 | Principal Service Designer / IA Lead | Personas-to-journey model, service blueprints, platform allocation, sitemaps, navigation and cross-channel continuity | Canonical information architecture |
@@ -63,42 +68,47 @@ qualified approver.
 
 ### 3.1 RACI by artifact
 
-| Artifact | Responsible | Accountable | Consulted | Independent verifier |
-|---|---|---|---|---|
-| Research plan and repository | UX Research | UX Research Lead | Legal, Security, Product | Privacy reviewer |
-| Personas, JTBD and mental models | UX Research + Service Design | IA Lead | Product, Support, Data | Design QA |
-| Journey maps and service blueprints | Service Design | IA Lead | Platform designers, Ops | UX Research Lead |
-| Sitemaps and navigation | Platform designers | IA Lead | Product, Engineering, Accessibility | Design QA |
-| Visual direction | Brand/Product Design | CDO | Platform and Content leads | Accessibility Lead |
-| Tokens and components | Design Systems | Design Systems Lead | Platform designers, UX Engineering | Design QA |
-| Platform flows and prototypes | Platform design squad | Platform Design Lead | Product, Engineering, Content | UX Research + Accessibility |
-| Implementation handoff | UX Engineering + platform designer | Platform Design Lead | Engineering and QA | Design QA |
-| Design readiness | Design Program Director | CDO | All leads | Design QA evidence owner |
-| Build conformance | Engineering + UX Engineering | Engineering lead | Platform designer | Design QA |
-| Release design QA | Design QA | CDO | Product, Engineering, Accessibility | Release manager |
+The complete versioned RACI lives in
+[design-gates.json](../governance/design-gates.json), with its human-readable accountabilities in
+[design operations section 2](../governance/design-operations.md#2-raci-and-accountable-artifact-ownership).
+Each artifact class has exactly one accountable role and at least one independent verifier.
+The contract covers research/store access, personas, journeys, IA, all three platforms, systems,
+content, accessibility, handoff, readiness, conformance, release, outcomes, traceability and archive.
+The UX Engineering role is accountable for the shared handoff contract; each platform role retains
+its own platform artifact accountability. Actual scoped assignments and discipline-rights approvals
+are required separately; this role table is not proof of staffing, consent or licensed legal review.
 
 ## 4. Design lifecycle gates
 
 | Gate | Required evidence | Exit decision |
 |---|---|---|
-| D0 - Product truth | `PRODUCT.md`, constraints, known evidence, open decisions, research ethics | CDO and Product approve the problem and boundaries |
+| D0 - Product truth | `PRODUCT.md`, constraints, known evidence, open decisions, research ethics | Accountable Product role approves the problem and boundaries |
 | D1 - Experience architecture | Personas, JTBD, journeys, service blueprints, platform allocation, sitemaps and coverage registry | IA Lead approves complete topology |
 | D2 - Direction | Tested concept alternatives, chosen visual/interaction thesis, accessibility pre-check and decision record | CDO selects one durable direction |
 | D3 - Flow definition | Task flows, wireflows, content hierarchy, edge cases, contract assumptions and telemetry intent | Platform lead approves every mapped flow |
-| D4 - System design | High-fidelity screens, responsive/adaptive variants, components, tokens, content and motion | Design Systems and platform leads approve |
+| D4 - System design | High-fidelity screens, responsive/adaptive variants, components, tokens, content and motion | Design Systems approves; independent artifact verification remains required |
 | D5 - Prototype validation | Interactive critical paths, heuristic review, accessibility audit, moderated usability and comprehension results | Independent Design QA accepts evidence or returns revisions |
 | D6 - Implementation readiness | Versioned handoff, assets, component mapping, state table, API fields, test IDs and known limitations | CDO approves platform handoff; frontend dependencies may close |
-| D7 - Build conformance | Design-to-code comparison, visual regression, interaction/accessibility parity and documented deviations | Platform lead and Design QA accept implementation |
+| D7 - Build conformance | Design-to-code comparison, visual regression, interaction/accessibility parity and documented deviations | Engineering accountable accepts with independent Design QA verification |
 | D8 - Release design QA | Device/browser/operator walkthroughs, localization, destructive flows, privacy and final UAT | CDO signs release design evidence |
-| D9 - Outcome review | Funnel/task metrics, support evidence, longitudinal research and design-debt decisions | Product and CDO accept, iterate or retire |
+| D9 - Outcome review | Funnel/task metrics, support evidence, longitudinal research and design-debt decisions | Accountable Product role accepts, iterates or retires with independent verification |
 
 Approval expires when a contract, user-visible policy, information architecture, component major
 version or critical acceptance criterion changes. The change opens a design-impact review and
 invalidates only affected artifacts; it never freezes unrelated squads.
+The [machine contract](../governance/design-gates.json) supplies exact evidence keys, gate/role IDs,
+maximum lifetimes and prerequisites. At expiry equality, changed scope, unresolved blocking comment,
+missing evidence or revoked/unassigned reviewer authority, closure fails even if a stored status
+says approved. See [freshness rules](../governance/design-operations.md#3-gate-contract-and-freshness).
 
 ## 5. Figma and artifact topology
 
-The setup ticket must create one governed team project with these library and product files:
+The setup ticket specifies one governed team project with these library and product files.
+**Creation, shared-file editing and publishing are disabled** until actual existing workspace
+ownership/access is verified. Controlled Git is the current artifact workspace; the list is not a
+claim of provisioned Figma. Exact page/branch/ownership, no-paid-feature fallback, publishing,
+archive and restoration rules are in
+[design operations section 6](../governance/design-operations.md#6-figma-topology-publishing-and-restoration-disabled).
 
 1. **00 - Product truth and research:** personas, JTBD, mental models, research plans and findings.
 2. **01 - Service and IA:** journey maps, service blueprints, platform allocation and sitemaps.
@@ -113,9 +123,9 @@ The setup ticket must create one governed team project with these library and pr
 9. **50 - Design QA:** test plans, annotated findings, conformance evidence and release snapshots.
 10. **90 - Archive:** immutable superseded versions with replacement links; never a dumping ground.
 
-Each file has Cover, Changelog, Foundations, Components, Flows, Screens, Prototype, Handoff and
-Archive pages where applicable. Published components require descriptions, property names, variant
-coverage, accessibility notes, content limits and a named code target. Branches use the ticket ID;
+Each file has the exact applicable pages declared in the machine topology, including controlled
+Cover/Changelog/Handoff/Archive indexes. Published components require descriptions, property names, variant
+coverage, accessibility notes, content limits and a named code target. Branches use ticket, squad and change slug;
 reviews use Figma comments tied to a GitHub issue; releases use semantic versions. The CDO approves
 library major versions and platform D6 snapshots.
 
@@ -427,6 +437,35 @@ readiness evidence and consume D7/D8 conformance rather than rerunning design re
   comments are not an unowned backlog.
 - WIP limits are enforced per design lane; CDO review and independent Design QA have their own
   queues and capacity.
+
+### 15.1 D18 - Design change control and release approval
+
+The [design operations contract](../governance/design-operations.md) governs the decision log,
+two-squad collision tabletop, bounded WIP/SLA, exact expiry checks and privacy-safe ownership.
+This flow describes required decisions, not actual approvals or a provisioned remote workspace.
+
+```mermaid
+flowchart TD
+    A["Reserve one owner and pin canonical base"] --> B["Isolated ticket and squad proposal"]
+    B --> C{"Current base and no ownership collision?"}
+    C -- No --> D["Keep both proposals; append conflict decision"]
+    D --> E["Accountable disposition plus independent verifier"]
+    E --> B
+    C -- Yes --> F["Evidence and full dependency/comment inventory"]
+    F --> G{"Fresh scope, expiry, roles and independent reviews?"}
+    G -- No --> H["Block or reopen affected gates; retain history"]
+    H --> B
+    G -- Yes --> I{"D2 / D6 / D8, system major or material exception?"}
+    I -- Yes --> J["Bounded coordinator decision; no safety waiver"]
+    I -- No --> K["Artifact/gate accountable decision"]
+    J --> L{"Actual workspace access and publishing verified?"}
+    K --> L
+    L -- No --> M["Source-only handoff; Figma remains disabled"]
+    L -- Yes --> N["Serialized versioned promotion; archive prior snapshot"]
+    N --> O{"Rollback needed?"}
+    O -- Yes --> P["Append freeze; keep history; restore as new draft version"]
+    P --> H
+```
 
 ## 16. Required diagrams and specifications
 

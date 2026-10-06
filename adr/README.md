@@ -268,9 +268,9 @@ Source status/date remain the recorded decision metadata. The index derives effe
 | Field | Value |
 |---|---|
 | Source | <a id="adr-022--ai-egress-runtime-platform-and-mode-c-custom-endpoints"></a> [ADR-022.md](ADR-022.md) |
-| Status | PENDING |
+| Status | ACCEPTED |
 | Ticket | T-ADR-AIEGRESS-08 |
-| Date | 2026-09-30 |
+| Date | 2026-10-05 |
 | Supersedes | — |
 | Superseded by | — |
 <!-- SLOT END ADR-022 -->
@@ -393,7 +393,7 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Field | Value |
 |---|---|
 | Ticket | `T-ADR-AIEGRESS-08` |
-| State | PENDING |
+| State | ACCEPTED |
 | Question the record must settle | AI egress path, runtime platform, and Mode C custom endpoints - including which destinations are code-managed and which are runtime registered, validated and pinned |
 | Blocks | AI harness (E17), AI product surfaces (E18), BYOK, platform (E24) |
 <!-- SLOT END ADR-022 -->
