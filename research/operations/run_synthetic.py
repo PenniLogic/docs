@@ -94,24 +94,37 @@ def expected_tests(raw):
 
 
 def test_evidence(stdout, stderr, expected):
-    text = (stdout + b"\n" + stderr).decode("utf-8", errors="replace").replace("\r\n", "\n")
-    summary = re.search(r"^Ran (\d+) tests in ([0-9.]+)s$", text, re.MULTILINE)
-    events = re.findall(
-        r"^test_\w+ \((test_research_operations\.\w+\.test_\w+)\) \.\.\. (ok|FAIL|ERROR|skipped\b)",
-        text, re.MULTILINE,
+    # Test diagnostics are not outcomes: require an uninterrupted native stderr report.
+    text = stderr.decode("utf-8", errors="replace").replace("\r\n", "\n")
+    summary = re.search(
+        r"\n-{70}\nRan (\d+) tests in ([0-9]+(?:\.[0-9]+)?)s\n\n"
+        r"(OK(?: \([^\n]+\))?|FAILED(?: \([^\n]+\))?)\n\Z", text,
     )
+    events = []
+    unambiguous = summary is not None
+    if summary:
+        for line in text[:summary.start()].splitlines():
+            event = re.fullmatch(
+                r"(test_\w+) \((test_research_operations\.\w+\.(test_\w+))\) \.\.\. "
+                r"(ok|FAIL|ERROR|skipped .+|expected failure|unexpected success)", line,
+            )
+            if event is None or event.group(1) != event.group(3):
+                unambiguous, events = False, []
+                break
+            outcome = event.group(4)
+            events.append((event.group(2), "skipped" if outcome.startswith("skipped ") else outcome))
     counts = Counter(name for name, _ in events)
     complete = (
-        summary is not None and int(summary.group(1)) == len(expected)
+        unambiguous and summary.group(3) == "OK" and int(summary.group(1)) == len(expected)
         and set(counts) == expected and set(counts.values()) == {1}
         and all(outcome == "ok" for _, outcome in events)
     )
     return {
-        "complete": complete, "expected": len(expected),
+        "complete": complete, "expected": len(expected), "unambiguous_outcomes": unambiguous,
         "executed": int(summary.group(1)) if summary else None,
         "runner_seconds": float(summary.group(2)) if summary else None,
-        "passed": sum(outcome == "ok" for _, outcome in events),
-        "skipped": sum(outcome == "skipped" for _, outcome in events),
+        "passed": sum(outcome == "ok" for _, outcome in events) if unambiguous else None,
+        "skipped": sum(outcome == "skipped" for _, outcome in events) if unambiguous else None,
         "cases": [{"id": name, "outcome": outcome} for name, outcome in events if name in expected],
         "missing_ids": sorted(expected - set(counts)),
         "unexpected_or_duplicate_ids": bool(set(counts) - expected or any(n != 1 for n in counts.values())),
@@ -218,9 +231,25 @@ def assess(output):
         assessment["failure"] = str(error)
     except (OSError, ValueError, KeyError, SyntaxError):
         assessment["failure"] = "Required source or output is unreadable or invalid; assessment failed."
-    with (output / "assessment.json").open("x", encoding="utf-8", newline="\n") as stream:
-        json.dump(assessment, stream, ensure_ascii=True, indent=2)
-        stream.write("\n")
+    temporary = output / ".assessment.json.tmp"
+    stream = temporary.open("x", encoding="utf-8", newline="\n")
+    published = False
+    try:
+        with stream:
+            json.dump(assessment, stream, ensure_ascii=True, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        # A hard link publishes the closed file without replacing an existing destination.
+        os.link(temporary, output / "assessment.json")
+        published = True
+    finally:
+        try:
+            temporary.unlink()
+        except OSError:
+            if not published:
+                raise
+            print("Synthetic operations warning: assessment persisted; temporary-file cleanup failed.", file=sys.stderr)
     return assessment, exit_code
 
 

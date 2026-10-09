@@ -122,8 +122,10 @@ changed source fails the run. Raw child output is not copied into the report.
 Only after both checks pass does it prepare byte-identical, schema-checked
 `plan.source.json` and `report.UNRUN.json` in the new directory. It never
 overwrites the source pack or a previous assessment. A persistence failure may
-leave partial source copies; only a persisted `status: passed` assessment
-indicates a complete run.
+leave partial source copies or a staging file. A complete run requires a
+successful runner exit (0) and `status: passed` in the final `assessment.json`.
+The closed, flushed staging file is published without overwrite using a local
+hard link; an unsupported filesystem fails explicitly, without a fallback.
 
 Only the output destination is accepted. There is no participant-data input,
 live mode, approval flag, recruitment integration, spending or nested agent.

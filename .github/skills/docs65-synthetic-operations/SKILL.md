@@ -35,8 +35,9 @@ still govern actual contact and are not waived by this skill.
    exits, test counts and failing or incomplete checks. Only successful checks
    permit byte-identical, schema-checked `plan.source.json` and
    `report.UNRUN.json`. These are source copies, not new findings.
-   A persistence failure may leave partial copies; only `status: passed` in a
-   successfully persisted assessment indicates a complete run.
+   A persistence failure may leave partial copies or a staging file. A complete
+   run requires a successful runner exit (0) and `status: passed` in the final
+   `assessment.json`, not a staging file.
 4. Give the output location and the remaining evidence limits, then stop.
    A failed command, skip, missing test or changed source fails the assessment.
    Do not relabel it, bypass a check, edit policy to obtain a pass, recruit a

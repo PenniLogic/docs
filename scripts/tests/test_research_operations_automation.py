@@ -20,6 +20,37 @@ spec = importlib.util.spec_from_file_location("synthetic_operations_runner", SCR
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
 
+PAIRED_NATIVE_FIXTURE = r'''
+import sys
+import unittest
+
+prefix, outcome = sys.argv[1:]
+
+class SyntheticCase(unittest.TestCase):
+    def test_control(self):
+        self.assertTrue(True)
+
+    def test_case(self):
+        if prefix != "clean":
+            sys.stderr.write("synthetic diagnostic\nok\n" if prefix == "diagnostic_then_ok" else "ok\n")
+            sys.stderr.flush()
+        if outcome == "skip":
+            self.skipTest("SYNTHETIC capability skip")
+        if outcome == "expected_failure":
+            self.fail("SYNTHETIC expected failure")
+
+SyntheticCase.__module__ = "test_research_operations"
+if outcome == "expected_failure":
+    SyntheticCase.test_case = unittest.expectedFailure(SyntheticCase.test_case)
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(SyntheticCase)
+result = unittest.TextTestRunner(verbosity=2).run(suite)
+sys.exit(not result.wasSuccessful())
+'''
+PAIRED_IDS = {
+    "test_research_operations.SyntheticCase.test_case",
+    "test_research_operations.SyntheticCase.test_control",
+}
+
 
 class SyntheticOperationsTests(unittest.TestCase):
     def setUp(self):
@@ -32,7 +63,7 @@ class SyntheticOperationsTests(unittest.TestCase):
 
     def native_output(self):
         lines = [f"{name.rsplit('.', 1)[-1]} ({name}) ... ok" for name in sorted(self.expected)]
-        return ("\n".join(lines) + f"\n\nRan {len(lines)} tests in 0.001s\n\nOK\n").encode("ascii")
+        return ("\n".join(lines) + "\n\n" + "-" * 70 + f"\nRan {len(lines)} tests in 0.001s\n\nOK\n").encode("ascii")
 
     def successful_commands(self):
         return [
@@ -252,6 +283,83 @@ class SyntheticOperationsTests(unittest.TestCase):
         self.assertEqual(crlf, lf)
         self.assertNotEqual(runner.fingerprint(raw), runner.fingerprint(raw.replace(b"\n", b"\r\n")))
 
+    def native_pair(self, prefix, outcome):
+        result = subprocess.run(
+            [sys.executable, "-I", "-B", "-c", PAIRED_NATIVE_FIXTURE, prefix, outcome],
+            cwd=ROOT, stdin=subprocess.DEVNULL, capture_output=True, timeout=15,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn(b"Ran 2 tests", result.stderr)
+        return result
+
+    def assert_native_paired_rejected(self, outcome):
+        for prefix in ("clean", "diagnostic_then_ok", "ok_prefix_only"):
+            self.output = self.directory / prefix
+            with self.subTest(prefix=prefix):
+                result = self.native_pair(prefix, outcome)
+                self.assertIn(b"OK (skipped=1)" if outcome == "skip" else b"OK (expected failures=1)", result.stderr)
+                parsed = runner.test_evidence(result.stdout, result.stderr, PAIRED_IDS)
+                self.assertFalse(parsed["complete"])
+                self.assertEqual(parsed["passed"], 1 if prefix == "clean" else None)
+                if prefix != "clean":
+                    self.assertEqual(parsed["cases"], [])
+                lf = result.stderr.replace(b"\r\n", b"\n")
+                self.assertEqual(parsed, runner.test_evidence(result.stdout, lf, PAIRED_IDS))
+                self.assertEqual(parsed, runner.test_evidence(result.stdout, lf.replace(b"\n", b"\r\n"), PAIRED_IDS))
+                responses = self.successful_commands()
+                responses[1] = result
+                with mock.patch.object(runner, "expected_tests", return_value=PAIRED_IDS):
+                    with mock.patch.object(runner.subprocess, "run", side_effect=responses):
+                        code, stdout, stderr = self.invoke()
+                data = self.assessment()
+                self.assertEqual(code, 1)
+                self.assertEqual(data["status"], "failed")
+                self.assertEqual(data["failure"], "incomplete_native_test_evidence")
+                self.assertEqual(data["checks"][1]["exit_code"], 0)
+                self.assertEqual(data["checks"][1]["status"], "failed")
+                self.assertEqual(data["prepared_artifacts"], [])
+                self.assertFalse((self.output / "plan.source.json").exists())
+                self.assertFalse((self.output / "report.UNRUN.json").exists())
+                self.assertNotIn("SYNTHETIC capability skip", json.dumps(data) + stdout + stderr)
+                self.assert_no_research_claim(data)
+
+    def test_native_paired_skip_diagnostics_cannot_be_pass_evidence(self):
+        self.assert_native_paired_rejected("skip")
+
+    def test_native_paired_expected_failure_diagnostics_cannot_be_pass_evidence(self):
+        self.assert_native_paired_rejected("expected_failure")
+
+    def test_native_paired_passing_results_are_preserved(self):
+        result = self.native_pair("clean", "pass")
+        parsed = runner.test_evidence(result.stdout, result.stderr, PAIRED_IDS)
+        self.assertTrue(parsed["complete"])
+        self.assertEqual(parsed["passed"], 2)
+        self.assertEqual(parsed["skipped"], 0)
+        responses = self.successful_commands()
+        responses[1] = result
+        with mock.patch.object(runner, "expected_tests", return_value=PAIRED_IDS):
+            with mock.patch.object(runner.subprocess, "run", side_effect=responses):
+                code, _, _ = self.invoke()
+        self.assertEqual(code, 0)
+        self.assert_no_research_claim(self.assessment())
+
+    def test_terminal_report_cannot_be_supplied_by_stdout_or_ambiguous_diagnostics(self):
+        valid = self.native_output()
+        first_line = valid.splitlines(keepends=True)[0]
+        variants = (
+            (valid, b""),
+            (valid, valid.replace(b"\nOK\n", b"\nOK (skipped=1)\n")),
+            (b"", valid.replace(b"\nOK\n", b"\nOK (expected failures=1)\n")),
+            (b"", first_line + b"skipped 'SYNTHETIC hidden status'\n" + valid[len(first_line):]),
+            (b"", valid + b"SYNTHETIC trailing diagnostic\n"),
+            (b"", valid + valid),
+            (b"", valid.replace(b"\nOK\n", b"\n")),
+        )
+        for index, (stdout, stderr) in enumerate(variants):
+            with self.subTest(index=index):
+                self.assertFalse(runner.test_evidence(stdout, stderr, self.expected)["complete"])
+        self.assertTrue(runner.test_evidence(b"SYNTHETIC stdout is not a result\n", valid, self.expected)["complete"])
+
     def test_raw_command_text_and_false_approval_claims_are_not_retained(self):
         marker = b"SYNTHETIC-not-real@example.invalid; legal approved; 16 real participants; consent granted"
         responses = self.successful_commands()
@@ -316,7 +424,7 @@ class SyntheticOperationsTests(unittest.TestCase):
         original = Path.open
 
         def deny_report(path, *args, **kwargs):
-            if path == self.output / "assessment.json":
+            if path == self.output / ".assessment.json.tmp":
                 raise PermissionError("SYNTHETIC-PRIVATE-ERROR")
             return original(path, *args, **kwargs)
 
@@ -328,12 +436,110 @@ class SyntheticOperationsTests(unittest.TestCase):
         self.assertIn("could not be persisted", stderr)
         self.assertNotIn("SYNTHETIC-PRIVATE-ERROR", stderr)
 
+    def test_late_assessment_write_flush_or_close_failure_never_publishes_success(self):
+        original = Path.open
+        for fault in ("write", "flush", "close"):
+            self.output = self.directory / fault
+            injected = []
+
+            class FaultingWriter:
+                def __init__(self, handle):
+                    self.handle = handle
+
+                def __enter__(self):
+                    self.handle.__enter__()
+                    return self
+
+                def write(self, text):
+                    result = self.handle.write(text)
+                    if fault == "write" and text == "\n":
+                        injected.append(fault)
+                        raise OSError("SYNTHETIC-PRIVATE-ERROR")
+                    return result
+
+                def flush(self):
+                    self.handle.flush()
+                    if fault == "flush":
+                        injected.append(fault)
+                        raise OSError("SYNTHETIC-PRIVATE-ERROR")
+
+                def fileno(self):
+                    return self.handle.fileno()
+
+                def __exit__(self, kind, error, traceback):
+                    result = self.handle.__exit__(kind, error, traceback)
+                    if fault == "close":
+                        injected.append(fault)
+                        raise OSError("SYNTHETIC-PRIVATE-ERROR")
+                    return result
+
+            def fail_late(path, *args, **kwargs):
+                handle = original(path, *args, **kwargs)
+                return FaultingWriter(handle) if path == self.output / ".assessment.json.tmp" else handle
+
+            with self.subTest(fault=fault), mock.patch.object(Path, "open", autospec=True, side_effect=fail_late):
+                with mock.patch.object(runner.subprocess, "run", side_effect=self.successful_commands()):
+                    code, stdout, stderr = self.invoke()
+            self.assertEqual(injected, [fault])
+            self.assertEqual(code, 1)
+            self.assertFalse((self.output / "assessment.json").exists())
+            self.assertFalse((self.output / ".assessment.json.tmp").exists())
+            self.assertNotIn("passed", stdout)
+            self.assertIn("could not be persisted", stderr)
+            self.assertNotIn("SYNTHETIC-PRIVATE-ERROR", stderr)
+
+    def test_final_publication_preserves_existing_destination_and_staging_files(self):
+        for name in ("assessment.json", ".assessment.json.tmp"):
+            self.output = self.directory / name.replace(".", "-")
+            self.output.mkdir()
+            sentinel = self.output / name
+            sentinel.write_bytes(b"SYNTHETIC prior file must not be changed")
+            with self.subTest(name=name), mock.patch.object(runner.subprocess, "run", side_effect=self.successful_commands()):
+                with self.assertRaises(FileExistsError):
+                    runner.assess(self.output)
+            self.assertEqual(sentinel.read_bytes(), b"SYNTHETIC prior file must not be changed")
+            if name == "assessment.json":
+                self.assertFalse((self.output / ".assessment.json.tmp").exists())
+            else:
+                self.assertFalse((self.output / "assessment.json").exists())
+
+    def test_sync_or_no_clobber_publication_failure_never_leaves_a_success_receipt(self):
+        for operation in ("fsync", "link"):
+            self.output = self.directory / operation
+            with self.subTest(operation=operation), mock.patch.object(runner.os, operation, side_effect=OSError("SYNTHETIC-PRIVATE-ERROR")):
+                with mock.patch.object(runner.subprocess, "run", side_effect=self.successful_commands()):
+                    code, stdout, stderr = self.invoke()
+            self.assertEqual(code, 1)
+            self.assertFalse((self.output / "assessment.json").exists())
+            self.assertFalse((self.output / ".assessment.json.tmp").exists())
+            self.assertNotIn("passed", stdout)
+            self.assertIn("could not be persisted", stderr)
+            self.assertNotIn("SYNTHETIC-PRIVATE-ERROR", stderr)
+
+    def test_post_publication_cleanup_warning_does_not_contradict_persisted_result(self):
+        original = Path.unlink
+
+        def fail_cleanup(path, *args, **kwargs):
+            if path == self.output / ".assessment.json.tmp":
+                raise OSError("SYNTHETIC-PRIVATE-ERROR")
+            return original(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "unlink", autospec=True, side_effect=fail_cleanup):
+            with mock.patch.object(runner.subprocess, "run", side_effect=self.successful_commands()):
+                code, _, stderr = self.invoke()
+        self.assertEqual(code, 0)
+        self.assertEqual(self.assessment()["status"], "passed")
+        self.assertIn("temporary-file cleanup failed", stderr)
+        self.assertNotIn("SYNTHETIC-PRIVATE-ERROR", stderr)
+        self.assertEqual((self.output / "assessment.json").read_bytes(), (self.output / ".assessment.json.tmp").read_bytes())
+
     def test_project_skill_has_one_native_entry_point_without_permission_overrides(self):
         skill = ROOT / ".github" / "skills" / "docs65-synthetic-operations" / "SKILL.md"
         text = skill.read_text(encoding="utf-8")
         self.assertTrue(text.startswith("---\nname: docs65-synthetic-operations\ndescription: "))
         self.assertIn("python research\\operations\\run_synthetic.py --output", text)
         self.assertIn("copilot skill list --json", text)
+        self.assertIn("successful runner exit (0)", text)
         self.assertIn("not a new policy", (ROOT / "research" / "operations" / "README.md").read_text(encoding="utf-8"))
         self.assertNotIn("allowed-tools:", text)
         self.assertNotIn("mcp-servers:", text)
