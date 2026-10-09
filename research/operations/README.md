@@ -99,6 +99,52 @@ operational activation record.
 | [household-tabletop.md](household-tabletop.md) | No-contact safe-recruitment tabletop and its negative-test mapping |
 | [check.py](check.py) and [native tests](../../scripts/tests/test_research_operations.py) | Offline source, planted-data, expiry, access, consent, order and recruitment checks |
 
+## Autonomous synthetic operations
+
+The repository-specific
+[docs65-synthetic-operations skill](../../.github/skills/docs65-synthetic-operations/SKILL.md)
+runs the existing pack without routine human coordination, professional
+approval or real participants. This is a finite **automated synthetic
+assessment**, not a new policy, study or role-allocation mechanism.
+
+From the repository root, choose a new directory under an existing local
+session-artifact directory outside Git, then run:
+
+```text
+python research\operations\run_synthetic.py --output <new-local-directory>
+```
+
+[The runner](run_synthetic.py) invokes the existing source check and native
+research-test discovery. It records command exits, actual per-test outcomes,
+timings and source/output hashes in `assessment.json`; every expected research
+case must execute once without a skip. Any failed command, missing case or
+changed source fails the run. Raw child output is not copied into the report.
+Only after both checks pass does it prepare byte-identical, schema-checked
+`plan.source.json` and `report.UNRUN.json` in the new directory. It never
+overwrites the source pack or a previous assessment. A persistence failure may
+leave partial source copies; only a persisted `status: passed` assessment
+indicates a complete run.
+
+Only the output destination is accepted. There is no participant-data input,
+live mode, approval flag, recruitment integration, spending or nested agent.
+The result does not invent consent, professional qualifications or operational
+storage/deletion evidence. The existing method, published pricing, provider
+rights and UNRUN/null-participant report remain unchanged.
+
+This removes the manual coordination, copying and repeated command sequence
+for **synthetic source preparation**. The contact conditions below do not block
+that lane. Original #65 includes running a specific study as a non-goal; genuine
+participants are therefore not a prerequisite for building or running this
+automation. Its actual operational/qualified-approval criteria are not closed
+by a passing assessment. #53's later real-study conditions still apply.
+
+Use `/docs65-synthetic-operations` in a client that has discovered the project
+skill. Supported clients expose `/skills reload`, `/skills info` or
+`copilot skill list --json`. File presence, native discovery and actual skill
+invocation are distinct; report any runtime limitation rather than claiming
+an agent ran merely because this file exists. The Python command above is
+independently executable and does not require a second AI session.
+
 ## Conditions that remain unmet
 
 **All rows below are pending.** A person's absence for three days, owner

@@ -60,6 +60,12 @@
       "date": "2026-10-04",
       "sha256": "02c5bdd1e44d69ca4e9488ab2c8d27a3e5f35a3fa9fc8d4c9cfbc9c383216389",
       "bytes": 19735
+    },
+    {
+      "number": "ADR-025",
+      "date": "2026-10-04",
+      "sha256": "148fe74a232a7bdc1b149f7807adbad24b1679aed0024c8ffe98b94d1cb6fd38",
+      "bytes": 33609
     }
   ]
 }

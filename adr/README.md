@@ -299,6 +299,18 @@ Source status/date remain the recorded decision metadata. The index derives effe
 | Superseded by | — |
 <!-- SLOT END ADR-024 -->
 
+<!-- SLOT START ADR-025 -->
+### ADR-025
+| Field | Value |
+|---|---|
+| Source | <a id="adr-025--durable-user-derived-embeddings-prohibited-for-the-current-release"></a> [ADR-025.md](ADR-025.md) |
+| Status | ACCEPTED |
+| Ticket | T-ADR-EMBED-12 |
+| Date | 2026-10-04 |
+| Supersedes | — |
+| Superseded by | — |
+<!-- SLOT END ADR-025 -->
+
 <!-- END GENERATED ACCEPTED INDEX -->
 
 Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recorded date and effective replacement state are generated from the records; allocation metadata is not rewritten when a decision lands.
@@ -405,6 +417,16 @@ Slots ADR-015 to ADR-023 retain their original ticket allocations. Source, recor
 | Question the record must settle | Credit bureau integration or explicit current-release non-goal: data, consent, cost, erasure, sharing, advice and measurable reopening conditions |
 | Blocks | Nothing while declined; no implementation tickets |
 <!-- SLOT END ADR-024 -->
+
+<!-- SLOT START ADR-025 -->
+### ADR-025
+| Field | Value |
+|---|---|
+| Ticket | `T-ADR-EMBED-12` |
+| State | ACCEPTED |
+| Question the record must settle | Prohibit durable user-derived embeddings for the current release; bound static prototypes and ephemeral inference, inversion risk, erasure and cross-purpose use |
+| Blocks | Vector extensions and durable user-derived embedding paths; actual T-PLT-01 gate consumption remains required |
+<!-- SLOT END ADR-025 -->
 
 <!-- END GENERATED PENDING GATE ADRS -->
 

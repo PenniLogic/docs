@@ -70,6 +70,13 @@
       "state": "PENDING",
       "question": "Credit bureau integration or explicit current-release non-goal: data, consent, cost, erasure, sharing, advice and measurable reopening conditions",
       "blocks": "Nothing while declined; no implementation tickets"
+    },
+    {
+      "number": "ADR-025",
+      "ticket": "T-ADR-EMBED-12",
+      "state": "PENDING",
+      "question": "Prohibit durable user-derived embeddings for the current release; bound static prototypes and ephemeral inference, inversion risk, erasure and cross-purpose use",
+      "blocks": "Vector extensions and durable user-derived embedding paths; actual T-PLT-01 gate consumption remains required"
     }
   ]
 }
