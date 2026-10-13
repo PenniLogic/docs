@@ -870,6 +870,19 @@ class CommandLineTests(unittest.TestCase):
         self.write(document)
         self.assertEqual(self.run_main(), (1, "", "Figma library check refused: id.synthetic_reserved C-SYN-DRAFT\n"))
 
+    def test_mirror_prints_the_generated_section_of_validated_data_only(self):
+        expected = module.render_mirror(run_check(real(), False))
+        self.assertEqual(self.run_main("--mirror"), (0, expected, ""))
+        document = real()
+        document["tabletop"][0]["live_verified"] = True
+        self.write(document)
+        self.assertEqual(self.run_main("--mirror"), (1, "", "Figma library check refused: tabletop.live_claim TT-01\n"))
+
+    def test_mirror_and_structure_are_exclusive(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+            module.main(["--mirror", "--structure"])
+        self.assertEqual(caught.exception.code, 2)
+
     def test_missing_or_duplicate_key_input_fails_closed(self):
         (self.root / module.DATA).write_bytes(b'{"schema_version": 1, "schema_version": 1}\n')
         self.assertEqual(self.run_main(), (1, "", "Figma library check refused: input.unreadable_or_invalid\n"))

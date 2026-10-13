@@ -723,7 +723,9 @@ def platforms_of(component):
 def render_mirror(model):
     """The governance document's generated section: a deterministic rendering of the validated JSON only."""
     document = model.document
-    lines = [MIRROR_BEGIN, "", "### Library topology", ""]
+    lines = [MIRROR_BEGIN, "", f"Contract version {document['contract_version']}; registry pin "
+             f"{document['registry_ref']['commit']} {cell(document['registry_ref']['path'])}; direction reference "
+             f"{cell(document['direction_ref'])}.", "", "### Library topology", ""]
     lines += table(("Library", "Kind", "Layer", "Figma file", "Figma page", "Owner role", "Publish roles", "Consumes",
                     "Status"),
                    [(key, item["kind"], str(TOPOLOGY[key][1]), item["figma_file"], item["figma_page"],
@@ -733,7 +735,7 @@ def render_mirror(model):
     for key, item in model.libraries.items():
         members = sorted(identifier for identifier, component in model.components.items()
                          if component["library"] == key)
-        variants = sorted(f"{identifier} -> {component['variant_of']}" for identifier, component
+        variants = sorted(f"{identifier} of {component['variant_of']}" for identifier, component
                           in model.components.items() if component["library"] == key and component["variant_of"])
         lines.append(f"- {key} consumes {cell(item['consumes'])}; {len(members)} component records; "
                      f"variants: {cell(variants)}")

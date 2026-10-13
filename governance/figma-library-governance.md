@@ -1,7 +1,7 @@
 # Figma library governance and component contribution contract
 
 Plan task T-DSY-02, [PenniLogic/docs#78](https://github.com/PenniLogic/docs/issues/78). Draft contract
-`0.1.0`: proposed by this source change and awaiting the Design Systems, DesignOps, Accessibility,
+(version in section 11): proposed by this source change and awaiting the Design Systems, DesignOps, Accessibility,
 UX Engineering and CDO decisions. Nothing here is an approval, a Figma permission change, a published
 library or live evidence.
 
@@ -29,7 +29,8 @@ account, plan, permission, link or export setting.
 ## 2. Library topology
 
 Six libraries, in a strict layer order; a library may consume only libraries of a lower layer and must
-consume the ones listed (`topology.invalid_consumption`, `topology.missing_dependency`).
+consume the layers it builds on: `LIB-COMPONENTS` consumes `LIB-FOUNDATION`; the platform-variant and
+candidate libraries consume both (`topology.invalid_consumption`, `topology.missing_dependency`).
 
 | Library | Layer | Role in the system | Reserved location |
 | --- | --- | --- | --- |
@@ -60,7 +61,7 @@ least two values and a default from that list (or none); booleans default to `tr
 text may carry a default; slots and instances carry no values and no default
 (`component.property_contract`).
 
-**Proposed placement (awaiting Design Systems confirmation).** All 57 pinned components are imported as
+**Proposed placement (awaiting Design Systems confirmation).** All pinned components are imported as
 unpublished `draft` records in `LIB-COMPONENTS` with their pinned platforms (`shared` = android, web and
 admin). Platform libraries hold only variants of a `LIB-COMPONENTS` component, and the registry records
 semantic components, not variants, so single-platform components (for example the admin-only operator
@@ -104,7 +105,7 @@ Releases are keyed by (library, SemVer) and form a chain through `previous`
 | Class | Version step | Content | Decision right |
 | --- | --- | --- | --- |
 | patch | `x.y.z` -> `x.y.(z+1)` | Fixes without a contract change | Design Systems (`systems`) |
-| minor | `x.y.z` -> `x.(y+1).0` | Additive components or properties | Design Systems Lead (`systems`, accountable) |
+| minor | `x.y.z` -> `x.(y+1).0` | Additive components, properties or tokens | Design Systems Lead (`systems`, accountable) |
 | major | `x.y.z` -> `(x+1).0.0`, or a first `x.0.0` | Breaking component or token changes; first releases | CDO (`decision_coordinator` within `shared_system_major`) |
 
 Breaking changes (criterion 3) must be major (`release.breaking_not_major`), carry a migration plan
@@ -156,7 +157,7 @@ This source has no enable-publishing action.
 | publish to a shared library by a feature squad | never | `permission.feature_squad_publish` |
 | publish to `LIB-CANDIDATE` | never; candidates have no publish roles | `permission.candidate_publish` |
 | edit a shared library | its maintainers only; squads contribute through proposal branches | tabletop |
-| view, comment | any active role with a grant under section 7 of `design-operations.md` | tabletop |
+| view, comment | any known role that is not offboarded; real access still needs a default-deny grant under section 7 of `design-operations.md` | tabletop |
 | public link, external sharing, asset export | nobody (E34-F06) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
 | any action after offboarding | nobody; offboarding revokes every grant and session | `access.offboarding_not_revoking` |
 
@@ -214,6 +215,8 @@ Regenerate with `python scripts/check_figma_libraries.py --mirror` and replace t
 unit tests fail when it differs from the JSON.
 
 <!-- BEGIN GENERATED: governance/figma-libraries.json (check_figma_libraries.py --mirror) -->
+
+Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 planning/source/evidence/experience-coverage.json; direction reference -.
 
 ### Library topology
 
