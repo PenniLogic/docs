@@ -22,6 +22,8 @@ Personas are planning hypotheses, not research evidence: every persona basis sta
 | readiness.gap_backlog_missing | 16 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
 | readiness.figma_held | 5 | D01, D03, D04, D05, D21 |
 
+Drift of the live registry from the pin (readiness.registry_id_added, readiness.registry_id_retired, readiness.registry_record_changed) is reported by the default mode only, never by this file.
+
 ## Approvals and research gate
 
 | Role | Status |

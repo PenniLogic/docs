@@ -689,10 +689,41 @@ EXPECTED_GAPS = {
     "readiness.gap_open": ["GAP-J10-01"],
     "readiness.gap_backlog_missing": ["GAP-J10-01"],
     "readiness.figma_held": ["D01", "D03", "D04", "D05", "D21"],
+    "readiness.registry_id_added": [],
+    "readiness.registry_id_retired": [],
+    "readiness.registry_record_changed": [],
 }
 
 
+def drifted_registry():
+    """The synthetic registry with one added critical flow joined to J01 (review round 1 SS-05)."""
+    registry = copy.deepcopy(REGISTRY)
+    registry["flows"].append({"id": "F-WEB-03", "journey_ids": ["J01"], "screen_ids": ["S-WEB-001"], "critical": True})
+    registry["journeys"][0]["flow_ids"].append("F-WEB-03")
+    return registry
+
+
 class ReadinessTests(JourneyCase):
+    def drift(self, registry):
+        result = module.readiness(self.run_check(), module.index_registry(registry))
+        return [result[rule] for rule in module.DRIFT_RULES]
+
+    def test_unchanged_live_registry_has_no_drift(self):
+        self.assertEqual(self.drift(copy.deepcopy(REGISTRY)), [[], [], []])
+
+    def test_added_flow_and_changed_journey_are_drift(self):
+        self.assertEqual(self.drift(drifted_registry()), [["F-WEB-03"], [], ["J01"]])
+
+    def test_retired_diagram_is_drift(self):
+        registry = copy.deepcopy(REGISTRY)
+        registry["diagrams"].pop()
+        self.assertEqual(self.drift(registry), [[], ["D02"], []])
+
+    def test_critical_flag_change_is_drift(self):
+        registry = copy.deepcopy(REGISTRY)
+        registry["flows"][4]["critical"] = True
+        self.assertEqual(self.drift(registry), [[], [], ["F-AND-02"]])
+
     def test_control_readiness_gaps_are_exact(self):
         self.assertEqual(module.readiness(self.run_check()), EXPECTED_GAPS)
 
@@ -725,6 +756,8 @@ class SummaryAndCliTests(JourneyCase):
         (self.root / module.GAPS).write_bytes(encode(GAPS))
         (self.root / module.SCHEMA).write_bytes((ROOT / module.SCHEMA).read_bytes())
         (self.root / module.INVENTORY).write_bytes((ROOT / module.INVENTORY).read_bytes())
+        (self.root / REGISTRY_PATH).parent.mkdir(parents=True)
+        (self.root / REGISTRY_PATH).write_bytes(BLOB)
         self.patches = [mock.patch.object(module, "ROOT", self.root),
                         mock.patch.object(module, "REGISTRY_PIN", PIN),
                         mock.patch.object(module, "GitSources", lambda root: SOURCES)]
@@ -830,6 +863,25 @@ class SummaryAndCliTests(JourneyCase):
         self.assertEqual(sorted(["J10", "J02", "J1"], key=module.natural_key), ["J1", "J02", "J10"])
         self.assertEqual(module.natural_key("J01\u00b2"), [(0, "J"), (1, "01"), (0, "\u00b2")])
 
+    def test_default_mode_reports_live_registry_drift_as_readiness(self):
+        self.assertEqual(self.main("--write-summary")[0], 0)
+        (self.root / module.CANONICAL_REGISTRY).write_bytes(encode(drifted_registry()))
+        self.assertEqual(self.main("--structure")[0], 0)
+        code, out, _ = self.main()
+        self.assertEqual(code, 1)
+        self.assertIn("readiness.registry_id_added: 1", out.splitlines())
+        self.assertIn("readiness.registry_record_changed: 1", out.splitlines())
+
+    def test_unreadable_live_registry_refused(self):
+        self.assertEqual(self.main("--write-summary")[0], 0)
+        (self.root / module.CANONICAL_REGISTRY).write_text("{\"personas\": 1}", encoding="utf-8", newline="\n")
+        self.assertEqual(self.main(), (1, "", "Journey blueprint check refused: registry.current_invalid\n"))
+
+    def test_missing_live_registry_refused(self):
+        self.assertEqual(self.main("--write-summary")[0], 0)
+        (self.root / REGISTRY_PATH).unlink()
+        self.assertEqual(self.main(), (1, "", "Journey blueprint check refused: registry.current_invalid\n"))
+
     def test_invalid_input_fails_closed_without_echo(self):
         (self.root / module.DATA).write_text("{\"kind\": \"secret-ish text\",", encoding="utf-8", newline="\n")
         self.assertEqual(self.main("--structure"),
@@ -857,6 +909,9 @@ PUBLISHED_READINESS = {
     "readiness.gap_open": PUBLISHED_GAPS,
     "readiness.gap_backlog_missing": PUBLISHED_GAPS,
     "readiness.figma_held": ["D01", "D03", "D04", "D05", "D21"],
+    "readiness.registry_id_added": [],
+    "readiness.registry_id_retired": [],
+    "readiness.registry_record_changed": [],
 }
 
 

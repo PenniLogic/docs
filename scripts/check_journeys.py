@@ -47,6 +47,7 @@ REGISTRY_PIN = {
     "sha256": "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a",
 }
 REGISTRY_ISSUE = "PenniLogic/docs#75"
+CANONICAL_REGISTRY = "product/experience-coverage.json"
 RESEARCH_ISSUE = "PenniLogic/docs#66"
 METRIC_PENDING = "pending:PenniLogic/docs#77"
 OWNER_PLAN_ID = "T-UXR-04"
@@ -152,6 +153,7 @@ STRUCTURE_RULES = (
     "content.secret_shape", "content.url_shape", "content.email_shape", "content.amount_shape",
     "content.phone_shape", "content.unexpected_number",
     "registry.ref_mismatch", "registry.unavailable", "registry.digest_mismatch", "registry.invalid",
+    "registry.current_invalid",
     "inventory.invalid", "id.duplicate",
     "blueprint.journey_mismatch", "blueprint.missing_journey", "blueprint.unknown_journey",
     "blueprint.name_mismatch", "blueprint.persona_mismatch", "blueprint.flow_mismatch",
@@ -181,7 +183,11 @@ READINESS_RULES = (
     "readiness.registry_unintegrated", "readiness.research_pending", "readiness.persona_provisional",
     "readiness.approval_pending", "readiness.metric_pending", "readiness.event_pending",
     "readiness.gap_open", "readiness.gap_backlog_missing", "readiness.figma_held",
+    "readiness.registry_id_added", "readiness.registry_id_retired", "readiness.registry_record_changed",
 )
+# TS-M8: live-registry drift is a readiness gap, never a structure failure; the default mode reports it, while
+# the committed summary renders the pinned registry only, so drift can never surface as summary.drift.
+DRIFT_RULES = READINESS_RULES[-3:]
 
 
 def classify(identifier):
@@ -369,6 +375,11 @@ def read_registry(document, sources, pin):
         registry = loads(blob)
     except (ValueError, RecursionError):
         raise Refused("registry.invalid") from None
+    return index_registry(registry)
+
+
+def index_registry(registry):
+    """Personas, journeys, flows, screens and diagrams by ID, with their joins checked (registry.invalid)."""
     personas = _records(registry, "personas", "persona")
     journeys = _records(registry, "journeys", "journey")
     flows = _records(registry, "flows", "flow")
@@ -384,7 +395,39 @@ def read_registry(document, sources, pin):
         require(isinstance(flow.get("critical"), bool), "registry.invalid")
     for diagram in diagrams.values():
         require(isinstance(diagram.get("owner_ticket"), str), "registry.invalid")
-    return {"journeys": journeys, "flows": flows, "screens": screens, "diagrams": diagrams}
+    return {"personas": personas, "journeys": journeys, "flows": flows, "screens": screens, "diagrams": diagrams}
+
+
+def read_current(root):
+    """The working-tree registry: docs#75's canonical file once integrated, else the planning import (TS-M8)."""
+    for relative in (CANONICAL_REGISTRY, REGISTRY_PIN["path"]):
+        target = repository_file(root, relative)
+        if target.exists():
+            try:
+                return index_registry(loads(target.read_bytes()))
+            except (OSError, ValueError, RecursionError, Refused):
+                raise Refused("registry.current_invalid") from None
+    raise Refused("registry.current_invalid")
+
+
+# What a changed registry record means for a blueprint: its persona, flow, screen, critical or owner joins.
+RECORD_JOINS = {"journeys": ("persona_ids", "flow_ids"), "flows": ("journey_ids", "screen_ids", "critical"),
+                "diagrams": ("owner_ticket",)}
+
+
+def registry_drift(pinned, current):
+    """IDs the live registry added or retired since the pin, and records whose blueprint joins changed."""
+    added, retired, changed = set(), set(), set()
+    for collection in ("personas", "journeys", "flows", "screens", "diagrams"):
+        before, after = pinned[collection], current[collection]
+        added.update(set(after) - set(before))
+        retired.update(set(before) - set(after))
+        for identifier in set(before) & set(after):
+            for key in RECORD_JOINS.get(collection, ()):
+                old, new = before[identifier].get(key), after[identifier].get(key)
+                if (set(old) != set(new)) if isinstance(old, list) and isinstance(new, list) else old != new:
+                    changed.add(identifier)
+    return added, retired, changed
 
 
 def inventory_index(inventory):
@@ -649,8 +692,9 @@ def check(document, gaps, schema, inventory, adrs, sources, pin=None):
     return model
 
 
-def readiness(model):
-    """Every visible gap by static rule: sorted, de-duplicated subjects; never filled in or waived."""
+def readiness(model, current=None):
+    """Every visible gap by static rule: sorted, de-duplicated subjects; never filled in or waived. `current` is the
+    working-tree registry; without it the drift rules stay empty (the summary's pinned view)."""
     document, gaps = model.document, {rule: set() for rule in READINESS_RULES}
     if document["registry_ref"]["path"] == REGISTRY_PIN["path"]:
         gaps["readiness.registry_unintegrated"].add(REGISTRY_ISSUE)
@@ -676,6 +720,11 @@ def readiness(model):
     for diagram in document["diagrams"]:
         if diagram["figma"] == "held":
             gaps["readiness.figma_held"].add(diagram["id"])
+    if current is not None:
+        added, retired, changed = registry_drift(model.registry, current)
+        gaps["readiness.registry_id_added"].update(added)
+        gaps["readiness.registry_id_retired"].update(retired)
+        gaps["readiness.registry_record_changed"].update(changed)
     return {rule: sorted(subjects, key=natural_key) for rule, subjects in gaps.items()}
 
 
@@ -811,7 +860,9 @@ def render_summary(model, gaps):
         "## Readiness gaps", "",
     ]
     lines += _table(("Rule", "Count", "Subjects"), [
-        (rule, str(len(gaps[rule])), _list(gaps[rule])) for rule in READINESS_RULES])
+        (rule, str(len(gaps[rule])), _list(gaps[rule])) for rule in READINESS_RULES if rule not in DRIFT_RULES])
+    lines += ["Drift of the live registry from the pin (" + ", ".join(DRIFT_RULES) + ") is reported by the default "
+              "mode only, never by this file.", ""]
     lines += ["## Approvals and research gate", ""]
     lines += _table(("Role", "Status"), [(item["role"], item["status"]) for item in document["approvals"]])
     lines += [f"Research gate {document['research_gate']['issue']}: {document['research_gate']['status']}, "
@@ -900,6 +951,8 @@ def main(argv=None):
         if args.check_summary:
             print(f"Journey blueprint summary {SUMMARY} matches the data ({status}).")
             return 0
+        gaps = readiness(model, read_current(ROOT))
+        status = NOT_GREEN if any(gaps.values()) else GREEN
         print(status)
         print(structure_line(model))
         if status == GREEN:
