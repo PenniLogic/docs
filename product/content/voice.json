@@ -72,6 +72,21 @@
       "phrase": "you should have"
     },
     {
+      "id": "banned.guarantee",
+      "category": "guarantee",
+      "phrase": "guarantee"
+    },
+    {
+      "id": "banned.guarantees",
+      "category": "guarantee",
+      "phrase": "guarantees"
+    },
+    {
+      "id": "banned.guaranteeing",
+      "category": "guarantee",
+      "phrase": "guaranteeing"
+    },
+    {
       "id": "banned.guaranteed",
       "category": "guarantee",
       "phrase": "guaranteed"

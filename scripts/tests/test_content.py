@@ -603,6 +603,43 @@ class MessageKeyTests(Harness):
                            "debt.delete.next")
 
 
+class BannedVariantTests(Harness):
+    """Review round 1 F-05: banned phrases match across case, hyphens and dashes, spacing and contractions."""
+
+    def assertVariantRefused(self, phrase, text):
+        docs = documents()
+        docs["voice"]["banned_patterns"].append({"id": "banned.variant", "category": "shame", "phrase": phrase})
+        self.run_check(docs)  # control: the phrase is configured and no copy uses it
+        keys_of(docs)["debt.delete.consequence"].update(copy=text)
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs)
+        self.assertEqual((caught.exception.rule, caught.exception.subject),
+                         ("key.banned_pattern", "debt.delete.consequence"))
+
+    def test_hyphenated_copy_matches_a_spaced_phrase(self):
+        self.assertVariantRefused("debt free by", "You will be debt-free by June")
+
+    def test_spaced_copy_matches_a_hyphenated_phrase(self):
+        self.assertVariantRefused("risk-free", "This method is risk free")
+
+    def test_en_dash_reads_as_a_hyphen(self):
+        self.assertVariantRefused("life-changing", "A life\u2013changing result")
+
+    def test_doubled_whitespace_is_collapsed(self):
+        self.assertVariantRefused("bad with money", "You are bad  with money")
+
+    def test_contraction_is_expanded(self):
+        self.assertVariantRefused("you should have", "You should've paid on time")
+
+    def test_typographic_contraction_is_expanded(self):
+        self.assertVariantRefused("you should have", "You should\u2019ve paid on time")
+
+    def test_spelling_variants_of_one_phrase_are_duplicates(self):
+        self.assertRefused(lambda d: d["voice"]["banned_patterns"].append(
+            {"id": "banned.variant", "category": "advice", "phrase": "You-should  invest"}),
+            "voice.duplicate_pattern", "banned.variant")
+
+
 class PlaceholderTests(Harness):
     def placeholders(self, docs):
         return docs["message-keys"]["placeholders"]
@@ -621,6 +658,30 @@ class PlaceholderTests(Harness):
         for identifier in ("payee_name", "otp", "operator_id", "raw_text", "account_ref", "member_alias"):
             with self.subTest(identifier=identifier):
                 self.assertRefused(lambda d: self.placeholders(d)[0].update(id=identifier), "placeholder.prohibited")
+
+
+    # Review round 1 F-06: parts match anywhere in the name, and identity-bearing names are on the list.
+    def test_joined_up_and_identity_bearing_placeholder_names_are_prohibited(self):
+        for identifier in ("username", "accountnumber", "cardnumber", "otpcode", "merchant", "payee", "sender",
+                           "recipient", "counterparty", "upi_id", "vpa", "pan", "aadhaar", "ifsc", "iban", "passwd"):
+            with self.subTest(identifier=identifier):
+                self.assertRefused(lambda d: self.placeholders(d)[0].update(id=identifier), "placeholder.prohibited")
+
+    def test_notification_never_echoes_a_data_placeholder(self):
+        docs = documents()
+        self.placeholders(docs).append({"id": "due_day", "description": "Synthetic.", "source": "service_response"})
+        add_key(docs, key("debt.reminder.due", "Due on {due_day}", "label"))
+        self.run_check(docs)  # control: a label may render the data placeholder
+        keys_of(docs)["debt.reminder.due"].update(category="notification")
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs)
+        self.assertEqual((caught.exception.rule, caught.exception.subject),
+                         ("key.notification_data_placeholder", "debt.reminder.due"))
+
+    def test_notification_may_use_a_surface_placeholder(self):
+        docs = documents()
+        add_key(docs, key("debt.reminder.period", "Your {period_label} summary is ready", "notification"))
+        self.run_check(docs)
 
 
 class ContentGuardTests(Harness):
@@ -1429,7 +1490,7 @@ class PublishedContentTests(unittest.TestCase):
 
     def test_published_content_passes_structure(self):
         self.assertEqual(content.structure_line(self.model), (
-            "Content glossary 0.1.0 structure valid: 30 terms (7 need comprehension evidence); voice 0.1.0: 15 "
+            "Content glossary 0.1.0 structure valid: 30 terms (7 need comprehension evidence); voice 0.1.0: 18 "
             "banned patterns, 8 content patterns, taxonomy copy rules imported by reference; message keys 0.1.0: "
             "81 keys (43 state., 0 nav., 11 reg., 12 common.); regulated copy 0.1.0: 11 records, 0 approved"
         ))
@@ -1461,6 +1522,16 @@ class PublishedContentTests(unittest.TestCase):
                 expected = "pending:PenniLogic/docs#66" if term["comprehension"]["required"] else None
                 self.assertEqual(term["comprehension"]["evidence_ref"], expected)
                 self.assertEqual(term["contract_field_names"], [])  # contracts owns field names; none invented
+
+    def test_published_banned_phrases_catch_inflected_and_respelled_forms(self):
+        # Review round 1 F-05: the reviewer's bypasses, each refused by the published voice; the control passes.
+        phrases = [pattern["phrase"] for pattern in self.docs["voice"]["banned_patterns"]]
+        self.assertIsNone(content.banned_in("Your payoff date is a projection", phrases))
+        for text in ("We guarantee your payoff date", "Our plan guarantees lower interest", "Guaranteeing a date",
+                     "You will be debt-free by June", "This method is risk free", "You are bad  with money",
+                     "A life changing result", "You should've paid on time"):
+            with self.subTest(text=text):
+                self.assertIsNotNone(content.banned_in(text, phrases))
 
     def test_published_state_keys_are_exactly_the_taxonomy_derived_set(self):
         facts = content.taxonomy_facts(content.support.load_json(ROOT / content.TAXONOMY))

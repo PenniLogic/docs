@@ -91,12 +91,17 @@ REGULATED_CATEGORIES = (
 APPROVER_ROLE = "legal"
 # Neutral safe-exit copy must exist for shared-device and coercive contexts (security and privacy section).
 SAFE_EXIT_CATEGORIES = ("notification", "denial")
-# A placeholder whose name carries one of these parts would echo raw content, credentials or hidden identity.
+# A placeholder whose name contains one of these parts anywhere (underscores ignored, so "username" and
+# "account_number" both match) would echo raw content, credentials or hidden identity. Substring matching fails
+# closed: an innocent name that happens to contain a part is refused too and must be renamed.
 PROHIBITED_PLACEHOLDER_PARTS = (
-    "password", "passcode", "otp", "pin", "token", "secret", "credential", "key", "account", "card", "email",
-    "phone", "name", "operator", "agent", "raw", "message", "body", "content", "note", "resource", "user",
-    "member", "amount", "balance",
+    "password", "passwd", "passcode", "otp", "pin", "token", "secret", "credential", "key", "account", "card",
+    "email", "phone", "mobile", "address", "contact", "name", "operator", "agent", "raw", "message", "body",
+    "content", "note", "resource", "user", "member", "person", "people", "amount", "balance", "merchant", "payee",
+    "payer", "sender", "recipient", "counterparty", "upi", "vpa", "pan", "aadhaar", "aadhar", "ifsc", "iban",
 )
+# Placeholder sources that carry user data; notifications never echo them (voice.discreet_by_default).
+DATA_PLACEHOLDER_SOURCES = ("client_cache", "service_response")
 # Numeric bounds are enforced here, not in the schemas (shared draft-07 subset).
 SENTENCE_WORDS = (8, 40)
 RANGE_LIMIT = 2000
@@ -137,7 +142,8 @@ STRUCTURE_RULES = (
     "key.copy_missing", "key.range_order",
     "key.copy_out_of_range", "key.unknown_term", "key.term_label_missing", "key.forbidden_term",
     "key.forbidden_alias", "key.banned_pattern", "key.sentence_too_long", "key.placeholder_unknown",
-    "key.safe_exit_placeholder", "key.neutral_safe_exit_missing", "held.key_approval",
+    "key.safe_exit_placeholder", "key.notification_data_placeholder", "key.neutral_safe_exit_missing",
+    "held.key_approval",
     "regulated.id_grammar", "regulated.duplicate_id", "regulated.approver_role_unqualified",
     "regulated.category_missing", "regulated.key_mismatch", "regulated.fail_closed_key_unknown",
     "regulated.fail_closed_key_unsafe", "regulated.forbidden_term", "regulated.forbidden_alias",
@@ -373,8 +379,8 @@ def check_voice(voice, facts):
     phrases = set()
     for pattern in voice["banned_patterns"]:
         phrase = pattern["phrase"].casefold()
-        require(phrase not in phrases, "voice.duplicate_pattern", pattern["id"])
-        phrases.add(phrase)
+        require(normalised(phrase) not in phrases, "voice.duplicate_pattern", pattern["id"])
+        phrases.add(normalised(phrase))
         # Overlap with the imported list in either direction is a fork of the taxonomy's forbidden terms.
         require(forbidden_in(phrase, facts["forbidden_terms"]) is None
                 and all(phrase not in term.casefold() for term in facts["forbidden_terms"]),
@@ -396,9 +402,27 @@ def check_term_wording(glossary, banned):
             require(forbidden_in(text, aliases) is None, "term.forbidden_alias", term["id"])
 
 
+DASHES = re.compile("[-\u2010\u2011\u2012\u2013\u2014\u2015\u2212]")
+CONTRACTIONS = (
+    ("won't", "will not"), ("can't", "cannot"), ("shan't", "shall not"), ("n't", " not"), ("'ve", " have"),
+    ("'re", " are"), ("'ll", " will"), ("'d", " would"), ("'m", " am"),
+)
+
+
+def normalised(text):
+    """Text as the banned-phrase lint compares it: case-folded, typographic apostrophes straightened, contractions
+    expanded, hyphens and dashes read as spaces and whitespace collapsed ("Debt-free", "debt  free" and "debt free"
+    are one phrase; "should've" is "should have")."""
+    folded = text.casefold().replace("\u2019", "'").replace("\u2018", "'")
+    for short, full in CONTRACTIONS:
+        folded = folded.replace(short, full)
+    return " ".join(DASHES.sub(" ", folded).split())
+
+
 def banned_in(text, phrases):
-    """The first banned voice phrase in text, matched like the taxonomy's forbidden terms."""
-    return support.forbidden_term(text, [phrase.casefold() for phrase in phrases])
+    """The first banned voice phrase in text: both sides normalised, then matched word-bounded like the taxonomy's
+    forbidden terms. Inflected forms are separate phrases in voice.json (guarantee, guarantees, guaranteed ...)."""
+    return support.forbidden_term(normalised(text), [normalised(phrase) for phrase in phrases])
 
 
 def check_placeholders(catalogue, facts):
@@ -407,7 +431,8 @@ def check_placeholders(catalogue, facts):
                   "placeholder.duplicate")
     for identifier in own:
         require(identifier not in facts["placeholders"], "placeholder.shadows_taxonomy")
-        require(not set(identifier.split("_")) & set(PROHIBITED_PLACEHOLDER_PARTS), "placeholder.prohibited")
+        joined = identifier.replace("_", "")
+        require(not any(part in joined for part in PROHIBITED_PLACEHOLDER_PARTS), "placeholder.prohibited")
     return own | facts["placeholders"]
 
 
@@ -481,6 +506,8 @@ def check_keys(catalogue, facts, terms, context, roles, regulated_ids):
                 require(forbidden_in(copy, [label]) is not None, "key.term_label_missing", key, reference)
             names = check_copy(copy, key, context, KEY_COPY_RULES)
             require(not (entry["neutral_safe_exit"] and names), "key.safe_exit_placeholder", key)
+            require(entry["category"] != "notification" or not set(names) & context["data_placeholders"],
+                    "key.notification_data_placeholder", key)
         require(entry["status"] == "provisional", "held.key_approval", key)
         index[key] = entry
     for category in SAFE_EXIT_CATEGORIES:
@@ -856,6 +883,8 @@ def check(documents, schemas, taxonomy, gates, now, sources, owner=None):
         "forbidden_terms": facts["forbidden_terms"], "banned": banned, "max_words": voice["max_sentence_words"],
         "aliases": [alias.casefold() for term in glossary["terms"] for alias in term["forbidden_aliases"]],
         "placeholders": check_placeholders(catalogue, facts),
+        "data_placeholders": {item["id"] for item in catalogue["placeholders"]
+                              if item["source"] in DATA_PLACEHOLDER_SOURCES},
     }
     identifiers = regulated_ids(regulated)
     keys = check_keys(catalogue, facts, terms, context, roles, identifiers)

@@ -31,6 +31,9 @@ Applied by reference from `product/client-state-taxonomy.json` (never restated h
 | `banned.careless` | shame | careless |
 | `banned.bad_with_money` | shame | bad with money |
 | `banned.should_have` | shame | you should have |
+| `banned.guarantee` | guarantee | guarantee |
+| `banned.guarantees` | guarantee | guarantees |
+| `banned.guaranteeing` | guarantee | guaranteeing |
 | `banned.guaranteed` | guarantee | guaranteed |
 | `banned.debt_free_by` | guarantee | debt free by |
 | `banned.risk_free` | guarantee | risk-free |
