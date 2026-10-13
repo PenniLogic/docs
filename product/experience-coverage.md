@@ -13,7 +13,7 @@ and docs#126 publish no record this validator can resolve, so those columns stay
 | --- | --- |
 | Registry version | `1.0.0` |
 | Schema version | `2` |
-| Registry checksum | `sha256:b5e7d1675a1aa200fa1cd88f797d27e90f6cbf4d60b4db60f96714c214be00fd` |
+| Registry checksum | `sha256:394a4f79fae475773c9fb71e7e0fb4ee457e7467cfdbe7c507de1066baebd52b` |
 | Imported from | `planning/source/evidence/experience-coverage.json` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` |
 | Ledger | 319 active, 0 retired |
 

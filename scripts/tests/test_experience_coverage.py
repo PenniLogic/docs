@@ -214,9 +214,21 @@ COLLECTIONS = {
          "owner_ticket": copy.deepcopy(DIAGRAM_OWNER)},
     ],
 }
+
+
+def identity(record):
+    """The identifying text the ledger fingerprints: the record's name, or a user story's i_want."""
+    return record["i_want"] if "i_want" in record else record["name"]
+
+
+def fingerprint(text):
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 # The frozen import predates S-AND-004, so only the base registry can protect that ID.
 IMPORT = {"kind": "experience_coverage", "schema_version": 1, **{
-    collection: [{"id": record["id"]} for record in records if record["id"] != "S-AND-004"]
+    collection: [{"id": record["id"], "i_want" if collection == "user_stories" else "name": identity(record)}
+                 for record in records if record["id"] != "S-AND-004"]
     for collection, records in COLLECTIONS.items()
 }}
 IMPORT_BYTES = (json.dumps(IMPORT, indent=2) + "\n").encode("utf-8")
@@ -237,8 +249,8 @@ REGISTRY = {
     "taxonomy_state_map": [{"state": item["name"], "taxonomy_state": item["id"]} for item in TAXONOMY["states"]],
     "id_ranges": RANGES,
     "id_ledger": [
-        {"id": record["id"], "kind": kind, "platform": module.classify(record["id"])[1], "status": "active",
-         "retired_reason": None}
+        {"id": record["id"], "kind": kind, "platform": module.classify(record["id"])[1],
+         "name_sha256": fingerprint(identity(record)), "status": "active", "retired_reason": None}
         for collection, kind in module.COLLECTIONS for record in COLLECTIONS[collection]
     ],
     **COLLECTIONS,
@@ -544,12 +556,12 @@ class InputAndSchemaRuleTests(CoverageCase):
 
     def test_content_boundaries(self):
         fixture = Fixture()
-        fixture.record("D01")["name"] = "x" * module.FREE_TEXT_LIMIT
+        fixture.record("D01")["artifact_path"] = "x" * module.FREE_TEXT_LIMIT  # a name change would be a repoint
         fixture.record("US-ADM-01")["so_that"] = "the phone digit run 1234-5678 stays below nine digits"
         fixture.record("P01")["jobs"].append("Release plan path design/android/handoff-and-001-v1-2-0-final-review")
         fixture.check()
-        self.refused(lambda f: f.record("D01").update(name="x" * (module.FREE_TEXT_LIMIT + 1)), "content.too_long",
-                     "D01")
+        self.refused(lambda f: f.record("D01").update(artifact_path="x" * (module.FREE_TEXT_LIMIT + 1)),
+                     "content.too_long", "D01")
         self.refused(lambda f: f.record("US-ADM-01").update(so_that="runs 123-456-789 in a row"),
                      "content.phone_shape", "US-ADM-01")
 
@@ -594,6 +606,18 @@ class InputAndSchemaRuleTests(CoverageCase):
             fixture.set_import(json.dumps(imported).encode("utf-8"))
         self.refused(missing_collection, "import.invalid")
 
+        def unnamed(fixture):
+            imported = copy.deepcopy(IMPORT)
+            del imported["screens"][0]["name"]
+            fixture.set_import(json.dumps(imported).encode("utf-8"))
+        self.refused(unnamed, "import.invalid")
+
+        def duplicated(fixture):
+            imported = copy.deepcopy(IMPORT)
+            imported["screens"].append(copy.deepcopy(imported["screens"][0]))
+            fixture.set_import(json.dumps(imported).encode("utf-8"))
+        self.refused(duplicated, "import.invalid")
+
     def test_inventory_and_taxonomy_inputs(self):
         self.refused(lambda f: f.inventory.update(operator="someone-else"), "inventory.invalid")
         self.refused(lambda f: f.inventory["issues"].append(copy.deepcopy(f.inventory["issues"][0])),
@@ -618,6 +642,16 @@ class IdentityAndLedgerTests(CoverageCase):
         with self.assertRaises(module.Refused) as caught:
             fixture.check()
         self.assertEqual((caught.exception.rule, caught.exception.subject), ("ledger.missing_record", "C-SYN-QUEUE"))
+
+        def retired_fixture_id(fixture):
+            fixture.registry["id_ledger"].append({
+                "id": "C-SYN-FIXTURE", "kind": "component", "platform": None,
+                "name_sha256": fingerprint("Synthetic fixture"), "status": "retired",
+                "retired_reason": "Synthetic test fixture identifier.",
+            })
+        fixture = self.refused(retired_fixture_id, "id.synthetic_reserved", "C-SYN-FIXTURE")
+        fixture.synthetic_ok = True
+        fixture.check()  # test fixtures may hold it
 
     def test_id_outside_platform_range_fails(self):
         def narrow(last):
@@ -655,19 +689,49 @@ class IdentityAndLedgerTests(CoverageCase):
         self.refused(lambda f: f.ledger("C-OP-QUEUE").update(platform="admin"), "ledger.kind_or_platform_mismatch",
                      "C-OP-QUEUE")
 
+    def test_repointed_id_same_kind_rejected(self):
+        """E33-F05 "repointed": the first-issued identity fingerprint pins what each ID names (TS-M3)."""
+        def swap(fixture):
+            first, second = fixture.record("S-AND-001"), fixture.record("S-AND-002")
+            first["name"], second["name"] = second["name"], first["name"]
+        self.refused(swap, "ledger.fingerprint_mismatch", "S-AND-001")
+        self.refused(lambda f: f.record("S-AND-002").update(name="Synthetic screen renamed"),
+                     "ledger.fingerprint_mismatch", "S-AND-002")
+        self.refused(lambda f: f.record("US-WEB-01").update(i_want="a different synthetic outcome"),
+                     "ledger.fingerprint_mismatch", "US-WEB-01")
+
+        def swap_with_ledger(fixture):
+            swap(fixture)
+            first, second = fixture.ledger("S-AND-001"), fixture.ledger("S-AND-002")
+            first["name_sha256"], second["name_sha256"] = second["name_sha256"], first["name_sha256"]
+        self.refused(swap_with_ledger, "ledger.import_discontinuity", "S-AND-001")
+        self.refused(swap_with_ledger, "ledger.entry_changed", "S-AND-001", prepare=Fixture.freeze_base)
+
+        def rename_new_id(fixture):
+            fixture.record("S-AND-004")["name"] = "Synthetic screen renamed"
+            fixture.ledger("S-AND-004")["name_sha256"] = fingerprint("Synthetic screen renamed")
+        fixture = Fixture()
+        rename_new_id(fixture)
+        fixture.check()  # S-AND-004 postdates the import: only a base registry pins it (documented limit)
+        self.refused(rename_new_id, "ledger.entry_changed", "S-AND-004", prepare=Fixture.freeze_base)
+
     def test_record_without_active_ledger_entry_fails(self):
         self.refused(lambda f: f.registry["id_ledger"].remove(f.ledger("D01")), "ledger.missing_record", "D01")
 
     def test_dropped_ledger_id_rejected(self):
         self.refused(lambda f: f.registry["id_ledger"].append(
-            {"id": "S-AND-009", "kind": "screen", "platform": "android", "status": "active", "retired_reason": None}),
+            {"id": "S-AND-009", "kind": "screen", "platform": "android",
+             "name_sha256": fingerprint("Synthetic screen 009"), "status": "active", "retired_reason": None}),
             "ledger.dropped_record", "S-AND-009")
 
     def test_retired_id_reuse_rejected(self):
         def retire(fixture):
             fixture.drop_screen("S-AND-004")
-            fixture.registry["id_ledger"].append({"id": "S-AND-004", "kind": "screen", "platform": "android",
-                                                  "status": "retired", "retired_reason": "Synthetic retirement."})
+            fixture.registry["id_ledger"].append({
+                "id": "S-AND-004", "kind": "screen", "platform": "android",
+                "name_sha256": fingerprint("Synthetic screen 004"), "status": "retired",
+                "retired_reason": "Synthetic retirement.",
+            })
         reused = copy.deepcopy(REGISTRY["screens"][3])
 
         def reuse(fixture):
@@ -702,8 +766,11 @@ class IdentityAndLedgerTests(CoverageCase):
 
     def test_ledger_is_append_only_against_the_base(self):
         def append(fixture):
-            fixture.registry["id_ledger"].append({"id": "S-WEB-009", "kind": "screen", "platform": "web",
-                                                  "status": "retired", "retired_reason": "Synthetic, never used."})
+            fixture.registry["id_ledger"].append({
+                "id": "S-WEB-009", "kind": "screen", "platform": "web",
+                "name_sha256": fingerprint("Synthetic screen 009"), "status": "retired",
+                "retired_reason": "Synthetic, never used.",
+            })
         fixture = Fixture()
         fixture.freeze_base()
         append(fixture)
@@ -1565,6 +1632,30 @@ class PublishedDataTests(unittest.TestCase):
                 with self.assertRaises(module.Refused) as caught:
                     fixture.check()
                 self.assertEqual((caught.exception.rule, caught.exception.subject), (rule, "S-AND-041"))
+
+    def test_published_repointed_id_fails(self):
+        """AV-02 on the published registry: two screens swap identities, with or without their fingerprints."""
+        base = (ROOT / module.REGISTRY).read_bytes()
+        keys = ("name", "route_hint", "surface_type", "states", "component_ids", "security_critical", "security_reason",
+                "privacy_states", "authorization_states", "implementation_tickets", "proposal")
+        for committed, with_ledger, rule in ((base, False, "ledger.fingerprint_mismatch"),
+                                             (None, True, "ledger.import_discontinuity"),
+                                             (base, True, "ledger.entry_changed")):
+            with self.subTest(base=committed is not None, ledger=with_ledger):
+                fixture = Published()
+                fixture.base = committed
+                fixture.check()
+                screens = {item["id"]: item for item in fixture.registry["screens"]}
+                entries = {item["id"]: item for item in fixture.registry["id_ledger"]}
+                for key in keys:
+                    screens["S-AND-001"][key], screens["S-AND-002"][key] = screens["S-AND-002"][key], screens[
+                        "S-AND-001"][key]
+                if with_ledger:
+                    first, second = entries["S-AND-001"], entries["S-AND-002"]
+                    first["name_sha256"], second["name_sha256"] = second["name_sha256"], first["name_sha256"]
+                with self.assertRaises(module.Refused) as caught:
+                    fixture.check()
+                self.assertEqual((caught.exception.rule, caught.exception.subject), (rule, "S-AND-001"))
 
     def test_published_release_gate_bypass_fails(self):
         """An implementation issue closed as completed while its screens lack D6 is a bypass of the gate."""

@@ -82,6 +82,8 @@ PLATFORMS = ("android", "web", "admin")
 CLIENT_REPOSITORIES = tuple(f"PenniLogic/{platform}" for platform in PLATFORMS)
 # Component IDs with this prefix belong to test fixtures only and are refused in published data.
 SYNTHETIC_PREFIX = "C-SYN-"
+# The identifying text fingerprinted when an ID is first issued (TS-M3): a user story has no name.
+IDENTITY_FIELD = {"user_story": "i_want"}
 ISSUE_REF = re.compile(
     r"PenniLogic/(" + "|".join(re.escape(name.split("/")[1]) for name in strategy.REPOSITORY_IDS) + r")#([1-9][0-9]*)"
 )
@@ -134,8 +136,8 @@ STRUCTURE_RULES = (
     "id.duplicate", "id.platform_infix_mismatch", "id.synthetic_reserved", "id.out_of_range",
     "range.invalid", "range.overlap", "range.unknown_role",
     "ledger.duplicate", "ledger.kind_or_platform_mismatch", "ledger.retired_reason", "ledger.missing_record",
-    "ledger.retired_in_use", "ledger.dropped_record", "ledger.entry_removed", "ledger.reordered",
-    "ledger.entry_changed", "ledger.import_discontinuity",
+    "ledger.retired_in_use", "ledger.dropped_record", "ledger.fingerprint_mismatch", "ledger.entry_removed",
+    "ledger.reordered", "ledger.entry_changed", "ledger.import_discontinuity",
     "reference.dangling", "ticket.empty", "ticket.issue_missing", "ticket.dangling", "ticket.plan_id_mismatch",
     "ticket.renounced", "ownership.design_missing", "ownership.implementation_missing", "ownership.qa_missing",
     "graph.journey_without_persona", "graph.flow_without_screens", "graph.flow_without_journey",
@@ -394,8 +396,13 @@ class GitSources:
         return self.blob(commit, REGISTRY)
 
 
+def fingerprint(record, kind):
+    """sha256 of the UTF-8 bytes of a record's identifying text (its name; a user story's i_want)."""
+    return gates.digest(record[IDENTITY_FIELD.get(kind, "name")].encode("utf-8"))
+
+
 def read_import(registry, sources, pin):
-    """Read the frozen import at its pinned commit and return its IDs by kind (continuity input)."""
+    """Read the frozen import at its pinned commit; return {ID: first-issued fingerprint} (continuity input)."""
     reference = registry["imported_from"]
     require((reference["path"], reference["sha256"]) == tuple(pin), "import.mismatch")
     try:
@@ -407,15 +414,16 @@ def read_import(registry, sources, pin):
         imported = loads(blob)
     except (ValueError, RecursionError):
         raise Refused("import.invalid") from None
-    identities = []
+    identities = {}
     for collection, kind in COLLECTIONS:
         records = imported.get(collection) if isinstance(imported, dict) else None
         require(isinstance(records, list), "import.invalid")
         for record in records:
             identifier = record.get("id") if isinstance(record, dict) else None
             info = classify(identifier)
-            require(info is not None and info[0] == kind, "import.invalid")
-            identities.append(identifier)
+            require(info is not None and info[0] == kind and identifier not in identities, "import.invalid")
+            require(isinstance(record.get(IDENTITY_FIELD.get(kind, "name")), str), "import.invalid")
+            identities[identifier] = fingerprint(record, kind)
     return identities
 
 
@@ -534,6 +542,8 @@ def check_identifiers(model, synthetic_ok):
             require(synthetic_ok or not identifier.startswith(SYNTHETIC_PREFIX), "id.synthetic_reserved", identifier)
             model.records[identifier] = kind
             model.by_kind[kind][identifier] = record
+    for entry in registry["id_ledger"]:  # a retired fixture ID is published data too
+        require(synthetic_ok or not entry["id"].startswith(SYNTHETIC_PREFIX), "id.synthetic_reserved", entry["id"])
     ranges = defaultdict(list)
     for item in registry["id_ranges"]:
         kind, platform, first, last = item["kind"], item["platform"], item["first"], item["last"]
@@ -563,9 +573,12 @@ def check_ledger(model, imported, base):
         require((entry["status"] == "retired") == (entry["retired_reason"] is not None), "ledger.retired_reason",
                 identifier)
         entries[identifier] = entry
-    for identifier in model.records:
+    for identifier, kind in model.records.items():
         require(identifier in entries, "ledger.missing_record", identifier)
         require(entries[identifier]["status"] == "active", "ledger.retired_in_use", identifier)
+        # TS-M3: an ID keeps the identity it was first issued with; a renamed or repointed record needs a new ID.
+        require(entries[identifier]["name_sha256"] == fingerprint(model.by_kind[kind][identifier], kind),
+                "ledger.fingerprint_mismatch", identifier)
     for identifier, entry in entries.items():
         require(entry["status"] != "active" or identifier in model.records, "ledger.dropped_record", identifier)
     if base is not None:
@@ -573,9 +586,13 @@ def check_ledger(model, imported, base):
             require(entry["id"] in entries, "ledger.entry_removed", entry["id"])
         require([entry["id"] for entry in ledger[:len(base)]] == [entry["id"] for entry in base], "ledger.reordered")
         for entry in base:
-            require(entry["status"] != "retired" or entries[entry["id"]] == entry, "ledger.entry_changed", entry["id"])
-    for identifier in imported:
-        require(identifier in entries, "ledger.import_discontinuity", identifier)
+            # Kind, platform and fingerprint never change; the only allowed change is retiring an active ID.
+            current = entries[entry["id"]]
+            retired = entry["status"] == "active" and {**current, "status": "active", "retired_reason": None} == entry
+            require(current == entry or retired, "ledger.entry_changed", entry["id"])
+    for identifier, first_issued in imported.items():
+        require(identifier in entries and entries[identifier]["name_sha256"] == first_issued,
+                "ledger.import_discontinuity", identifier)
     model.ledger_base = "base registry" if base is not None else "frozen import"
 
 

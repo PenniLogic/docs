@@ -148,14 +148,15 @@
       }
     },
     "ledger_entry": {
-      "description": "Every ID ever issued; append-only against the base registry, retired IDs are never reused.",
+      "description": "Every ID ever issued; append-only against the base registry, retired IDs are never reused. name_sha256 is the sha256 of the UTF-8 bytes of the record's name (a user story's i_want) when the ID was first issued (the frozen import for imported IDs); it never changes and the active record must still match it, so a rename or repoint retires the ID and issues a new one.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "kind", "platform", "status", "retired_reason"],
+      "required": ["id", "kind", "platform", "name_sha256", "status", "retired_reason"],
       "properties": {
         "id": {"$ref": "#/definitions/record_id"},
         "kind": {"$ref": "#/definitions/kind"},
         "platform": {"enum": ["android", "web", "admin", null]},
+        "name_sha256": {"$ref": "#/definitions/digest"},
         "status": {"enum": ["active", "retired"]},
         "retired_reason": {"$ref": "#/definitions/optional_text"}
       }
