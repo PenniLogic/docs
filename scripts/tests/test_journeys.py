@@ -716,6 +716,7 @@ EXPECTED_GAPS = {
     "readiness.gap_open": ["GAP-J10-01"],
     "readiness.gap_backlog_missing": ["GAP-J10-01"],
     "readiness.figma_held": ["D03", "D04", "D05", "D21"],
+    "readiness.continuity_unchecked": ["PenniLogic/docs#67"],
     "readiness.registry_id_added": [],
     "readiness.registry_id_retired": [],
     "readiness.registry_record_changed": [],
@@ -734,6 +735,29 @@ class ReadinessTests(JourneyCase):
     def drift(self, registry):
         result = module.readiness(self.run_check(), module.index_registry(registry))
         return [result[rule] for rule in module.DRIFT_RULES]
+
+    def test_synthetic_resolved_model_reaches_green(self):
+        # Review round 1 SS-13: readiness() computes every gap from the data, so a resolved model is GREEN; the
+        # structure rules hold these inputs today, so this state is reached only in memory.
+        model = self.run_check()
+        document = model.document
+        document["registry_ref"]["path"] = module.CANONICAL_REGISTRY
+        document["research_gate"]["status"] = "complete"
+        for approval in document["approvals"]:
+            approval["status"] = "recorded"
+        for item in document["blueprints"]:
+            item["persona_basis"] = "validated"
+            item["outcome"]["metric_ref"] = "M-SYNTHETIC-01"
+            for entry in item["steps"]:
+                entry["event_refs"] = []
+        for diagram in document["diagrams"]:
+            diagram["figma"] = "delivered"
+        for gap in model.gaps["gaps"]:
+            gap["status"] = "resolved"
+        model.continuity_checked = True
+        result = module.readiness(model, module.index_registry(REGISTRY))
+        self.assertEqual({rule: subjects for rule, subjects in result.items() if subjects}, {})
+        self.assertIn("Readiness: " + module.GREEN + ".", module.render_summary(model, result))
 
     def test_unchanged_live_registry_has_no_drift(self):
         self.assertEqual(self.drift(copy.deepcopy(REGISTRY)), [[], [], []])
@@ -960,6 +984,7 @@ PUBLISHED_READINESS = {
     "readiness.gap_open": PUBLISHED_GAPS,
     "readiness.gap_backlog_missing": PUBLISHED_GAPS,
     "readiness.figma_held": ["D03", "D04", "D05", "D21"],
+    "readiness.continuity_unchecked": ["PenniLogic/docs#67"],
     "readiness.registry_id_added": [],
     "readiness.registry_id_retired": [],
     "readiness.registry_record_changed": [],

@@ -8,6 +8,8 @@ Registry pin: commit 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4, path planning/sou
 
 Personas are planning hypotheses, not research evidence: every persona basis stays provisional until PenniLogic/docs#66 evidence exists. Metric references stay pending on PenniLogic/docs#77 and event references pending on their owner issues. Diagrams here are markdown text renderings; a Figma page named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, review, tabletop or backlog issue is recorded by this file.
 
+The readiness verdict is NOT GREEN by construction: the checker holds every human input (approvals, research, persona validation, backlog items, gap resolution), the registry pin, pending metric and event references and the Figma state, so GREEN needs a later change to the checker and its schema, not only new inputs. Identifier continuity against an earlier published revision is not checked (readiness.continuity_unchecked).
+
 ## Readiness gaps
 
 | Rule | Count | Subjects |
@@ -21,6 +23,7 @@ Personas are planning hypotheses, not research evidence: every persona basis sta
 | readiness.gap_open | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
 | readiness.gap_backlog_missing | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
 | readiness.figma_held | 4 | D03, D04, D05, D21 |
+| readiness.continuity_unchecked | 1 | PenniLogic/docs#67 |
 
 Drift of the live registry from the pin (readiness.registry_id_added, readiness.registry_id_retired, readiness.registry_record_changed) is reported by the default mode only, never by this file.
 

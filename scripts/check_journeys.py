@@ -19,8 +19,21 @@ Persona basis stays provisional until docs#66 evidence exists.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers matching a published
 grammar; input text is never echoed. Readiness gaps (pending research, approvals, metrics and events, open gaps
-without backlog items, held Figma artifacts, the unintegrated registry) are counted, never filled in, and keep the
-default mode NOT GREEN. No network, remote action, approval, issue creation or review is made or implied.
+without backlog items, held Figma artifacts, the unintegrated registry, live-registry drift, unchecked identifier
+continuity) are counted, never filled in, and keep the default mode NOT GREEN. No network, remote action,
+approval, issue creation or review is made or implied.
+
+Human inputs are held (held.*): this checker cannot resolve or digest-check a decision or evidence record, so a
+recorded approval, complete research, a validated persona basis or document status, a backlog item or a resolved
+gap is refused rather than trusted. NOT GREEN is therefore constant by construction: the held rules, the pinned
+registry_ref, the pending-only metric and event grammars and the held Figma state admit no resolved value, so
+GREEN needs a later change to this checker and its schema, not only new inputs. readiness() itself computes every
+gap from the data (a synthetic resolved model reaches GREEN in the tests).
+
+Identifier continuity is not checked: IDs are unique within one revision, but no earlier published revision is
+compared, so a dropped or reused blueprint, step, abuse or gap ID would pass. readiness.continuity_unchecked keeps
+that limitation visible until a base comparison exists (the files are new in this change, so there is no
+published base yet).
 """
 
 import argparse
@@ -189,6 +202,7 @@ READINESS_RULES = (
     "readiness.registry_unintegrated", "readiness.research_pending", "readiness.persona_provisional",
     "readiness.approval_pending", "readiness.metric_pending", "readiness.event_pending",
     "readiness.gap_open", "readiness.gap_backlog_missing", "readiness.figma_held",
+    "readiness.continuity_unchecked",
     "readiness.registry_id_added", "readiness.registry_id_retired", "readiness.registry_record_changed",
 )
 # TS-M8: live-registry drift is a readiness gap, never a structure failure; the default mode reports it, while
@@ -447,6 +461,9 @@ def inventory_index(inventory):
 
 class Model:
     """The checked documents with their registry and inventory joins."""
+
+    # No earlier published revision is compared (see the module docstring); readiness.continuity_unchecked says so.
+    continuity_checked = False
 
     def __init__(self, document, gaps, registry, issues, adrs):
         self.document, self.gaps, self.registry, self.issues, self.adrs = document, gaps, registry, issues, adrs
@@ -739,6 +756,8 @@ def readiness(model, current=None):
     for diagram in document["diagrams"]:
         if diagram["figma"] == "held":
             gaps["readiness.figma_held"].add(diagram["id"])
+    if not model.continuity_checked:
+        gaps["readiness.continuity_unchecked"].add(document["source_issue"])
     if current is not None:
         added, retired, changed = registry_drift(model.registry, current)
         gaps["readiness.registry_id_added"].update(added)
@@ -875,7 +894,13 @@ def render_summary(model, gaps):
         "Personas are planning hypotheses, not research evidence: every persona basis stays provisional until "
         f"{RESEARCH_ISSUE} evidence exists. Metric references stay pending on PenniLogic/docs#77 and event "
         "references pending on their owner issues. Diagrams here are markdown text renderings; a Figma page "
-        "named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, review, tabletop or backlog issue is recorded by this file.", "",
+        "named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, "
+        "review, tabletop or backlog issue is recorded by this file.", "",
+        "The readiness verdict is NOT GREEN by construction: the checker holds every human input (approvals, "
+        "research, persona validation, backlog items, gap resolution), the registry pin, pending metric and event "
+        "references and the Figma state, so GREEN needs a later change to the checker and its schema, not only new "
+        "inputs. Identifier continuity against an earlier published revision is not checked "
+        "(readiness.continuity_unchecked).", "",
         "## Readiness gaps", "",
     ]
     lines += _table(("Rule", "Count", "Subjects"), [
