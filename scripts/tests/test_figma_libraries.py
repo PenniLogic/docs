@@ -316,7 +316,7 @@ class StructureTests(RuleCase):
                            "content.too_long", "C-SYN-BUTTON")
 
     def test_host_and_link_shapes_are_refused(self):
-        samples = ("see www" + ".example", "mail" + "to:someone", "Prototype at bit" + ".ly/3xYzAbC",
+        samples = ("see www" + ".example", "visit www" + ".", "mail" + "to:someone", "Prototype at bit" + ".ly/3xYzAbC",
                    "host pl" + ".figma" + ".site", "files" + ".example" + ".de/proto", "local" + "host:8080/proto",
                    "10" + ".0.0.7/proto")
         for sample in samples:
