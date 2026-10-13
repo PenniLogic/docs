@@ -164,7 +164,7 @@ STRUCTURE_RULES = (
     "published.release_missing",
     "deprecation.unexpected", "deprecation.missing", "deprecation.replacement_missing",
     "deprecation.replacement_invalid", "deprecation.removal_version_missing", "deprecation.removal_version_invalid",
-    "deprecation.unavailable",
+    "deprecation.removal_not_breaking", "deprecation.unavailable",
     "duplicate.semantic_component",
     "contribution.branch_grammar", "contribution.branch_outside_candidates", "contribution.squad_mismatch",
     "contribution.branch_duplicate", "contribution.candidate_library",
@@ -466,12 +466,15 @@ def check_releases(document, schema, fixture):
             require((source is None) == (approval["status"] == "pending"), "approval.source_mismatch", name)
             if source is not None:
                 shape(source, schema, "source", name)
-        published = release["status"] == "published"
+        # A rolled-back release was published before the rollback unpublished it, so the criterion 3 publication
+        # prerequisites hold for it too.
+        published = release["status"] in ("published", "rolled_back")
         require(not (published and approval is not None and approval["status"] == "pending"),
                 "release.cdo_pending_published", name)
-        # A published release never sits on an unpublished one: by induction its whole chain is published, so no
-        # pending CDO decision or migration plan lies below it (criterion 3) and, the chain being linear, nothing is
-        # published above a rolled-back version (the design-operations.md section 6 rollback freeze).
+        # A published (or rolled-back) release never sits on an unpublished one: by induction its whole chain is
+        # published, so no pending CDO decision or migration plan lies below it (criterion 3) and, the chain being
+        # linear, nothing is published above a rolled-back version (the design-operations.md section 6 rollback
+        # freeze).
         require(not published or previous is None or releases[(library, previous)]["status"] == "published",
                 "release.previous_unpublished", name)
         require(not (published and (release["migration_plan_ref"] or "").startswith("pending:")),
@@ -668,6 +671,11 @@ def check_component_graph(components, releases):
         current = max(majors, default=0)
         # Removal is a breaking change, so it lands in a later major release and never before it.
         require(version(removal)[1:] == (0, 0) and version(removal)[0] > current, "deprecation.removal_version_invalid",
+                identifier)
+        # The removal release, when this document records it, is declared breaking, so the migration plan and the
+        # CDO record of criterion 3 are required for it.
+        removal_release = releases.get((component["library"], removal))
+        require(removal_release is None or removal_release["breaking"], "deprecation.removal_not_breaking",
                 identifier)
         require(deprecation["available_until_removal"], "deprecation.unavailable", identifier)
     # Every record is linted against every published or deprecated record of every shared library (semantic and

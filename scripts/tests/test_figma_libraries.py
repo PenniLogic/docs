@@ -708,8 +708,13 @@ def append_release(document, name, previous, change, status, **options):
 
 
 def roll_back(document, freeze=True):
-    """Roll back the fixture's draft LIB-COMPONENTS@2.0.0 to 1.0.0; the rollback freezes the library."""
-    find_release(document, "LIB-COMPONENTS@2.0.0").update(status="rolled_back", rollback_to="1.0.0")
+    """Roll back the fixture's LIB-COMPONENTS@2.0.0 to 1.0.0; the rollback freezes the library. The release was
+    published first, so it carries the criterion 3 prerequisites: a synthetic recorded CDO decision and a migration
+    plan reference that is no longer pending (synthetic fixture values, not a real decision or plan)."""
+    find_release(document, "LIB-COMPONENTS@2.0.0").update(
+        status="rolled_back", rollback_to="1.0.0", migration_plan_ref="PenniLogic/docs#78",
+        cdo_approval={"role": "decision_coordinator", "scope": "shared_system_major", "status": "recorded",
+                      "decision_source": copy.deepcopy(DECISION)})
     if freeze:
         find(document, "libraries", "LIB-COMPONENTS")["status"] = "frozen"
 
@@ -826,16 +831,27 @@ class ReleaseTests(RuleCase):
     def test_rollback_restores_the_prior_published_version(self):
         model = run_check(rolled_back())
         self.assertEqual(model.releases[("LIB-COMPONENTS", "1.0.0")]["status"], "published")
-        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(status="rolled_back"),
-                           "release.rollback_target", "LIB-COMPONENTS@2.0.0")
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(rollback_to=None),
+                           "release.rollback_target", "LIB-COMPONENTS@2.0.0", base=rolled_back)
 
-    def test_rollback_target_is_a_published_release(self):
-        def over_draft(document):
-            append_release(document, "LIB-ANDROID@1.1.0", "1.0.0", "minor", "draft")
-            append_release(document, "LIB-ANDROID@1.1.1", "1.1.0", "patch", "rolled_back")
-            find_release(document, "LIB-ANDROID@1.1.1")["rollback_to"] = "1.1.0"
-            find(document, "libraries", "LIB-ANDROID")["status"] = "frozen"
-        self.assertRefused(over_draft, "release.rollback_target", "LIB-ANDROID@1.1.1")
+    def test_rollback_target_is_the_published_previous_release(self):
+        def chain(rolled_back_to, middle="published"):
+            def build(document):
+                append_release(document, "LIB-ANDROID@1.1.0", "1.0.0", "minor", middle)
+                append_release(document, "LIB-ANDROID@1.2.0", "1.1.0", "minor", "rolled_back")
+                find_release(document, "LIB-ANDROID@1.2.0")["rollback_to"] = rolled_back_to
+                find(document, "libraries", "LIB-ANDROID")["status"] = "frozen"
+            return build
+        # A rolled-back release was published, so it never sits on a draft (SC2-01).
+        self.assertRefused(chain("1.1.0", middle="draft"), "release.previous_unpublished", "LIB-ANDROID@1.2.0")
+
+        def two_back():
+            document = fixture()
+            chain("1.1.0")(document)
+            return document
+        # SC2-02 M4: restoring a version two steps back skips the published 1.1.0.
+        self.assertRefused(lambda d: find_release(d, "LIB-ANDROID@1.2.0").update(rollback_to="1.0.0"),
+                           "release.rollback_target", "LIB-ANDROID@1.2.0", base=two_back)
 
     def test_nothing_is_published_after_a_rollback(self):
         def publish_after(document):
@@ -845,6 +861,16 @@ class ReleaseTests(RuleCase):
         append_release(document, "LIB-COMPONENTS@2.0.1", "2.0.0", "patch", "draft")
         run_check(document)  # control: a restoration draft above the rolled-back version
         self.assertRefused(publish_after, "release.previous_unpublished", "LIB-COMPONENTS@2.0.1")
+
+    def test_rolled_back_release_met_the_publication_prerequisites(self):
+        """SC2-01: a rolled-back release was published, so a pending CDO decision or migration plan is refused."""
+        def pending_cdo(document):
+            find_release(document, "LIB-COMPONENTS@2.0.0")["cdo_approval"].update(status="pending",
+                                                                                 decision_source=None)
+        self.assertRefused(pending_cdo, "release.cdo_pending_published", "LIB-COMPONENTS@2.0.0", base=rolled_back)
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(
+            migration_plan_ref="pending:PenniLogic/docs#78"), "release.migration_plan_pending_published",
+            "LIB-COMPONENTS@2.0.0", base=rolled_back)
 
     def test_rollback_target_only_on_rolled_back_releases(self):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(rollback_to="1.0.0"),
@@ -994,6 +1020,12 @@ class DeprecationTests(RuleCase):
             with self.subTest(replacement=replacement):
                 self.assertRefused(lambda d: chip_deprecation(d).update(replacement=replacement),
                                    "deprecation.replacement_invalid", "C-SYN-CHIP")
+
+    def test_recorded_removal_release_is_breaking(self):
+        """AV2-3: the removal release a deprecation names, when recorded here, is declared breaking."""
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(breaking=False,
+                                                                                    migration_plan_ref=None),
+                           "deprecation.removal_not_breaking", "C-SYN-CHIP")
 
     def test_removal_version_is_required(self):
         self.assertRefused(lambda d: chip_deprecation(d).update(removal_version=None),

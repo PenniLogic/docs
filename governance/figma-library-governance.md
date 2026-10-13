@@ -182,14 +182,18 @@ availability is the declared `available_until_removal` flag. The deprecation rec
 
 A deprecation record on a non-deprecated component, or a deprecated component without one, is refused
 (`deprecation.unexpected`, `deprecation.missing`). The removal itself is a breaking major release under
-section 5 (migration plan and CDO approval).
+section 5 (migration plan and CDO approval): when the document records the removal release, it must be
+declared `breaking` (`deprecation.removal_not_breaking`), so those section 5 rules apply to it.
 
 ## 7. Rollback and restoration
 
 Rollback unpublishes a bad version and restores the prior library without deleting dependent
 instances. A `rolled_back` release names `rollback_to`, which must be its own `previous` version and a
 published release of the same library; any other release keeps `rollback_to` empty
-(`release.rollback_target`). Under [`design-operations.md`](design-operations.md) section 6 the rollback
+(`release.rollback_target`). A `rolled_back` release was published before the rollback, so the
+criterion 3 publication prerequisites hold for it as for a published one: no pending CDO decision, no
+pending migration plan and a published previous release (`release.cdo_pending_published`,
+`release.migration_plan_pending_published`, `release.previous_unpublished`). Under [`design-operations.md`](design-operations.md) section 6 the rollback
 also appends a publishing-freeze decision, preserves every proposal, decision and version, keeps the last
 verified library available read-only and stops promotion. The validator enforces the freeze on the
 records: a library is `frozen` exactly when it has a `rolled_back` release (`library.freeze_mismatch`),
