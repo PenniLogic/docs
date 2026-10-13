@@ -3,8 +3,11 @@
 Every rule test builds a fresh deep copy of one synthetic registry, proves it passes (the control), applies exactly
 one mutation and asserts the exact static rule identifier and offending identifier. The registry is complete except
 for the held interfaces: no D6, handoff, route or verified-QA reference can be resolved yet, so none is recorded and
-the baseline keeps exactly those readiness gaps. The synthetic fixtures hold no real coverage, approvals, gate
-records, people, money or contact data. Command-line tests run
+the baseline keeps exactly those readiness gaps. TS-M5's synthetic "ready" baseline is therefore "ready except the
+held interfaces" plus model-level controls: a held reference is set on the structurally checked model to prove that
+each readiness rule and the release gate clear for a resolved subject, and that the summary reaches GREEN once all
+of them resolve. The synthetic fixtures hold no real coverage, approvals, gate records, people, money or contact
+data. Command-line tests run
 against hermetic temporary Git checkouts outside this repository. PublishedDataTests read this checkout's committed
 product/experience-coverage.* files and inputs (and, for the real-Git paths, its local object store and
 refs/remotes/origin/main) without writing anything. Nothing here touches the network.
@@ -120,6 +123,16 @@ def verified_qa():
     return {"status": "verified", "evidence": {
         "commit": EVIDENCE_COMMIT, "path": EVIDENCE_PATH, "sha256": module.gates.digest(EVIDENCE_BYTES),
     }}
+
+
+def resolve_d6(model, *identifiers, dependency=True, handoff=True):
+    """Set a well-formed D6 dependency and/or handoff on screens of an already checked model (a held interface)."""
+    for identifier in identifiers:
+        screen = model.screens[identifier]
+        if dependency:
+            screen["d6_dependency"] = d6_reference(identifier)
+        if handoff:
+            screen["handoff_ref"] = f"HND-{identifier.split('-')[1]}-{identifier[-3:]}@1.0.0"
 
 
 def screen(identifier, flow, components, states, route_hint, implementation, *, critical=True, surface="page",
@@ -388,6 +401,17 @@ class CoverageCase(unittest.TestCase):
         mutate(fixture)
         self.assertEqual(fixture.gaps(), {**BASELINE_GAPS, rule: [subject]})
 
+    def cleared(self, resolve, rule, subject):
+        """Model-level control for a held interface (SC-R2-1): registry data cannot carry the reference (held.*), so
+        it is set on the structurally checked model, where it must remove exactly this subject from this gap."""
+        self.assertIn(subject, HELD_GAPS[rule])
+        model = Fixture().check()
+        self.assertEqual(module.readiness(model), BASELINE_GAPS)
+        resolve(model)
+        self.assertEqual(module.readiness(model),
+                         {**BASELINE_GAPS, rule: [item for item in HELD_GAPS[rule] if item != subject]})
+        return model
+
 
 class BaselineAndSchemaTests(CoverageCase):
     def test_synthetic_registry_is_ready_except_the_held_interfaces(self):
@@ -399,6 +423,23 @@ class BaselineAndSchemaTests(CoverageCase):
         self.assertEqual(module.render_summary(model, gaps).splitlines()[0], module.NOT_GREEN)
         # The GREEN line stays for a later registry version that resolves the held interfaces' records.
         self.assertEqual(module.render_summary(model, EMPTY_GAPS).splitlines()[0], module.GREEN)
+
+    def test_readiness_is_green_once_every_held_reference_resolves(self):
+        """TS-M5's "ready" baseline, reached on the checked model (registry 1.0.0 data cannot carry the references):
+        readiness itself, not a stub, reports no gap and the summary turns GREEN with full coverage."""
+        model = Fixture().check()
+        resolve_d6(model, *SCREEN_IDS)
+        for identifier in SCREEN_IDS:
+            model.screens[identifier]["route_id"] = "route-" + identifier.lower()
+        for flow_id in HELD_GAPS["readiness.qa_unverified"]:
+            model.flows[flow_id]["qa_independence"] = verified_qa()
+        gaps = module.readiness(model)
+        self.assertEqual(gaps, EMPTY_GAPS)
+        lines = module.render_summary(model, gaps).splitlines()
+        self.assertEqual(lines[0], module.GREEN)
+        for line in ("| android | 4 | 4 | 10000 | 4 | 10000 |", "| critical | 4 | 4 | 10000 | 4 | 10000 |",
+                     "| android | 2 | 1 | 1 | 10000 |", "None."):
+            self.assertIn(line, lines)
 
     def test_schema_is_a_self_contained_subset_with_its_own_identity(self):
         keywords, refs, patterns = set(), [], []
@@ -453,6 +494,18 @@ class BaselineAndSchemaTests(CoverageCase):
                     else:
                         with self.assertRaises(ValueError):
                             check()
+        # SC-R2-3 decision: D6 is referenced by the dependency triple a gate_record lists (resolved from Root's
+        # snapshot through close_gate), so the source shape locates only the import and QA evidence.
+        users = {own: sorted(f"{name}.{key}" for name, definition in SCHEMA["definitions"].items()
+                             for key, node in definition.get("properties", {}).items()
+                             if node.get("$ref") == f"#/definitions/{own}")
+                 for own in ("source", "optional_source", "optional_dependency")}
+        users["source"] += [key for key, node in SCHEMA["properties"].items()
+                            if node.get("$ref") == "#/definitions/source"]
+        self.assertEqual(users, {"source": ["imported_from"], "optional_source": ["qa_independence.evidence"],
+                                 "optional_dependency": ["screen.d6_dependency"]})
+        for phrase in ("gate_record", "close_gate", "no `source` locator"):
+            self.assertIn(phrase, SCHEMA["definitions"]["optional_dependency"]["description"])
 
     def test_rule_ids_are_static_registered_and_tested(self):
         source = (ROOT / "scripts/check_experience_coverage.py").read_text(encoding="utf-8")
@@ -1086,7 +1139,8 @@ class PartitionAndReleaseGateTests(CoverageCase):
 
         def two_new_issues(fixture):
             """TS-M7: a refresh that adds client issues learns every reference it must partition in one run."""
-            fixture.inventory = build_inventory(fixture.inventory["issues"] + [issue("web", 905), issue("android", 905)])
+            added = [issue("web", 905), issue("android", 905)]
+            fixture.inventory = build_inventory(fixture.inventory["issues"] + added)
         self.refused(two_new_issues, "partition.unclassified_issue", "PenniLogic/android#905 PenniLogic/web#905")
 
     def test_partition_count_mismatch_vs_inventory_fails(self):
@@ -1158,6 +1212,25 @@ class PartitionAndReleaseGateTests(CoverageCase):
         # An open implementation issue without D6 is a readiness gap, not a bypass.
         self.assertIn("S-WEB-001", Fixture().gaps()["readiness.d6_missing"])
 
+    def test_release_gate_passes_once_every_screen_of_the_delivered_issue_has_d6(self):
+        """SC-R2-1 model-level control: registry data cannot carry D6 yet, so D6 is set on the checked model. A
+        delivered issue bypasses the gate while any screen it implements lacks either D6 part, and only then."""
+        model = Fixture().check()
+        module.check_release_gate(model)  # control: nothing delivered
+        model.index["PenniLogic/android#901"] = {
+            **model.index["PenniLogic/android#901"], "state": "closed", "state_reason": "completed"}
+        steps = (
+            (lambda: None, "PenniLogic/android#901 S-AND-001"),
+            (lambda: resolve_d6(model, "S-AND-001"), "PenniLogic/android#901 S-AND-002"),
+            (lambda: resolve_d6(model, "S-AND-002", handoff=False), "PenniLogic/android#901 S-AND-002"),
+        )
+        for step, subject in steps:
+            step()
+            with self.assertRaises(module.Refused) as caught:
+                module.check_release_gate(model)
+            self.assertEqual((caught.exception.rule, caught.exception.subject), ("release_gate.bypass", subject))
+        resolve_d6(model, "S-AND-002", dependency=False)
+        module.check_release_gate(model)  # every screen of android#901 now carries both D6 parts
 
     def test_delivered_frontend_issue_cannot_be_relabeled(self):
         """AV-05: unmapping a delivered issue and relabelling it non-frontend would hide its release-gate bypass."""
@@ -1182,6 +1255,13 @@ class ReadinessTests(CoverageCase):
     def test_missing_d6_dependency_fails(self):
         """Every screen lacks D6 (a reference is refused until it can be resolved); the default mode exits 1."""
         self.assertEqual(Fixture().gaps()["readiness.d6_missing"], SCREEN_IDS)
+        # Not vacuous: a screen with both D6 parts on the checked model leaves the gap; half a reference does not.
+        self.cleared(lambda model: resolve_d6(model, "S-AND-002"), "readiness.d6_missing", "S-AND-002")
+        for half in ({"dependency": False}, {"handoff": False}):
+            with self.subTest(**half):
+                model = Fixture().check()
+                resolve_d6(model, "S-AND-002", **half)
+                self.assertEqual(module.readiness(model), BASELINE_GAPS)
         checkout = Checkout(self, Fixture())
         self.assertEqual(checkout.run("--write-summary")[0], 0)
         self.assertEqual(checkout.run("--structure")[0], 0)
@@ -1191,11 +1271,15 @@ class ReadinessTests(CoverageCase):
 
     def test_missing_route_id_is_a_readiness_gap(self):
         self.assertEqual(Fixture().gaps()["readiness.route_missing"], SCREEN_IDS)
+        self.cleared(lambda model: model.screens["S-WEB-001"].update(route_id="route-s-web-001"),
+                     "readiness.route_missing", "S-WEB-001")
         self.refused(lambda f: f.record("S-WEB-001").update(route_id="route-s-web-001"), "held.route_id", "S-WEB-001")
 
     def test_unverified_critical_flow_qa_is_a_readiness_gap(self):
         flows = Fixture().gaps()["readiness.qa_unverified"]
         self.assertEqual(flows, ["F-AND-01", "F-WEB-01", "F-ADM-01"])  # F-AND-02 is not critical
+        self.cleared(lambda model: model.flows["F-WEB-01"].update(qa_independence=verified_qa()),
+                     "readiness.qa_unverified", "F-WEB-01")
 
     def test_persona_outside_its_journey_is_a_readiness_gap(self):
         self.gap(lambda f: f.record("US-AND-01")["persona_ids"].append("P03"), "readiness.persona_outside_journey",
@@ -1301,6 +1385,10 @@ class SummaryTests(CoverageCase):
             "| android | 2 | 1 | 0 | 0 |",
             "| `PenniLogic/android` | 4 | 2 | 2 | 0 | 0 |",
             "- `readiness.route_missing` (6): " + ", ".join(SCREEN_IDS),
+            # SC-R2-4 / TS-M6: the offline limit of the release gate is disclosed where the coverage is reviewed.
+            "`release_gate.bypass` sees only implementation issues closed as delivered in the committed inventory",
+            "snapshot; work that progresses without D6 (GitHub Project status) is not in it and cannot be checked "
+            "offline.",
         ):
             self.assertIn(line, summary.splitlines())
         self.assertNotIn("Synthetic screen", summary)

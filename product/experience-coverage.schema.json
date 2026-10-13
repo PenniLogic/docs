@@ -199,7 +199,7 @@
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"
     },
     "optional_dependency": {
-      "description": "design-gates `dependency` shape {artifact_id, gate_id, scope_sha256}. The validator refuses a present value (held.d6_reference) until it can resolve a pinned docs#86 / T-DQA-12 (docs#137) gate record, so it stays null.",
+      "description": "design-gates `dependency` shape {artifact_id, gate_id, scope_sha256}: the same triple a design-gates gate_record lists in `dependencies`. The D6 gate record itself is resolved from the snapshot that Root supplies to check_design_gates close_gate as trusted input, so no `source` locator is recorded beside it; the `source` shape is used for imported_from and QA evidence. The validator refuses a present value (held.d6_reference) until it can resolve a pinned docs#86 / T-DQA-12 (docs#137) gate record, so it stays null.",
       "type": [
         "object",
         "null"

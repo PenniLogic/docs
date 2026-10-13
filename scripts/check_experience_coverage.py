@@ -18,7 +18,9 @@ dependencies and handoffs, docs#74 route IDs, verified independent QA, owner con
 proposals, imported persona and ticket contradictions, security states, unresolved and post-snapshot
 issues, partition scope questions) are counted, never filled in, and keep the default mode NOT GREEN.
 Everything runs offline against local files and the local Git object store: no network, remote action,
-approval, appointment, gate closure or independent Design QA is made or implied.
+approval, appointment, gate closure or independent Design QA is made or implied. The release-gate bypass rule
+therefore sees only implementation issues closed as delivered in the committed inventory snapshot: work that
+progresses without D6 (its GitHub Project status) is not in the snapshot and cannot be checked offline (TS-M6).
 """
 
 import argparse
@@ -897,7 +899,11 @@ def delivered(found):
 
 
 def check_release_gate(model, base_dispositions=None):
-    """A client implementation issue closed as delivered while any of its screens lacks D6 bypassed the gate."""
+    """A client implementation issue closed as delivered while any of its screens lacks D6 bypassed the gate.
+
+    Only the committed inventory snapshot's states are visible: GitHub Project status is not in it, so work that
+    progresses without D6 is not detectable offline (TS-M6).
+    """
     # Relabelling delivered frontend work non-frontend (after unmapping it) would hide exactly that bypass.
     for entry in model.partition["entries"]:
         issue = entry["issue"]
@@ -1041,6 +1047,8 @@ def render_summary(model, gaps):
         "Counts are integers and coverage is in basis points (10000 = 100 percent, rounded down). D6 dependencies,",
         "handoff references, route IDs and verified independent QA are refused while docs#86 and docs#137, docs#74",
         "and docs#126 publish no record this validator can resolve, so those columns stay 0 and readiness stays open.",
+        "`release_gate.bypass` sees only implementation issues closed as delivered in the committed inventory",
+        "snapshot; work that progresses without D6 (GitHub Project status) is not in it and cannot be checked offline.",
         "",
     ]
     ledger = registry["id_ledger"]

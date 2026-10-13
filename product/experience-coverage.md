@@ -8,6 +8,8 @@ mode, `--check-summary` and `scripts/tests/test_experience_coverage.py` compare 
 Counts are integers and coverage is in basis points (10000 = 100 percent, rounded down). D6 dependencies,
 handoff references, route IDs and verified independent QA are refused while docs#86 and docs#137, docs#74
 and docs#126 publish no record this validator can resolve, so those columns stay 0 and readiness stays open.
+`release_gate.bypass` sees only implementation issues closed as delivered in the committed inventory
+snapshot; work that progresses without D6 (GitHub Project status) is not in it and cannot be checked offline.
 
 | Registry | Value |
 | --- | --- |
