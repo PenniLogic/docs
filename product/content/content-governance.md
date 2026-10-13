@@ -40,14 +40,17 @@ Removing or renaming a term or key needs a major version bump; additions are min
 1. Content Design drafts a record (`status: draft`, `approval: null`) bound to its `reg.` key and a neutral
    fail-closed key.
 2. The record moves to `in_review` when the qualified legal/compliance owner (design-gates role `legal`) receives
-   it. That role is unassigned today, so no record can leave draft with an approval.
+   it. That role is unassigned today, so every record and history entry stays `draft` (or `withdrawn`): the checker
+   refuses `in_review` without an injected owner assignment.
 3. Only that owner records approval: role, decision reference, `effective_at` and `expires_at` (at most 366 days
    apart). The checker refuses an approval from any other role, without a decision reference, or without a
    coordinator-verified assignment of the role; the published data supplies none.
 4. Approved copy is usable only while `effective_at <= now < expires_at`; at `expires_at` it is expired. The checker
    reads the system clock (UTC) by default, and CI evaluates the published records at that real clock; `--now` pins
    an instant for tests and audits only.
-5. Changing approved copy means a new version; the record keeps its prior versions in `history`.
+5. Changing copy means a new version; the superseded version moves into `history` with its own text, key binding,
+   status and approval. History is append-only against the base: earlier entries stay byte-identical, an approval
+   is never re-dated or invented, and expired or withdrawn copy never returns without a new version.
 6. Withdrawal sets `withdrawn`; records are never deleted.
 
 **Fail closed.** A consumer that finds a record missing, draft, in review, not yet effective, expired or withdrawn
@@ -55,7 +58,8 @@ shows the record's fail-closed key (a neutral safe-exit key without placeholders
 substitutes local or cached text.
 
 **Rollback** pins `rollback_version` to a prior version in `history` whose status is `approved` and whose window
-still contains `now`; any other target is refused.
+still contains `now`; any other target is refused. The pinned entry carries the text to show, and a rollback pin is
+refused while the current version is approved, so exactly one copy is in force.
 
 ## Proposed observability signals (metadata only)
 

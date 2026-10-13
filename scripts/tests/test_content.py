@@ -874,13 +874,15 @@ class ApprovalTests(Harness):
                 self.assertEqual(caught.exception.rule, "time.untrusted_clock")
 
 
+def prior(version, status, window, text="Synthetic earlier text for review.", bound="reg.consent.text"):
+    return {"version": version, "key": bound, "status": status, "copy": text, "approval": window}
+
+
 class HistoryAndRollbackTests(Harness):
     def with_history(self, docs, *entries, rollback=None):
         record = first(docs)
         record["version"] = "2.0.0"
-        record["history"] = [
-            {"version": version, "status": status, "approval": window} for version, status, window in entries
-        ]
+        record["history"] = [prior(version, status, window) for version, status, window in entries]
         record["rollback_version"] = rollback
 
     def test_history_must_increase_below_the_current_version(self):
@@ -916,6 +918,47 @@ class HistoryAndRollbackTests(Harness):
 
     def test_version_grammar(self):
         self.assertRefused(lambda d: first(d).update(version="1.0.0-rc"), "version.grammar")
+
+    # Review round 1 F-03: the pinned prior version carries its own text, so rollback never needs local text.
+    def test_rollback_pin_renders_the_prior_versions_own_text(self):
+        docs = documents()
+        self.with_history(docs, ("1.0.0", "approved", approval()), rollback="1.0.0")
+        view = "\n".join(content.render_regulated(self.run_check(docs, owner=OWNER).documents["regulated-copy"]))
+        self.assertIn("  - 1.0.0 (approved - rollback pin): Synthetic earlier text for review.", view)
+
+    def test_history_entry_without_its_copy_is_a_schema_failure(self):
+        def mutate(d):
+            self.with_history(d, ("1.0.0", "draft", None))
+            del first(d)["history"][0]["copy"]
+        self.assertRefused(mutate, "schema.invalid")
+
+    def test_history_entry_bound_to_another_key(self):
+        self.assertRefused(lambda d: self.with_history(d, ("1.0.0", "draft", None)) or
+                           first(d)["history"][0].update(key="reg.refund.text"),
+                           "regulated.history_key_mismatch", "RC-001")
+
+    def test_history_copy_is_linted_like_current_copy(self):
+        self.assertRefused(lambda d: self.with_history(d, ("1.0.0", "draft", None)) or
+                           first(d)["history"][0].update(copy="Results are guaranteed."),
+                           "regulated.banned_pattern", "RC-001")
+
+    def test_rollback_pin_beside_a_usable_current_approval_is_refused(self):
+        def mutate(d):
+            self.with_history(d, ("1.0.0", "approved", approval()), rollback="1.0.0")
+            approve(first(d))
+        self.assertRefused(mutate, "regulated.rollback_with_usable_approval", "RC-001", owner=OWNER)
+
+    # Review round 1 F-08: nobody can receive a record for review while the qualified owner is unassigned.
+    def test_in_review_needs_an_assigned_approver(self):
+        docs = documents()
+        first(docs).update(status="in_review")
+        self.run_check(docs, owner=OWNER)
+        self.assertRefused(lambda d: first(d).update(status="in_review"), "regulated.review_without_approver",
+                           "RC-001")
+
+    def test_history_in_review_needs_an_assigned_approver(self):
+        self.assertRefused(lambda d: self.with_history(d, ("1.0.0", "in_review", None)),
+                           "regulated.review_without_approver", "RC-001")
 
 
 class BaseVersioningTests(Harness):
@@ -999,8 +1042,60 @@ class BaseVersioningTests(Harness):
         self.assertEqual(self.check_against(base, lambda d: first(d).update(copy="Synthetic revised text.")),
                          ("regulated.changed_without_version", "RC-001"))
         docs = documents()
-        first(docs).update(copy="Synthetic revised text.", version="0.2.0")
+        first(docs).update(copy="Synthetic revised text.", version="0.2.0",
+                           history=[prior("0.1.0", "draft", None, text="Synthetic draft text for review.")])
         self.run_check(docs, sources=FakeSources(base))
+
+    def test_new_version_keeps_the_superseded_text_in_history(self):
+        # Review round 1 F-03: the base's current text moves into history; dropping it is refused.
+        base = documents()
+        self.assertEqual(
+            self.check_against(base, lambda d: first(d).update(copy="Synthetic revised text.", version="0.2.0")),
+            ("regulated.prior_version_not_kept", "RC-001"))
+
+    def test_superseded_draft_cannot_gain_an_approval_in_history(self):
+        base = documents()
+        self.run_check(sources=FakeSources(base), owner=OWNER)
+        docs = documents()
+        first(docs).update(copy="Synthetic revised text.", version="0.2.0",
+                           history=[prior("0.1.0", "approved", approval(), text="Synthetic draft text for review.")])
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, sources=FakeSources(base), owner=OWNER)
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("regulated.history_rewritten", "RC-001"))
+
+    # Review round 1 F-07: approval data and history are append-only against the base.
+    def test_history_entries_are_byte_identical_to_the_base(self):
+        base = documents()
+        first(base).update(version="2.0.0", history=[prior("1.0.0", "withdrawn", None)])
+        docs = documents()
+        first(docs).update(version="2.0.0", history=[prior("1.0.0", "withdrawn", None)])
+        self.run_check(docs, sources=FakeSources(base), owner=OWNER)  # control: unchanged history passes
+        first(docs).update(history=[prior("1.0.0", "approved", approval())], rollback_version="1.0.0")
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, sources=FakeSources(base), owner=OWNER)
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("regulated.history_rewritten", "RC-001"))
+
+    def test_an_approval_window_cannot_be_redated_without_a_new_version(self):
+        base = documents()
+        approve(first(base), start=NOW - timedelta(days=285), end=NOW)
+        docs = documents()
+        approve(first(docs), start=NOW - timedelta(days=285), end=NOW, status="expired")
+        self.run_check(docs, sources=FakeSources(base), owner=OWNER)  # control: the same approval, now expired
+        approve(first(docs), start=NOW - timedelta(days=1), end=NOW + timedelta(days=364))
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, sources=FakeSources(base), owner=OWNER)
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("regulated.approval_rewritten", "RC-001"))
+
+    def test_withdrawn_copy_cannot_return_without_a_new_version(self):
+        base = documents()
+        first(base).update(status="withdrawn")
+        docs = documents()
+        first(docs).update(status="withdrawn")
+        self.run_check(docs, sources=FakeSources(base))  # control
+        first(docs).update(status="draft")
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, sources=FakeSources(base))
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("regulated.status_reverted", "RC-001"))
 
     def test_regulated_record_version_never_regresses(self):
         base = documents()

@@ -147,8 +147,10 @@ STRUCTURE_RULES = (
     "regulated.approver_unassigned", "regulated.approval_evidence_missing", "time.invalid", "time.untrusted_clock",
     "regulated.approval_window_invalid", "regulated.approval_lifetime", "regulated.approval_not_yet_effective",
     "regulated.approval_expired", "regulated.expired_status_mismatch", "regulated.history_order",
-    "regulated.rollback_target_unapproved",
-    "base.unavailable", "base.invalid", "version.regressed", "glossary.term_removed_without_major",
+    "regulated.rollback_target_unapproved", "regulated.review_without_approver", "regulated.history_key_mismatch",
+    "regulated.rollback_with_usable_approval",
+    "base.unavailable", "base.invalid", "version.regressed", "regulated.history_rewritten", "regulated.status_reverted",
+    "regulated.approval_rewritten", "regulated.prior_version_not_kept", "glossary.term_removed_without_major",
     "catalogue.key_removed_without_major", "regulated.record_removed", "regulated.changed_without_version",
     "views.unsafe_path", "views.missing", "views.drift",
 )
@@ -575,6 +577,8 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
             label = terms[reference]["preferred_label"].casefold()
             require(forbidden_in(record["copy"], [label]) is not None, "regulated.term_label_missing", identifier)
         current = version(record["version"])
+        # While the qualified owner is unassigned nobody can receive a record for review (content-governance step 2).
+        require(owner is not None or record["status"] != "in_review", "regulated.review_without_approver", identifier)
         window = check_approval(record, approver_role, owner, identifier)
         if record["status"] == "approved":
             require(now >= window[0], "regulated.approval_not_yet_effective", identifier)
@@ -587,9 +591,16 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
             require((previous is None or previous < number) and number < current, "regulated.history_order",
                     identifier)
             previous = number
+            require(owner is not None or prior["status"] != "in_review", "regulated.review_without_approver",
+                    identifier)
+            # Each prior version keeps its own text and key binding, so a rollback never needs local or cached text.
+            require(prior["key"] == record["key"], "regulated.history_key_mismatch", identifier)
+            check_copy(prior["copy"], identifier, context, REGULATED_COPY_RULES)
             windows[prior["version"]] = (prior["status"], check_approval(prior, approver_role, owner, identifier))
         target = record["rollback_version"]
         if target is not None:
+            # Exactly one copy is in force: a usable approval of the current version excludes a rollback pin.
+            require(record["status"] != "approved", "regulated.rollback_with_usable_approval", identifier)
             # Rollback pins the prior approved version, still inside its window; never local or unapproved text.
             status, prior_window = windows.get(target, (None, None))
             require(status == "approved" and usable(prior_window, now), "regulated.rollback_target_unapproved",
@@ -727,6 +738,36 @@ def read_base(sources, schemas):
     return base
 
 
+# Status moves a record may make without a new version: never back to approved or into review once expired/withdrawn.
+STATUS_SUCCESSORS = {
+    "draft": {"draft", "in_review", "approved", "withdrawn"},
+    "in_review": {"draft", "in_review", "approved", "withdrawn"},
+    "approved": {"approved", "expired", "withdrawn"},
+    "expired": {"expired", "withdrawn"},
+    "withdrawn": {"withdrawn"},
+}
+
+
+def check_record_history(before, after):
+    """History is append-only against the base: earlier entries stay byte-identical, the superseded version is kept
+    with its own text, key and approval, and an approval or terminal status never changes without a new version."""
+    identifier = after["id"]
+    kept = after["history"][:len(before["history"])]
+    require(kept == before["history"], "regulated.history_rewritten", identifier)
+    if after["version"] == before["version"]:
+        require(after["status"] in STATUS_SUCCESSORS[before["status"]], "regulated.status_reverted", identifier)
+        if before["approval"] is not None and after["approval"] is not None:
+            require(after["approval"] == before["approval"], "regulated.approval_rewritten", identifier)
+        return
+    entry = next((prior for prior in after["history"] if prior["version"] == before["version"]), None)
+    require(entry is not None and entry["copy"] == before["copy"] and entry["key"] == before["key"],
+            "regulated.prior_version_not_kept", identifier)
+    allowed = {before["status"], "withdrawn"} | ({"expired"} if before["status"] == "approved" else set())
+    require(entry["status"] in allowed, "regulated.history_rewritten", identifier)
+    require(entry["approval"] is None or entry["approval"] == before["approval"], "regulated.approval_rewritten",
+            identifier)
+
+
 def check_base(documents, base):
     """Additive versioning against the base: versions never regress; removing a term or key needs a major bump;
     regulated records are never removed (withdraw instead) and their copy never changes without a new version."""
@@ -756,6 +797,7 @@ def check_base(documents, base):
                 require(version(after["version"]) >= version(item["version"]), "version.regressed", item["id"])
                 require(after["copy"] == item["copy"] or after["version"] != item["version"],
                         "regulated.changed_without_version", item["id"])
+                check_record_history(item, after)
 
 
 class Model:
@@ -973,9 +1015,14 @@ def render_regulated(regulated):
          record["rollback_version"] or "none"]
         for record in regulated["records"]
     ])
-    lines += ["", "## Draft copy", ""]
+    lines += ["", "## Copy by version", "",
+              "Current copy first, then every prior version with its own text; a rollback pin shows the pinned text.",
+              ""]
     for record in regulated["records"]:
         lines += [f"- {record['id']} {record['version']} ({record['status']}): {cell(record['copy'])}"]
+        for prior in record["history"]:
+            pinned = " - rollback pin" if prior["version"] == record["rollback_version"] else ""
+            lines += [f"  - {prior['version']} ({prior['status']}{pinned}): {cell(prior['copy'])}"]
     return lines
 
 

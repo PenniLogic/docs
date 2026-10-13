@@ -20,7 +20,9 @@ Approver role: `legal` (qualified legal/compliance owner; unassigned in `governa
 | RC-010 | disclaimer | `reg.disclaimer.scenario_not_advice` | 0.1.0 | draft | none | `common.safe_exit.denial` | none | none |
 | RC-011 | disclaimer | `reg.disclaimer.projection` | 0.1.0 | draft | none | `common.safe_exit.denial` | none | none |
 
-## Draft copy
+## Copy by version
+
+Current copy first, then every prior version with its own text; a rollback pin shows the pinned text.
 
 - RC-001 0.1.0 (draft): Allow PenniLogic to read bank and payment messages on this phone to record transactions? Messages are read on this phone only. You can withdraw consent at any time in settings.
 - RC-002 0.1.0 (draft): Automatic capture needs the device permission to read messages. Without it, you can still add every transaction by hand.
