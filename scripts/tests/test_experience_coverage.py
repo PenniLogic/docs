@@ -622,10 +622,14 @@ class IdentityAndLedgerTests(CoverageCase):
     def test_ledger_entries_are_consistent(self):
         self.refused(lambda f: f.registry["id_ledger"].append(copy.deepcopy(f.ledger("P01"))), "ledger.duplicate",
                      "P01")
+        self.refused(lambda f: f.ledger("P01").update(retired_reason="Synthetic note."), "ledger.retired_reason", "P01")
+
+    def test_repointed_id_kind_or_platform_rejected(self):
         self.refused(lambda f: f.ledger("S-AND-001").update(platform="web"), "ledger.kind_or_platform_mismatch",
                      "S-AND-001")
         self.refused(lambda f: f.ledger("D01").update(kind="journey"), "ledger.kind_or_platform_mismatch", "D01")
-        self.refused(lambda f: f.ledger("P01").update(retired_reason="Synthetic note."), "ledger.retired_reason", "P01")
+        self.refused(lambda f: f.ledger("C-OP-QUEUE").update(platform="admin"), "ledger.kind_or_platform_mismatch",
+                     "C-OP-QUEUE")
 
     def test_record_without_active_ledger_entry_fails(self):
         self.refused(lambda f: f.registry["id_ledger"].remove(f.ledger("D01")), "ledger.missing_record", "D01")
@@ -665,7 +669,8 @@ class IdentityAndLedgerTests(CoverageCase):
                 self.refused(lambda f: f.drop_screen(identifier), "ledger.entry_removed", identifier,
                              prepare=Fixture.freeze_base)
 
-    def test_import_continuity_is_the_fallback_without_a_base_registry(self):
+    def test_imported_id_continuity(self):
+        """Without a base registry, every ID of the frozen import must stay in the ledger."""
         self.refused(lambda f: f.drop_screen("S-AND-002"), "ledger.import_discontinuity", "S-AND-002")
         fixture = Fixture()
         fixture.drop_screen("S-AND-004")
@@ -942,9 +947,18 @@ class PartitionAndReleaseGateTests(CoverageCase):
 
 
 class ReadinessTests(CoverageCase):
-    def test_missing_d6_dependency_or_handoff_is_a_readiness_gap(self):
+    def test_missing_d6_dependency_fails(self):
+        """A missing D6 dependency or handoff is a readiness gap; the default mode then exits 1 (NOT GREEN)."""
         self.gap(lambda f: f.record("S-AND-002").update(d6_dependency=None), "readiness.d6_missing", "S-AND-002")
         self.gap(lambda f: f.record("S-ADM-001").update(handoff_ref=None), "readiness.d6_missing", "S-ADM-001")
+        fixture = Fixture()
+        fixture.record("S-AND-002")["d6_dependency"] = None
+        checkout = Checkout(self, fixture)
+        self.assertEqual(checkout.run("--write-summary")[0], 0)
+        self.assertEqual(checkout.run("--structure")[0], 0)
+        code, out, err = checkout.run()
+        self.assertEqual((code, err, out.splitlines()[0]), (1, "", module.NOT_GREEN))
+        self.assertIn("readiness.d6_missing: 1", out.splitlines())
 
     def test_missing_route_id_is_a_readiness_gap(self):
         self.gap(lambda f: f.record("S-WEB-001").update(route_id=None), "readiness.route_missing", "S-WEB-001")
@@ -1293,7 +1307,19 @@ class CommandLineTests(unittest.TestCase):
                        "Experience coverage check refused: input.unreadable_or_invalid\n")
         self.assertEqual(victim.read_text(encoding="utf-8"), "unchanged\n")
 
-    def test_usage_errors_exit_2(self):
+    def test_main_exit_codes(self):
+        """0 complete or structurally sound as asked, 1 refused or NOT GREEN, 2 usage error."""
+        fixture = Fixture()
+        checkout = Checkout(self, fixture)
+        self.assertEqual(checkout.run("--write-summary")[0], 0)
+        self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])], [0, 0, 0])
+        fixture.record("S-WEB-001")["route_id"] = None
+        checkout.save()
+        self.assertEqual(checkout.run("--write-summary")[0], 0)
+        self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])], [1, 0, 0])
+        fixture.record("C-TRUST-FOUNDATION")["foundational"] = False
+        checkout.save()
+        self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])], [1, 1, 1])
         for argv in (["--structure", "--check-summary"], ["--write-summary", "--structure"], ["--unknown"]):
             with self.subTest(argv=argv), contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit) as caught:
