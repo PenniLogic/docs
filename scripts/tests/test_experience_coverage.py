@@ -283,10 +283,10 @@ PARTITION = {
 
 
 class Sources:
-    """In-memory stand-in for GitSources: pinned blobs and the ledger base registry bytes."""
+    """In-memory stand-in for GitSources: pinned blobs and the ledger base registry and partition bytes."""
 
-    def __init__(self, blobs, base=None, base_error=False):
-        self.blobs, self.base, self.base_error = blobs, base, base_error
+    def __init__(self, blobs, base=None, base_error=False, partition=None):
+        self.blobs, self.base, self.base_error, self.partition = blobs, base, base_error, partition
 
     def blob(self, commit, path):
         try:
@@ -298,6 +298,9 @@ class Sources:
         if self.base_error:
             raise LookupError("no base")
         return self.base
+
+    def base_partition(self):
+        return self.partition
 
 
 class Fixture:
@@ -311,12 +314,13 @@ class Fixture:
             (IMPORT_COMMIT, module.IMPORT_PATH): IMPORT_BYTES, (EVIDENCE_COMMIT, EVIDENCE_PATH): EVIDENCE_BYTES,
         }
         self.pin = (module.IMPORT_PATH, module.gates.digest(IMPORT_BYTES))
-        self.base, self.base_error, self.synthetic_ok = None, False, False
+        self.base, self.base_error, self.partition_base, self.synthetic_ok = None, False, None, False
 
     def check(self):
         return module.check(
             self.registry, self.partition, self.schema, self.inventory, self.taxonomy,
-            Sources(self.blobs, self.base, self.base_error), import_pin=self.pin, synthetic_ok=self.synthetic_ok,
+            Sources(self.blobs, self.base, self.base_error, self.partition_base), import_pin=self.pin,
+            synthetic_ok=self.synthetic_ok,
         )
 
     def gaps(self):
@@ -336,8 +340,9 @@ class Fixture:
         return next(item for item in self.partition["entries"] if item["issue"] == reference)
 
     def freeze_base(self):
-        """Record the current registry as the committed base the ledger must extend."""
+        """Record the current registry and partition as the committed base the ledger must extend."""
         self.base = json.dumps(self.registry).encode("utf-8")
+        self.partition_base = json.dumps(self.partition).encode("utf-8")
 
     def drop_screen(self, identifier):
         """Remove a screen consistently: record, its ledger entry and its flow links."""
@@ -797,6 +802,12 @@ class IdentityAndLedgerTests(CoverageCase):
             base["id_ledger"][0]["platform"] = "web"
             fixture.base = json.dumps(base).encode("utf-8")
         self.refused(inconsistent, "ledger.base_invalid")
+        for partition in (b"[]", b'{"entries": {}}', b'{"entries": [{"issue": "PenniLogic/web#901"}]}',
+                          b'{"entries": [{"issue": "web#901", "disposition": "frontend"}]}',
+                          b'{"entries": [{"issue": "PenniLogic/web#901", "disposition": "excluded"}]}'):
+            with self.subTest(partition=partition):
+                self.refused(lambda f: setattr(f, "partition_base", partition), "partition.base_invalid",
+                             prepare=Fixture.freeze_base)
 
 
 class ReferenceAndOwnershipTests(CoverageCase):
@@ -1070,6 +1081,25 @@ class PartitionAndReleaseGateTests(CoverageCase):
         self.refused(asserted_d6, "held.d6_reference", "S-AND-001")
         # An open implementation issue without D6 is a readiness gap, not a bypass.
         self.assertIn("S-WEB-001", Fixture().gaps()["readiness.d6_missing"])
+
+
+    def test_delivered_frontend_issue_cannot_be_relabeled(self):
+        """AV-05: unmapping a delivered issue and relabelling it non-frontend would hide its release-gate bypass."""
+        def relabel(fixture):
+            fixture.issue("PenniLogic/android#903").update(state="closed", state_reason="completed")
+            for identifier in ("F-AND-02", "S-AND-003", "S-AND-004"):
+                fixture.record(identifier)["implementation_tickets"] = [copy.deepcopy(AND1)]
+            fixture.entry("PenniLogic/android#903").update(
+                disposition="non_frontend", rationale_class="other", rationale="Synthetic relabel of delivered work.")
+        self.refused(relabel, "release_gate.relabeled", "PenniLogic/android#903", prepare=Fixture.freeze_base)
+        fixture = Fixture()
+        relabel(fixture)
+        fixture.check()  # no base partition yet (the registry's first PR): reviewed by hand, documented limit
+        fixture = Fixture()
+        fixture.freeze_base()
+        relabel(fixture)
+        fixture.issue("PenniLogic/android#903").update(state="open", state_reason=None)
+        fixture.check()  # relabelling open work stays an ordinary, reviewed disposition change
 
 
 class ReadinessTests(CoverageCase):
@@ -1379,6 +1409,21 @@ class CommandLineTests(unittest.TestCase):
                 self.assertRun(checkout.run("--structure", f"--base={revision}"), 1, "", unavailable)
         self.assertRun(checkout.run("--structure", "--base", checkout.base), 1, "", removed)
 
+    def test_missing_base_registry_blob_fails_closed(self):
+        """AV-03: the base tree lists the registry but its blob is absent locally (a blobless clone or a pruned
+        object); that must not pass as a base that predates the registry."""
+        fixture = Fixture()
+        fixture.drop_screen("S-AND-004")
+        checkout = Checkout(self, fixture, base_registry=REGISTRY)
+        self.assertRun(checkout.run("--structure"), 1, "",
+                       "Experience coverage check refused: ledger.entry_removed S-AND-004\n")
+        blob = git(checkout.root, "rev-parse", f"{checkout.base}:{module.REGISTRY}")
+        (checkout.root / ".git/objects" / blob[:2] / blob[2:]).unlink()
+        self.assertEqual(git(checkout.root, "ls-tree", "--name-only", checkout.base, "--", module.REGISTRY),
+                         module.REGISTRY)
+        self.assertRun(checkout.run("--structure"), 1, "",
+                       "Experience coverage check refused: ledger.base_unavailable\n")
+
     def test_ledger_base_ignores_a_local_branch_named_origin_main(self):
         fixture = Fixture()
         fixture.drop_screen("S-AND-004")
@@ -1527,11 +1572,11 @@ class Published:
         self.inventory, self.taxonomy = load(ROOT / module.INVENTORY), load(ROOT / module.TAXONOMY)
         self.blobs = {(self.registry["imported_from"]["commit"], module.IMPORT_PATH): (ROOT / module.IMPORT_PATH)
                       .read_bytes()}
-        self.base = None
+        self.base = self.partition_base = None
 
     def check(self):
         return module.check(self.registry, self.partition, SCHEMA, self.inventory, self.taxonomy,
-                            Sources(self.blobs, self.base))
+                            Sources(self.blobs, self.base, partition=self.partition_base))
 
     def drop_screen(self, identifier):
         """Remove a screen consistently: record, its ledger entry and its flow links."""
@@ -1555,7 +1600,9 @@ class PublishedDataTests(unittest.TestCase):
     def test_published_registry_structure_passes(self):
         """Real files and the local Git object store: pinned import blob and the merge base with origin/main."""
         model = module.load_and_check(ROOT)
-        self.assertIn(model.ledger_base, ("frozen import", "base registry"))
+        merge_base = git(ROOT, "merge-base", "HEAD", module.BASE_REF)
+        listed = git(ROOT, "ls-tree", "--name-only", merge_base, "--", module.REGISTRY)
+        self.assertEqual(model.ledger_base, "base registry" if listed else "frozen import")
         self.assertEqual({collection: len(model.registry[collection]) for collection, _ in module.COLLECTIONS}, {
             "personas": 12, "journeys": 12, "user_stories": 38, "flows": 38, "screens": 141, "components": 57,
             "diagrams": 21,
@@ -1656,6 +1703,26 @@ class PublishedDataTests(unittest.TestCase):
                 with self.assertRaises(module.Refused) as caught:
                     fixture.check()
                 self.assertEqual((caught.exception.rule, caught.exception.subject), (rule, "S-AND-001"))
+
+    def test_published_relabel_of_delivered_issue_fails(self):
+        """AV-05 on the published registry: admin#10 closed, unmapped and relabelled non-frontend."""
+        fixture = Published()
+        fixture.base = (ROOT / module.REGISTRY).read_bytes()
+        fixture.partition_base = (ROOT / module.PARTITION).read_bytes()
+        fixture.check()
+        issue = next(item for item in fixture.inventory["issues"] if item["reference"] == "PenniLogic/admin#10")
+        issue.update(state="closed", state_reason="completed")
+        for collection in ("flows", "screens"):
+            for record in fixture.registry[collection]:
+                kept = [item for item in record["implementation_tickets"] if item["issue"] != "PenniLogic/admin#10"]
+                record["implementation_tickets"] = kept or [{"plan_id": "T-ADM-14", "issue": "PenniLogic/admin#11"}]
+        entry = next(item for item in fixture.partition["entries"] if item["issue"] == "PenniLogic/admin#10")
+        entry.update(disposition="non_frontend", rationale_class="other", rationale="Delivered without a screen.",
+                     proposed_by="design_ops")
+        with self.assertRaises(module.Refused) as caught:
+            fixture.check()
+        self.assertEqual((caught.exception.rule, caught.exception.subject),
+                         ("release_gate.relabeled", "PenniLogic/admin#10"))
 
     def test_published_release_gate_bypass_fails(self):
         """An implementation issue closed as completed while its screens lack D6 is a bypass of the gate."""

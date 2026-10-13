@@ -153,7 +153,8 @@ STRUCTURE_RULES = (
     "partition.duplicate_issue", "partition.unknown_issue", "partition.plan_id_mismatch",
     "partition.rationale_missing", "partition.rationale_on_frontend", "partition.unclassified_issue",
     "partition.unmapped_implementation_ticket", "partition.frontend_without_mapping",
-    "partition.post_snapshot_invalid", "release_gate.bypass", "summary.drift",
+    "partition.post_snapshot_invalid", "partition.base_invalid", "release_gate.relabeled", "release_gate.bypass",
+    "summary.drift",
 )
 READINESS_RULES = (
     "readiness.d6_missing", "readiness.route_missing", "readiness.qa_unverified",
@@ -350,7 +351,7 @@ class GitSources:
     """Pinned blobs and the ledger base from the local Git object store; never fetches, writes or pushes."""
 
     def __init__(self, root, base=None):
-        self.root, self.base, self.executable = Path(root), base, None
+        self.root, self.base, self.executable, self.commit = Path(root), base, None, None
 
     def _git(self, *args):
         self.executable = self.executable or trusted_git(self.root)
@@ -383,17 +384,39 @@ class GitSources:
             raise LookupError("blob unavailable")
         return result.stdout
 
+    def base_commit(self):
+        if self.commit is None:
+            if self.base is None:
+                self.commit = self._commit("merge-base", "HEAD", BASE_REF)
+            elif isinstance(self.base, str) and REVISION.fullmatch(self.base):
+                self.commit = self._commit("rev-parse", "--verify", "--quiet", f"{self.base}^{{commit}}")
+            else:
+                raise LookupError("unsafe revision")
+        return self.commit
+
+    def base_file(self, path):
+        """Bytes of path at the ledger base, or None only when the base commit's tree has no such entry.
+
+        Presence is read from the trees: a listed blob missing from the local object store (a blobless clone, a
+        pruned object) fails closed instead of passing as a base that predates the registry.
+        """
+        commit = self.base_commit()
+        listed = self._git("ls-tree", "-z", "--name-only", commit, "--", path)
+        if listed.returncode != 0:
+            raise LookupError("base tree unavailable")
+        if not listed.stdout:
+            return None
+        if listed.stdout != path.encode("ascii") + b"\0":
+            raise LookupError("unexpected base tree entry")
+        return self.blob(commit, path)
+
     def base_registry(self):
         """The registry bytes at the ledger base, or None when the base predates the registry."""
-        if self.base is None:
-            commit = self._commit("merge-base", "HEAD", BASE_REF)
-        elif isinstance(self.base, str) and REVISION.fullmatch(self.base):
-            commit = self._commit("rev-parse", "--verify", "--quiet", f"{self.base}^{{commit}}")
-        else:
-            raise LookupError("unsafe revision")
-        if self._git("cat-file", "-e", f"{commit}:{REGISTRY}").returncode != 0:
-            return None
-        return self.blob(commit, REGISTRY)
+        return self.base_file(REGISTRY)
+
+    def base_partition(self):
+        """The partition bytes at the ledger base, or None when the base has none."""
+        return self.base_file(PARTITION)
 
 
 def fingerprint(record, kind):
@@ -455,6 +478,26 @@ def read_base(sources, schema):
         require(entry["id"] not in seen and _ledger_entry_consistent(entry), "ledger.base_invalid")
         seen.add(entry["id"])
     return ledger
+
+
+def read_base_partition(sources):
+    """{issue: disposition} of the base partition, or None without one; only that shape is relied on."""
+    try:
+        blob = sources.base_partition()
+    except LookupError:
+        raise Refused("ledger.base_unavailable") from None
+    if blob is None:
+        return None
+    try:
+        entries = loads(blob)["entries"]
+        dispositions = {entry["issue"]: entry["disposition"] for entry in entries}
+        valid = isinstance(entries, list) and len(dispositions) == len(entries) and all(
+            isinstance(issue, str) and ISSUE_REF.fullmatch(issue) for issue in dispositions
+        ) and set(dispositions.values()) <= {"frontend", "non_frontend"}
+    except (ValueError, RecursionError, KeyError, TypeError):
+        raise Refused("partition.base_invalid") from None
+    require(valid, "partition.base_invalid")
+    return dispositions
 
 
 def inventory_index(inventory):
@@ -808,14 +851,22 @@ def check_partition(model):
         require(issue not in index and int(number) > highest[repository], "partition.post_snapshot_invalid", issue)
 
 
-def check_release_gate(model):
+def delivered(found):
+    return found["state"] == "closed" and found.get("state_reason") not in strategy.UNOWNED_REASONS
+
+
+def check_release_gate(model, base_dispositions=None):
     """A client implementation issue closed as delivered while any of its screens lacks D6 bypassed the gate."""
+    # Relabelling delivered frontend work non-frontend (after unmapping it) would hide exactly that bypass.
+    for entry in model.partition["entries"]:
+        issue = entry["issue"]
+        require(not (base_dispositions and base_dispositions.get(issue) == "frontend"
+                     and entry["disposition"] != "frontend" and delivered(model.index[issue])),
+                "release_gate.relabeled", issue)
     for screen in model.screens.values():
         if lacks_d6(screen):
             for issue in model.implementation_issues(screen):
-                found = model.index[issue]
-                require(not (found["state"] == "closed" and found.get("state_reason") not in strategy.UNOWNED_REASONS),
-                        "release_gate.bypass", issue, screen["id"])
+                require(not delivered(model.index[issue]), "release_gate.bypass", issue, screen["id"])
 
 
 def check(registry, partition, schema, inventory, taxonomy, sources, import_pin=None, synthetic_ok=False):
@@ -827,6 +878,7 @@ def check(registry, partition, schema, inventory, taxonomy, sources, import_pin=
     guard_content(partition)
     imported = read_import(registry, sources, import_pin or (IMPORT_PATH, IMPORT_SHA256))
     base = read_base(sources, schema)
+    base_dispositions = read_base_partition(sources) if base is not None else None
     model = Model(registry, partition, inventory_index(inventory))
     states = taxonomy_states(taxonomy)
     check_identifiers(model, synthetic_ok)
@@ -841,7 +893,7 @@ def check(registry, partition, schema, inventory, taxonomy, sources, import_pin=
     check_flows(model, sources)
     check_diagrams(model)
     check_partition(model)
-    check_release_gate(model)
+    check_release_gate(model, base_dispositions)
     return model
 
 
