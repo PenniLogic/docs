@@ -158,10 +158,11 @@ def schemas():
 
 
 class FakeSources:
-    """In-memory base documents; None means the base predates them, an exception means Git failed."""
+    """In-memory base documents and their base-commit schemas (default: the committed schemas); None means the base
+    predates them, an exception means Git failed."""
 
-    def __init__(self, base=None, error=None):
-        self.base, self.error = base or {}, error
+    def __init__(self, base=None, error=None, base_schemas=None):
+        self.base, self.error, self.base_schemas = base or {}, error, base_schemas
 
     def base_file(self, path):
         if self.error is not None:
@@ -169,6 +170,8 @@ class FakeSources:
         for name, document in self.base.items():
             if path == content.document_path(name):
                 return (json.dumps(document, indent=2) + "\n").encode("utf-8")
+            if path == content.schema_path(name):
+                return (json.dumps((self.base_schemas or schemas())[name], indent=2) + "\n").encode("utf-8")
         return None
 
 
@@ -989,6 +992,38 @@ class BaseVersioningTests(Harness):
             self.run_check(sources=FakeSources(base))
         self.assertEqual(caught.exception.rule, "base.invalid")
 
+    # Review round 1 F-10: the base is validated against the schemas of its own commit.
+    def test_tightened_candidate_schema_still_compares_against_the_base(self):
+        tightened = schemas()
+        definition = tightened["glossary"]["definitions"]["term"]
+        definition["required"].append("plural_label")
+        definition["properties"]["plural_label"] = {"type": "string", "minLength": 1}
+        docs = documents()
+        docs["glossary"]["glossary_version"] = "1.0.0"
+        for item in docs["glossary"]["terms"]:
+            item["plural_label"] = item["preferred_label"] + "s"
+        model = content.check(docs, tightened, taxonomy(), gates(), NOW, FakeSources(documents()))
+        self.assertEqual(model.base_documents, content.DOCUMENTS)
+
+    def test_base_document_without_its_schema_fails_closed(self):
+        class Schemaless(FakeSources):
+            def base_file(self, path):
+                return None if path.endswith(".schema.json") else super().base_file(path)
+        self.run_check(sources=FakeSources(documents()))  # control
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(sources=Schemaless(documents()))
+        self.assertEqual(caught.exception.rule, "base.invalid")
+
+    def test_base_missing_a_compared_field_fails_closed(self):
+        loose = schemas()
+        loose["glossary"]["required"].remove("glossary_version")
+        base = documents()
+        del base["glossary"]["glossary_version"]
+        self.run_check(sources=FakeSources(documents(), base_schemas=loose))  # control
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(sources=FakeSources(base, base_schemas=loose))
+        self.assertEqual(caught.exception.rule, "base.invalid")
+
     def test_undecodable_base_fails_closed(self):
         class Broken(FakeSources):
             def base_file(self, path):
@@ -1027,6 +1062,43 @@ class BaseVersioningTests(Harness):
             self.run_check(docs, sources=FakeSources(base))
         self.assertEqual((caught.exception.rule, caught.exception.subject),
                          ("catalogue.key_removed_without_major", "debt.edit.title"))
+
+    # Review round 1 F-11: additions and consumer-visible changes need at least a minor bump.
+    def test_adding_a_term_needs_a_minor_bump(self):
+        def add(d):
+            d["glossary"]["terms"].append(term("loan", "loan"))
+        docs = documents()
+        add(docs)
+        docs["glossary"]["glossary_version"] = "0.2.0"
+        self.run_check(docs, sources=FakeSources(documents()))  # control: the addition ships with a minor bump
+        self.assertEqual(self.check_against(documents(), add), ("glossary.changed_without_minor", "term.loan"))
+
+    def test_relabelling_a_term_needs_a_minor_bump(self):
+        def relabel(d):
+            terms_of(d)["term.debt"].update(definition="Synthetic revised definition of debt.")
+        docs = documents()
+        relabel(docs)
+        docs["glossary"]["glossary_version"] = "0.1.1"
+        with self.assertRaises(content.Refused) as caught:  # a patch bump is not enough
+            self.run_check(docs, sources=FakeSources(documents()))
+        self.assertEqual(caught.exception.rule, "glossary.changed_without_minor")
+        docs["glossary"]["glossary_version"] = "0.2.0"
+        self.run_check(docs, sources=FakeSources(documents()))  # control
+        self.assertEqual(self.check_against(documents(), relabel), ("glossary.changed_without_minor", "term.debt"))
+
+    def test_adding_a_key_needs_a_minor_bump(self):
+        self.assertEqual(self.check_against(documents(), lambda d: add_key(d, key("debt.edit.title", "Edit"))),
+                         ("catalogue.changed_without_minor", "debt.edit.title"))
+
+    def test_changing_key_copy_needs_a_minor_bump(self):
+        def change(d):
+            keys_of(d)["debt.delete.status"].update(copy="This debt is gone")
+        docs = documents()
+        change(docs)
+        docs["message-keys"]["catalogue_version"] = "0.2.0"
+        self.run_check(docs, sources=FakeSources(documents()))  # control
+        self.assertEqual(self.check_against(documents(), change),
+                         ("catalogue.changed_without_minor", "debt.delete.status"))
 
     def test_regulated_records_are_never_removed(self):
         base = documents()

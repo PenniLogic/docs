@@ -151,6 +151,7 @@ STRUCTURE_RULES = (
     "regulated.rollback_with_usable_approval",
     "base.unavailable", "base.invalid", "version.regressed", "regulated.history_rewritten", "regulated.status_reverted",
     "regulated.approval_rewritten", "regulated.prior_version_not_kept", "glossary.term_removed_without_major",
+    "glossary.changed_without_minor", "catalogue.changed_without_minor",
     "catalogue.key_removed_without_major", "regulated.record_removed", "regulated.changed_without_version",
     "views.unsafe_path", "views.missing", "views.drift",
 )
@@ -716,24 +717,28 @@ def document_path(name):
     return f"{CONTENT}/{name}.json"
 
 
-def read_base(sources, schemas):
-    """Each content document at the base, schema-checked, or None where the base predates it."""
+def schema_path(name):
+    return f"{CONTENT}/{name}.schema.json"
+
+
+def read_base(sources):
+    """Each content document at the base, checked against the schema of that same base commit (a candidate schema
+    may legitimately tighten), or None where the base predates it. A base document without its schema fails closed."""
     base = {}
     for name in DOCUMENTS:
         try:
             raw = sources.base_file(document_path(name))
+            raw_schema = None if raw is None else sources.base_file(schema_path(name))
         except LookupError:
             raise Refused("base.unavailable") from None
         if raw is None:
             base[name] = None
             continue
         try:
+            require(raw_schema is not None, "base.invalid")
             base[name] = loads(raw)
+            shape(base[name], loads(raw_schema))
         except (UnicodeDecodeError, ValueError, RecursionError):
-            raise Refused("base.invalid") from None
-        try:
-            shape(base[name], schemas[name])
-        except Refused:
             raise Refused("base.invalid") from None
     return base
 
@@ -768,9 +773,18 @@ def check_record_history(before, after):
             identifier)
 
 
+# What consumers read from a term or key: changing any of these, or adding an item, needs at least a minor bump.
+VERSIONED_FIELDS = {
+    "glossary": ("preferred_label", "definition", "surfaces", "forbidden_aliases", "contract_field_names"),
+    "message-keys": ("category", "copy", "range", "platforms", "term_refs", "neutral_safe_exit"),
+}
+CHANGE_RULES = {"glossary": "glossary.changed_without_minor", "message-keys": "catalogue.changed_without_minor"}
+
+
 def check_base(documents, base):
-    """Additive versioning against the base: versions never regress; removing a term or key needs a major bump;
-    regulated records are never removed (withdraw instead) and their copy never changes without a new version."""
+    """Additive versioning against the base: versions never regress; adding or changing a term or key needs at least
+    a minor bump and removing one a major bump; regulated records are never removed (withdraw instead) and their
+    copy never changes without a new version."""
     fields = {
         "glossary": ("glossary_version", "terms", "id", "glossary.term_removed_without_major"),
         "message-keys": ("catalogue_version", "keys", "key", "catalogue.key_removed_without_major"),
@@ -791,6 +805,12 @@ def check_base(documents, base):
             if subject in current:
                 continue
             require(name != "regulated-copy" and new[0] > old[0], removal_rule, subject)
+        if name in VERSIONED_FIELDS:
+            previous = {item[identity]: item for item in before[items]}
+            for subject, item in current.items():
+                changed = subject not in previous or any(
+                    item[field] != previous[subject][field] for field in VERSIONED_FIELDS[name])
+                require(not changed or new[:2] > old[:2], CHANGE_RULES[name], subject)
         if name == "regulated-copy":
             for item in before[items]:
                 after = current[item["id"]]
@@ -841,8 +861,12 @@ def check(documents, schemas, taxonomy, gates, now, sources, owner=None):
     keys = check_keys(catalogue, facts, terms, context, roles, identifiers)
     check_patterns(voice, keys)
     check_regulated(regulated, keys, terms, context, roles, now, owner)
-    base = read_base(sources, schemas)
-    check_base(documents, base)
+    base = read_base(sources)
+    try:
+        check_base(documents, base)
+    except (KeyError, TypeError, AttributeError):
+        # A base shaped by an older schema may lack a field the comparison reads: fail closed, never skip.
+        raise Refused("base.invalid") from None
     return Model(documents, terms, keys, owner, (name for name in DOCUMENTS if base[name] is not None))
 
 
@@ -1072,7 +1096,7 @@ def write_views(root, views):
 def load_documents(root):
     root = Path(root)
     documents = {name: support.load_json(root / document_path(name)) for name in DOCUMENTS}
-    schemas = {name: support.load_json(root / f"{CONTENT}/{name}.schema.json") for name in DOCUMENTS}
+    schemas = {name: support.load_json(root / schema_path(name)) for name in DOCUMENTS}
     return documents, schemas
 
 

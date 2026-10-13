@@ -33,7 +33,11 @@ AI disclosure, advice boundaries and projection disclosures are regulated copy (
 `disclosure`-category key lives under `reg.` and binds a record (`ai_disclosure` or `disclaimer`), and no ordinary key
 may restate a record's text, even inside longer copy.
 
-Removing or renaming a term or key needs a major version bump; additions are minor.
+Versions are compared with the merge base of `HEAD` and `origin/main`. Adding a term or key, or changing what
+consumers read (a term's label, definition, surfaces, forbidden aliases or contract field names; a key's category,
+copy, range, platforms, term references or safe-exit flag), needs at least a minor bump; removing or renaming one needs
+a major bump. Each base document is validated against the schema of its own base commit, and a base the comparison
+cannot read fails closed.
 
 ## Regulated-copy workflow
 
