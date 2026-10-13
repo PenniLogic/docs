@@ -5893,6 +5893,41 @@
             }
           ],
           "next": [
+            "J12.T.09"
+          ]
+        },
+        {
+          "id": "J12.T.09",
+          "lane": "team",
+          "channel": "service",
+          "actor": "Audit trail service",
+          "action": "Verifies the append-only audit chain and derives access anomalies for review",
+          "system": "audit-trail",
+          "flow_id": null,
+          "screen_ids": [],
+          "data_class": "confidential",
+          "authorization": "Append-only audit writer; chain reads by the verification job",
+          "event_refs": [],
+          "policy_refs": [
+            "ADR-020"
+          ],
+          "telemetry": null,
+          "handoff": null,
+          "controls": null,
+          "boundary": {
+            "raw_message_egress": false,
+            "client_money_arithmetic": false,
+            "unauthorized_detail_access": false
+          },
+          "branches": [
+            {
+              "kind": "failure",
+              "to": null,
+              "recovery": "A chain that fails verification is flagged and surfaces at the next review",
+              "recovery_owner": "security_team"
+            }
+          ],
+          "next": [
             "J12.T.06"
           ]
         },

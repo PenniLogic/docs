@@ -169,7 +169,7 @@ STRUCTURE_RULES = (
     "step.service_without_branch", "branch.dangling_target",
     "coverage.flow_without_step", "coverage.critical_flow_unmapped", "coverage.branch_missing",
     "coverage.signal_missing", "coverage.not_applicable_kind", "coverage.not_applicable_contradiction",
-    "handoff.missing", "handoff.unexpected",
+    "handoff.missing", "handoff.unexpected", "handoff.unknown_service",
     "policy.class_mismatch", "policy.controls_missing", "policy.controls_unexpected", "policy.ref_grammar",
     "policy.unknown_adr", "boundary.raw_message_egress", "boundary.client_money_arithmetic",
     "boundary.unauthorized_detail_access", "boundary.restricted_notification",
@@ -600,12 +600,16 @@ def check_graph(blueprint):
     for identifier in steps:
         require(identifier in reached, "step.unreachable", identifier)
     require(any(not step["next"] for step in blueprint["steps"]), "step.no_terminal", blueprint["id"])
+    systems = {step["system"] for step in blueprint["steps"]}
     crossing = {target for source, target in _edges(blueprint)
                 if steps[source]["channel"] != steps[target]["channel"] and steps[target]["channel"] in SURFACES}
     for identifier, step in steps.items():
         # The receiving surface names the authoritative service and what it may safely show.
         require(identifier not in crossing or step["handoff"] is not None, "handoff.missing", identifier)
         require(identifier in crossing or step["handoff"] is None, "handoff.unexpected", identifier)
+        # The authoritative service is one the blueprint models as a step system, so D01 and the reopen index agree.
+        require(step["handoff"] is None or step["handoff"]["authoritative_service"] in systems,
+                "handoff.unknown_service", identifier)
 
 
 def check_coverage(model, blueprint):

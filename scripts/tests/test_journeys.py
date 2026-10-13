@@ -529,6 +529,10 @@ class StepTests(JourneyCase):
     def test_cross_channel_handoff_missing(self):
         self.assertRefused("handoff.missing", "J01.C.02", setter(("J01.C.02", "handoff"), None))
 
+    def test_handoff_names_an_unmodelled_service(self):
+        self.assertRefused("handoff.unknown_service", "J01.C.02",
+                           setter(("J01.C.02", "handoff", "authoritative_service"), "made-up-service"))
+
     def test_handoff_without_channel_change(self):
         self.assertRefused("handoff.unexpected", "J01.C.01", setter(
             ("J01.C.01", "handoff"), {"authoritative_service": "sync-api", "may_show": "Status only"}))
@@ -961,7 +965,7 @@ class PublishedDataTests(unittest.TestCase):
     def test_structure_line_is_exact(self):
         self.assertEqual(
             module.structure_line(self.model),
-            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 125 steps (69 customer, 56 team), 94 branches, "
+            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 126 steps (69 customer, 57 team), 95 branches, "
             "28 abuse paths, 16 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
@@ -1040,6 +1044,13 @@ class PublishedDataTests(unittest.TestCase):
         # kill switch refuses new requests at admission and stops in-flight traffic within a 60-second bound.
         pattern = re.compile(r"\b(?:immediate(?:ly)?|at once|instant(?:ly)?)\b", re.IGNORECASE)
         self.assertEqual([text for text in self._texts() if pattern.search(text)], [])
+
+    def test_every_handoff_names_a_modelled_service(self):
+        for blueprint in self.document["blueprints"]:
+            systems = {step["system"] for step in blueprint["steps"]}
+            for step in blueprint["steps"]:
+                if step["handoff"] is not None:
+                    self.assertIn(step["handoff"]["authoritative_service"], systems, step["id"])
 
     def test_safe_exit_runs_under_step_up(self):
         for step_id in ("J07.C.05", "J07.T.04"):

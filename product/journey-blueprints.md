@@ -77,6 +77,7 @@ flowchart LR
     system_api_split_ledger["api-split-ledger"]
     system_api_support["api-support"]
     system_api_sync["api-sync"]
+    system_audit_trail["audit-trail"]
     system_notification_outbox["notification-outbox"]
     system_web_app["web-app"]
     channel_admin --> system_admin_console
@@ -102,6 +103,7 @@ flowchart LR
     channel_service --> system_api_split_ledger
     channel_service --> system_api_support
     channel_service --> system_api_sync
+    channel_service --> system_audit_trail
     channel_web --> system_web_app
 ```
 
@@ -1190,6 +1192,7 @@ flowchart LR
         J12_T_03["J12.T.03 admin: Migrates or retires a plan version with customer impact shown first"]
         J12_T_04["J12.T.04 admin: Changes AI provider routing, spend caps or the kill switch"]
         J12_T_05["J12.T.05 service: Applies routing and spend caps; the kill switch refuses new remote calls at admission"]
+        J12_T_09["J12.T.09 service: Verifies the append-only audit chain and derives access anomalies for review"]
         J12_T_06["J12.T.06 admin: Reviews the audit chain, access anomalies and aggregate analytics"]
         J12_T_07["J12.T.07 admin: Runs the incident clock and its actions"]
         J12_T_08["J12.T.08 admin: Records red-team coverage, finding evidence and retest before release"]
@@ -1199,7 +1202,8 @@ flowchart LR
     J12_T_03 --> J12_C_01
     J12_T_03 --> J12_T_04
     J12_T_04 --> J12_T_05
-    J12_T_05 --> J12_T_06
+    J12_T_05 --> J12_T_09
+    J12_T_09 --> J12_T_06
     J12_T_06 --> J12_T_07
     J12_T_06 -. escalation .-> J12_T_07
     J12_T_07 --> J12_T_08
@@ -1213,6 +1217,7 @@ flowchart LR
 | J12.C.01 | customer | notification | notification-outbox | Affected customer | Receives notice of a plan migration before it takes effect | none | none | internal | Delivery to affected subscribers only | none | none | none |
 | J12.T.04 | team | admin | admin-console | Billing and AI operations manager (provisional persona) | Changes AI provider routing, spend caps or the kill switch | F-ADM-05 | S-ADM-013, S-ADM-014 | internal | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-022 | none |
 | J12.T.05 | team | service | ai-gateway | AI gateway | Applies routing and spend caps; the kill switch refuses new remote calls at admission | none | none | internal | Approved operations change | none | ADR-022 | none |
+| J12.T.09 | team | service | audit-trail | Audit trail service | Verifies the append-only audit chain and derives access anomalies for review | none | none | confidential | Append-only audit writer; chain reads by the verification job | none | ADR-020 | none |
 | J12.T.06 | team | admin | admin-console | Security and compliance approver (provisional persona) | Reviews the audit chain, access anomalies and aggregate analytics | F-ADM-08 | S-ADM-021, S-ADM-022, S-ADM-023 | confidential | Security reviewer role; aggregates only | none | ADR-020 | escalation |
 | J12.T.07 | team | admin | admin-console | Security and compliance approver (provisional persona) | Runs the incident clock and its actions | F-ADM-10 | S-ADM-029 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | none | none |
 | J12.T.08 | team | admin | admin-console | Security and compliance approver (provisional persona) | Records red-team coverage, finding evidence and retest before release | F-ADM-10 | S-ADM-027, S-ADM-028 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | none | completion |
@@ -1224,6 +1229,7 @@ flowchart LR
 | J12.T.03 | rollback | terminal | A migration is reversible until its effective boundary | billing_team |
 | J12.T.04 | revocation | terminal | A revoked provider key or approval is refused at admission for every new request | ai_platform_team |
 | J12.T.05 | partial | terminal | In-flight traffic is terminated within the ADR-022 60-second bound; no new request bypasses the new cap | ai_platform_team |
+| J12.T.09 | failure | terminal | A chain that fails verification is flagged and surfaces at the next review | security_team |
 | J12.T.06 | escalation | J12.T.07 | An anomaly or broken chain opens an incident | security_team |
 | J12.T.07 | timeout | terminal | A notice deadline at risk is escalated to the compliance owner | compliance_lead |
 | J12.T.08 | failure | terminal | A failed retest blocks release until it is fixed | security_team |
