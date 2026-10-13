@@ -102,6 +102,9 @@ ISSUE_REF = re.compile(r"PenniLogic/(\.github|docs|contracts|api|ai-service|andr
 COMMIT = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 RELEASE_ID = re.compile(r"(LIB-[A-Z]+)@((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))")
+# camelCase property names of the schema grammar built from words: every capital starts a lower-case word and digit
+# runs are at most two long, so a mixed-case key (a capital or digit run before another capital) never matches.
+PROPERTY_NAME = re.compile(r"(?=[A-Za-z0-9]{1,40}\Z)[a-z]+(?:[A-Z][a-z]+|[0-9]{1,2}(?![0-9]))*")
 TEXT_LIMIT = 400
 NUMBER_PATHS = frozenset({("schema_version",)})
 # Exempt from the content scan only at these paths and only with exactly this grammar (a digest is hex-shaped).
@@ -109,7 +112,8 @@ EXEMPT_PATHS = {("registry_ref", "commit"): COMMIT, ("registry_ref", "sha256"): 
                 ("registry_ref", "path"): FILE_PATH,
                 ("releases", "*", "cdo_approval", "decision_source", "commit"): COMMIT,
                 ("releases", "*", "cdo_approval", "decision_source", "sha256"): DIGEST,
-                ("releases", "*", "cdo_approval", "decision_source", "path"): FILE_PATH}
+                ("releases", "*", "cdo_approval", "decision_source", "path"): FILE_PATH,
+                ("components", "*", "properties", "*", "name"): PROPERTY_NAME}
 CONTENT_SHAPES = (
     ("content.unprintable_character", re.compile(r"[^\x20-\x7e]")),
     ("content.secret_shape", re.compile(
@@ -155,7 +159,7 @@ STRUCTURE_RULES = (
     "component.registry_platform_mismatch", "component.registry_name_mismatch",
     "component.variant_invalid", "component.variant_parent_unpublished", "component.owner_not_maintainer",
     "component.property_contract",
-    "published.owner_missing", "published.description_missing", "published.properties_missing",
+    "published.owner_missing", "published.name_missing", "published.description_missing", "published.properties_missing",
     "published.accessibility_missing", "published.platforms_missing", "published.semantic_role_missing",
     "published.release_missing",
     "deprecation.unexpected", "deprecation.missing", "deprecation.replacement_missing",
@@ -515,9 +519,11 @@ def check_component(component, schema, policy, releases, fixture):
     candidate = component["status"] == "candidate"
     require(candidate == (library == "LIB-CANDIDATE"), "contribution.candidate_library", identifier)
     # A candidate names its proposing owner and branch, and declares what the duplicate lint compares: omitting the
-    # semantic role or property contract cannot hide a duplicate (criterion 2).
+    # semantic role or property contract, or writing a placeholder name or role such as '-', cannot hide a duplicate
+    # (criterion 2).
     require(not candidate or (component["owner_role"] is not None and component["proposal_branch"] is not None
-                              and component["semantic_role"] is not None and bool(component["properties"])),
+                              and _worded(component["name"]) and _worded(component["semantic_role"])
+                              and bool(component["properties"])),
             "contribution.candidate_incomplete", identifier)
     platform = TOPOLOGY[library][5]
     require(platform is None or component["platforms"] == [platform], "component.platform_mismatch", identifier)
@@ -546,10 +552,14 @@ def check_component(component, schema, policy, releases, fixture):
     if published:
         # Criterion 1: owner, description, property contract, accessibility behaviour and supported platforms.
         require(owner is not None, "published.owner_missing", identifier)
-        require(component["description"] is not None, "published.description_missing", identifier)
-        require(component["semantic_role"] is not None, "published.semantic_role_missing", identifier)
+        # Each text names something: a placeholder such as '-' is missing text (_worded).
+        require(_worded(component["name"]), "published.name_missing", identifier)
+        require(_worded(component["description"]), "published.description_missing", identifier)
+        require(_worded(component["semantic_role"]), "published.semantic_role_missing", identifier)
         require(bool(component["properties"]), "published.properties_missing", identifier)
-        require(component["accessibility"] is not None, "published.accessibility_missing", identifier)
+        accessibility = component["accessibility"]
+        require(accessibility is not None and all(_worded(text) for text in accessibility.values()),
+                "published.accessibility_missing", identifier)
         require(bool(component["platforms"]), "published.platforms_missing", identifier)
         since = component["since_version"]
         require(since is not None and releases.get((library, since), {}).get("status") == "published",
@@ -560,28 +570,73 @@ def _normal(text):
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
+# Function words carry no semantics: 52 of the 57 pinned registry names contain "and".
+STOP_WORDS = frozenset({"a", "an", "and", "for", "of", "or", "the", "to", "with"})
+
+
+def _stem(word):
+    """Drop a plural ending (-ies, -es after s/ch/sh/x/z, -s) so plurals do not hide a duplicate."""
+    if len(word) > 4 and word.endswith("ies"):
+        return word[:-3] + "y"
+    if len(word) > 4 and word.endswith(("sses", "ches", "shes", "xes", "zes")):
+        return word[:-2]
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
+def _tokens(text):
+    return [word for word in re.findall(r"[a-z0-9]+", (text or "").lower()) if word not in STOP_WORDS]
+
+
 def _words(text):
-    """Lower-case word set with a plural `s` dropped, so word order and plurals do not hide a duplicate."""
-    return frozenset(word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
-                     for word in re.findall(r"[a-z0-9]+", (text or "").lower()))
+    """Stemmed content-word set, so word order, case, punctuation, function words and plurals do not hide a
+    duplicate."""
+    return frozenset(_stem(word) for word in _tokens(text))
+
+
+def _joined(text):
+    """The content words run together with the plural dropped, so camelCase and spaced spellings compare equal."""
+    return _stem("".join(_tokens(text)))
+
+
+def _worded(text):
+    """Criterion 1 text names something: at least one run of two letters (a placeholder such as '-' does not)."""
+    return text is not None and re.search(r"[A-Za-z]{2}", text) is not None
 
 
 def duplicates(component, other):
-    """Criterion 2 against one published record: the same name or semantic role (as word sets), or the published
-    property signature contained in this one together with a shared name or role word. An equal signature alone
-    is not a duplicate: distinct components may share property names and types."""
-    name, other_name = _words(component["name"]), _words(other["name"])
-    role, other_role = _words(component["semantic_role"]), _words(other["semantic_role"])
-    if (name and name == other_name) or (role and role == other_role):
-        return True
+    """Criterion 2 against one published record: the same name or semantic role (as word sets or run together),
+    or the published property signature contained in this one together with a shared content word. An equal
+    signature alone is not a duplicate: distinct components may share property names and types."""
+    for field in ("name", "semantic_role"):
+        words, joined = _words(component[field]), _joined(component[field])
+        if (words and words == _words(other[field])) or (joined and joined == _joined(other[field])):
+            return True
     signature = {(_normal(item["name"]), item["type"]) for item in component["properties"]}
     other_signature = {(_normal(item["name"]), item["type"]) for item in other["properties"]}
-    return bool(other_signature) and other_signature <= signature and bool((name | role) & (other_name | other_role))
+    shared = (_words(component["name"]) | _words(component["semantic_role"])) & (
+        _words(other["name"]) | _words(other["semantic_role"]))
+    return bool(other_signature) and other_signature <= signature and bool(shared)
 
 
-def _replaces(component, other):
-    deprecation = component["deprecation"]
-    return deprecation is not None and deprecation["replacement"] == other["id"]
+def _family(component):
+    return component["variant_of"] or component["id"]
+
+
+def _counterparts(component, other, components):
+    """Pairs the duplicate lint does not compare: one component family (a parent and its variants) across
+    libraries; a deprecated family and its declared replacement's family; and two shared-library records whose
+    platform sets are disjoint (cross-platform counterparts). Candidates and same-platform records are compared."""
+    if _family(component) == _family(other) and component["library"] != other["library"]:
+        return True
+    for first, second in ((component, other), (other, component)):
+        for record in (first, components.get(_family(first))):
+            deprecation = record["deprecation"] if record is not None else None
+            if deprecation is not None and deprecation["replacement"] in (second["id"], _family(second)):
+                return True
+    return "candidate" not in (component["status"], other["status"]) and not (
+        set(component["platforms"]) & set(other["platforms"]))
 
 
 def check_component_graph(components, releases):
@@ -616,13 +671,11 @@ def check_component_graph(components, releases):
                 identifier)
         require(deprecation["available_until_removal"], "deprecation.unavailable", identifier)
     # Every record is linted against every published or deprecated record of every shared library (semantic and
-    # platform), except its own parent or variant and a declared replacement pair.
+    # platform), except the counterparts _counterparts names.
     published = [item for item in components.values() if item["status"] in PUBLISHED]
     for identifier, component in components.items():
         for other in published:
-            if other["id"] in (identifier, component["variant_of"]) or other["variant_of"] == identifier:
-                continue
-            if _replaces(component, other) or _replaces(other, component):
+            if other["id"] == identifier or _counterparts(component, other, components):
                 continue
             require(not duplicates(component, other), "duplicate.semantic_component", identifier, other["id"])
 

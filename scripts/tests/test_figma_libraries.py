@@ -331,6 +331,23 @@ class StructureTests(RuleCase):
                 self.assertRefused(lambda d: button(d).update(description=sample), "content.secret_shape",
                                    "C-SYN-BUTTON")
 
+    def test_camel_case_property_names_are_exempt_from_the_key_scan(self):
+        """AV2-5: schema-valid word-built property names pass; a key-shaped property name is still refused."""
+        def named(name):
+            return lambda d: button(d)["properties"].append(
+                {"name": name, "type": "text", "values": [], "default": None, "required": False})
+        for name in ("iconSize24Enabled", "showSupportingTextWhenErrorVisible", "maxLines2"):
+            with self.subTest(name=name):
+                document = fixture()
+                named(name)(document)
+                self.assertIn(name, [item["name"] for item in run_check(document).components["C-SYN-BUTTON"][
+                    "properties"]])
+        for name in ("fp7lqd1V00" + "LUaT5zvdklkk", "aB3dE5fG7hJ9" + "kL1mN2pQ4", "x" + "1a2b3c4d" * 4):
+            with self.subTest(name=name):
+                self.assertRefused(named(name), "content.secret_shape", "C-SYN-BUTTON")
+        self.assertRefused(lambda d: button(d).update(description="iconSize24" + "EnabledAndVisible"),
+                           "content.secret_shape", "C-SYN-BUTTON")  # exempt only at a property name
+
     def test_file_paths_are_exempt_only_at_their_fields(self):
         self.assertIn("C-SYN-BUTTON", run_check(fixture()).components)  # registry and decision paths pass
         self.assertRefused(lambda d: button(d).update(description="see governance/synthetic-decision" + ".json"),
@@ -940,6 +957,18 @@ class PublishedComponentTests(RuleCase):
             with self.subTest(field=field, value=value):
                 self.assertRefused(lambda d: button(d).update({field: value}), rule, "C-SYN-BUTTON")
 
+    def test_placeholder_text_is_missing_text(self):
+        """AV2-4: a punctuation-only placeholder satisfies no criterion 1 field."""
+        cases = (("name", "published.name_missing"), ("description", "published.description_missing"),
+                 ("semantic_role", "published.semantic_role_missing"))
+        for field, rule in cases:
+            with self.subTest(field=field):
+                self.assertRefused(lambda d: button(d).update({field: "-"}), rule, "C-SYN-BUTTON")
+        for field in ("role", "accessible_name", "focus", "announcements"):
+            with self.subTest(field=field):
+                self.assertRefused(lambda d: button(d)["accessibility"].update({field: "-"}),
+                                   "published.accessibility_missing", "C-SYN-BUTTON")
+
     def test_drafts_may_be_incomplete(self):
         draft = find(run_check(fixture()).document, "components", "C-SYN-DRAFT")
         self.assertIsNone(draft["owner_role"])
@@ -986,6 +1015,18 @@ class DeprecationTests(RuleCase):
 
 def local(document):
     return find(document, "components", "C-SYN-LOCAL")
+
+
+LABEL = [{"name": "label", "type": "text", "values": [], "default": None, "required": True}]
+SLOT = [{"name": "items", "type": "slot", "values": [], "default": None, "required": True}]
+
+
+def with_web_library():
+    """The fixture with LIB-WEB active at a published 1.0.0, so Web variants may be drafted or published."""
+    document = fixture()
+    find(document, "libraries", "LIB-WEB")["status"] = "active"
+    document["releases"].append(release("LIB-WEB@1.0.0", None, "major", "published"))
+    return document
 
 
 class DuplicateTests(RuleCase):
@@ -1044,8 +1085,8 @@ class DuplicateTests(RuleCase):
         self.assertRefused(twin, "duplicate.semantic_component", "C-SYN-BUTTON-AND", "C-SYN-BUTTON-ANDTWO")
 
     def test_replacement_pair_sharing_a_role_is_exempt(self):
+        """AV2-2 F2b, DF-R2-01: the replacement's variant (C-SYN-BUTTON-AND) stays in the document."""
         document = fixture()
-        document["components"] = [item for item in document["components"] if item["id"] != "C-SYN-BUTTON-AND"]
         run_check(copy.deepcopy(document))
         find(document, "components", "C-SYN-CHIP")["semantic_role"] = "primary action"  # shared with its replacement
         self.assertEqual(run_check(document).components["C-SYN-CHIP"]["semantic_role"], "primary action")
@@ -1057,8 +1098,76 @@ class DuplicateTests(RuleCase):
     def test_platform_library_duplicate_without_variant_link(self):
         self.assertRefused(lambda d: d["components"].append(component(
             "C-SYN-WEB-ACTION", "Web action", library_id="LIB-WEB", status="draft", role="primary action",
-            platforms=["web"], variant_of="C-SYN-CHIP", since=None)), "duplicate.semantic_component",
+            platforms=["web"], variant_of="C-SYN-DRAFT", since=None)), "duplicate.semantic_component",
             "C-SYN-WEB-ACTION", "C-SYN-BUTTON")
+
+    def test_spelling_does_not_hide_a_duplicate(self):
+        """AV2-1, DF-R2-02: camelCase or run-together spellings, -es/-ies plurals and dropped function words."""
+        def published(identifier, name, role, properties):
+            def build():
+                document = fixture()
+                document["components"].append(component(identifier, name, role=role, properties=properties))
+                return document
+            return build
+        field = published("C-SYN-FIELD", "Text field", "text entry", LABEL)
+        cases = (
+            (field, "C-SYN-FIELD", dict(name="TextField")),
+            (field, "C-SYN-FIELD", dict(semantic_role="TextEntry")),
+            (fixture, "C-SYN-BUTTON", dict(semantic_role="PrimaryAction")),
+            (published("C-SYN-SWITCH", "Switch", "boolean switch", LABEL), "C-SYN-SWITCH", dict(name="Switches")),
+            (published("C-SYN-CATEGORY", "Category", "grouping heading", LABEL), "C-SYN-CATEGORY",
+             dict(name="Categories")),
+            (published("C-SYN-ACTIONS", "Primary secondary tonal text and icon actions", "command trigger", LABEL),
+             "C-SYN-ACTIONS", dict(name="Primary secondary tonal text icon actions")),
+        )
+        for base, other, change in cases:
+            with self.subTest(change=change):
+                self.assertRefused(lambda d: local(d).update(change), "duplicate.semantic_component", "C-SYN-LOCAL",
+                                   other, base=base)
+
+    def test_function_words_alone_are_not_shared_words(self):
+        """DF-R2-02: two names sharing only 'and', with an equal signature, are not duplicates."""
+        document = fixture()
+        document["components"] += [
+            component("C-SYN-CONSENT", "Purpose consent and withdrawal", role="consent request", properties=LABEL),
+            component("C-SYN-AMOUNT", "Currency amount balance and delta", role="money figure", properties=LABEL)]
+        self.assertIn("C-SYN-AMOUNT", run_check(document).components)
+
+    def test_sibling_platform_variants_share_their_parents_semantics(self):
+        """AV2-2 F2a, DF-R2-01: Android and Web variants of one parent share its role and contract."""
+        document = with_web_library()
+        run_check(copy.deepcopy(document))
+        for status in ("draft", "published"):
+            with self.subTest(status=status):
+                trial = copy.deepcopy(document)
+                trial["components"].append(component(
+                    "C-SYN-BUTTON-WEB", "Web button", library_id="LIB-WEB", status=status, platforms=["web"],
+                    variant_of="C-SYN-BUTTON", role="primary action", since="1.0.0" if status != "draft" else None))
+                self.assertIn("C-SYN-BUTTON-WEB", run_check(trial).components)
+
+    def test_single_platform_counterparts_are_compared_only_on_a_shared_platform(self):
+        """DF-R2-01: single-platform records of one library with disjoint platforms (the C-NAV-* pair) pass."""
+        def counterparts():
+            document = fixture()
+            document["components"] += [
+                component("C-SYN-NAV-ANDROID", "Android navigation", role="primary navigation", platforms=["android"],
+                          properties=SLOT),
+                component("C-SYN-NAV-WEB", "Web navigation", role="primary navigation", platforms=["web"],
+                          properties=SLOT)]
+            return document
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-NAV-WEB").update(platforms=["web", "android"]),
+                           "duplicate.semantic_component", "C-SYN-NAV-ANDROID", "C-SYN-NAV-WEB", base=counterparts)
+
+    def test_candidates_are_compared_across_platforms(self):
+        """A candidate is never a cross-platform counterpart: the contribution lint compares every platform."""
+        def distinct_variant():
+            document = fixture()
+            find(document, "components", "C-SYN-BUTTON-AND").update(
+                name="Android floating button", semantic_role="floating primary action")
+            return document
+        # The candidate is Web only and the published variant Android only: disjoint, and still compared.
+        self.assertRefused(lambda d: local(d).update(platforms=["web"], name="Android floating button"),
+                           "duplicate.semantic_component", "C-SYN-LOCAL", "C-SYN-BUTTON-AND", base=distinct_variant)
 
     def test_variants_and_replacements_are_not_duplicates(self):
         model = run_check(fixture())
@@ -1090,6 +1199,13 @@ class ContributionTests(RuleCase):
     def test_candidate_cannot_omit_its_semantic_role(self):
         self.assertRefused(lambda d: local(d).update(name="Primary CTA", semantic_role=None),
                            "contribution.candidate_incomplete", "C-SYN-LOCAL")
+
+    def test_candidate_cannot_write_a_placeholder_name_or_role(self):
+        """AV2-1 F1b: a '-' name or role carries no word for the duplicate lint to compare."""
+        for field in ("name", "semantic_role"):
+            with self.subTest(field=field):
+                self.assertRefused(lambda d: local(d).update({field: "-"}), "contribution.candidate_incomplete",
+                                   "C-SYN-LOCAL")
 
     def test_candidate_cannot_omit_its_property_contract(self):
         self.assertRefused(lambda d: local(d).update(properties=[]), "contribution.candidate_incomplete",

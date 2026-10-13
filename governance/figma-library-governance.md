@@ -62,10 +62,16 @@ The ticket's rollout phrase "existing drafts import as unpublished candidates" i
 status `draft` in `LIB-COMPONENTS`, not as this contract's `candidate` state (a squad proposal). A published or deprecated record (criterion 1) must name an owner role that maintains its
 library, a description, a semantic role, a non-empty property contract, accessibility behavior (role,
 accessible name, focus, announcements), supported platforms, and a `since_version` that is a published
-release of its library (`published.*` rules). Property contracts have unique names; enums carry at
+release of its library (`published.*` rules). Each of its texts (name, description, semantic role and
+the four accessibility fields) names something: a punctuation-only placeholder such as `-`, with no run
+of two letters, counts as missing (`published.name_missing` and the other `published.*` rules).
+Property contracts have unique names; enums carry at
 least two values and a default from that list (or none); booleans default to `true`, `false` or none;
 text may carry a default; slots and instances carry no values and no default; names are unique after
-case and punctuation normalization (`component.property_contract`).
+case and punctuation normalization (`component.property_contract`). A property name built from words in
+camelCase (each capital starts a lower-case word, digit runs of at most two) is exempt from the
+key-shape scan, so `showSupportingTextWhenErrorVisible` or `iconSize24Enabled` pass; any other
+property name is scanned like every text (`content.secret_shape`).
 
 **Proposed placement (awaiting Design Systems confirmation).** All pinned components are imported as
 unpublished `draft` records in `LIB-COMPONENTS` with their pinned platforms (`shared` = android, web and
@@ -81,8 +87,9 @@ no visual direction is selected.
 
 1. **Request.** A feature squad (`android_design`, `web_design`, `admin_design`: the owners of the
    platform product files) proposes a component as a `candidate` in `LIB-CANDIDATE`, owned by the
-   proposing role (`owner_role`), with a semantic role and a non-empty property contract so the
-   duplicate lint can judge it (`contribution.candidate_incomplete`), on a proposal branch or proposal file named by the
+   proposing role (`owner_role`), with a worded name and semantic role (a placeholder such as `-` is
+   missing) and a non-empty property contract so the duplicate lint can judge it
+   (`contribution.candidate_incomplete`), on a proposal branch or proposal file named by the
    [`design-operations.md`](design-operations.md) section 6 grammar
    `<plan-ticket>__<squad>__<change-slug>` with a known squad (`contribution.branch_grammar`). The
    branch's squad is the squad of the proposing owner role's reserved file (`contribution.squad_mismatch`),
@@ -92,13 +99,18 @@ no visual direction is selected.
    `LIB-CANDIDATE` (their candidates) but never edit or publish a shared library directly (section 8).
 2. **Duplicate review (criterion 2).** Before review, the registry lint compares every record with every
    published or deprecated record of every shared library (`LIB-COMPONENTS` and the platform libraries).
-   Names and semantic roles are compared as lower-case word sets with a plural `s` dropped, so word
-   order, case, punctuation and plurals do not hide a duplicate. A record is a duplicate when its name or
-   semantic role equals the other's, or when it contains the other's whole property signature (property
-   names and types) and shares a name or role word with it; an equal signature alone is not a duplicate,
-   because distinct components may share property names and types (`duplicate.semantic_component`). The
-   only exemptions are a record and its own platform parent or variant, and a declared replacement pair;
-   two variants of one parent are compared like any other pair. A published variant needs a published
+   Names and semantic roles are compared as sets of content words (function words such as `and`, `or`,
+   `of`, `the` dropped; plural `-s`, `-es` and `-ies` endings dropped) and as the content words run
+   together, so word order, case, punctuation, camelCase or run-together spelling, function words and
+   plurals do not hide a duplicate. A record is a duplicate when its name or semantic role equals the
+   other's in either form, or when it contains the other's whole property signature (property names and
+   types) and shares a content word of its name or role with it; an equal signature alone is not a
+   duplicate, because distinct components may share property names and types
+   (`duplicate.semantic_component`). Counterparts are not compared: one component family (a parent and
+   its variants, or variants of one parent) across different libraries; a deprecated component's family
+   and its declared replacement's family; and two non-candidate records whose platform sets are disjoint
+   (for example single-platform Android and Web counterparts). Candidates are compared on every platform,
+   and two variants of one parent in the same platform library are compared. A published variant needs a published
    parent (`component.variant_parent_unpublished`). The lint matches words, not meaning: synonyms are
    left to the Design Systems review, and reviewers reuse the published component instead.
 3. **Review and test.** Design Systems (`systems`) reviews the candidate against the published-component
