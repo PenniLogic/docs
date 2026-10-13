@@ -6,9 +6,10 @@ the reserved C-SYN-* component prefix and a synthetic registry pin served from m
 published-component, breaking-change and deprecation rules are exercised. Real-mode documents (the mode the command
 line uses) hold no components and only draft releases, proving the held rules: no publication, no recorded CDO
 decision, no direction or token reference. No fixture is an approval, a Figma permission, a live verification or a
-real component. Command-line tests run against temporary directories outside this repository; one test reads the
-real pinned registry from this checkout's local Git object store. Nothing here touches the network or writes inside
-the repository.
+real component. Command-line tests run against temporary directories outside this repository. The published-data
+tests read the committed governance/figma-libraries.json and the real pinned registry from this checkout's local Git
+object store, assert the exact readiness gaps and fail when the governance document's generated section drifts from
+the JSON. Nothing here touches the network or writes inside the repository.
 """
 
 import contextlib
@@ -19,6 +20,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 import unittest
@@ -144,7 +146,7 @@ def fixture():
         {"name": "selected", "type": "boolean", "values": [], "default": "false", "required": False},
     ])
     chip["deprecation"] = {"replacement": "C-SYN-BUTTON", "removal_version": "2.0.0", "available_until_removal": True}
-    draft = component("C-SYN-DRAFT", "Draft banner", status="draft", since=None)
+    draft = component("C-SYN-DRAFT", "Draft banner", status="draft", since=None, platforms=["web"])
     draft.update(semantic_role=None, owner_role=None, description=None, properties=[], accessibility=None)
     local = component("C-SYN-LOCAL", "Local card", library_id="LIB-CANDIDATE", status="candidate",
                       role="summary card", since=None, properties=[
@@ -660,6 +662,12 @@ class ComponentTests(RuleCase):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON-AND").update(platforms=["web"]),
                            "component.platform_mismatch", "C-SYN-BUTTON-AND")
 
+    def test_pinned_component_keeps_the_registry_platforms(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(platforms=["web", "admin"]),
+                           "component.registry_platform_mismatch", "C-SYN-DRAFT")
+        self.assertRefused(lambda d: button(d).update(platforms=["android", "web"]),
+                           "component.registry_platform_mismatch", "C-SYN-BUTTON")
+
     def test_unknown_owner_role_is_refused(self):
         self.assertRefused(lambda d: button(d).update(owner_role="cdo"), "role.unknown", "C-SYN-BUTTON")
 
@@ -875,6 +883,108 @@ class CommandLineTests(unittest.TestCase):
                                                                               side_effect=error):
                 self.assertEqual(self.run_main(),
                                  (1, "", "Figma library check refused: input.unreadable_or_invalid\n"))
+
+
+class PublishedDataTests(unittest.TestCase):
+    """The committed governance/figma-libraries.json against the real pinned registry (read from local Git)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.raw = (ROOT / module.DATA).read_bytes()
+        cls.model = module.load_and_check(ROOT)
+
+    def test_published_data_passes_structure(self):
+        model = self.model
+        self.assertEqual(tuple(model.libraries), module.LIBRARIES)
+        self.assertEqual({item["status"] for item in model.libraries.values()}, {"shell"})
+        self.assertEqual(sorted(model.releases), [(name, "1.0.0") for name in sorted(module.SHARED)])
+        self.assertEqual({item["status"] for item in model.releases.values()}, {"draft"})
+        self.assertEqual(len(model.components), 57)
+        self.assertEqual({(item["library"], item["status"]) for item in model.components.values()},
+                         {("LIB-COMPONENTS", "draft")})
+        self.assertEqual(len(model.document["tabletop"]), 27)
+        self.assertFalse(any(item["live_verified"] for item in model.document["tabletop"]))
+        self.assertIsNone(model.document["direction_ref"])
+
+    def test_every_pinned_component_is_an_unpublished_draft_with_its_platforms(self):
+        self.assertEqual(sorted(self.model.components), sorted(self.model.pinned))
+        for identifier, component in self.model.components.items():
+            with self.subTest(component=identifier):
+                self.assertEqual(set(component["platforms"]), set(self.model.pinned[identifier]))
+                self.assertEqual(component["token_refs"], [])
+                self.assertIsNone(component["since_version"])
+
+    def test_published_readiness_gaps_are_exact(self):
+        self.assertEqual(module.readiness(self.model), {
+            "readiness.direction_missing": ["PenniLogic/docs#76"],
+            "readiness.tokens_unpublished": ["PenniLogic/docs#55"],
+            "readiness.approval_not_recorded": sorted(module.APPROVAL_ROLES),
+            "readiness.cdo_decision_pending": sorted(f"{name}@1.0.0" for name in module.SHARED),
+            "readiness.cdo_decision_unverified": [],
+            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 28)],
+            "readiness.component_not_in_registry": [],
+            "readiness.registry_component_ungoverned": [],
+        })
+
+    def test_published_data_bytes_are_canonical(self):
+        self.assertEqual(self.raw, encode(json.loads(self.raw.decode("utf-8"))))
+
+    def test_governance_document_mirrors_the_json(self):
+        text = (ROOT / module.MIRROR).read_bytes().decode("utf-8")
+        self.assertNotIn("\r", text)
+        self.assertEqual(module.mirror_section(text), module.render_mirror(self.model))
+
+    def test_command_line_reports_not_green_with_exact_counts(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = module.main([])
+        lines = out.getvalue().splitlines()
+        self.assertEqual((code, err.getvalue(), lines[0]), (1, "", module.NOT_GREEN))
+        self.assertEqual(lines[2:], [
+            "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1",
+            "readiness.approval_not_recorded: 5", "readiness.cdo_decision_pending: 5",
+            "readiness.cdo_decision_unverified: 0", "readiness.live_verification_missing: 27",
+            "readiness.component_not_in_registry: 0", "readiness.registry_component_ungoverned: 0",
+        ])
+
+
+class MirrorTests(unittest.TestCase):
+    """The generated section: deterministic, escaped, and located only between exactly one pair of markers."""
+
+    def render(self, document):
+        return module.render_mirror(run_check(document))
+
+    def test_rendering_is_deterministic_and_round_trips(self):
+        text = self.render(fixture())
+        self.assertEqual(text, self.render(copy.deepcopy(fixture())))
+        self.assertEqual(module.mirror_section("# Title\n\n" + text + "\nAfter.\n"), text)
+
+    def test_hostile_names_cannot_break_cells_or_markers(self):
+        document = fixture()
+        self.render(copy.deepcopy(document))
+        find(document, "components", "C-SYN-DRAFT")["name"] = f"A | b `c` *d* [e] {module.MIRROR_END}"
+        text = self.render(document)
+        self.assertEqual((text.count(module.MIRROR_BEGIN), text.count(module.MIRROR_END)), (1, 1))
+        row = next(line for line in text.splitlines() if line.startswith("| C-SYN-DRAFT |"))
+        self.assertIn("A \\| b \\`c\\` \\*d\\* \\[e\\] &lt;!-- END GENERATED", row)
+        # Eight columns: nine unescaped pipes.
+        self.assertEqual(len(re.findall(r"(?<!\\)\|", row)), 9)
+        self.assertEqual(module.mirror_section(text), text)
+
+    def test_missing_or_ambiguous_markers_have_no_section(self):
+        text = self.render(fixture())
+        self.assertEqual(module.mirror_section(text), text)
+        for broken in (text.replace(module.MIRROR_END, ""), text + text, text.rstrip("\n"),
+                       module.MIRROR_END + "\n" + text.replace(module.MIRROR_END + "\n", ""), ""):
+            with self.subTest(broken=broken[-40:]):
+                self.assertIsNone(module.mirror_section(broken))
+
+    def test_drift_is_detected(self):
+        document = fixture()
+        text = self.render(copy.deepcopy(document))
+        self.assertEqual(module.mirror_section(text), self.render(copy.deepcopy(document)))
+        find(document, "tabletop", "TT-01")["role"] = "web_design"
+        self.assertNotEqual(module.mirror_section(text), self.render(document))
 
 
 if __name__ == "__main__":

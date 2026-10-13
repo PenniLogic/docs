@@ -17,6 +17,9 @@ Readiness gaps (the docs#76 direction, the docs#55 token grammar, unrecorded app
 Figma verification and registry coverage) are counted, never filled in, and keep the default mode NOT GREEN.
 Nothing here contacts Figma or GitHub, records an approval, publishes a library, grants or revokes access, or proves
 live permission enforcement: the tabletop is synthetic and `live_verified` stays false.
+
+`--mirror` prints the generated section of governance/figma-library-governance.md, rendered from the validated JSON
+only; a unit test fails when the committed section drifts from it. It writes nothing.
 """
 
 import argparse
@@ -136,6 +139,7 @@ STRUCTURE_RULES = (
     "release.rollback_target", "approval.source_mismatch",
     "reference.invalid",
     "component.library_invalid", "component.candidate_published", "component.platform_mismatch",
+    "component.registry_platform_mismatch",
     "component.variant_invalid", "component.owner_not_maintainer", "component.property_contract",
     "published.owner_missing", "published.description_missing", "published.properties_missing",
     "published.accessibility_missing", "published.platforms_missing", "published.semantic_role_missing",
@@ -644,6 +648,9 @@ def check(document, schema, policy_data, policy_schema, sources, pin=None, fixtu
         require(component["id"] not in components, "id.duplicate", component["id"])
         components[component["id"]] = component
         check_component(component, schema, policy, releases, fixture)
+        # A record keyed by a pinned registry ID supports exactly the platforms the registry assigns to it.
+        require(component["id"] not in pinned or set(component["platforms"]) == set(pinned[component["id"]]),
+                "component.registry_platform_mismatch", component["id"])
     check_component_graph(components, releases)
     check_tabletop(document, policy, libraries)
     check_approvals(document)
@@ -685,6 +692,83 @@ def structure_line(model):
     )
 
 
+MIRROR = "governance/figma-library-governance.md"
+MIRROR_BEGIN = "<!-- BEGIN GENERATED: governance/figma-libraries.json (check_figma_libraries.py --mirror) -->"
+MIRROR_END = "<!-- END GENERATED: governance/figma-libraries.json -->"
+# Free text cannot break a table cell or the generated-section markers, nor add emphasis, code or links.
+_CELL_ESCAPES = str.maketrans({character: "\\" + character for character in "\\|`*[]"} | {"<": "&lt;", ">": "&gt;"})
+
+
+def cell(value):
+    """One Markdown table cell: escaped free text, a hyphen for null or empty, lists joined by commas."""
+    if value is None or value == []:
+        return "-"
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, list):
+        value = ", ".join(value)
+    return str(value).translate(_CELL_ESCAPES)
+
+
+def table(header, rows):
+    lines = ["| " + " | ".join(header) + " |", "| " + " | ".join("---" for _ in header) + " |"]
+    lines += ["| " + " | ".join(cell(value) for value in row) + " |" for row in rows]
+    return lines
+
+
+def platforms_of(component):
+    return [platform for platform in PLATFORMS if platform in component["platforms"]]
+
+
+def render_mirror(model):
+    """The governance document's generated section: a deterministic rendering of the validated JSON only."""
+    document = model.document
+    lines = [MIRROR_BEGIN, "", "### Library topology", ""]
+    lines += table(("Library", "Kind", "Layer", "Figma file", "Figma page", "Owner role", "Publish roles", "Consumes",
+                    "Status"),
+                   [(key, item["kind"], str(TOPOLOGY[key][1]), item["figma_file"], item["figma_page"],
+                     item["owner_role"], item["publish_roles"], item["consumes"], item["status"])
+                    for key, item in model.libraries.items()])
+    lines += ["", "### D14 component dependency and variant map", ""]
+    for key, item in model.libraries.items():
+        members = sorted(identifier for identifier, component in model.components.items()
+                         if component["library"] == key)
+        variants = sorted(f"{identifier} -> {component['variant_of']}" for identifier, component
+                          in model.components.items() if component["library"] == key and component["variant_of"])
+        lines.append(f"- {key} consumes {cell(item['consumes'])}; {len(members)} component records; "
+                     f"variants: {cell(variants)}")
+    lines += ["", "### Releases", ""]
+    lines += table(("Release", "Previous", "Change", "Breaking", "Status", "Migration plan", "CDO approval",
+                    "Rollback to"),
+                   [(f"{library}@{current}", item["previous"], item["change_class"], item["breaking"], item["status"],
+                     item["migration_plan_ref"], (item["cdo_approval"] or {}).get("status"), item["rollback_to"])
+                    for (library, current), item in model.releases.items()])
+    lines += ["", "### Component records and proposed placement", ""]
+    lines += table(("Component", "Name", "Library", "Status", "Platforms", "Variant of", "Owner role",
+                    "In registry pin"),
+                   [(identifier, item["name"], item["library"], item["status"], platforms_of(item), item["variant_of"],
+                     item["owner_role"], identifier in model.pinned) for identifier, item in model.components.items()])
+    lines += ["", "### Permission and offboarding tabletop (synthetic, not live-verified)", ""]
+    lines += table(("Scenario", "Action", "Role", "Library", "Offboarded", "Expected", "Live verified"),
+                   [(item["id"], item["action"], item["role"], item["library"], item["offboarded"], item["expected"],
+                     item["live_verified"]) for item in document["tabletop"]])
+    lines += ["", "### Required approvals", ""]
+    lines += table(("Role", "Status"), [(item["role"], item["status"]) for item in document["approvals"]])
+    lines += ["", "### Readiness gaps (default mode)", ""]
+    gaps = readiness(model)
+    lines += table(("Rule", "Count"), [(rule, str(len(gaps[rule]))) for rule in READINESS_RULES])
+    lines += ["", MIRROR_END]
+    return "\n".join(lines) + "\n"
+
+
+def mirror_section(text):
+    """The generated section of the governance document, markers included, or None when absent or ambiguous."""
+    if text.count(MIRROR_BEGIN) != 1 or text.count(MIRROR_END) != 1:
+        return None
+    start, end = text.index(MIRROR_BEGIN), text.index(MIRROR_END) + len(MIRROR_END) + 1
+    return text[start:end] if start < end <= len(text) and text[end - 1] == "\n" else None
+
+
 def load_and_check(root):
     root = Path(root)
     return check(
@@ -695,10 +779,16 @@ def load_and_check(root):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--structure", action="store_true", help="Check structure only; readiness is not evaluated.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--structure", action="store_true", help="Check structure only; readiness is not evaluated.")
+    mode.add_argument("--mirror", action="store_true",
+                      help="Check structure, then print the governance document's generated section (writes nothing).")
     args = parser.parse_args(argv)
     try:
         model = load_and_check(ROOT)
+        if args.mirror:
+            sys.stdout.write(render_mirror(model))
+            return 0
         if args.structure:
             print(structure_line(model) + "; readiness not evaluated.")
             return 0
