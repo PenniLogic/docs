@@ -977,6 +977,34 @@ class ReferenceAndOwnershipTests(CoverageCase):
         fixture = Fixture()
         fixture.record("F-AND-02")["qa_ticket"] = copy.deepcopy(AUTHOR)
         fixture.check()  # independence is required of critical flows; F-AND-02 is not critical
+        # R2-AV-01: a critical flow's QA owner may not design or implement any of its own screens either.
+        self.refused(lambda f: f.record("F-AND-01").update(qa_ticket=copy.deepcopy(COMPONENT_DESIGN)),
+                     "ownership.qa_not_independent", "F-AND-01",
+                     prepare=lambda f: f.record("S-AND-002").update(design_ticket=copy.deepcopy(COMPONENT_DESIGN)))
+        self.refused(lambda f: f.record("F-AND-01").update(qa_ticket=copy.deepcopy(AND3)),
+                     "ownership.qa_not_independent", "F-AND-01",
+                     prepare=lambda f: f.record("S-AND-002")["implementation_tickets"].append(copy.deepcopy(AND3)))
+
+    def test_critical_screen_qa_owner_is_independent(self):
+        """R2-AV-01: a critical screen's QA owner is none of the design or implementation owners of the screen and
+        its flows, and never the registry author; non-critical screens are not held to it (like flows)."""
+        self.refused(lambda f: f.record("S-AND-001").update(qa_ticket=copy.deepcopy(AND1)),
+                     "ownership.qa_not_independent", "S-AND-001")
+        self.refused(lambda f: f.record("S-AND-001").update(qa_ticket=copy.deepcopy(AUTHOR)),
+                     "ownership.qa_not_independent", "S-AND-001")
+        self.refused(lambda f: f.record("S-AND-002").update(qa_ticket=copy.deepcopy(DESIGN)),
+                     "ownership.qa_not_independent", "S-AND-002",
+                     prepare=lambda f: f.record("S-AND-002").update(design_ticket=copy.deepcopy(COMPONENT_DESIGN)))
+        fixture = Fixture()
+        fixture.record("S-AND-003")["qa_ticket"] = copy.deepcopy(AUTHOR)
+        fixture.check()  # S-AND-003 is on the non-critical F-AND-02
+
+    def test_design_owner_is_not_an_implementation_owner(self):
+        """R2-AV-01: a flow or screen designed by one of its own implementation issues has no design dependency."""
+        self.refused(lambda f: f.record("S-AND-002").update(design_ticket=copy.deepcopy(AND1)),
+                     "ownership.design_not_distinct", "S-AND-002")
+        self.refused(lambda f: f.record("F-AND-02").update(design_ticket=copy.deepcopy(AND3)),
+                     "ownership.design_not_distinct", "F-AND-02")
 
     def test_critical_flow_needs_a_persona(self):
         self.refused(lambda f: f.record("US-AND-01").update(flow_id="F-AND-02"), "flow.critical_without_persona",

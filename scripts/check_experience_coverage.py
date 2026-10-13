@@ -169,7 +169,8 @@ STRUCTURE_RULES = (
     "proposal.field_without_value", "d6.dependency_mismatch", "handoff.platform_mismatch",
     "held.d6_reference", "held.route_id", "qa.independence_evidence", "qa.evidence_unavailable",
     "qa.evidence_digest_mismatch", "held.qa_verification",
-    "flow.critical_without_persona", "ownership.qa_not_independent", "diagram.d20_artifact",
+    "flow.critical_without_persona", "ownership.design_not_distinct", "ownership.qa_not_independent",
+    "diagram.d20_artifact",
     "partition.duplicate_issue", "partition.unknown_issue", "partition.plan_id_mismatch",
     "partition.rationale_missing", "partition.rationale_on_frontend", "partition.unclassified_issue",
     "partition.unmapped_implementation_ticket", "partition.frontend_without_mapping",
@@ -845,10 +846,31 @@ def check_flows(model, sources):
         require(independence["status"] != "verified", "held.qa_verification", identifier)
         if flow["critical"]:
             require(bool(model.stories_by_flow[identifier]), "flow.critical_without_persona", identifier)
-            qa, design = flow["qa_ticket"], flow["design_ticket"]
-            implementation = {ticket_key(ticket) for ticket in flow["implementation_tickets"]}
-            require(ticket_key(qa) != ticket_key(design) and ticket_key(qa) not in implementation
-                    and not is_registry_author(qa), "ownership.qa_not_independent", identifier)
+
+
+def independent_qa(record, related):
+    """The QA owner is none of the design or implementation owners of the record and the related records, and is
+    never the registry author (DesignOps, PenniLogic/docs#75)."""
+    owners = {ticket_key(ticket) for item in (record, *related)
+              for ticket in (item["design_ticket"], *item["implementation_tickets"])}
+    return ticket_key(record["qa_ticket"]) not in owners and not is_registry_author(record["qa_ticket"])
+
+
+def check_independence(model):
+    """No flow or screen is designed by one of its implementation owners, and the QA owner of a critical flow (of a
+    critical screen) is independent of the flow and all its screens (of the screen and all its flows)."""
+    for record in [*model.flows.values(), *model.screens.values()]:
+        implementation = {ticket_key(ticket) for ticket in record["implementation_tickets"]}
+        require(ticket_key(record["design_ticket"]) not in implementation, "ownership.design_not_distinct",
+                record["id"])
+    for flow in model.flows.values():
+        if flow["critical"]:
+            require(independent_qa(flow, [model.screens[item] for item in flow["screen_ids"]]),
+                    "ownership.qa_not_independent", flow["id"])
+    for screen in model.screens.values():
+        if screen["critical"]:
+            require(independent_qa(screen, [model.flows[item] for item in screen["flow_ids"]]),
+                    "ownership.qa_not_independent", screen["id"])
 
 
 def check_diagrams(model):
@@ -938,6 +960,7 @@ def check(registry, partition, schema, inventory, taxonomy, sources, import_pin=
     check_states(model, states)
     check_screens(model)
     check_flows(model, sources)
+    check_independence(model)
     check_diagrams(model)
     check_partition(model)
     check_release_gate(model, base_dispositions)
