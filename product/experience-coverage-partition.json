@@ -1,0 +1,880 @@
+{
+  "kind": "experience_coverage_partition",
+  "schema_version": 1,
+  "source_issue": "PenniLogic/docs#75",
+  "description": "Disposition of every Android, web and admin issue in the committed planning/issue-inventory.json snapshot. Frontend entries derive from registry implementation tickets; non-frontend entries carry DesignOps-proposed rationales awaiting owner confirmation. Issues created after the snapshot are disclosed in post_snapshot_issues as readiness gaps until a separate inventory refresh partitions them.",
+  "repositories": [
+    "PenniLogic/android",
+    "PenniLogic/web",
+    "PenniLogic/admin"
+  ],
+  "post_snapshot_issues": [
+    "PenniLogic/android#69"
+  ],
+  "entries": [
+    {
+      "issue": "PenniLogic/android#1",
+      "plan_id": "T-SCA-AND-01",
+      "disposition": "non_frontend",
+      "rationale_class": "build_or_release",
+      "rationale": "Build scaffold: Gradle application module, unit test, lint and debug signing so CI runs real tasks. Feature architecture and navigation are stated non-goals owned by another ticket.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#2",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#3",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#4",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#5",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#6",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#7",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "other",
+      "rationale": "Analytics instrumentation: a consent-state machine checked before every event, a funnel drop-off report and a payload allowlist lint. Its user-facing analytics opt-out toggle is not mapped to any registry screen; the Android design owner should confirm this exclusion or map it to a consent screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#8",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "capture_or_device_runtime",
+      "rationale": "On-device deterministic SMS parser engine with sender allowlist and structured rejection reasons; device capture runtime with no screen or flow of its own.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#9",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "capture_or_device_runtime",
+      "rationale": "Signed, versioned and remotely updatable parser rule configuration with sandboxed evaluation and rollback; device runtime configuration with no screen or flow of its own.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#10",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#11",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#12",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#13",
+      "plan_id": null,
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#14",
+      "plan_id": "T-QA-07",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Procurement and provisioning of the physical Android test device and synthetic test account; test infrastructure with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#15",
+      "plan_id": "T-QA-08",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Quality gate running instrumented Android journeys, accessibility and performance budgets on the device matrix; it verifies screens implemented by other tickets and owns none.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#16",
+      "plan_id": "T-QA-09",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Automated privacy traffic inspection of every release candidate through an intercepting proxy; a release test gate with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#17",
+      "plan_id": "T-CMP-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#18",
+      "plan_id": "T-CMP-03",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Third-party component inventory, payload scrubbing hooks and the store data safety declaration with its re-check procedure; compliance governance with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#19",
+      "plan_id": "T-SYN-03",
+      "disposition": "non_frontend",
+      "rationale_class": "backend_integration",
+      "rationale": "Offline sync client reconciled with the published sync contract: queue, conflicts, backoff and durability. Its plain-language pending, failed and conflicted sync state is user-visible but not mapped to a registry screen; the Android design owner should confirm this exclusion or add a mapping.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#20",
+      "plan_id": "T-AND-01",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#21",
+      "plan_id": "T-AND-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#22",
+      "plan_id": "T-AND-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#23",
+      "plan_id": "T-BIL-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#24",
+      "plan_id": "T-SPL-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#25",
+      "plan_id": "T-FAM-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#26",
+      "plan_id": "T-AIP-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#27",
+      "plan_id": "T-SEC-05",
+      "disposition": "non_frontend",
+      "rationale_class": "platform_security_or_storage",
+      "rationale": "Platform hardening: encrypted local storage keyed from hardware-backed storage, integrity verdicts, pinned transport and window protections. User-facing privacy controls are a stated non-goal; its biometric key unwrap fallback and read-only adverse-verdict states are user-visible, so the owner should confirm coverage by existing screens such as S-AND-002.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#28",
+      "plan_id": "T-INC-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#29",
+      "plan_id": "T-GOL-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#30",
+      "plan_id": "T-TRU-01",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#31",
+      "plan_id": "T-TRU-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#32",
+      "plan_id": "T-ING-01",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#33",
+      "plan_id": "T-ING-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#34",
+      "plan_id": "T-GLO-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#35",
+      "plan_id": "T-QA-12",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Synthetic parser corpus and Android compatibility matrix across emulators, managed and physical devices; test infrastructure with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#36",
+      "plan_id": "T-NWT-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#37",
+      "plan_id": "T-REL-01",
+      "disposition": "non_frontend",
+      "rationale_class": "build_or_release",
+      "rationale": "Release engineering: Play App Signing, signed bundle pipeline, tracks, staged rollout and Vitals budgets. Its in-app and forced update prompt relates to S-AND-001, which the registry assigns to PenniLogic/android#2; the owner should confirm whether this issue also implements that screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#38",
+      "plan_id": "T-RET-01",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#39",
+      "plan_id": "T-AUTH-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#40",
+      "plan_id": "T-AND-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#41",
+      "plan_id": "T-NOT-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#42",
+      "plan_id": "T-AND-05",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#43",
+      "plan_id": "T-TRU-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#44",
+      "plan_id": "T-SUP-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#45",
+      "plan_id": "T-GLO-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#46",
+      "plan_id": "T-PRS-01",
+      "disposition": "non_frontend",
+      "rationale_class": "capture_or_device_runtime",
+      "rationale": "Bank and wallet parser template library shipped as parser configuration; capture runtime content with no screen or flow of its own.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#47",
+      "plan_id": "T-PRS-02",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Published parser coverage target measured on the sanitized corpus and enforced as a release gate; a quality gate with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#48",
+      "plan_id": "T-NWT-05",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#49",
+      "plan_id": "T-TRU-05",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#50",
+      "plan_id": "T-SYN-04",
+      "disposition": "non_frontend",
+      "rationale_class": "backend_integration",
+      "rationale": "CI verification that the on-device schema matches the published contract, with round-trip and local migration checks; contract binding with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#51",
+      "plan_id": "T-AND-06",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#52",
+      "plan_id": "T-ING-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#53",
+      "plan_id": "T-TXN-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#54",
+      "plan_id": "T-FAM-06",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#55",
+      "plan_id": "T-DEBT-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#56",
+      "plan_id": "T-NOT-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#57",
+      "plan_id": "T-AND-07",
+      "disposition": "non_frontend",
+      "rationale_class": "capture_or_device_runtime",
+      "rationale": "Android API level baseline: SDK targets, app-wide edge-to-edge insets, predictive back, large-screen, scheduling and stopped-state handling. Feature-specific UI is a stated non-goal, so it maps to no single flow or screen; the owner should confirm.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#58",
+      "plan_id": "T-AND-08",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/android#59",
+      "plan_id": "T-GOV-SCA-MAN-AND",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the exact scaffold authorization manifest only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#60",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the Android JDK protecting manifest only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#61",
+      "plan_id": "T-GOV-AND-JDK-VAL-01",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage for the Android JDK input validator, closed as not planned; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#62",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Keyless governance and refreshed agent instructions for the repository; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/android#65",
+      "plan_id": "T-QA-01-AND",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Mutation-testing gate for the Android ledger and parser packages against the published floor; a build quality gate with no product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#1",
+      "plan_id": "T-SCA-WEB-01",
+      "disposition": "non_frontend",
+      "rationale_class": "build_or_release",
+      "rationale": "Build scaffold: application skeleton with routing groups, typed configuration and CI lint, type-check and unit tests. Feature screens are a stated non-goal owned by the web epic.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#2",
+      "plan_id": "T-GOV-SCA-MAN-WEB",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the exact scaffold authorization manifest only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#3",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the web runtime protecting manifest only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#4",
+      "plan_id": "T-GOV-WEB-RUN-POL-01",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the web runtime policy without workflow or scaffold changes; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#5",
+      "plan_id": "T-GOV-WEB-RUN-WF-01",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage installing the web runtime workflow and its preserving manifest, closed as not planned; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#6",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Keyless governance and refreshed agent instructions for the repository; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#7",
+      "plan_id": "T-QA-06",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Quality gate running end-to-end web journeys, accessibility and performance budgets per pull request; it verifies screens implemented by other tickets and owns none.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/web#8",
+      "plan_id": "T-WEB-01",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#9",
+      "plan_id": "T-WEB-02",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#10",
+      "plan_id": "T-WEB-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#11",
+      "plan_id": "T-GLO-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#12",
+      "plan_id": "T-BIL-09",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#13",
+      "plan_id": "T-SPL-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#14",
+      "plan_id": "T-FAM-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#15",
+      "plan_id": "T-AIP-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#16",
+      "plan_id": "T-NWT-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#17",
+      "plan_id": "T-INC-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#18",
+      "plan_id": "T-GOL-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#19",
+      "plan_id": "T-SUP-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#20",
+      "plan_id": "T-TRU-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#21",
+      "plan_id": "T-NOT-03",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#22",
+      "plan_id": "T-FAM-07",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#23",
+      "plan_id": "T-DEBT-05",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#24",
+      "plan_id": "T-NWT-06",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#25",
+      "plan_id": "T-WEB-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/web#26",
+      "plan_id": "T-WEB-05",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#1",
+      "plan_id": "T-SCA-ADM-01",
+      "disposition": "non_frontend",
+      "rationale_class": "build_or_release",
+      "rationale": "Build scaffold isolated from the customer web app: skeleton, CI tasks, an import boundary check and a deny-all placeholder authentication boundary. Administrative features are a stated non-goal.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/admin#2",
+      "plan_id": "T-ADM-04",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#3",
+      "plan_id": "T-QA-13",
+      "disposition": "non_frontend",
+      "rationale_class": "quality_or_test_infrastructure",
+      "rationale": "Quality gate running operator journeys, accessibility, performance and planted-defect checks; it verifies console screens implemented by other tickets and owns none.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/admin#4",
+      "plan_id": "T-ADM-07",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#5",
+      "plan_id": "T-ADM-08",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#6",
+      "plan_id": "T-ADM-09",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#7",
+      "plan_id": "T-ADM-10",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#8",
+      "plan_id": "T-ADM-11",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#9",
+      "plan_id": "T-ADM-12",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#10",
+      "plan_id": "T-ADM-13",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#11",
+      "plan_id": "T-ADM-14",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#12",
+      "plan_id": "T-ADM-15",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#13",
+      "plan_id": "T-ADM-16",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#14",
+      "plan_id": "T-ADM-17",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#15",
+      "plan_id": "T-ADM-18",
+      "disposition": "frontend",
+      "rationale_class": null,
+      "rationale": null,
+      "proposed_by": null
+    },
+    {
+      "issue": "PenniLogic/admin#16",
+      "plan_id": "T-GOV-SCA-MAN-ADM",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the exact scaffold authorization manifest only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/admin#17",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage admitting the admin executor preserving manifest only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/admin#18",
+      "plan_id": "T-GOV-ADM-EXEC-V2-01",
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Governance stage transporting the admin executor validator only; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    },
+    {
+      "issue": "PenniLogic/admin#19",
+      "plan_id": null,
+      "disposition": "non_frontend",
+      "rationale_class": "governance_or_tooling",
+      "rationale": "Keyless governance and refreshed agent instructions for the repository; no application behavior or product screen.",
+      "proposed_by": "design_ops"
+    }
+  ]
+}
