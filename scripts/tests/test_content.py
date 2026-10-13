@@ -635,6 +635,38 @@ class ContentGuardTests(Harness):
     def test_padded_text(self):
         self.assertRefused(self.mutate_copy("Review {item} "), "content.blank_or_padded", "debt.delete.next")
 
+    def test_homoglyph_letter_cannot_hide_a_forbidden_term(self):
+        # Greek omicron in "oops": the ASCII lints would not see the taxonomy's forbidden term.
+        self.assertRefused(self.mutate_copy("οops, review {item}"), "content.non_ascii_word_character",
+                           "debt.delete.next")
+
+    def test_fullwidth_letters_are_refused(self):
+        self.assertRefused(self.mutate_copy("Review ｉｔｅｍ"), "content.non_ascii_word_character",
+                           "debt.delete.next")
+
+    def test_combining_mark_is_refused(self):
+        self.assertRefused(self.mutate_copy("Reviéw {item}"), "content.non_ascii_word_character",
+                           "debt.delete.next")
+
+    def test_native_script_digits_cannot_hide_a_number(self):
+        self.assertRefused(lambda d: terms_of(d)["term.debt"].update(definition="Owed १२३४५."),
+                           "content.non_ascii_word_character", "term.debt")
+
+    def test_typographic_punctuation_passes(self):
+        docs = documents()
+        keys_of(docs)["debt.delete.next"]["copy"] = "Review {item} – it’s yours"
+        self.run_check(docs)
+
+    def test_stray_brace_is_an_unknown_placeholder(self):
+        self.assertRefused(self.mutate_copy("Review {item"), "key.placeholder_unknown", "debt.delete.next")
+
+    def test_doubled_braces_are_an_unknown_placeholder(self):
+        self.assertRefused(self.mutate_copy("Review {{item}}"), "key.placeholder_unknown", "debt.delete.next")
+
+    def test_stray_brace_in_regulated_copy(self):
+        self.assertRefused(lambda d: records_of(d)["RC-001"].update(copy="Synthetic draft text } for review."),
+                           "regulated.placeholder_unknown", "RC-001")
+
     def test_unprintable_text(self):
         self.assertRefused(self.mutate_copy("Review\u200b{item}"), "content.unprintable_character",
                            "debt.delete.next")
@@ -1121,6 +1153,22 @@ class CommandLineTests(unittest.TestCase):
         target.write_text(text, encoding="utf-8", newline="\n")
         self.assertEqual(self.main(), (1, "", "Content check refused: input.unreadable_or_invalid\n"))
 
+    def test_hostile_bytes_fail_closed_without_echo(self):
+        self.assertEqual(self.main()[0], 1)  # control: NOT GREEN, not refused
+        self.assertEqual(self.main()[2], "")
+        target = self.repository.root / content.document_path("voice")
+        original = target.read_bytes()
+        cases = {
+            "invalid UTF-8": original.replace(b'"voice_version"', b'"voice_\xff_version"', 1),
+            "byte order mark": b"\xef\xbb\xbf" + original,
+            "deep nesting": b'{"schema_version": ' + b"[" * 100000 + b"]" * 100000 + b"}\n",
+        }
+        for label, raw in cases.items():
+            with self.subTest(case=label):
+                target.write_bytes(raw)
+                self.assertEqual(self.main(), (1, "", "Content check refused: input.unreadable_or_invalid\n"))
+        target.write_bytes(original)
+
     def test_git_inside_the_checked_repository_is_never_used(self):
         planted = self.repository.root / "bin"
         planted.mkdir()
@@ -1320,6 +1368,20 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(self.main("--write-views"),
                          (1, "", "Content check refused: term.duplicate_id term.payoff\n"))
         self.assertFalse((self.views / "glossary.md").exists())
+
+    def test_write_replaces_the_entry_and_never_writes_through_a_hard_link(self):
+        self.main("--write-views")
+        view = self.views / "voice.md"
+        other = Path(self.directory.name) / "linked.md"
+        try:
+            os.link(view, other)
+        except OSError:
+            self.skipTest("hard links are not available here")
+        view.write_bytes(b"stale\n")  # both names now read "stale"
+        self.assertEqual(self.main("--write-views")[0], 0)
+        self.assertEqual(other.read_bytes(), b"stale\n")
+        self.assertEqual(self.main("--check-views")[0], 0)
+        self.assertEqual(sorted(path.name for path in self.views.glob(".view-*")), [])
 
     def test_modes_are_mutually_exclusive(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):

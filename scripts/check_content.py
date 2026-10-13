@@ -31,6 +31,8 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
+import unicodedata
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,7 +117,7 @@ VOICE_ID = {
 STRUCTURE_RULES = (
     "input.unreadable_or_invalid", "schema.invalid", "taxonomy.unreadable", "roles.unreadable",
     "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.secret_shape",
-    "content.url_shape", "content.email_shape", "content.number_shape",
+    "content.non_ascii_word_character", "content.url_shape", "content.email_shape", "content.number_shape",
     "version.grammar", "owner.unknown_role",
     "term.id_grammar", "term.duplicate_id", "term.duplicate_label", "term.alias_is_label", "term.alias_collision",
     "term.forbidden_term", "term.banned_pattern", "term.forbidden_alias", "term.contract_field_grammar",
@@ -223,6 +225,10 @@ def scan_text(text, subject):
     require(text != "" and text.strip() == text, "content.blank_or_padded", *subject)
     require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
     require(all(character.isprintable() for character in text), "content.unprintable_character", *subject)
+    # Source copy is English: a non-ASCII letter, mark or digit (a homoglyph, a combining mark, a native-script digit)
+    # would slip past the word-bounded ASCII lints, so only ASCII ones are accepted; symbols such as an apostrophe stay.
+    require(all(character.isascii() or unicodedata.category(character)[0] not in "LMN" for character in text),
+            "content.non_ascii_word_character", *subject)
     require(not _secret_shape(text), "content.secret_shape", *subject)
     for rule, pattern in CONTENT_SHAPES:
         require(pattern.search(text) is None, rule, *subject)
@@ -410,6 +416,8 @@ def check_copy(text, subject, context, rules):
     require(all(count <= context["max_words"] for count in words_per_sentence(text)), rules["sentence"], subject)
     names = PLACEHOLDER.findall(text)
     require(all(name in context["placeholders"] for name in names), rules["placeholder"], subject)
+    # Braces only ever delimit a placeholder: a stray, nested or doubled brace is an unknown placeholder.
+    require(not set("{}") & set(PLACEHOLDER.sub("", text)), rules["placeholder"], subject)
     return names
 
 
@@ -985,8 +993,18 @@ def check_views(root, views):
 
 
 def write_views(root, views):
+    """Write each view to a fresh file in the content directory and rename it over the view: the rename replaces
+    the directory entry, so a hard link or a symbolic link planted after view_target never receives the bytes."""
     for relative, text in views.items():
-        view_target(root, relative).write_bytes(text.encode("utf-8"))
+        target = view_target(root, relative)
+        handle, temporary = tempfile.mkstemp(dir=target.parent, prefix=".view-", suffix=".tmp")
+        try:
+            with os.fdopen(handle, "wb") as stream:
+                stream.write(text.encode("utf-8"))
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
 
 
 def load_documents(root):
