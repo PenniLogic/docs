@@ -17,6 +17,7 @@ import copy
 import hashlib
 import importlib.util
 import io
+import itertools
 import json
 import os
 from pathlib import Path
@@ -327,6 +328,9 @@ class StructureTests(RuleCase):
         samples = ("see www" + ".example", "visit www" + ".", "mail" + "to:someone", "Prototype at bit" + ".ly/3xYzAbC",
                    "host pl" + ".figma" + ".site", "files" + ".example" + ".de/proto", "local" + "host:8080/proto",
                    "10" + ".0.0.7/proto")
+        # R3-AV-7: a listed scheme with no slash, a backslash or a numeric host; an unlisted script scheme.
+        samples += ("Spec at " + "https" + ":16843009", "Spec at " + "https" + ":0x01010101",
+                    "Spec at " + "https" + ":\\\\16843009", "vb" + "script:msgbox", "ws" + ":relay", "ftp" + ":files")
         for sample in samples:
             with self.subTest(sample=sample):
                 self.assertRefused(lambda d: button(d).update(description=sample), "content.url_shape",
@@ -1120,6 +1124,9 @@ class PublishedComponentTests(RuleCase):
         for field, rule in cases:
             with self.subTest(field=field):
                 self.assertRefused(lambda d: button(d).update({field: "-"}), rule, "C-SYN-BUTTON")
+        for field, rule in (("name", "published.name_missing"), ("semantic_role", "published.semantic_role_missing")):
+            with self.subTest(field=field, value="Of the"):  # R3-AV-8: the lint would compare an empty word set
+                self.assertRefused(lambda d: button(d).update({field: "Of the"}), rule, "C-SYN-BUTTON")
         for field in ("role", "accessible_name", "focus", "announcements"):
             with self.subTest(field=field):
                 self.assertRefused(lambda d: button(d)["accessibility"].update({field: "-"}),
@@ -1312,11 +1319,74 @@ class DuplicateTests(RuleCase):
              dict(name="Categories")),
             (published("C-SYN-ACTIONS", "Primary secondary tonal text and icon actions", "command trigger", LABEL),
              "C-SYN-ACTIONS", dict(name="Primary secondary tonal text icon actions")),
+            # R3-AV-3, DF-R3-02: -es after a final s, -ie/-ies and -e/-es plurals meet their singulars.
+            (published("C-SYN-STATUS", "Status", "status indicator", LABEL), "C-SYN-STATUS", dict(name="Statuses")),
+            (published("C-SYN-COOKIE", "Cookie banner", "consent notice", LABEL), "C-SYN-COOKIE",
+             dict(name="Cookies banner")),
+            (published("C-SYN-PURPOSE", "Purpose", "consent scope", LABEL), "C-SYN-PURPOSE", dict(name="Purposes")),
+            (published("C-SYN-FOCUS", "Focus ring", "focus outline", LABEL), "C-SYN-FOCUS",
+             dict(semantic_role="focuses outline")),
+            (published("C-SYN-ENTRY", "Entry row", "ledger entry", LABEL), "C-SYN-ENTRY", dict(name="Entries row")),
         )
         for base, other, change in cases:
             with self.subTest(change=change):
                 self.assertRefused(lambda d: local(d).update(change), "duplicate.semantic_component", "C-SYN-LOCAL",
                                    other, base=base)
+
+    def test_plural_folding_keeps_distinct_words_apart(self):
+        """DF-R3-02: folding is symmetric for -s, -es and -ies, and never merges these distinct words."""
+        for singular, plural in (("status", "statuses"), ("purpose", "purposes"), ("case", "cases"),
+                                 ("cookie", "cookies"), ("entry", "entries"), ("switch", "switches"),
+                                 ("class", "classes"), ("address", "addresses"), ("hero", "heroes"), ("key", "keys")):
+            with self.subTest(word=singular):
+                self.assertEqual(module._stem(singular), module._stem(plural))
+        for first, second in (("status", "state"), ("class", "clas"), ("bus", "bu"), ("purpose", "purport")):
+            with self.subTest(pair=(first, second)):
+                self.assertNotEqual(module._stem(first), module._stem(second))
+
+    def test_camel_case_and_run_together_copies_share_a_word(self):
+        """R3-AV-1: camelCase, digit-suffixed and run-together spellings of a superset or exact contract copy."""
+        def superset(name):
+            def mutate(document):
+                local(document).update(name=name, properties=[
+                    *copy.deepcopy(button(document)["properties"]),
+                    {"name": "body", "type": "slot", "values": [], "default": None, "required": True}])
+            return mutate
+
+        def exact(name, role):
+            def mutate(document):
+                local(document).update(name=name, semantic_role=role,
+                                       properties=copy.deepcopy(button(document)["properties"]))
+            return mutate
+        # A word inside another with a short remainder is an inflection or another word, not a run-together copy.
+        document = fixture()
+        superset("Reactions panel")(document)
+        self.assertIn("C-SYN-LOCAL", run_check(document).components)
+        cases = [(name, superset(name)) for name in ("ActionCard", "Actioncard", "Cardaction")]
+        cases += [(name, exact(name, role)) for name, role in (("LocalButton", "MainAction"),
+                                                               ("Button2", "primaryAction2"))]
+        for name, mutate in cases:
+            with self.subTest(name=name):
+                self.assertRefused(mutate, "duplicate.semantic_component", "C-SYN-LOCAL", "C-SYN-BUTTON")
+
+    def test_family_words_do_not_corroborate_a_duplicate(self):
+        """R3-AV-2: two governed input-family siblings with a contained field API pass (the word `input` names
+        two families); a candidate sharing a word only one governed name has is still refused."""
+        api = [*LABEL, {"name": "disabled", "type": "boolean", "values": [], "default": "false", "required": False}]
+
+        def siblings():
+            document = fixture()
+            document["components"] += [
+                component("C-SYN-INPUT-RATE", "Rate and percentage input", role="ratio figure", properties=api),
+                component("C-SYN-INPUT-TEXT", "Text and multiline input", role="free prose", properties=[
+                    *api, {"name": "multiline", "type": "boolean", "values": [], "default": "false",
+                           "required": False}])]
+            return document
+        for name, other in (("Multiline entry", "C-SYN-INPUT-TEXT"), ("Percentage field", "C-SYN-INPUT-RATE")):
+            with self.subTest(name=name):
+                self.assertRefused(lambda d: local(d).update(name=name, properties=copy.deepcopy(
+                    find(d, "components", other)["properties"])), "duplicate.semantic_component", "C-SYN-LOCAL",
+                    other, base=siblings)
 
     def test_function_words_alone_are_not_shared_words(self):
         """DF-R2-02: two names sharing only 'and', with an equal signature, are not duplicates."""
@@ -1394,10 +1464,10 @@ class ContributionTests(RuleCase):
                            "contribution.candidate_incomplete", "C-SYN-LOCAL")
 
     def test_candidate_cannot_write_a_placeholder_name_or_role(self):
-        """AV2-1 F1b: a '-' name or role carries no word for the duplicate lint to compare."""
-        for field in ("name", "semantic_role"):
-            with self.subTest(field=field):
-                self.assertRefused(lambda d: local(d).update({field: "-"}), "contribution.candidate_incomplete",
+        """AV2-1 F1b, R3-AV-8: a '-' or function-word-only name or role carries no word for the lint to compare."""
+        for field, value in itertools.product(("name", "semantic_role"), ("-", "The", "Of the", "And")):
+            with self.subTest(field=field, value=value):
+                self.assertRefused(lambda d: local(d).update({field: value}), "contribution.candidate_incomplete",
                                    "C-SYN-LOCAL")
 
     def test_candidate_cannot_omit_its_property_contract(self):

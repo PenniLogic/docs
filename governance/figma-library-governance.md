@@ -64,7 +64,9 @@ library, a description, a semantic role, a non-empty property contract, accessib
 accessible name, focus, announcements), supported platforms, and a `since_version` that is a published
 release of its library (`published.*` rules). Each of its texts (name, description, semantic role and
 the four accessibility fields) names something: a punctuation-only placeholder such as `-`, with no run
-of two letters, counts as missing (`published.name_missing` and the other `published.*` rules).
+of two letters, counts as missing (`published.name_missing` and the other `published.*` rules); a name
+or semantic role made only of function words (such as `The` or `Of the`) is missing too, because the
+duplicate lint drops those words and would compare nothing.
 Property contracts have unique names; enums carry at
 least two values and a default from that list (or none); booleans default to `true`, `false` or none;
 text may carry a default; slots and instances carry no values and no default; names are unique after
@@ -88,8 +90,8 @@ no visual direction is selected.
 1. **Request.** A feature squad (`android_design`, `web_design`, `admin_design`: the owners of the
    platform product files) proposes a component as a `candidate` in `LIB-CANDIDATE`, owned by the
    proposing feature squad (`owner_role`; any other role is refused, `contribution.owner_not_squad`, because
-   the permission model of section 8 lets no other non-maintainer role edit `LIB-CANDIDATE`), with a worded name and semantic role (a placeholder such as `-` is
-   missing) and a non-empty property contract so the duplicate lint can judge it
+   the permission model of section 8 lets no other non-maintainer role edit `LIB-CANDIDATE`), with a worded name and semantic role (a placeholder such as `-`, or only function
+   words such as `The`, is missing) and a non-empty property contract so the duplicate lint can judge it
    (`contribution.candidate_incomplete`), on a proposal branch or proposal file named by the
    [`design-operations.md`](design-operations.md) section 6 grammar
    `<plan-ticket>__<squad>__<change-slug>` with a known squad (`contribution.branch_grammar`). The
@@ -101,14 +103,22 @@ no visual direction is selected.
    record only, section 8) but never edit or publish a shared library directly (section 8).
 2. **Duplicate review (criterion 2).** Before review, the registry lint compares every record with every
    published or deprecated record of every shared library (`LIB-COMPONENTS` and the platform libraries).
-   Names and semantic roles are compared as sets of content words (function words such as `and`, `or`,
-   `of`, `the` dropped; plural `-s`, `-es` and `-ies` endings dropped) and as the content words run
-   together, so word order, case, punctuation, camelCase or run-together spelling, function words and
-   plurals do not hide a duplicate. A record is a duplicate when its name or semantic role equals the
-   other's in either form, or when it contains the other's whole property signature (property names and
-   types) and shares a content word of its name or role with it; an equal signature alone is not a
-   duplicate, because distinct components may share property names and types
-   (`duplicate.semantic_component`). Counterparts are not compared: one component family (a parent and
+   Names and semantic roles are split at camelCase and letter/digit boundaries and compared as sets of
+   content words (function words such as `and`, `or`, `of`, `the` dropped; plurals folded to their
+   singular: a final `-s`, `-e` and `-s` dropped and `-y` read as `-i`, so `status`/`statuses`,
+   `purpose`/`purposes`, `cookie`/`cookies` and `entry`/`entries` meet) and as the content words run
+   together, so word order, case, punctuation, camelCase or run-together spelling, digit suffixes,
+   function words and plurals do not hide a duplicate. A record is a duplicate when its name or semantic
+   role equals the other's in either form, or when it contains the other's whole property signature
+   (property names and types) and shares a content word of its name or role with it; an equal signature
+   alone is not a duplicate, because distinct components may share property names and types
+   (`duplicate.semantic_component`). A word of four or more letters that starts or ends a run-together
+   word of the other record, leaving four or more letters (`Actioncard`), counts as shared. A family
+   word, one that appears in the names of two or more component families outside `LIB-CANDIDATE` (in the
+   pinned registry `action`, `input`, `recovery`, `status` and others), does not count as shared: those
+   siblings share a field API by design. So a candidate whose only shared words are family words, or
+   whose spelling hides a word inside another with a shorter remainder, passes the lint and is left to
+   review. Counterparts are not compared: one component family (a parent and
    its variants, or variants of one parent) across different libraries; a deprecated component's family
    and its declared replacement's family; and two non-candidate records whose platform sets are disjoint
    (for example single-platform Android and Web counterparts). Candidates are compared on every platform,

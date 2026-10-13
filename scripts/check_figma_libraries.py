@@ -125,10 +125,11 @@ CONTENT_SHAPES = (
         r"|(?=[A-Za-z0-9+/=]{32})[A-Za-z+/=]*[0-9][A-Za-z0-9+/=]*|[A-Za-z0-9]{32,}"
         r"|(?<![A-Za-z0-9])(?=[A-Za-z0-9]*[0-9])(?=[A-Za-z0-9]*[a-z])(?=[A-Za-z0-9]*[A-Z])[A-Za-z0-9]{16,}"
     )),
-    # E34-F06: no public links, file keys or hosts: any scheme, www., dotted host name (any letter top-level label),
-    # host:port or IPv4 shape is refused. Repository file paths are exempt only at EXEMPT_PATHS.
+    # E34-F06: no public links, file keys or hosts: any scheme followed by ':/', a listed scheme followed by ':'
+    # alone (a browser resolves 'https:' plus a numeric host without slashes), www., dotted host name (any letter
+    # top-level label), host:port or IPv4 shape is refused. Repository file paths are exempt only at EXEMPT_PATHS.
     ("content.url_shape", re.compile(
-        r"[A-Za-z][A-Za-z0-9+.-]*:/|\bwww\.|\b(?:mailto|javascript|data|file|tel):"
+        r"[A-Za-z][A-Za-z0-9+.-]*:/|\bwww\.|\b(?:https?|ftps?|wss?|file|mailto|javascript|vbscript|data|tel|blob):"
         r"|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b|\b[A-Za-z][A-Za-z0-9-]*:[0-9]{2,5}\b"
         r"|\b[0-9]{1,3}(?:\.[0-9]{1,3}){3}\b",
         re.IGNORECASE,
@@ -532,10 +533,10 @@ def check_component(component, schema, policy, releases, fixture):
     candidate = component["status"] == "candidate"
     require(candidate == (library == "LIB-CANDIDATE"), "contribution.candidate_library", identifier)
     # A candidate names its proposing owner and branch, and declares what the duplicate lint compares: omitting the
-    # semantic role or property contract, or writing a placeholder name or role such as '-', cannot hide a duplicate
-    # (criterion 2).
+    # semantic role or property contract, or writing a placeholder name or role such as '-' or only function words
+    # such as 'The' (_named), cannot hide a duplicate (criterion 2).
     require(not candidate or (component["owner_role"] is not None and component["proposal_branch"] is not None
-                              and _worded(component["name"]) and _worded(component["semantic_role"])
+                              and _named(component["name"]) and _named(component["semantic_role"])
                               and bool(component["properties"])),
             "contribution.candidate_incomplete", identifier)
     platform = TOPOLOGY[library][5]
@@ -569,9 +570,9 @@ def check_component(component, schema, policy, releases, fixture):
         # Criterion 1: owner, description, property contract, accessibility behaviour and supported platforms.
         require(owner is not None, "published.owner_missing", identifier)
         # Each text names something: a placeholder such as '-' is missing text (_worded).
-        require(_worded(component["name"]), "published.name_missing", identifier)
+        require(_named(component["name"]), "published.name_missing", identifier)
         require(_worded(component["description"]), "published.description_missing", identifier)
-        require(_worded(component["semantic_role"]), "published.semantic_role_missing", identifier)
+        require(_named(component["semantic_role"]), "published.semantic_role_missing", identifier)
         require(bool(component["properties"]), "published.properties_missing", identifier)
         accessibility = component["accessibility"]
         require(accessibility is not None and all(_worded(text) for text in accessibility.values()),
@@ -591,18 +592,23 @@ STOP_WORDS = frozenset({"a", "an", "and", "for", "of", "or", "the", "to", "with"
 
 
 def _stem(word):
-    """Drop a plural ending (-ies, -es after s/ch/sh/x/z, -s) so plurals do not hide a duplicate."""
-    if len(word) > 4 and word.endswith("ies"):
-        return word[:-3] + "y"
-    if len(word) > 4 and word.endswith(("sses", "ches", "shes", "xes", "zes")):
-        return word[:-2]
-    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
-        return word[:-1]
-    return word
+    """Fold a plural and its singular to one key, so plurals do not hide a duplicate: a final -s (not -ss), a final
+    -e and again a final -s (not -ss) are dropped and a final -y becomes -i, so status/statuses, purpose/purposes,
+    switch/switches, cookie/cookies and entry/entries meet. Words of three letters or fewer are kept."""
+    for suffix in ("s", "e", "s"):
+        if len(word) > 3 and word.endswith(suffix) and not word.endswith("ss"):
+            word = word[:-1]
+    return word[:-1] + "i" if len(word) > 3 and word.endswith("y") else word
+
+
+# Word boundaries inside camelCase, acronym-then-word and letter/digit runs ("LocalButton", "OTPInput", "Button2").
+CASE_BOUNDARY = re.compile(
+    r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[A-Za-z])(?=[0-9])|(?<=[0-9])(?=[A-Za-z])")
 
 
 def _tokens(text):
-    return [word for word in re.findall(r"[a-z0-9]+", (text or "").lower()) if word not in STOP_WORDS]
+    words = re.findall(r"[a-z0-9]+", CASE_BOUNDARY.sub(" ", text or "").lower())
+    return [word for word in words if word not in STOP_WORDS]
 
 
 def _words(text):
@@ -621,19 +627,53 @@ def _worded(text):
     return text is not None and re.search(r"[A-Za-z]{2}", text) is not None
 
 
-def duplicates(component, other):
+def _shared(component, other, family_words):
+    """Content words of a name or semantic role shared by both records, family words excluded. A word of four or
+    more letters of one record that starts or ends a run-together word of the other, leaving four or more letters
+    ("Actioncard", "Cardaction"), is shared too; shorter remainders are inflections or other words ("clock")."""
+    texts = [(component[field], other[field]) for field in ("name", "semantic_role")]
+    first = frozenset().union(*(_words(text) for text, _ in texts))
+    second = frozenset().union(*(_words(text) for _, text in texts))
+    shared = set(first & second)
+    for words, runs in ((first, second), (second, first)):
+        shared.update(word for word in words if len(word) >= 4 and any(
+            len(run) - len(word) >= 4 and (run.startswith(word) or run.endswith(word)) for run in runs))
+    return shared - family_words
+
+
+def _named(text):
+    """A name or semantic role the duplicate lint can compare: worded, with a content word (not only 'the' or
+    'and', which the lint drops and would compare as empty)."""
+    return _worded(text) and bool(_words(text))
+
+
+def duplicates(component, other, family_words=frozenset()):
     """Criterion 2 against one published record: the same name or semantic role (as word sets or run together),
-    or the published property signature contained in this one together with a shared content word. An equal
-    signature alone is not a duplicate: distinct components may share property names and types."""
+    or the published property signature contained in this one together with a shared content word that is not a
+    family word. An equal signature alone is not a duplicate: distinct components may share property names and
+    types, and siblings of one registry family (the pinned `input` or `action` names) share their family word."""
     for field in ("name", "semantic_role"):
         words, joined = _words(component[field]), _joined(component[field])
         if (words and words == _words(other[field])) or (joined and joined == _joined(other[field])):
             return True
     signature = {(_normal(item["name"]), item["type"]) for item in component["properties"]}
     other_signature = {(_normal(item["name"]), item["type"]) for item in other["properties"]}
-    shared = (_words(component["name"]) | _words(component["semantic_role"])) & (
-        _words(other["name"]) | _words(other["semantic_role"]))
-    return bool(other_signature) and other_signature <= signature and bool(shared)
+    return bool(other_signature) and other_signature <= signature and bool(_shared(component, other, family_words))
+
+
+def family_words(components):
+    """Words of the names of two or more component families outside LIB-CANDIDATE (a parent and its variants are
+    one family): they name a registry family such as `input` or `action`, not one component, so a governed name
+    word corroborates a duplicate only when no other governed family uses it."""
+    words = {}
+    for component in components.values():
+        if component["status"] != "candidate":
+            words.setdefault(_family(component), set()).update(_words(component["name"]))
+    counts = {}
+    for family in words.values():
+        for word in family:
+            counts[word] = counts.get(word, 0) + 1
+    return frozenset(word for word, count in counts.items() if count >= 2)
 
 
 def _family(component):
@@ -702,11 +742,13 @@ def check_component_graph(components, releases):
     # Every record is linted against every published or deprecated record of every shared library (semantic and
     # platform), except the counterparts _counterparts names.
     published = [item for item in components.values() if item["status"] in PUBLISHED]
+    family = family_words(components)
     for identifier, component in components.items():
         for other in published:
             if other["id"] == identifier or _counterparts(component, other, components):
                 continue
-            require(not duplicates(component, other), "duplicate.semantic_component", identifier, other["id"])
+            require(not duplicates(component, other, family), "duplicate.semantic_component", identifier,
+                    other["id"])
 
 
 def decide(scenario, policy, libraries):
