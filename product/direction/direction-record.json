@@ -110,7 +110,7 @@
   "platform_consequences": {
     "android": "Whichever direction is selected is expressed through Material components and semantic roles only; no Android-specific identity, palette or type system may be introduced, and the selected direction's feasibility notes for Android apply.",
     "web": "The customer web app adopts the same semantic roles and thesis as Android; responsive layouts may reflow but may not invent a separate web identity.",
-    "admin": "The admin console uses a neutral, metadata-first variant of the same direction; operator access to user financial detail is always shown as an audited, time-boxed elevation, never as ordinary browsing."
+    "admin": "The admin console uses a neutral, metadata-first variant of the same direction; operator access to user financial detail is always shown as an audited, time-boxed elevation approved by a distinct approver who is neither the requester nor the access-basis originator (ADR-020), with no elevated view until that approval's chain record is confirmed, never as ordinary browsing."
   },
   "unresolved_risks": [
     {

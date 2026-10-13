@@ -46,6 +46,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/08-experience-design-and-sdlc-plan.md",
           "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {
@@ -169,6 +174,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/08-experience-design-and-sdlc-plan.md",
           "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {
@@ -288,6 +298,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/08-experience-design-and-sdlc-plan.md",
           "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {
@@ -416,6 +431,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/client-state-taxonomy.json",
           "sha256": "sha256:040d2f0c27332ce3f6794a90139e714b3c50afb5b7340aa596d47b8866f2b3fb"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {
@@ -535,6 +555,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/08-experience-design-and-sdlc-plan.md",
           "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {
@@ -623,7 +648,7 @@
       "material_tradition": "enamel_painted_tin",
       "graphic_tradition": "indic_hand_painted_signage",
       "category_default": false,
-      "rationale": "The product serves households paying in rupees (product spec section 1). Hand-painted shopfront signage is a familiar public language of plain, bold, trustworthy statements; it can make the payoff date and next action unmistakable without banking imagery.",
+      "rationale": "The product serves households paying in rupees (product spec section 1). Hypothesis (unvalidated; depends on personas in docs#66 and the docs#53 study): hand-painted shopfront signage may read to these households as a familiar public language of plain, bold statements; if so, it can make the payoff date and next action unmistakable without banking imagery.",
       "intended_feel": "Direct, local and confident: a clear painted sign that tells you what is here and what to do next.",
       "form_language": "Bold display lettering for one headline figure, flat saturated panels, painted borders around actions, simple pictograms; body text stays in a plain readable face.",
       "signature_interaction": "Next-step panel: one painted panel always names the single next action and its effect on the payoff date; other options sit below in plain text.",
@@ -658,6 +683,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/08-experience-design-and-sdlc-plan.md",
           "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {
@@ -782,6 +812,11 @@
           "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
           "path": "product/client-state-taxonomy.json",
           "sha256": "sha256:040d2f0c27332ce3f6794a90139e714b3c50afb5b7340aa596d47b8866f2b3fb"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "adr/ADR-020.md",
+          "sha256": "sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8"
         }
       ],
       "illustrative_values": {

@@ -1025,6 +1025,26 @@ class PublishedDataTests(unittest.TestCase):
         ])
         self.assertIn("D1", record["unresolved_risks"][2]["text"])
 
+    def test_published_operator_probe_shows_the_distinct_approver_and_wait(self):
+        # ADR-020: elevation needs a distinct approver and opens nothing until its chain record is confirmed.
+        operator = self.model.probes["probes"][3]
+        texts = [operator["scenario"], *(item["description"] for item in operator["renderings"])]
+        self.assertEqual(operator["topic"], "operator_urgency")
+        for text in texts:
+            with self.subTest(text=text[:40]):
+                self.assertIn("distinct approver", text)
+                self.assertIn("confirmed", text)
+        admin = self.model.record["platform_consequences"]["admin"]
+        self.assertIn("distinct approver", admin)
+        self.assertIn("ADR-020", admin)
+        for item in self.model.candidates["candidates"]:
+            self.assertIn("adr/ADR-020.md", [pin["path"] for pin in item["grounding"]], item["id"])
+
+    def test_published_dir06_signage_claim_is_labelled_unvalidated(self):
+        rationale = self.model.candidates["candidates"][5]["rationale"]
+        self.assertIn("Hypothesis (unvalidated", rationale)
+        self.assertNotIn("trustworthy", rationale)
+
     def test_published_candidates_are_pairwise_distinct(self):
         candidates = self.model.candidates["candidates"]
         for key in ("name", "material_tradition", "graphic_tradition"):

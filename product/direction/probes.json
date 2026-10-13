@@ -123,35 +123,35 @@
       "format": "text",
       "data_origin": "synthetic",
       "access_depiction": "audited_elevation",
-      "scenario": "Synthetic operator scenario: a fictional support ticket reports a failed statement import for a fictional user. The operator sees system metadata only. Opening any user financial detail requires a time-boxed elevation with a stated reason, recorded in an audit trail the user can see. The probe asks whether urgency, the boundary of operator access and the audited elevation are legible, and that admin access never looks like ordinary browsing.",
+      "scenario": "Synthetic operator scenario: a fictional support ticket reports a failed statement import for a fictional user. The operator sees system metadata only. Opening user financial detail needs a time-boxed elevation with a stated reason and a distinct approver (neither the requester nor the access-basis originator); nothing opens until the approval's chain record is confirmed, and every step enters an audit trail the user can see. The probe asks whether urgency, the approval wait, the access boundary and the audited elevation are legible, and that admin access never looks like ordinary browsing.",
       "renderings": [
         {
           "candidate": "DIR-01",
-          "description": "An operator queue in ledger rows with import status and age; user amounts are absent. Requesting detail opens an elevation entry requiring a reason and showing its expiry, written to the audit ledger."
+          "description": "An operator queue in ledger rows with import status and age; user amounts are absent. Requesting detail opens an elevation entry requiring a reason and showing its expiry, written to the audit ledger; the entry stays marked awaiting a distinct approver, and nothing opens until the approval is confirmed."
         },
         {
           "candidate": "DIR-02",
-          "description": "A neutral status strip shows the import failure as a blocked segment; detail access is a separate gated step that names the reason, duration and audit record before anything is shown."
+          "description": "A neutral status strip shows the import failure as a blocked segment; detail access is a separate gated step that names the reason, duration and audit record before anything is shown; the step waits, visibly, for a distinct approver and a confirmed approval record."
         },
         {
           "candidate": "DIR-03",
-          "description": "A dense grid of tickets sorted by urgency with metadata only; the elevation request is a distinct form with reason, scope and expiry, and the granted view carries a persistent elevated banner with time remaining."
+          "description": "A dense grid of tickets sorted by urgency with metadata only; the elevation request is a distinct form with reason, scope and expiry, and the granted view carries a persistent elevated banner with time remaining; between request and grant the form shows that a distinct approver, not the requester, must approve and that the view opens only once that approval is confirmed."
         },
         {
           "candidate": "DIR-04",
-          "description": "Operators use a plain neutral variant: a ticket list with metadata only and a separate elevation request naming reason and expiry; no household layers are shown to operators."
+          "description": "Operators use a plain neutral variant: a ticket list with metadata only and a separate elevation request naming reason and expiry; no household layers are shown to operators. The request shows it awaits a distinct approver and opens nothing until the approval is confirmed."
         },
         {
           "candidate": "DIR-05",
-          "description": "A ticket sheet with a title block for system metadata; elevation adds a stamped revision row with reason and expiry, and the elevated view is framed and labelled until the time box ends."
+          "description": "A ticket sheet with a title block for system metadata; elevation adds a stamped revision row with reason and expiry, and the elevated view is framed and labelled until the time box ends; the revision row stays unsigned until a distinct approver signs and the approval is confirmed."
         },
         {
           "candidate": "DIR-06",
-          "description": "Operators use a calm neutral variant; one panel names the urgent ticket and its next step, and elevation is a separate step with a reason field, an expiry and an audit notice."
+          "description": "Operators use a calm neutral variant; one panel names the urgent ticket and its next step, and elevation is a separate step with a reason field, an expiry and an audit notice; the step plainly says it waits for a distinct approver and that detail stays hidden until the approval is confirmed."
         },
         {
           "candidate": "DIR-07",
-          "description": "Operators use the plain-surface variant: a metadata-only list, and an elevation step stating reason, scope and expiry; the elevated view stays visibly framed and logged."
+          "description": "Operators use the plain-surface variant: a metadata-only list, and an elevation step stating reason, scope and expiry; the elevated view stays visibly framed and logged; until a distinct approver approves and the approval is confirmed, the step shows that it is waiting and opens nothing."
         }
       ]
     }

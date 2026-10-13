@@ -85,6 +85,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ### DIR-02 Route Atlas
 
@@ -139,6 +140,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ### DIR-03 Almanac Grid
 
@@ -192,6 +194,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ### DIR-04 Cut Paper Household
 
@@ -247,6 +250,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
 - `product/client-state-taxonomy.json` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:040d2f0c27332ce3f6794a90139e714b3c50afb5b7340aa596d47b8866f2b3fb`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ### DIR-05 Drafting Table
 
@@ -300,12 +304,13 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ### DIR-06 Painted Shopfront
 
 Material tradition `enamel_painted_tin`; graphic tradition `indic_hand_painted_signage`.
 
-- **Rationale:** The product serves households paying in rupees (product spec section 1). Hand-painted shopfront signage is a familiar public language of plain, bold, trustworthy statements; it can make the payoff date and next action unmistakable without banking imagery.
+- **Rationale:** The product serves households paying in rupees (product spec section 1). Hypothesis (unvalidated; depends on personas in docs#66 and the docs#53 study): hand-painted shopfront signage may read to these households as a familiar public language of plain, bold statements; if so, it can make the payoff date and next action unmistakable without banking imagery.
 - **Intended feel:** Direct, local and confident: a clear painted sign that tells you what is here and what to do next.
 - **Form language:** Bold display lettering for one headline figure, flat saturated panels, painted borders around actions, simple pictograms; body text stays in a plain readable face.
 - **Signature interaction:** Next-step panel: one painted panel always names the single next action and its effect on the payoff date; other options sit below in plain text.
@@ -354,6 +359,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ### DIR-07 Handloom Weave
 
@@ -408,6 +414,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
 - `product/client-state-taxonomy.json` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:040d2f0c27332ce3f6794a90139e714b3c50afb5b7340aa596d47b8866f2b3fb`)
+- `adr/ADR-020.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:1beee6eb764fc61b9f8eca71e7eee8ddb5d0012908edaf8c1b3d13329d26a6c8`)
 
 ## Probes (static, synthetic, text only)
 
@@ -463,17 +470,17 @@ Synthetic household of two fictional members, Member A and Member B. Member A ha
 
 Format `text`; data origin `synthetic`; access depiction `audited_elevation`.
 
-Synthetic operator scenario: a fictional support ticket reports a failed statement import for a fictional user. The operator sees system metadata only. Opening any user financial detail requires a time-boxed elevation with a stated reason, recorded in an audit trail the user can see. The probe asks whether urgency, the boundary of operator access and the audited elevation are legible, and that admin access never looks like ordinary browsing.
+Synthetic operator scenario: a fictional support ticket reports a failed statement import for a fictional user. The operator sees system metadata only. Opening user financial detail needs a time-boxed elevation with a stated reason and a distinct approver (neither the requester nor the access-basis originator); nothing opens until the approval's chain record is confirmed, and every step enters an audit trail the user can see. The probe asks whether urgency, the approval wait, the access boundary and the audited elevation are legible, and that admin access never looks like ordinary browsing.
 
 | Candidate | Rendering |
 |---|---|
-| DIR-01 | An operator queue in ledger rows with import status and age; user amounts are absent. Requesting detail opens an elevation entry requiring a reason and showing its expiry, written to the audit ledger. |
-| DIR-02 | A neutral status strip shows the import failure as a blocked segment; detail access is a separate gated step that names the reason, duration and audit record before anything is shown. |
-| DIR-03 | A dense grid of tickets sorted by urgency with metadata only; the elevation request is a distinct form with reason, scope and expiry, and the granted view carries a persistent elevated banner with time remaining. |
-| DIR-04 | Operators use a plain neutral variant: a ticket list with metadata only and a separate elevation request naming reason and expiry; no household layers are shown to operators. |
-| DIR-05 | A ticket sheet with a title block for system metadata; elevation adds a stamped revision row with reason and expiry, and the elevated view is framed and labelled until the time box ends. |
-| DIR-06 | Operators use a calm neutral variant; one panel names the urgent ticket and its next step, and elevation is a separate step with a reason field, an expiry and an audit notice. |
-| DIR-07 | Operators use the plain-surface variant: a metadata-only list, and an elevation step stating reason, scope and expiry; the elevated view stays visibly framed and logged. |
+| DIR-01 | An operator queue in ledger rows with import status and age; user amounts are absent. Requesting detail opens an elevation entry requiring a reason and showing its expiry, written to the audit ledger; the entry stays marked awaiting a distinct approver, and nothing opens until the approval is confirmed. |
+| DIR-02 | A neutral status strip shows the import failure as a blocked segment; detail access is a separate gated step that names the reason, duration and audit record before anything is shown; the step waits, visibly, for a distinct approver and a confirmed approval record. |
+| DIR-03 | A dense grid of tickets sorted by urgency with metadata only; the elevation request is a distinct form with reason, scope and expiry, and the granted view carries a persistent elevated banner with time remaining; between request and grant the form shows that a distinct approver, not the requester, must approve and that the view opens only once that approval is confirmed. |
+| DIR-04 | Operators use a plain neutral variant: a ticket list with metadata only and a separate elevation request naming reason and expiry; no household layers are shown to operators. The request shows it awaits a distinct approver and opens nothing until the approval is confirmed. |
+| DIR-05 | A ticket sheet with a title block for system metadata; elevation adds a stamped revision row with reason and expiry, and the elevated view is framed and labelled until the time box ends; the revision row stays unsigned until a distinct approver signs and the approval is confirmed. |
+| DIR-06 | Operators use a calm neutral variant; one panel names the urgent ticket and its next step, and elevation is a separate step with a reason field, an expiry and an audit notice; the step plainly says it waits for a distinct approver and that detail stays hidden until the approval is confirmed. |
+| DIR-07 | Operators use the plain-surface variant: a metadata-only list, and an elevation step stating reason, scope and expiry; the elevated view stays visibly framed and logged; until a distinct approver approves and the approval is confirmed, the step shows that it is waiting and opens nothing. |
 
 ## Direction record (pending)
 
@@ -518,7 +525,7 @@ Platform consequences:
 |---|---|
 | android | Whichever direction is selected is expressed through Material components and semantic roles only; no Android-specific identity, palette or type system may be introduced, and the selected direction's feasibility notes for Android apply. |
 | web | The customer web app adopts the same semantic roles and thesis as Android; responsive layouts may reflow but may not invent a separate web identity. |
-| admin | The admin console uses a neutral, metadata-first variant of the same direction; operator access to user financial detail is always shown as an audited, time-boxed elevation, never as ordinary browsing. |
+| admin | The admin console uses a neutral, metadata-first variant of the same direction; operator access to user financial detail is always shown as an audited, time-boxed elevation approved by a distinct approver who is neither the requester nor the access-basis originator (ADR-020), with no elevated view until that approval's chain record is confirmed, never as ordinary browsing. |
 
 Unresolved risks:
 
