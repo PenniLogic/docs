@@ -1,0 +1,917 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/governance/ux-outcomes.schema.json",
+  "title": "PenniLogic UX outcome, research cadence and design-debt catalogue (T-UXR-08)",
+  "description": "Structure only; identifier grammars, references, coverage, privacy and held-gate rules are enforced by scripts/check_ux_outcomes.py.",
+  "definitions": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pending_ref": {
+      "type": "string",
+      "pattern": "^pending:PenniLogic/[a-z][a-z0-9.-]*#[1-9][0-9]*(?![\\s\\S])"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(?![\\s\\S])"
+    },
+    "unmeasured": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "null"
+        },
+        "source": {
+          "const": "unmeasured"
+        }
+      },
+      "required": [
+        "source",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "unset": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "null"
+        },
+        "source": {
+          "const": "unset"
+        }
+      },
+      "required": [
+        "source",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "ratio": {
+      "type": "object",
+      "properties": {
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "definition": {
+          "$ref": "#/definitions/text"
+        }
+      },
+      "required": [
+        "definition",
+        "event_ids"
+      ],
+      "additionalProperties": false
+    },
+    "denominator": {
+      "type": "object",
+      "properties": {
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "eligibility": {
+          "$ref": "#/definitions/text"
+        },
+        "excludes_opted_out": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "eligibility",
+        "event_ids",
+        "excludes_opted_out"
+      ],
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/id"
+        },
+        "kind": {
+          "$ref": "#/definitions/id"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "name": {
+          "$ref": "#/definitions/id"
+        },
+        "purpose": {
+          "$ref": "#/definitions/text"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/field"
+          },
+          "uniqueItems": true
+        },
+        "incentive": {
+          "enum": [
+            null,
+            "permission_grant",
+            "ai_use",
+            "subscription",
+            "sharing"
+          ]
+        },
+        "opt_out_honoured": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "payload_review": {
+          "const": "pending"
+        }
+      },
+      "required": [
+        "enabled",
+        "fields",
+        "id",
+        "incentive",
+        "name",
+        "opt_out_honoured",
+        "payload_review",
+        "purpose"
+      ],
+      "additionalProperties": false
+    },
+    "metric": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "journey_id": {
+          "$ref": "#/definitions/id"
+        },
+        "role": {
+          "enum": [
+            "primary",
+            "secondary"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "task_success",
+            "time_on_task",
+            "error",
+            "correction",
+            "abandonment",
+            "comprehension",
+            "recovery",
+            "trust",
+            "sustained_progress"
+          ]
+        },
+        "statement": {
+          "$ref": "#/definitions/text"
+        },
+        "numerator": {
+          "$ref": "#/definitions/ratio"
+        },
+        "denominator": {
+          "$ref": "#/definitions/denominator"
+        },
+        "unit": {
+          "enum": [
+            "proportion",
+            "duration_bucket_share",
+            "rate_per_eligible"
+          ]
+        },
+        "direction": {
+          "enum": [
+            "increase",
+            "decrease"
+          ]
+        },
+        "benefit_context": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "guardrail_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "baseline": {
+          "$ref": "#/definitions/unmeasured"
+        },
+        "target": {
+          "$ref": "#/definitions/unset"
+        },
+        "sample_limitation": {
+          "$ref": "#/definitions/text"
+        },
+        "threshold_id": {
+          "$ref": "#/definitions/id"
+        },
+        "status": {
+          "$ref": "#/definitions/id"
+        }
+      },
+      "required": [
+        "baseline",
+        "benefit_context",
+        "denominator",
+        "direction",
+        "guardrail_ids",
+        "id",
+        "journey_id",
+        "kind",
+        "numerator",
+        "role",
+        "sample_limitation",
+        "statement",
+        "status",
+        "target",
+        "threshold_id",
+        "unit"
+      ],
+      "additionalProperties": false
+    },
+    "guardrail": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "journey_id": {
+          "$ref": "#/definitions/id"
+        },
+        "class": {
+          "enum": [
+            "permission_coercion",
+            "harmful_sharing",
+            "support_demand",
+            "accessibility",
+            "dark_pattern"
+          ]
+        },
+        "concern": {
+          "enum": [
+            "trust",
+            "harm"
+          ]
+        },
+        "signal": {
+          "$ref": "#/definitions/text"
+        },
+        "numerator": {
+          "$ref": "#/definitions/ratio"
+        },
+        "denominator": {
+          "$ref": "#/definitions/denominator"
+        },
+        "baseline": {
+          "$ref": "#/definitions/unmeasured"
+        },
+        "threshold_id": {
+          "$ref": "#/definitions/id"
+        },
+        "status": {
+          "$ref": "#/definitions/id"
+        }
+      },
+      "required": [
+        "baseline",
+        "class",
+        "concern",
+        "denominator",
+        "id",
+        "journey_id",
+        "numerator",
+        "signal",
+        "status",
+        "threshold_id"
+      ],
+      "additionalProperties": false
+    },
+    "threshold": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "warn": {
+          "$ref": "#/definitions/unset"
+        },
+        "kill": {
+          "$ref": "#/definitions/unset"
+        },
+        "minimum_sample_ref": {
+          "$ref": "#/definitions/pending_ref"
+        },
+        "on_cross": {
+          "$ref": "#/definitions/id"
+        },
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "decision_record": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "decision_record",
+        "id",
+        "kill",
+        "minimum_sample_ref",
+        "on_cross",
+        "reviewers",
+        "warn"
+      ],
+      "additionalProperties": false
+    },
+    "trigger": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "journey_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "condition": {
+          "enum": [
+            "threshold_crossed",
+            "benchmark_regression"
+          ]
+        },
+        "source_id": {
+          "$ref": "#/definitions/id"
+        },
+        "follow_up": {
+          "enum": [
+            "moderated_study",
+            "unmoderated_benchmark",
+            "diary_follow_up",
+            "guardrail_review"
+          ]
+        },
+        "owner_role": {
+          "$ref": "#/definitions/id"
+        },
+        "status": {
+          "const": "dormant"
+        }
+      },
+      "required": [
+        "condition",
+        "follow_up",
+        "id",
+        "journey_ids",
+        "owner_role",
+        "source_id",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "cadence": {
+      "type": "object",
+      "properties": {
+        "study": {
+          "enum": [
+            "moderated_usability",
+            "unmoderated_benchmark",
+            "diary_follow_up",
+            "panel_health_review",
+            "guardrail_review"
+          ]
+        },
+        "cadence": {
+          "enum": [
+            "per_release",
+            "monthly",
+            "quarterly",
+            "post_beta"
+          ]
+        },
+        "journey_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "next_session": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "cadence",
+        "journey_ids",
+        "next_session",
+        "study"
+      ],
+      "additionalProperties": false
+    },
+    "benchmark": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "journey_id": {
+          "$ref": "#/definitions/id"
+        },
+        "version": {
+          "$ref": "#/definitions/id"
+        },
+        "scenario": {
+          "$ref": "#/definitions/text"
+        },
+        "task_steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/text"
+          },
+          "uniqueItems": true
+        },
+        "task_script_sha256": {
+          "$ref": "#/definitions/id"
+        },
+        "success_definition": {
+          "$ref": "#/definitions/text"
+        },
+        "entry_criteria": {
+          "const": "moderated_defects_closed"
+        },
+        "moderated_defects_ref": {
+          "$ref": "#/definitions/pending_ref"
+        },
+        "baseline": {
+          "$ref": "#/definitions/unmeasured"
+        },
+        "results": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "baseline",
+        "entry_criteria",
+        "id",
+        "journey_id",
+        "moderated_defects_ref",
+        "results",
+        "scenario",
+        "success_definition",
+        "task_script_sha256",
+        "task_steps",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "exception": {
+      "type": "object",
+      "properties": {
+        "recorded_by_role": {
+          "$ref": "#/definitions/id"
+        },
+        "recorded_on": {
+          "$ref": "#/definitions/id"
+        },
+        "expires_on": {
+          "$ref": "#/definitions/id"
+        },
+        "reason": {
+          "$ref": "#/definitions/text"
+        }
+      },
+      "required": [
+        "expires_on",
+        "reason",
+        "recorded_by_role",
+        "recorded_on"
+      ],
+      "additionalProperties": false
+    },
+    "debt": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "journey_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "owner_role": {
+          "$ref": "#/definitions/id"
+        },
+        "due_date": {
+          "$ref": "#/definitions/id"
+        },
+        "release_impact": {
+          "enum": [
+            "blocks_release",
+            "degrades_experience",
+            "none"
+          ]
+        },
+        "status": {
+          "enum": [
+            "open",
+            "closed"
+          ]
+        },
+        "exception": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "due_date",
+        "exception",
+        "id",
+        "journey_ids",
+        "owner_role",
+        "release_impact",
+        "severity",
+        "status",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/id"
+        },
+        "status": {
+          "$ref": "#/definitions/id"
+        },
+        "decision_ref": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "decision_ref",
+        "role",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "catalogue_version": {
+      "$ref": "#/definitions/id"
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#77"
+    },
+    "plan_id": {
+      "const": "T-UXR-08"
+    },
+    "status": {
+      "$ref": "#/definitions/id"
+    },
+    "registry_ref": {
+      "type": "object",
+      "properties": {
+        "commit": {
+          "$ref": "#/definitions/id"
+        },
+        "path": {
+          "$ref": "#/definitions/id"
+        },
+        "sha256": {
+          "$ref": "#/definitions/id"
+        }
+      },
+      "required": [
+        "commit",
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "collection": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "enable_requires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "rollback": {
+          "$ref": "#/definitions/text"
+        }
+      },
+      "required": [
+        "enable_requires",
+        "enabled",
+        "rollback"
+      ],
+      "additionalProperties": false
+    },
+    "privacy": {
+      "type": "object",
+      "properties": {
+        "payload_allowlist_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pending_ref"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "consent_ref": {
+          "$ref": "#/definitions/pending_ref"
+        },
+        "opt_out": {
+          "type": "object",
+          "properties": {
+            "honoured": {
+              "type": "boolean"
+            },
+            "rule": {
+              "$ref": "#/definitions/text"
+            }
+          },
+          "required": [
+            "honoured",
+            "rule"
+          ],
+          "additionalProperties": false
+        },
+        "cohort_minimum_ref": {
+          "$ref": "#/definitions/id"
+        },
+        "retention_ref": {
+          "$ref": "#/definitions/id"
+        },
+        "aggregation_ref": {
+          "$ref": "#/definitions/id"
+        },
+        "access_ref": {
+          "$ref": "#/definitions/id"
+        },
+        "session_recording": {
+          "$ref": "#/definitions/id"
+        },
+        "privacy_budget": {
+          "type": "object",
+          "properties": {
+            "max_fields_per_event": {
+              "type": "integer"
+            },
+            "max_values_per_field": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "max_fields_per_event",
+            "max_values_per_field"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "access_ref",
+        "aggregation_ref",
+        "cohort_minimum_ref",
+        "consent_ref",
+        "opt_out",
+        "payload_allowlist_refs",
+        "privacy_budget",
+        "retention_ref",
+        "session_recording"
+      ],
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/event"
+      },
+      "uniqueItems": true
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/metric"
+      },
+      "uniqueItems": true
+    },
+    "guardrails": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/guardrail"
+      },
+      "uniqueItems": true
+    },
+    "thresholds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/threshold"
+      },
+      "uniqueItems": true
+    },
+    "research_triggers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/trigger"
+      },
+      "uniqueItems": true
+    },
+    "research_calendar": {
+      "type": "object",
+      "properties": {
+        "operations_ref": {
+          "$ref": "#/definitions/pending_ref"
+        },
+        "cadences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cadence"
+          },
+          "uniqueItems": true
+        },
+        "panel_health": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "attrition",
+              "coverage",
+              "recency",
+              "consent_currency",
+              "duplicate_screening"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "cadences",
+        "operations_ref",
+        "panel_health"
+      ],
+      "additionalProperties": false
+    },
+    "benchmarks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/benchmark"
+      },
+      "uniqueItems": true
+    },
+    "longitudinal_plan": {
+      "type": "object",
+      "properties": {
+        "cohort": {
+          "$ref": "#/definitions/text"
+        },
+        "cohort_minimum_ref": {
+          "$ref": "#/definitions/id"
+        },
+        "cadence": {
+          "$ref": "#/definitions/id"
+        },
+        "retention_ref": {
+          "$ref": "#/definitions/id"
+        },
+        "stop_criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/text"
+          },
+          "uniqueItems": true
+        },
+        "decisions_it_may_change": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "privacy_review_ref": {
+          "$ref": "#/definitions/pending_ref"
+        },
+        "status": {
+          "const": "unrun"
+        }
+      },
+      "required": [
+        "cadence",
+        "cohort",
+        "cohort_minimum_ref",
+        "decisions_it_may_change",
+        "privacy_review_ref",
+        "retention_ref",
+        "status",
+        "stop_criteria"
+      ],
+      "additionalProperties": false
+    },
+    "design_debt": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/debt"
+      },
+      "uniqueItems": true
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/approval"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "approvals",
+    "benchmarks",
+    "catalogue_version",
+    "collection",
+    "design_debt",
+    "events",
+    "guardrails",
+    "longitudinal_plan",
+    "metrics",
+    "plan_id",
+    "privacy",
+    "registry_ref",
+    "research_calendar",
+    "research_triggers",
+    "schema_version",
+    "source_issue",
+    "status",
+    "thresholds"
+  ],
+  "additionalProperties": false
+}

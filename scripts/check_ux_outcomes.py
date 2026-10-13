@@ -1,0 +1,921 @@
+"""Offline T-UXR-08 checks of the UX outcome, research cadence and design-debt catalogue and its summary.
+
+PenniLogic/docs#77 publishes governance/ux-outcomes.json, validated against governance/ux-outcomes.schema.json
+(the shared draft-07 subset) and by the rules below, and the generated summary governance/ux-outcomes.md. Journey
+identifiers come from the experience-coverage registry pinned by commit, path and sha256 (the frozen planning import
+at docs 1722fc79 until PenniLogic/docs#75 integrates), read from the local Git object store only.
+
+The catalogue defines outcomes; it collects nothing. Collection stays disabled, every event is an allowlisted,
+non-financial shape (bucketed or enumerated values, no free text, money, raw content, prompt, identity or household
+detail; E33-F04), opt-out is honoured in every event and denominator, and cohort minimums, retention, aggregation and
+access are references to PenniLogic/infra#27 (T-PLT-03), never numbers. Baselines are null and `unmeasured`,
+thresholds are `unset` and a crossed kill threshold opens a reviewed product decision, never an automatic action.
+The only numbers in the catalogue are the two privacy-budget caps. Design debt uses `DEBT-NNN` identifiers; the D8
+check is the function `d8_blocking_debt`, which never edits governance/design-gates.json.
+
+Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a catalogue or
+journey grammar; input text is never echoed. Held inputs (approvals, research operations, payload allowlist review,
+retention values, measurements, benchmark runs) are readiness gaps that keep the default mode NOT GREEN. Nothing here
+contacts a network, records an approval or implies that research, consent or collection happened.
+"""
+
+import argparse
+from datetime import date, datetime, timezone
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = "governance/ux-outcomes.json"
+SCHEMA = "governance/ux-outcomes.schema.json"
+SUMMARY = "governance/ux-outcomes.md"
+# The imported registry on docs main (final plan section 7, TS-M8); re-pinning after docs#75 is a one-field change.
+REGISTRY_PIN = {
+    "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+    "path": "planning/source/evidence/experience-coverage.json",
+    "sha256": "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a",
+}
+# The full remote-tracking ref: a local branch named origin/main must not shadow it.
+BASE_REF = "refs/remotes/origin/main"
+PLATFORM_REF = "pending:PenniLogic/infra#27"  # T-PLT-03: cohort minimum, retention, aggregation and access
+GREEN = "GREEN: readiness complete"
+NOT_GREEN = "NOT GREEN: readiness incomplete"
+
+
+def _sibling(name, filename):
+    """Load an accepted sibling checker read-only by path, as check_design_gates.py does."""
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / filename)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+support = _sibling("ux_outcomes_schema_support", "check_client_states.py")
+gates = _sibling("ux_outcomes_design_gates", "check_design_gates.py")
+ROLES = frozenset(gates.ROLES)
+
+GRAMMAR = {
+    "journey": re.compile(r"J[0-9]{2}"),
+    "metric": re.compile(r"M-(J[0-9]{2})-[0-9]{2}"),
+    "guardrail": re.compile(r"G-(J[0-9]{2})-[0-9]{2}"),
+    "threshold": re.compile(r"TH-[0-9]{3}"),
+    "event": re.compile(r"EV-[0-9]{3}"),
+    "trigger": re.compile(r"RT-[0-9]{3}"),
+    "benchmark": re.compile(r"BM-(J[0-9]{2})"),
+    "debt": re.compile(r"DEBT-[0-9]{3}"),
+}
+PENDING = re.compile(r"pending:PenniLogic/([a-z][a-z0-9.-]*)#([1-9][0-9]*)")
+COMMIT = re.compile(r"[0-9a-f]{40}")
+DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
+SEMVER = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
+CATALOGUE_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+SNAKE = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
+NAME_LIMIT = 48
+TEXT_LIMIT = 400
+SCRUBBED_GIT_VARIABLES = (
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_COMMON_DIR", "GIT_NAMESPACE",
+)
+
+
+def classify(identifier):
+    """The catalogue kind of a grammar-valid identifier, or None."""
+    if not isinstance(identifier, str):
+        return None
+    for kind, grammar in GRAMMAR.items():
+        if grammar.fullmatch(identifier):
+            return kind
+    return None
+
+
+def printable(value):
+    """Only catalogue and journey identifiers may appear in output; everything else is input text."""
+    return classify(value) is not None
+
+
+class Refused(ValueError):
+    """A static rule identifier plus at most grammar-validated identifiers; never echoes input text."""
+
+    def __init__(self, rule, *subjects):
+        self.rule = rule
+        self.subject = " ".join(subjects) if subjects and all(printable(item) for item in subjects) else None
+        super().__init__(rule if self.subject is None else f"{rule} {self.subject}")
+
+
+def require(condition, rule, *subjects):
+    if not condition:
+        raise Refused(rule, *subjects)
+
+
+def loads(raw):
+    """Strict JSON from bytes: UTF-8 and no duplicate keys, like check_client_states.load_json."""
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("duplicate JSON key")
+            value[key] = item
+        return value
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
+
+
+def digest(value):
+    """sha256 over bytes, or over canonical JSON (sorted keys, compact, ASCII), as check_design_gates.digest."""
+    return gates.digest(value)
+
+
+def shape(value, schema, definition=None):
+    """Validate with the shared subset validator; its messages echo input, so only the rule survives."""
+    try:
+        selected = schema if definition is None else schema["definitions"][definition]
+        support.validate_schema(value, selected, schema)
+    except (ValueError, KeyError, TypeError, RecursionError, re.error):
+        raise Refused("schema.invalid") from None
+
+
+_CURRENCIES = "INR|USD|EUR|GBP|AED|SGD|AUD|CAD|JPY|CNY|CHF|SAR|QAR|KWD|BHD|OMR|NZD|HKD|ZAR"
+CONTENT_SHAPES = (
+    # Printable ASCII only, so look-alike digits, at signs or currency signs cannot slip past the shapes below.
+    ("content.unprintable_character", re.compile(r"[^\x20-\x7e]")),
+    ("content.secret_shape", re.compile(
+        r"\bgh[pousr]_[A-Za-z0-9]{8,}|\bgithub_pat_|-----BEGIN|\bAKIA[0-9A-Z]{16}\b|\bxox[abposr]-"
+        r"|\bsk-[A-Za-z0-9_-]{20,}"
+    )),
+    ("content.url_shape", re.compile(
+        r"[A-Za-z][A-Za-z0-9+.-]*://|\bwww\.|\b(?:mailto|javascript|vbscript|tel|sms|file|intent|ftp):"
+        r"|\bdata:[a-z]+/|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:com|org|net|io|co|dev|app|ai|gov|edu|info|biz|me|us"
+        r"|uk|in|xyz)\b",
+        re.IGNORECASE,
+    )),
+    # Any at sign: email addresses, UPI handles and user@host forms alike.
+    ("content.email_shape", re.compile(r"@")),
+    # Currency codes and signs, and Indian shorthand (1,50,000/-, 1.5L, 2 Cr, 3 lk).
+    ("content.amount_shape", re.compile(
+        r"\$\s*[0-9]|\b(?:" + _CURRENCIES + r"|Rs\.?)\s*[0-9]|[0-9]\s*(?:" + _CURRENCIES + r")\b"
+        r"|[0-9]\s*(?:k|lakhs?|lacs?|lk|crores?|cr|rupees?|paise|dollars?|euros?|pounds?|cents?|bucks?|dirhams?)\b"
+        r"|[0-9]\s*(?:/-|(?-i:L)\b)",
+        re.IGNORECASE,
+    )),
+    ("content.personal_id_shape", re.compile(r"\b[A-Z]{5}[0-9]{4}[A-Z]\b|\b[0-9]{4}\s?[0-9]{4}\s?[0-9]{4}\b")),
+    # Nine or more digits, whatever short non-alphanumeric separators sit between them.
+    ("content.phone_shape", re.compile(r"[0-9](?:[^A-Za-z0-9]{0,3}[0-9]){8,}")),
+)
+TOKEN = re.compile(r"[A-Za-z0-9+=_]{32,}")
+HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
+# Only these strings skip the scan, and only when they match their exact grammar at exactly this path.
+EXEMPT_PATHS = {
+    ("registry_ref", "commit"): COMMIT, ("registry_ref", "sha256"): DIGEST,
+    ("benchmarks", "*", "task_script_sha256"): DIGEST,
+}
+# The two privacy-budget caps are the only numbers; baselines, targets, thresholds and cohorts carry none.
+NUMBER_PATHS = frozenset({("privacy", "privacy_budget", "max_fields_per_event"),
+                          ("privacy", "privacy_budget", "max_values_per_field")})
+
+
+def _secret_token(text):
+    for candidate in (text, re.sub(r"[-/_]", "", text)):
+        if HEX_RUN.search(candidate):
+            return True
+        for match in TOKEN.finditer(candidate):
+            if all(any(test(c) for c in match.group()) for test in (str.isdigit, str.islower, str.isupper)):
+                return True
+    return False
+
+
+def _scan(text, subject):
+    require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
+    require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
+    for rule, pattern in CONTENT_SHAPES:
+        require(pattern.search(text) is None, rule, *subject)
+    require(not _secret_token(text), "content.secret_shape", *subject)
+
+
+def guard_content(document):
+    """Scan every string value and key; only EXEMPT_PATHS values with their grammar and NUMBER_PATHS are exempt."""
+    def walk(value, subject, path):
+        if isinstance(value, dict):
+            if printable(value.get("id")):
+                subject = (value["id"],)
+            for key, item in value.items():
+                _scan(key, subject)
+                walk(item, subject, (*path, key))
+        elif isinstance(value, list):
+            for item in value:
+                walk(item, subject, (*path, "*"))
+        elif isinstance(value, str):
+            grammar = EXEMPT_PATHS.get(path)
+            if grammar is None or not grammar.fullmatch(value):
+                _scan(value, subject)
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            require(path in NUMBER_PATHS, "content.unexpected_number", *subject)
+
+    walk(document, (), ())
+
+
+def trusted_git(root):
+    """Absolute path of git from absolute PATH entries outside the checked repository (H06 hardening).
+
+    A bare "git" lets the operating system search relative PATH entries and, on Windows, the current directory
+    first, so a candidate-local executable could forge the pinned registry or the benchmark base.
+    """
+    root = Path(root).resolve()
+    names = ("git.exe",) if os.name == "nt" else ("git",)
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        if not entry or not os.path.isabs(entry):
+            continue
+        directory = Path(entry).resolve()
+        if directory == root or root in directory.parents:
+            continue
+        for name in names:
+            candidate = directory / name
+            target = candidate.resolve()
+            if target.is_file() and os.access(target, os.X_OK) and root not in target.parents:
+                return str(candidate)
+    raise LookupError("git not found outside the repository")
+
+
+class GitSources:
+    """Pinned blobs and the benchmark base from the local Git object store; never fetches, writes or pushes."""
+
+    def __init__(self, root, base=None):
+        self.root, self.base, self.executable, self.commit = Path(root), base, None, None
+
+    def _git(self, *args):
+        self.executable = self.executable or trusted_git(self.root)
+        env = {key: value for key, value in os.environ.items() if key not in SCRUBBED_GIT_VARIABLES}
+        # Objects exactly as stored: no lazy fetch, replace refs or grafts that could substitute pinned bytes.
+        env.update(GIT_NO_LAZY_FETCH="1", GIT_NO_REPLACE_OBJECTS="1", GIT_GRAFT_FILE=os.devnull)
+        try:
+            return subprocess.run(
+                [self.executable, "--no-pager", *args], cwd=self.root, capture_output=True, timeout=30, env=env,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            raise LookupError("git unavailable") from None
+
+    def blob(self, commit, path):
+        if not (isinstance(commit, str) and COMMIT.fullmatch(commit) and isinstance(path, str)):
+            raise LookupError("unpinned source")
+        kind = self._git("cat-file", "-t", commit)
+        if kind.returncode != 0 or kind.stdout.strip() != b"commit":
+            raise LookupError("commit unavailable")
+        result = self._git("cat-file", "blob", f"{commit}:{path}")
+        if result.returncode != 0:
+            raise LookupError("blob unavailable")
+        return result.stdout
+
+    def base_commit(self):
+        if self.commit is None:
+            if self.base is None:
+                args = ("merge-base", "HEAD", BASE_REF)
+            elif isinstance(self.base, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]{0,199}", self.base):
+                args = ("rev-parse", "--verify", "--quiet", f"{self.base}^{{commit}}")
+            else:
+                raise LookupError("unsafe revision")
+            result = self._git(*args)
+            commit = result.stdout.decode("ascii", "replace").strip()
+            if result.returncode != 0 or not COMMIT.fullmatch(commit):
+                raise LookupError("no such commit")
+            self.commit = commit
+        return self.commit
+
+    def base_file(self, path):
+        """Bytes of path at the base, or None only when the base commit's tree has no such entry."""
+        commit = self.base_commit()
+        listed = self._git("ls-tree", "-z", "--name-only", commit, "--", path)
+        if listed.returncode != 0:
+            raise LookupError("base tree unavailable")
+        if not listed.stdout:
+            return None
+        if listed.stdout != path.encode("ascii") + b"\0":
+            raise LookupError("unexpected base tree entry")
+        return self.blob(commit, path)
+
+
+def read_registry(document, sources, pin):
+    """{journey ID: critical} from the pinned registry, read at the pinned commit and digest-checked."""
+    require(document["registry_ref"] == pin, "registry.ref_mismatch")
+    try:
+        blob = sources.blob(pin["commit"], pin["path"])
+    except LookupError:
+        raise Refused("registry.unavailable") from None
+    require(isinstance(blob, bytes) and digest(blob) == pin["sha256"], "registry.digest_mismatch")
+    try:
+        registry = loads(blob)
+    except (ValueError, RecursionError):
+        raise Refused("registry.invalid") from None
+    journeys = registry.get("journeys") if isinstance(registry, dict) else None
+    require(isinstance(journeys, list), "registry.invalid")
+    pinned = {}
+    for record in journeys:
+        identifier = record.get("id") if isinstance(record, dict) else None
+        require(classify(identifier) == "journey" and identifier not in pinned, "registry.invalid")
+        require(isinstance(record.get("critical"), bool), "registry.invalid")
+        pinned[identifier] = record["critical"]
+    return pinned
+
+
+def read_base(sources):
+    """{(benchmark ID, version): script digest} of the committed catalogue at the base (merge base with
+    origin/main), or None when the base predates the catalogue. Only the benchmark keys are read, so a later schema
+    change elsewhere in the catalogue cannot make an older base unreadable."""
+    try:
+        blob = sources.base_file(DATA)
+    except LookupError:
+        raise Refused("base.unavailable") from None
+    if blob is None:
+        return None
+    try:
+        base = loads(blob)
+    except (ValueError, RecursionError):
+        raise Refused("base.invalid") from None
+    benchmarks = base.get("benchmarks") if isinstance(base, dict) else None
+    require(isinstance(benchmarks, list), "base.invalid")
+    versions = {}
+    for item in benchmarks:
+        key = (item.get("id"), item.get("version")) if isinstance(item, dict) else (None, None)
+        value = item.get("task_script_sha256") if isinstance(item, dict) else None
+        require(classify(key[0]) == "benchmark" and isinstance(key[1], str) and SEMVER.fullmatch(key[1])
+                and isinstance(value, str) and DIGEST.fullmatch(value) and key not in versions, "base.invalid")
+        versions[key] = value
+    return versions
+
+
+COLLECTIONS = (
+    ("events", "event"), ("metrics", "metric"), ("guardrails", "guardrail"), ("thresholds", "threshold"),
+    ("research_triggers", "trigger"), ("benchmarks", "benchmark"), ("design_debt", "debt"),
+)
+APPROVAL_ROLES = frozenset({"privacy", "product_owner", "research", "decision_coordinator"})
+ENABLE_REQUIRES = frozenset({"consent", "payload_allowlist", "cohort_minimum"})
+OPERATIONS_REF = "pending:PenniLogic/docs#65"  # T-UXR-02 research operations, consent and panel
+CADENCES = frozenset({"per_release", "monthly", "quarterly", "post_beta"})
+REQUIRED_STUDIES = frozenset({"moderated_usability", "unmoderated_benchmark", "diary_follow_up",
+                              "panel_health_review"})
+REQUIRED_PANEL_HEALTH = frozenset({"attrition", "coverage", "recency"})
+GUARDRAIL_CLASSES = frozenset({"permission_coercion", "harmful_sharing", "support_demand", "accessibility",
+                               "dark_pattern"})
+# A primary outcome is a user outcome; time, error and abandonment are diagnostics, never the primary.
+OUTCOME_KINDS = frozenset({"task_success", "comprehension", "correction", "recovery", "trust",
+                           "sustained_progress"})
+# Allowlisted payload shapes: coarsened, enumerated values only; no free text, number or identifier kind exists.
+FIELD_KINDS = frozenset({"boolean", "enum", "count_bucket", "duration_bucket"})
+BUDGET_CAPS = {"max_fields_per_event": (1, 8), "max_values_per_field": (2, 12)}
+VALUE_LIMIT = 32
+# Planted-field rejection (E33-F04; ticket criterion 3): a name, field or value segment naming one of these
+# categories is refused with the category's rule. Matching is per underscore segment (and its plural), and
+# also by substring for the unambiguous words in SUBSTRINGS, so a joined name such as `txnamount` is caught.
+SENSITIVE = (
+    ("event.money_field", ("amount", "balance", "money", "currency", "price", "cost", "fee", "salary", "income",
+                           "payment", "debt", "loan", "emi", "interest", "spend", "spent", "merchant", "payee",
+                           "counterparty", "account", "iban", "upi", "card", "wallet", "networth")),
+    ("event.content_field", ("text", "message", "body", "content", "note", "memo", "description", "comment",
+                             "query", "search", "transcript", "sms", "raw", "narration", "subject", "freeform")),
+    ("event.prompt_field", ("prompt", "completion", "response", "reply", "chat", "utterance", "conversation")),
+    ("event.identity_field", ("name", "email", "phone", "mobile", "address", "user", "uid", "id", "ids", "uuid",
+                              "device", "ip", "identifier", "token", "pan", "aadhaar", "dob", "birth", "location",
+                              "lat", "lon", "latitude", "longitude", "gps", "contact", "handle")),
+    ("event.household_field", ("household", "member", "relationship", "partner", "spouse", "child", "children",
+                               "parent", "family", "invitee", "grantee", "guardian", "dependant", "dependent")),
+)
+SUBSTRINGS = frozenset({"amount", "balance", "merchant", "salary", "counterparty", "transcript", "message", "prompt",
+                        "email", "aadhaar", "household", "relationship", "spouse"})
+
+
+def sensitive_rule(token):
+    """The category rule a snake-case token falls under, or None."""
+    segments = token.split("_")
+    compact = token.replace("_", "")
+    for rule, words in SENSITIVE:
+        for word in words:
+            if any(segment in (word, word + "s", word + "es") for segment in segments):
+                return rule
+            if word in SUBSTRINGS and word in compact:
+                return rule
+    return None
+
+
+def index(document):
+    """{collection: {ID: record}}; every ID must match its collection's grammar and be unique."""
+    indexed = {}
+    for collection, kind in COLLECTIONS:
+        records = {}
+        for record in document[collection]:
+            identifier = record["id"]
+            require(classify(identifier) == kind, "id.grammar")
+            require(identifier not in records, "id.duplicate", identifier)
+            records[identifier] = record
+        indexed[collection] = records
+    return indexed
+
+
+def journey_of(identifier):
+    """The J infix of an M-, G- or BM- identifier."""
+    for kind in ("metric", "guardrail", "benchmark"):
+        match = GRAMMAR[kind].fullmatch(identifier)
+        if match:
+            return match.group(1)
+    return None
+
+
+def parse_date(value):
+    """A calendar date in YYYY-MM-DD form, or None."""
+    if not (isinstance(value, str) and CATALOGUE_DATE.fullmatch(value)):
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def check_frame(document):
+    """Catalogue status, collection, privacy references, budget and approvals."""
+    require(isinstance(document["catalogue_version"], str) and SEMVER.fullmatch(document["catalogue_version"]),
+            "catalogue.version")
+    require(document["status"] == "proposed", "held.catalogue_status")
+    collection = document["collection"]
+    require(collection["enabled"] is False, "collection.enabled")
+    require(set(collection["enable_requires"]) == ENABLE_REQUIRES, "collection.enable_conditions")
+    privacy = document["privacy"]
+    for key in ("cohort_minimum_ref", "retention_ref", "aggregation_ref", "access_ref"):
+        require(privacy[key] == PLATFORM_REF, "privacy.platform_ref")
+    require(privacy["opt_out"]["honoured"] is True, "privacy.opt_out")
+    require(privacy["session_recording"] == "prohibited", "privacy.session_recording")
+    for key, (low, high) in BUDGET_CAPS.items():
+        require(low <= privacy["privacy_budget"][key] <= high, "privacy.budget_bounds")
+    roles = [item["role"] for item in document["approvals"]]
+    require(len(roles) == len(set(roles)) and set(roles) == APPROVAL_ROLES, "approval.roles")
+    for item in document["approvals"]:
+        # No session here records an approval (HC-m13): every role stays pending with no decision reference.
+        require(item["status"] == "pending", "held.approval_recorded")
+
+
+def check_event(event, budget):
+    """Allowlisted, non-financial, opt-out-honouring, disabled event shapes (E33-F04, ticket criterion 3)."""
+    identifier = event["id"]
+    require(SNAKE.fullmatch(event["name"]) is not None and len(event["name"]) <= NAME_LIMIT,
+            "event.name_grammar", identifier)
+    tokens = [event["name"]]
+    require(len(event["fields"]) <= budget["max_fields_per_event"], "event.privacy_budget", identifier)
+    names = set()
+    for field in event["fields"]:
+        require(SNAKE.fullmatch(field["name"]) is not None and len(field["name"]) <= NAME_LIMIT,
+                "event.field_grammar", identifier)
+        require(field["name"] not in names, "event.field_duplicate", identifier)
+        names.add(field["name"])
+        require(field["kind"] in FIELD_KINDS, "event.kind_not_allowlisted", identifier)
+        values = field["values"]
+        if field["kind"] == "boolean":
+            require(values == [], "event.values_mismatch", identifier)
+        else:
+            require(len(values) >= 2, "event.values_mismatch", identifier)
+            require(len(values) <= budget["max_values_per_field"], "event.privacy_budget", identifier)
+        for value in values:
+            require(SNAKE.fullmatch(value) is not None and len(value) <= VALUE_LIMIT, "event.value_grammar",
+                    identifier)
+        tokens += [field["name"], *values]
+    for token in tokens:
+        rule = sensitive_rule(token)
+        require(rule is None, rule, identifier)
+    require(event["opt_out_honoured"] is True, "event.opt_out_not_honoured", identifier)
+    require(event["enabled"] is False, "collection.enabled", identifier)
+
+
+def check_ratio(record, events):
+    """An explicit numerator and a distinct, eligibility-defined denominator that excludes opted-out users."""
+    identifier = record["id"]
+    numerator, denominator = record["numerator"]["event_ids"], record["denominator"]["event_ids"]
+    require(numerator, "ratio.numerator_missing", identifier)
+    require(denominator, "ratio.denominator_missing", identifier)
+    for event_id in (*numerator, *denominator):
+        require(event_id in events, "reference.dangling", identifier)
+    require(set(numerator) != set(denominator), "ratio.denominator_same_as_numerator", identifier)
+    require(record["denominator"]["excludes_opted_out"] is True, "ratio.opt_out_not_excluded", identifier)
+
+
+def check_measure(record, indexed):
+    """Shared journey, status and threshold rules of a metric or guardrail."""
+    identifier = record["id"]
+    require(classify(record["journey_id"]) == "journey", "id.grammar", identifier)
+    require(journey_of(identifier) == record["journey_id"], "id.journey_mismatch", identifier)
+    # Outcome interpretation stays unvalidated until docs#65/docs#66 evidence exists (held acceptance gate).
+    require(record["status"] == "unvalidated", "held.validation", identifier)
+    require(record["threshold_id"] in indexed["thresholds"], "reference.dangling", identifier)
+    check_ratio(record, indexed["events"])
+
+
+def check_metric(metric, indexed):
+    """Outcome metrics; an incentive event (permission grant, AI use, subscription, sharing) never counts as
+    success on its own (ticket criterion 2)."""
+    identifier = metric["id"]
+    check_measure(metric, indexed)
+    if metric["role"] == "primary":
+        require(metric["kind"] in OUTCOME_KINDS, "metric.primary_kind", identifier)
+    for guardrail_id in metric["guardrail_ids"]:
+        guardrail = indexed["guardrails"].get(guardrail_id)
+        require(guardrail is not None, "reference.dangling", identifier)
+        require(guardrail["journey_id"] == metric["journey_id"], "metric.guardrail_other_journey", identifier)
+    incentive = any(indexed["events"][event_id]["incentive"] is not None
+                    for event_id in metric["numerator"]["event_ids"])
+    if incentive:
+        require(metric["role"] != "primary", "incentive.primary", identifier)
+        require(metric["benefit_context"] is not None and metric["guardrail_ids"] != [],
+                "incentive.without_safety_context", identifier)
+
+
+def check_coverage(indexed, pinned):
+    """Every pinned critical journey: one primary outcome, a trust or harm guardrail and one benchmark."""
+    for journey, critical in sorted(pinned.items()):
+        if not critical:
+            continue
+        primaries = [m for m in indexed["metrics"].values() if m["journey_id"] == journey and m["role"] == "primary"]
+        require(primaries, "coverage.primary_missing", journey)
+        require(len(primaries) == 1, "coverage.primary_duplicate", journey)
+        require(any(g["journey_id"] == journey for g in indexed["guardrails"].values()),
+                "coverage.guardrail_missing", journey)
+        require(f"BM-{journey}" in indexed["benchmarks"], "coverage.benchmark_missing", journey)
+    covered = {guardrail["class"] for guardrail in indexed["guardrails"].values()}
+    require(covered >= GUARDRAIL_CLASSES, "coverage.guardrail_class_missing")
+    used = {event_id for collection in ("metrics", "guardrails") for record in indexed[collection].values()
+            for event_id in (*record["numerator"]["event_ids"], *record["denominator"]["event_ids"])}
+    for identifier in indexed["events"]:
+        require(identifier in used, "event.unused", identifier)
+
+
+def check_thresholds(indexed):
+    """A crossed threshold opens a reviewed product decision (ticket criterion 4); it never acts on its own."""
+    measured = [*indexed["metrics"].values(), *indexed["guardrails"].values()]
+    triggered = {trigger["source_id"] for trigger in indexed["research_triggers"].values()
+                 if trigger["condition"] == "threshold_crossed"}
+    for identifier, threshold in indexed["thresholds"].items():
+        require(threshold["on_cross"] == "product_decision_review", "threshold.automatic_action", identifier)
+        require(set(threshold["reviewers"]) <= ROLES, "threshold.unknown_role", identifier)
+        require("product_owner" in threshold["reviewers"], "threshold.review_missing", identifier)
+        require(threshold["minimum_sample_ref"] == PLATFORM_REF, "privacy.platform_ref", identifier)
+        require(any(record["threshold_id"] == identifier for record in measured), "threshold.unused", identifier)
+        require(identifier in triggered, "threshold.without_trigger", identifier)
+
+
+def check_triggers(indexed):
+    sources = {"threshold_crossed": indexed["thresholds"], "benchmark_regression": indexed["benchmarks"]}
+    for identifier, trigger in indexed["research_triggers"].items():
+        require(trigger["source_id"] in sources[trigger["condition"]], "trigger.source_mismatch", identifier)
+        require(trigger["owner_role"] == "research", "trigger.owner_role", identifier)
+        require(trigger["journey_ids"] != [], "trigger.journey_missing", identifier)
+        for journey in trigger["journey_ids"]:
+            require(classify(journey) == "journey", "id.grammar", identifier)
+
+
+def check_calendar(calendar):
+    """Continuous research cadence and panel health; no session is scheduled (docs#65 operations are held)."""
+    require(calendar["operations_ref"] == OPERATIONS_REF, "calendar.operations_ref")
+    studies = [item["study"] for item in calendar["cadences"]]
+    require(len(studies) == len(set(studies)), "calendar.duplicate_study")
+    require(set(studies) >= REQUIRED_STUDIES, "calendar.study_missing")
+    require(set(calendar["panel_health"]) >= REQUIRED_PANEL_HEALTH, "calendar.panel_health_missing")
+    for item in calendar["cadences"]:
+        for journey in item["journey_ids"]:
+            require(classify(journey) == "journey", "id.grammar")
+
+
+def check_benchmarks(indexed, base):
+    """Versioned, reproducible unmoderated benchmarks (ticket criterion 5): the task script digest is recorded,
+    and a changed script at an already-published version is refused (the version must be bumped)."""
+    for identifier, benchmark in indexed["benchmarks"].items():
+        require(classify(benchmark["journey_id"]) == "journey", "id.grammar", identifier)
+        require(journey_of(identifier) == benchmark["journey_id"], "id.journey_mismatch", identifier)
+        require(SEMVER.fullmatch(benchmark["version"]) is not None, "benchmark.version_grammar", identifier)
+        require(benchmark["task_steps"] != [], "benchmark.script_missing", identifier)
+        recorded = digest(benchmark["task_steps"])
+        require(benchmark["task_script_sha256"] == recorded, "benchmark.script_digest_mismatch", identifier)
+        published = None if base is None else base.get((identifier, benchmark["version"]))
+        require(published is None or published == recorded, "benchmark.version_not_bumped", identifier)
+
+
+def check_longitudinal(plan, indexed):
+    """The post-beta longitudinal plan names cohort, cadence, retention, stop criteria and decisions."""
+    require(plan["cohort_minimum_ref"] == PLATFORM_REF, "longitudinal.cohort_ref")
+    require(plan["retention_ref"] == PLATFORM_REF, "longitudinal.retention_ref")
+    require(plan["cadence"] in CADENCES, "longitudinal.cadence")
+    require(plan["stop_criteria"] != [], "longitudinal.stop_criteria_missing")
+    require(plan["decisions_it_may_change"] != [], "longitudinal.decisions_missing")
+    known = {*indexed["metrics"], *indexed["guardrails"], *indexed["thresholds"]}
+    for identifier in plan["decisions_it_may_change"]:
+        require(identifier in known, "reference.dangling")
+
+
+def check_debt(indexed, schema, fixture):
+    """Design-debt register records; a recorded CDO-equivalent exception is held in published data (HC-m13)."""
+    for identifier, debt in indexed["design_debt"].items():
+        require(debt["owner_role"] in ROLES, "debt.owner_role", identifier)
+        require(parse_date(debt["due_date"]) is not None, "debt.due_date", identifier)
+        require(debt["journey_ids"] != [], "debt.journey_missing", identifier)
+        for journey in debt["journey_ids"]:
+            require(classify(journey) == "journey", "id.grammar", identifier)
+        exception = debt["exception"]
+        if exception is None:
+            continue
+        require(fixture, "held.cdo_exception", identifier)
+        shape(exception, schema, "exception")
+        require(exception["recorded_by_role"] == "decision_coordinator", "debt.exception_role", identifier)
+        recorded, expires = parse_date(exception["recorded_on"]), parse_date(exception["expires_on"])
+        require(recorded is not None and expires is not None and recorded < expires, "debt.exception_dates",
+                identifier)
+
+
+def d8_blocking_debt(design_debt, today):
+    """The D8 design-debt check (ticket criterion 6): sorted IDs of open critical or high debt without a current,
+    dated decision_coordinator (CDO-equivalent) exception. `today` is injected; an exception is current from its
+    recorded_on date up to, not including, its expires_on date. Never reads or edits governance/design-gates.json."""
+    if not isinstance(today, date) or isinstance(today, datetime):
+        raise TypeError("today must be a date")
+    blocking = []
+    for debt in design_debt:
+        if debt["status"] != "open" or debt["severity"] not in ("critical", "high"):
+            continue
+        exception = debt["exception"]
+        if isinstance(exception, dict) and exception.get("recorded_by_role") == "decision_coordinator":
+            recorded, expires = parse_date(exception.get("recorded_on")), parse_date(exception.get("expires_on"))
+            if recorded is not None and expires is not None and recorded <= today < expires:
+                continue
+        blocking.append(debt["id"])
+    return sorted(blocking)
+
+
+def check(document, schema, sources, pin=None, base=None, fixture=False):
+    """Every structure rule, fail closed. `base` is {(BM ID, version): digest} of the base catalogue or None;
+    `fixture` (tests only, never the CLI) admits a recorded debt exception so the D8 rules can be exercised."""
+    pin = REGISTRY_PIN if pin is None else pin
+    shape(document, schema)
+    guard_content(document)
+    check_frame(document)
+    pinned = read_registry(document, sources, pin)
+    indexed = index(document)
+    budget = document["privacy"]["privacy_budget"]
+    for event in indexed["events"].values():
+        check_event(event, budget)
+    for guardrail in indexed["guardrails"].values():
+        check_measure(guardrail, indexed)
+    for metric in indexed["metrics"].values():
+        check_metric(metric, indexed)
+    check_triggers(indexed)
+    check_thresholds(indexed)
+    check_calendar(document["research_calendar"])
+    check_benchmarks(indexed, base)
+    check_longitudinal(document["longitudinal_plan"], indexed)
+    check_debt(indexed, schema, fixture)
+    check_coverage(indexed, pinned)
+    return {"document": document, "indexed": indexed, "pinned": pinned}
+
+
+READINESS_RULES = (
+    "readiness.approval_pending", "readiness.collection_disabled", "readiness.payload_review_pending",
+    "readiness.pending_reference", "readiness.baseline_unmeasured", "readiness.threshold_unset",
+    "readiness.measure_unvalidated", "readiness.benchmark_unrun", "readiness.longitudinal_unrun",
+    "readiness.journey_outside_pin", "readiness.registry_import_pin", "readiness.d8_blocking_debt",
+)
+
+
+def pending_references(value):
+    """Distinct `pending:PenniLogic/<repo>#N` references anywhere in the catalogue, sorted."""
+    found = set()
+
+    def walk(item):
+        if isinstance(item, dict):
+            for child in item.values():
+                walk(child)
+        elif isinstance(item, list):
+            for child in item:
+                walk(child)
+        elif isinstance(item, str) and PENDING.fullmatch(item):
+            found.add(item)
+
+    walk(value)
+    return sorted(found, key=lambda ref: (PENDING.fullmatch(ref).group(1), int(PENDING.fullmatch(ref).group(2))))
+
+
+def readiness(model, today):
+    """Held inputs, counted and never filled in: each keeps the default mode NOT GREEN."""
+    document, indexed, pinned = model["document"], model["indexed"], model["pinned"]
+    measures = [*indexed["metrics"], *indexed["guardrails"]]
+    referenced = {record["journey_id"] for collection in ("metrics", "guardrails", "benchmarks")
+                  for record in indexed[collection].values()}
+    referenced |= {journey for collection in ("research_triggers", "design_debt")
+                   for record in indexed[collection].values() for journey in record["journey_ids"]}
+    referenced |= {journey for item in document["research_calendar"]["cadences"] for journey in item["journey_ids"]}
+    return {
+        "readiness.approval_pending": sorted(item["role"] for item in document["approvals"]
+                                             if item["status"] == "pending"),
+        "readiness.collection_disabled": ["collection"] if document["collection"]["enabled"] is False else [],
+        "readiness.payload_review_pending": sorted(identifier for identifier, event in indexed["events"].items()
+                                                   if event["payload_review"] == "pending"),
+        "readiness.pending_reference": pending_references(document),
+        "readiness.baseline_unmeasured": sorted(
+            [*measures, *indexed["benchmarks"]],
+            key=lambda identifier: (journey_of(identifier), identifier)),
+        "readiness.threshold_unset": sorted(identifier for identifier, threshold in indexed["thresholds"].items()
+                                            if threshold["kill"]["value"] is None),
+        "readiness.measure_unvalidated": sorted(measures, key=lambda identifier: (journey_of(identifier), identifier)),
+        "readiness.benchmark_unrun": sorted(identifier for identifier, benchmark in indexed["benchmarks"].items()
+                                            if benchmark["results"] is None),
+        "readiness.longitudinal_unrun": ["longitudinal_plan"]
+        if document["longitudinal_plan"]["status"] == "unrun" else [],
+        "readiness.journey_outside_pin": sorted(journey for journey in referenced if journey not in pinned),
+        "readiness.registry_import_pin": ["registry_ref"]
+        if document["registry_ref"]["path"] == REGISTRY_PIN["path"] else [],
+        "readiness.d8_blocking_debt": d8_blocking_debt(document["design_debt"], today),
+    }
+
+
+def cell(text):
+    """Table-safe text: content-guarded ASCII with pipes, angle brackets and ampersands neutralised."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("|", "\\|")
+
+
+def table(header, rows):
+    lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    lines += ["| " + " | ".join(row) + " |" for row in rows]
+    return lines
+
+
+def codes(values):
+    return ", ".join(f"`{value}`" for value in values) if values else "none"
+
+
+def ratio(record, key):
+    part = record[key]
+    detail = part["definition"] if key == "numerator" else part["eligibility"]
+    return f"{codes(part['event_ids'])}: {cell(detail)}"
+
+
+def render_summary(model, gaps):
+    """The generated governance/ux-outcomes.md: LF, deterministic, no timestamps or issue titles (TS-M4). The D8
+    check depends on the date it runs, so it is reported by the validator and not written here."""
+    document, indexed = model["document"], model["indexed"]
+    privacy, collection = document["privacy"], document["collection"]
+    registry = document["registry_ref"]
+    budget = privacy["privacy_budget"]
+    held = [rule for rule in READINESS_RULES if rule != "readiness.d8_blocking_debt"]
+    status = NOT_GREEN if any(gaps[rule] for rule in held) else "readiness inputs complete (D8 debt check separate)"
+    lines = [
+        f"<!-- Generated by scripts/check_ux_outcomes.py --write-summary from {DATA}; do not edit by hand. -->",
+        "", "# UX outcomes, research cadence and design-debt governance (T-UXR-08)", "",
+        f"Catalogue `{document['catalogue_version']}`, status `{document['status']}`, source "
+        f"`{document['source_issue']}`. Journeys are read from `{registry['path']}` at `{registry['commit']}` "
+        f"(`{registry['sha256']}`). Every value below is a proposal awaiting the Privacy, Product, UX Research and "
+        "CDO-equivalent approvals; no measurement, research session, approval or collection has happened.", "",
+        f"Readiness: **{status}**.", "",
+        *table(("Readiness rule", "Count"), [(f"`{rule}`", str(len(gaps[rule]))) for rule in held]), "",
+        "## Privacy and collection", "",
+        f"- Collection: {'enabled' if collection['enabled'] else 'disabled'}; enabling requires "
+        f"{codes(sorted(collection['enable_requires']))}. Rollback: {cell(collection['rollback'])}",
+        f"- Payload allowlist (referenced, not restated; E33-F04): {codes(privacy['payload_allowlist_refs'])}.",
+        f"- Consent: `{privacy['consent_ref']}`. Opt-out honoured: {cell(privacy['opt_out']['rule'])}",
+        f"- Cohort minimum, retention, aggregation and access: `{privacy['cohort_minimum_ref']}`, "
+        f"`{privacy['retention_ref']}`, `{privacy['aggregation_ref']}`, `{privacy['access_ref']}`.",
+        f"- Session recording of financial or operator-sensitive content: `{privacy['session_recording']}`.",
+        f"- Privacy budget: at most {budget['max_fields_per_event']} fields per event and "
+        f"{budget['max_values_per_field']} enumerated values per field; no free-text, number or identifier kind.",
+        "", "## Events", "",
+        *table(("Event", "Name", "Fields", "Incentive", "Purpose"), [
+            (f"`{identifier}`", f"`{event['name']}`",
+             ", ".join(f"`{field['name']}` ({field['kind']})" for field in event["fields"]) or "none",
+             event["incentive"] or "none", cell(event["purpose"]))
+            for identifier, event in sorted(indexed["events"].items())]), "",
+        "## Outcome metrics", "",
+        *table(("Metric", "Journey", "Role", "Kind", "Statement", "Numerator", "Denominator", "Direction",
+                "Threshold", "Guardrails", "Sample limitation"), [
+            (f"`{identifier}`", f"`{metric['journey_id']}`", metric["role"], metric["kind"], cell(metric["statement"]),
+             ratio(metric, "numerator"), ratio(metric, "denominator"), metric["direction"],
+             f"`{metric['threshold_id']}`", codes(metric["guardrail_ids"]), cell(metric["sample_limitation"]))
+            for identifier, metric in sorted(indexed["metrics"].items())]), "",
+        "## Guardrails", "",
+        *table(("Guardrail", "Journey", "Class", "Concern", "Signal", "Numerator", "Denominator", "Threshold"), [
+            (f"`{identifier}`", f"`{guardrail['journey_id']}`", guardrail["class"], guardrail["concern"],
+             cell(guardrail["signal"]), ratio(guardrail, "numerator"), ratio(guardrail, "denominator"),
+             f"`{guardrail['threshold_id']}`")
+            for identifier, guardrail in sorted(indexed["guardrails"].items())]), "",
+        "Baselines are `unmeasured` and targets and thresholds `unset`: values arrive only through a reviewed, "
+        "versioned catalogue change backed by research evidence.", "",
+        "## Decision thresholds", "",
+        *table(("Threshold", "Warn", "Kill", "Minimum sample", "On crossing", "Reviewers"), [
+            (f"`{identifier}`", threshold["warn"]["source"], threshold["kill"]["source"],
+             f"`{threshold['minimum_sample_ref']}`", threshold["on_cross"], codes(sorted(threshold["reviewers"])))
+            for identifier, threshold in sorted(indexed["thresholds"].items())]), "",
+        "## Research triggers", "",
+        *table(("Trigger", "Journeys", "Condition", "Source", "Follow-up", "Owner", "Status"), [
+            (f"`{identifier}`", codes(trigger["journey_ids"]), trigger["condition"], f"`{trigger['source_id']}`",
+             trigger["follow_up"], trigger["owner_role"], trigger["status"])
+            for identifier, trigger in sorted(indexed["research_triggers"].items())]), "",
+    ]
+    return "\n".join(lines + render_tail(model)) + "\n"
+
+
+def render_tail(model):
+    document, indexed = model["document"], model["indexed"]
+    calendar, plan = document["research_calendar"], document["longitudinal_plan"]
+    return [
+        "## Research calendar and panel health", "",
+        f"Operations, consent and panel: `{calendar['operations_ref']}`. No session is scheduled. Panel health "
+        f"measures: {codes(sorted(calendar['panel_health']))}.", "",
+        *table(("Study", "Cadence", "Journeys"), [
+            (item["study"], item["cadence"], codes(item["journey_ids"]))
+            for item in sorted(calendar["cadences"], key=lambda item: item["study"])]), "",
+        "## Unmoderated benchmarks", "",
+        *table(("Benchmark", "Journey", "Version", "Scenario", "Steps", "Script digest", "Success", "Entry"), [
+            (f"`{identifier}`", f"`{benchmark['journey_id']}`", benchmark["version"], cell(benchmark["scenario"]),
+             str(len(benchmark["task_steps"])), f"`{benchmark['task_script_sha256']}`",
+             cell(benchmark["success_definition"]),
+             f"{benchmark['entry_criteria']} (`{benchmark['moderated_defects_ref']}`)")
+            for identifier, benchmark in sorted(indexed["benchmarks"].items())]), "",
+        "## Post-beta longitudinal plan", "",
+        f"- Status: `{plan['status']}`. Cohort: {cell(plan['cohort'])} Minimum: `{plan['cohort_minimum_ref']}`.",
+        f"- Cadence: {plan['cadence']}. Retention: `{plan['retention_ref']}`. Privacy review: "
+        f"`{plan['privacy_review_ref']}`.",
+        *[f"- Stop criterion: {cell(item)}" for item in plan["stop_criteria"]],
+        f"- Decisions it may change: {codes(plan['decisions_it_may_change'])}.", "",
+        "## Design-debt register", "",
+        "Open critical or high debt blocks D8 unless the CDO-equivalent (`decision_coordinator`) records a dated, "
+        "unexpired exception; `check_ux_outcomes.d8_blocking_debt` evaluates this on the date it runs.", "",
+        *(table(("Debt", "Title", "Journeys", "Severity", "Owner", "Due", "Release impact", "Status", "Exception"), [
+            (f"`{identifier}`", cell(debt["title"]), codes(debt["journey_ids"]), debt["severity"], debt["owner_role"],
+             debt["due_date"], debt["release_impact"], debt["status"],
+             "none" if debt["exception"] is None else
+             f"{debt['exception']['recorded_by_role']} {debt['exception']['recorded_on']} to "
+             f"{debt['exception']['expires_on']}")
+            for identifier, debt in sorted(indexed["design_debt"].items())]) if indexed["design_debt"]
+          else ["No design debt is recorded."]), "",
+        "## Approvals", "",
+        *table(("Role", "Status"), [(item["role"], item["status"])
+                                    for item in sorted(document["approvals"], key=lambda item: item["role"])]),
+    ]
+
+
+def load_and_check(root, base=None):
+    root = Path(root)
+    sources = GitSources(root, base)
+    document, schema = support.load_json(root / DATA), support.load_json(root / SCHEMA)
+    return check(document, schema, sources, base=read_base(sources))
+
+
+def today_utc():
+    return datetime.now(timezone.utc).date()
+
+
+def main(argv=None, root=None, loader=None, today=None):
+    """CLI. `root`, `loader` and `today` are test seams; the command line always uses the repository and clock."""
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--structure", action="store_true", help="Check structure only; readiness is not evaluated.")
+    modes.add_argument("--write-summary", action="store_true", help=f"Regenerate {SUMMARY} from the catalogue.")
+    modes.add_argument("--check-summary", action="store_true", help=f"Fail unless {SUMMARY} matches byte for byte.")
+    parser.add_argument("--base", help=f"Git revision whose committed benchmarks must not change without a version "
+                                       f"bump (default: the merge base of HEAD and {BASE_REF}).")
+    args = parser.parse_args(argv)
+    root = ROOT if root is None else Path(root)
+    try:
+        model = (loader or load_and_check)(root, args.base)
+        if args.structure:
+            print(f"UX outcomes structure valid: {len(model['indexed']['metrics'])} metrics, "
+                  f"{len(model['indexed']['guardrails'])} guardrails, {len(model['indexed']['events'])} events; "
+                  "readiness not evaluated.")
+            return 0
+        gaps = readiness(model, today_utc() if today is None else today)
+        summary = render_summary(model, gaps)
+        status = NOT_GREEN if any(gaps.values()) else GREEN
+        if args.write_summary:
+            target = root / SUMMARY
+            if target.is_symlink():
+                raise OSError("refusing to write the summary through a symlink")
+            target.write_text(summary, encoding="utf-8", newline="\n")
+            print(f"UX outcomes summary written to {SUMMARY} ({status}).")
+            return 0
+        try:
+            current = (root / SUMMARY).read_bytes()
+        except OSError:
+            current = None
+        require(current == summary.encode("utf-8"), "summary.drift")
+        if args.check_summary:
+            print(f"UX outcomes summary {SUMMARY} matches the catalogue ({status}).")
+            return 0
+        print(status)
+        if status == GREEN:
+            return 0
+        for rule in READINESS_RULES:
+            print(f"{rule}: {len(gaps[rule])}")
+        return 1
+    except Refused as error:
+        print(f"UX outcomes check refused: {error}", file=sys.stderr)
+        return 1
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError, RecursionError, LookupError,
+            re.error):
+        # Fail closed without a traceback, whose message could echo input content.
+        print("UX outcomes check refused: input.unreadable_or_invalid", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
