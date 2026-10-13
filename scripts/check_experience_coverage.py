@@ -347,7 +347,9 @@ class GitSources:
     def _git(self, *args):
         self.executable = self.executable or trusted_git(self.root)
         env = {key: value for key, value in os.environ.items() if key not in SCRUBBED_GIT_VARIABLES}
-        env["GIT_NO_LAZY_FETCH"] = "1"
+        # Objects exactly as stored: no lazy fetch, and no replace refs or grafts, which could substitute the
+        # (digest-unpinned) base registry bytes or move the merge base onto a commit that predates the registry.
+        env.update(GIT_NO_LAZY_FETCH="1", GIT_NO_REPLACE_OBJECTS="1", GIT_GRAFT_FILE=os.devnull)
         try:
             return subprocess.run(
                 [self.executable, "--no-pager", *args], cwd=self.root, capture_output=True, timeout=30, env=env,

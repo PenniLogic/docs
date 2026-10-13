@@ -1257,6 +1257,33 @@ class CommandLineTests(unittest.TestCase):
         git(checkout.root, "branch", "origin/main", "HEAD")
         self.assertRun(checkout.run("--structure"), 1, "", removed)
 
+    def test_replace_refs_cannot_forge_the_base_registry(self):
+        """The base registry blob is not pinned by digest, so a replace ref must not substitute its bytes."""
+        fixture = Fixture()
+        fixture.drop_screen("S-AND-004")
+        checkout = Checkout(self, fixture, base_registry=REGISTRY)
+        removed = "Experience coverage check refused: ledger.entry_removed S-AND-004\n"
+        self.assertRun(checkout.run("--structure"), 1, "", removed)
+        original = git(checkout.root, "rev-parse", f"{checkout.base}:{module.REGISTRY}")
+        git(checkout.root, "replace", original, git(checkout.root, "rev-parse", f"HEAD:{module.REGISTRY}"))
+        self.assertRun(checkout.run("--structure"), 1, "", removed)
+
+    def test_grafts_cannot_move_the_ledger_base(self):
+        """A graft re-parenting the candidate onto a pre-registry commit must not downgrade the base check."""
+        checkout = Checkout(self, Fixture())  # base commit without a registry, candidate commit with one
+        before = checkout.base
+        git(checkout.root, "update-ref", "refs/remotes/origin/main", "HEAD")
+        checkout.fixture.drop_screen("S-AND-004")  # S-AND-004 postdates the frozen import
+        checkout.save()
+        git(checkout.root, "add", "-A")
+        git(checkout.root, "commit", "-q", "-m", "synthetic removal")
+        removed = "Experience coverage check refused: ledger.entry_removed S-AND-004\n"
+        self.assertRun(checkout.run("--structure"), 1, "", removed)
+        (checkout.root / ".git/info").mkdir(parents=True, exist_ok=True)
+        (checkout.root / ".git/info/grafts").write_text(f"{git(checkout.root, 'rev-parse', 'HEAD')} {before}\n",
+                                                        encoding="utf-8")
+        self.assertRun(checkout.run("--structure"), 1, "", removed)
+
     def test_base_without_a_registry_falls_back_to_import_continuity(self):
         fixture = Fixture()
         fixture.drop_screen("S-AND-004")
