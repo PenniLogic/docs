@@ -556,6 +556,33 @@
         }
       }
     },
+    "unresolved_risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "state",
+        "owner_ref"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "open",
+            "mitigated",
+            "accepted"
+          ]
+        },
+        "owner_ref": {
+          "type": "string",
+          "pattern": "^PenniLogic/(docs|android|web|admin|api|contracts|infra)#[1-9][0-9]*(?![\\s\\S])"
+        }
+      }
+    },
     "direction_record": {
       "type": "object",
       "additionalProperties": false,
@@ -701,8 +728,7 @@
         "unresolved_risks": {
           "type": "array",
           "items": {
-            "type": "string",
-            "minLength": 1
+            "$ref": "#/definitions/unresolved_risk"
           }
         },
         "implementation_consequences": {

@@ -42,6 +42,11 @@ PAIRS = (
     ("text", "text_primary", "surface", "pass"), ("text", "text_secondary", "surface", "pass"),
     ("ui", "control_boundary", "surface", "pass"), ("ui", "focus_indicator", "surface", "pass"),
 )
+# The synthetic offline inventory: the only issue references the fixtures may resolve.
+ISSUES = frozenset(f"PenniLogic/docs#{n}" for n in (53, 55, 66, 67, 74, 75, 76, 78)) | {"PenniLogic/infra#22"}
+HELD_GATES = [f"pending:{reference}" for reference in (
+    "PenniLogic/docs#53", "PenniLogic/docs#66", "PenniLogic/docs#67", "PenniLogic/docs#74", "PenniLogic/docs#75",
+    "PenniLogic/infra#22")]
 TOPICS = ("debt_progress", "transaction_clarification", "household_privacy", "operator_urgency")
 DEPICTION = {"household_privacy": "explicit_revocable_grant", "operator_urgency": "audited_elevation"}
 
@@ -140,12 +145,14 @@ def record():
             for role in ("progress", "provenance", "uncertainty", "control")
         ],
         "platform_consequences": {"android": "Synthetic.", "web": "Synthetic.", "admin": "Synthetic."},
-        "unresolved_risks": ["Synthetic unresolved risk."],
+        "unresolved_risks": [
+            {"text": "Synthetic unresolved risk.", "state": "open", "owner_ref": "PenniLogic/docs#53"},
+        ],
         "implementation_consequences": ["Synthetic consequence."],
         "token_contract": {"state": "not_started", "owner_issue": "PenniLogic/docs#55", "reference": None},
         "supersession": {"supersedes": None, "requires": "A superseding D2 record and a migration plan."},
         "consumers": ["PenniLogic/docs#55", "PenniLogic/docs#78"],
-        "held_gates": ["pending:PenniLogic/docs#53", "pending:PenniLogic/docs#66"],
+        "held_gates": list(HELD_GATES),
     }
 
 
@@ -161,10 +168,10 @@ def decision(**changes):
 class Fixture:
     def __init__(self):
         self.candidates, self.probes, self.record = candidates(), probes(), record()
-        self.schema, self.sources = copy.deepcopy(SCHEMA), FakeSources()
+        self.schema, self.sources, self.issues = copy.deepcopy(SCHEMA), FakeSources(), set(ISSUES)
 
     def check(self):
-        return module.check(self.candidates, self.probes, self.record, self.schema, self.sources)
+        return module.check(self.candidates, self.probes, self.record, self.schema, self.sources, self.issues)
 
 
 class Case(unittest.TestCase):
@@ -243,7 +250,8 @@ class SchemaAndContentTests(Case):
 
     def test_content_guard_scans_probes_and_record(self):
         self.refuses(lambda f: probe(f, 2).update(scenario="Earn points daily."), "content.gamification", "PRB-02")
-        self.refuses(lambda f: f.record["unresolved_risks"].append("Bank-grade safety."), "content.trust_theater")
+        self.refuses(lambda f: f.record["unresolved_risks"][0].update(text="Bank-grade safety."),
+                     "content.trust_theater")
 
     def test_refusal_never_echoes_input(self):
         error = self.refuses(lambda f: at(f, 4).update(id="DIR-99"), "candidate.id_sequence")
@@ -479,6 +487,47 @@ class RecordTests(Case):
         self.refuses(lambda f: f.record["consumers"].append("PenniLogic/docs#55"), "record.duplicate_entry")
         self.refuses(lambda f: f.record["evidence"].append(dict(evidence(f))), "record.duplicate_entry")
 
+    def test_empty_risks_consequences_or_consumers_incomplete(self):
+        for key in ("unresolved_risks", "implementation_consequences", "consumers"):
+            with self.subTest(key=key):
+                self.refuses(lambda f: f.record.update({key: []}), "record.incomplete")
+
+    def test_dangling_references_refused(self):
+        dangling = "PenniLogic/docs#99999"
+        mutations = {
+            "consumer": lambda f: f.record["consumers"].__setitem__(1, dangling),
+            "held gate": lambda f: f.record["held_gates"].append("pending:" + dangling),
+            "study": lambda f: evidence(f).update(study_ref="pending:" + dangling),
+            "preparer": lambda f: f.record["prepared_by"].update(ref=dangling),
+            "risk owner": lambda f: f.record["unresolved_risks"][0].update(owner_ref=dangling),
+        }
+        for name, mutate in mutations.items():
+            subject = dangling if name in ("consumer", "preparer", "risk owner") else "pending:" + dangling
+            with self.subTest(field=name):
+                self.refuses(mutate, "record.dangling_reference", subject)
+
+    def test_reference_missing_from_the_inventory_snapshot_is_dangling(self):
+        self.refuses(lambda f: f.issues.discard("PenniLogic/docs#78"), "record.dangling_reference",
+                     "PenniLogic/docs#78")
+
+    def test_token_consumer_required(self):
+        self.refuses(lambda f: f.record["consumers"].remove("PenniLogic/docs#55"), "record.consumer_missing",
+                     "PenniLogic/docs#55")
+
+    def test_every_retained_and_d1_gate_required_while_pending(self):
+        for gate in HELD_GATES:
+            with self.subTest(gate=gate):
+                self.refuses(lambda f: f.record["held_gates"].remove(gate), "record.held_gate_missing", gate)
+        self.refuses(lambda f: f.record.update(held_gates=[]), "record.held_gate_missing", HELD_GATES[0])
+
+    def test_mitigated_or_accepted_risk_cannot_be_recorded_here(self):
+        for state in ("mitigated", "accepted"):
+            with self.subTest(state=state):
+                self.refuses(lambda f: f.record["unresolved_risks"][0].update(state=state), "held.risk_disposition")
+
+    def test_risk_without_owner_is_schema_invalid(self):
+        self.refuses(lambda f: f.record["unresolved_risks"][0].pop("owner_ref"), "schema.invalid")
+
     def test_issue_references_are_not_raw_tokens(self):
         fixture = Fixture()
         fixture.record["implementation_consequences"].append("Consumed by PenniLogic/docs#126 later.")
@@ -628,7 +677,7 @@ class ReadinessTests(Case):
             "readiness.review_pending": ["accessibility", "content", "android_design", "web_design", "admin_design"],
             "readiness.contrast_failing": [],
             "readiness.decision_pending": ["D2"],
-            "readiness.held_gate": ["pending:PenniLogic/docs#53", "pending:PenniLogic/docs#66"],
+            "readiness.held_gate": HELD_GATES,
         })
 
     def test_green_is_unreachable_while_the_decision_is_held(self):
@@ -648,6 +697,7 @@ class FilesCase(Case):
         files = {
             module.CANDIDATES: encode(fixture.candidates), module.PROBES: encode(fixture.probes),
             module.RECORD: encode(fixture.record), module.SCHEMA: encode(fixture.schema),
+            module.INVENTORY: encode({"issues": [{"reference": item} for item in sorted(fixture.issues)]}),
         }
         files.update(raw or {})
         for relative, data in files.items():
@@ -670,7 +720,7 @@ class CliTests(FilesCase):
             "NOT GREEN: readiness incomplete",
             "Direction structure valid: 7 candidates, 4 probes, 28 contrast pairs (0 failing), record 0.1.0 pending",
             "readiness.user_evidence_missing: 1", "readiness.persona_unvalidated: 7", "readiness.review_pending: 5",
-            "readiness.contrast_failing: 0", "readiness.decision_pending: 1", "readiness.held_gate: 2",
+            "readiness.contrast_failing: 0", "readiness.decision_pending: 1", "readiness.held_gate: 6",
         ])
 
     def test_structure_mode_passes(self):
@@ -720,6 +770,16 @@ class CliTests(FilesCase):
         root = self.layout(Fixture())
         (root / module.PROBES).unlink()
         self.assertEqual(self.run_main(root), (1, "", "Direction check refused: input.unreadable_or_invalid\n"))
+
+    def test_missing_or_malformed_inventory_fails_closed(self):
+        self.assertEqual(self.run_main(self.layout(Fixture()), "--structure")[0], 0)
+        refused = (1, "", "Direction check refused: input.unreadable_or_invalid\n")
+        for raw in (None, encode({"issues": []}), encode({"issues": [{"reference": "docs#55"}]}), encode([])):
+            with self.subTest(raw=raw):
+                root = self.layout(Fixture(), {module.INVENTORY: raw} if raw is not None else None)
+                if raw is None:
+                    (root / module.INVENTORY).unlink()
+                self.assertEqual(self.run_main(root, "--structure"), refused)
 
 
 def git(root, *args):
@@ -901,9 +961,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.review_pending": ["accessibility", "content", "android_design", "web_design", "admin_design"],
             "readiness.contrast_failing": PUBLISHED_FAILING,
             "readiness.decision_pending": ["D2"],
-            "readiness.held_gate": [
-                "pending:PenniLogic/docs#53", "pending:PenniLogic/docs#66", "pending:PenniLogic/infra#22",
-            ],
+            "readiness.held_gate": HELD_GATES,
         })
 
     def test_published_structure_line(self):
@@ -915,6 +973,14 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual((record["status"], record["participant_count"], record["decision"]), ("pending", None, None))
         self.assertEqual(record["token_contract"], {
             "state": "not_started", "owner_issue": "PenniLogic/docs#55", "reference": None})
+        self.assertEqual(record["prepared_by"], {"role": "systems", "ref": "PenniLogic/docs#76"})
+        self.assertEqual(record["consumers"], ["PenniLogic/docs#55", "PenniLogic/docs#78"])
+        self.assertEqual(record["held_gates"], HELD_GATES)
+        self.assertEqual([(item["state"], item["owner_ref"]) for item in record["unresolved_risks"]], [
+            ("open", "PenniLogic/docs#53"), ("open", "PenniLogic/docs#66"), ("open", "PenniLogic/docs#76"),
+            ("open", "PenniLogic/docs#55"), ("open", "PenniLogic/docs#76"), ("open", "PenniLogic/docs#76"),
+        ])
+        self.assertIn("D1", record["unresolved_risks"][2]["text"])
 
     def test_published_candidates_are_pairwise_distinct(self):
         candidates = self.model.candidates["candidates"]
@@ -935,7 +1001,7 @@ class PublishedDataTests(unittest.TestCase):
             "NOT GREEN: readiness incomplete",
             "Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing), record 0.1.0 pending",
             "readiness.user_evidence_missing: 1", "readiness.persona_unvalidated: 7", "readiness.review_pending: 5",
-            "readiness.contrast_failing: 8", "readiness.decision_pending: 1", "readiness.held_gate: 3",
+            "readiness.contrast_failing: 8", "readiness.decision_pending: 1", "readiness.held_gate: 6",
         ])
 
 

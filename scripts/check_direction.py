@@ -17,11 +17,14 @@ consequences, never a raw color, dimension, font or token contract (docs#55).
 
 The record stays `pending` with `participant_count: null` (never 0) and `decision: null`. The validator refuses
 AI-preference, internal-vote, synthetic-participant and mood-board "evidence", self-approval and platform-lead
-approval, any final token contract and any non-pending status: no D2 gate record is resolvable offline, so no
-session can record the decision_coordinator's D2 choice here. Representative-user evidence (docs#53), validated
-personas (docs#66), qualified Accessibility, Content and platform reviews and the D2 decision are counted as
-readiness gaps, never filled in, and keep the default mode NOT GREEN. `--render` prints the generated markdown view
-product/direction/README.md; a unittest pins the committed file to it.
+approval, any final token contract and any non-pending status: no D2 gate record is resolvable offline, so no session
+can record the decision_coordinator's D2 choice here. Representative-user evidence (docs#53), validated personas
+(docs#66), qualified Accessibility, Content and platform reviews and the D2 decision are counted as readiness gaps,
+never filled in, and keep the default mode NOT GREEN. `--render` prints the generated markdown view
+product/direction/README.md; a unittest pins the committed file to it. Every issue reference in the record must
+resolve in the offline snapshot planning/issue-inventory.json; the record must name non-empty unresolved risks (each
+open, with an owning issue), implementation consequences and consumers including docs#55, and, while pending, hold
+docs#53, infra#22 and D2's prerequisite D1 (docs#66, docs#67, docs#74, docs#75).
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a DIR/PRB
 grammar, a semantic role, a gate role or a `PenniLogic/<repo>#N` reference; input text is never echoed. Everything
@@ -46,6 +49,8 @@ CANDIDATES = "product/direction/candidates.json"
 PROBES = "product/direction/probes.json"
 RECORD = "product/direction/direction-record.json"
 SCHEMA = "product/direction/direction.schema.json"
+# The committed offline issue snapshot that check_test_strategy.py also resolves owners against.
+INVENTORY = "planning/issue-inventory.json"
 GREEN = "GREEN: readiness complete"
 NOT_GREEN = "NOT GREEN: readiness incomplete"
 
@@ -86,6 +91,13 @@ REQUIRED_PAIRS = (
 REQUIRED_REVIEWS = ("accessibility", "content", "android_design", "web_design", "admin_design")
 PLATFORM_ROLES = ("android_design", "web_design", "admin_design")
 APPROVER_ROLE = "decision_coordinator"
+# While pending, the record keeps the coordinator appendix's retained gates (docs#53 study, docs#66 personas,
+# infra#22 CI conformance) and D2's prerequisite D1 (docs#66, docs#67, docs#74, docs#75; design-gates D2 requires D1).
+REQUIRED_HELD_GATES = tuple(f"pending:PenniLogic/{name}" for name in (
+    "docs#53", "docs#66", "docs#67", "docs#74", "docs#75", "infra#22"))
+# T-DSY-01 consumes the approved direction's semantic roles as its token contract.
+REQUIRED_CONSUMERS = ("PenniLogic/docs#55",)
+INVENTORY_REF = re.compile(r"PenniLogic/[A-Za-z0-9._-]+#[1-9][0-9]*")
 TEXT_LIMIT = 600
 SCRUBBED_GIT_VARIABLES = (
     "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
@@ -146,7 +158,8 @@ STRUCTURE_RULES = (
     "record.semantic_roles_incomplete", "record.final_token_contract", "record.participant_count_zero",
     "record.participant_count_pending", "record.pending_with_decision", "record.decision_missing",
     "evidence.ai", "evidence.internal_vote", "evidence.synthetic", "evidence.mood_board", "evidence.missing",
-    "held.study_evidence", "record.duplicate_entry",
+    "held.study_evidence", "record.duplicate_entry", "record.incomplete", "record.dangling_reference",
+    "record.consumer_missing", "record.held_gate_missing", "held.risk_disposition",
     "review.missing_role", "review.duplicate_role", "review.self_review", "held.review_record",
     "decision.invalid", "decision.unknown_candidate", "decision.rejected_mismatch", "decision.self_approval",
     "decision.platform_self_approval", "decision.wrong_approver", "held.d2_decision",
@@ -532,7 +545,48 @@ def check_decision(record, schema):
     raise Refused("held.d2_decision", "D2")
 
 
-def check_record(record, schema):
+def issue_index(inventory):
+    """The set of issue references in the offline inventory snapshot; a malformed snapshot is unreadable input."""
+    issues = inventory.get("issues") if isinstance(inventory, dict) else None
+    if not isinstance(issues, list) or not issues:
+        raise ValueError("inventory has no issues")
+    references = set()
+    for issue in issues:
+        reference = issue.get("reference") if isinstance(issue, dict) else None
+        if not isinstance(reference, str) or INVENTORY_REF.fullmatch(reference) is None:
+            raise ValueError("inventory reference malformed")
+        references.add(reference)
+    return frozenset(references)
+
+
+def record_references(record):
+    """Every issue reference the record makes, in document order."""
+    yield record["source_issue"]
+    yield record["prepared_by"]["ref"]
+    yield from (item["study_ref"] for item in record["evidence"])
+    yield from (item["owner_ref"] for item in record["unresolved_risks"])
+    yield record["token_contract"]["owner_issue"]
+    yield from record["consumers"]
+    yield from record["held_gates"]
+
+
+def check_links(record, issues):
+    """Completeness (AC4) and resolution: every reference names an issue in the offline inventory snapshot."""
+    require(all(record[key] for key in ("unresolved_risks", "implementation_consequences", "consumers")),
+            "record.incomplete")
+    for reference in record_references(record):
+        bare = reference[len("pending:"):] if reference.startswith("pending:") else reference
+        require(bare in issues, "record.dangling_reference", reference)
+    for reference in REQUIRED_CONSUMERS:
+        require(reference in record["consumers"], "record.consumer_missing", reference)
+    if record["status"] == "pending":
+        for reference in REQUIRED_HELD_GATES:
+            require(reference in record["held_gates"], "record.held_gate_missing", reference)
+    # Mitigating or accepting a risk needs evidence or the D2 decision, neither of which exists here.
+    require(all(item["state"] == "open" for item in record["unresolved_risks"]), "held.risk_disposition")
+
+
+def check_record(record, schema, issues):
     require(SEMVER.fullmatch(record["version"]) is not None, "record.version_grammar")
     require(record["candidates_considered"] == list(CANDIDATE_IDS), "record.candidate_mismatch")
     require(record["prepared_by"]["role"] in gates.ROLES, "record.unknown_role")
@@ -545,6 +599,7 @@ def check_record(record, schema):
     # Duplicates would inflate the readiness gap counts; checked after the evidence kinds so those refuse first.
     for entries in ([item["study_ref"] for item in record["evidence"]], record["consumers"], record["held_gates"]):
         require(len(entries) == len(set(entries)), "record.duplicate_entry")
+    check_links(record, issues)
     check_reviews(record)
     check_decision(record, schema)
 
@@ -557,7 +612,7 @@ class Model:
         self.failing, self.unvalidated = failing, unvalidated
 
 
-def check(candidates, probes, record, schema, sources):
+def check(candidates, probes, record, schema, sources, issues):
     """Run every structure rule in a fixed order; raise Refused at the first violation, else return the model."""
     shape(candidates, schema, "candidate_set")
     shape(probes, schema, "probe_set")
@@ -567,7 +622,7 @@ def check(candidates, probes, record, schema, sources):
     guard_record_tokens(record)
     failing, unvalidated = check_candidates(candidates, sources)
     check_probes(probes)
-    check_record(record, schema)
+    check_record(record, schema, issues)
     return Model(candidates, probes, record, failing, unvalidated)
 
 
@@ -676,8 +731,10 @@ def render_record(record):
     lines += table(("Role", "Meaning"), [(item["role"], item["meaning"]) for item in record["semantic_roles"]])
     lines += ["", "Platform consequences:", ""]
     lines += table(("Platform", "Consequence"), list(record["platform_consequences"].items()))
-    for label, key in (("Unresolved risks", "unresolved_risks"),
-                       ("Implementation consequences", "implementation_consequences"),
+    lines += ["", "Unresolved risks:", ""]
+    lines += table(("Risk", "Disposition", "Owner"), [
+        (item["text"], item["state"], item["owner_ref"]) for item in record["unresolved_risks"]])
+    for label, key in (("Implementation consequences", "implementation_consequences"),
                        ("Consumers", "consumers"), ("Held gates", "held_gates")):
         lines += ["", f"{label}:", ""] + [f"- {item}" for item in record[key]]
     lines += ["", f"Supersession: {record['supersession']['requires']}", ""]
@@ -752,7 +809,8 @@ def load_and_check(root, sources=None):
     def read(relative):
         return loads(read_input(root, relative))
 
-    return check(read(CANDIDATES), read(PROBES), read(RECORD), read(SCHEMA), sources or GitSources(root))
+    issues = issue_index(read(INVENTORY))
+    return check(read(CANDIDATES), read(PROBES), read(RECORD), read(SCHEMA), sources or GitSources(root), issues)
 
 
 def main(argv=None, root=None, sources=None):

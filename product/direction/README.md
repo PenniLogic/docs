@@ -18,7 +18,7 @@ Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing)
 | readiness.review_pending | 5 |
 | readiness.contrast_failing | 8 |
 | readiness.decision_pending | 1 |
-| readiness.held_gate | 3 |
+| readiness.held_gate | 6 |
 
 ## Candidates
 
@@ -522,17 +522,21 @@ Platform consequences:
 
 Unresolved risks:
 
-- No representative-user concept evidence exists yet; preference, comprehension and identification for every candidate are unknown (docs#53).
-- Persona-dependent assumptions in every candidate are unvalidated (docs#66).
-- Illustrative contrast values fail for some candidates; the selected direction's final values must be set and verified by the token contract (docs#55).
-- Accessibility, Content and Android, web and admin feasibility reviews have not been recorded.
-- Cultural fit of the signage and textile traditions needs review by designers from those traditions.
+| Risk | Disposition | Owner |
+|---|---|---|
+| No representative-user concept evidence exists yet; preference, comprehension and identification for every candidate are unknown (docs#53). | open | PenniLogic/docs#53 |
+| Persona-dependent assumptions in every candidate are unvalidated (docs#66). | open | PenniLogic/docs#66 |
+| D2 requires the D1 experience architecture, which is not accepted: personas (docs#66), journeys and service blueprints (docs#67), platform allocation and sitemaps (docs#74) and the traceability registry (docs#75). | open | PenniLogic/docs#76 |
+| Illustrative contrast values fail for some candidates; the selected direction's final values must be set and verified by the token contract (docs#55). | open | PenniLogic/docs#55 |
+| Accessibility, Content and Android, web and admin feasibility reviews have not been recorded. | open | PenniLogic/docs#76 |
+| Cultural fit of the signage and textile traditions needs review by designers from those traditions. | open | PenniLogic/docs#76 |
 
 Implementation consequences:
 
 - Component and screen work waits for an approved direction; no platform team may start a separate visual system.
 - The token contract is authored in docs#55 after approval and consumes only the semantic roles named here.
 - The governed library (docs#78) references the approved record version, never a pending one.
+- The token contract (docs#55) and the platform tickets must cite the selected record version once it is approved; this pending record is not a version they may cite.
 - Reversal requires a superseding D2 record and a design-system migration plan.
 
 Consumers:
@@ -544,6 +548,9 @@ Held gates:
 
 - pending:PenniLogic/docs#53
 - pending:PenniLogic/docs#66
+- pending:PenniLogic/docs#67
+- pending:PenniLogic/docs#74
+- pending:PenniLogic/docs#75
 - pending:PenniLogic/infra#22
 
 Supersession: A superseding D2 record signed by the decision coordinator and a design-system migration plan.

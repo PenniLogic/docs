@@ -113,16 +113,42 @@
     "admin": "The admin console uses a neutral, metadata-first variant of the same direction; operator access to user financial detail is always shown as an audited, time-boxed elevation, never as ordinary browsing."
   },
   "unresolved_risks": [
-    "No representative-user concept evidence exists yet; preference, comprehension and identification for every candidate are unknown (docs#53).",
-    "Persona-dependent assumptions in every candidate are unvalidated (docs#66).",
-    "Illustrative contrast values fail for some candidates; the selected direction's final values must be set and verified by the token contract (docs#55).",
-    "Accessibility, Content and Android, web and admin feasibility reviews have not been recorded.",
-    "Cultural fit of the signage and textile traditions needs review by designers from those traditions."
+    {
+      "text": "No representative-user concept evidence exists yet; preference, comprehension and identification for every candidate are unknown (docs#53).",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#53"
+    },
+    {
+      "text": "Persona-dependent assumptions in every candidate are unvalidated (docs#66).",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#66"
+    },
+    {
+      "text": "D2 requires the D1 experience architecture, which is not accepted: personas (docs#66), journeys and service blueprints (docs#67), platform allocation and sitemaps (docs#74) and the traceability registry (docs#75).",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#76"
+    },
+    {
+      "text": "Illustrative contrast values fail for some candidates; the selected direction's final values must be set and verified by the token contract (docs#55).",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#55"
+    },
+    {
+      "text": "Accessibility, Content and Android, web and admin feasibility reviews have not been recorded.",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#76"
+    },
+    {
+      "text": "Cultural fit of the signage and textile traditions needs review by designers from those traditions.",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#76"
+    }
   ],
   "implementation_consequences": [
     "Component and screen work waits for an approved direction; no platform team may start a separate visual system.",
     "The token contract is authored in docs#55 after approval and consumes only the semantic roles named here.",
     "The governed library (docs#78) references the approved record version, never a pending one.",
+    "The token contract (docs#55) and the platform tickets must cite the selected record version once it is approved; this pending record is not a version they may cite.",
     "Reversal requires a superseding D2 record and a design-system migration plan."
   ],
   "token_contract": {
@@ -141,6 +167,9 @@
   "held_gates": [
     "pending:PenniLogic/docs#53",
     "pending:PenniLogic/docs#66",
+    "pending:PenniLogic/docs#67",
+    "pending:PenniLogic/docs#74",
+    "pending:PenniLogic/docs#75",
     "pending:PenniLogic/infra#22"
   ]
 }
