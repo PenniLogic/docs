@@ -15,9 +15,11 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -489,8 +491,11 @@ class InputAndSchemaRuleTests(CoverageCase):
             "content.url_shape": ["See https://example.invalid/x", "See www.example.invalid"],
             "content.email_shape": ["Mail fixture" + "@" + "example.invalid"],
             "content.phone_shape": ["Call +91 98765 43210"],
-            "content.amount_shape": ["Pays \u20b9500", "Pays Rs. 500", "Pays 500 rupees", "Owes $12"],
-            "content.control_character": ["Tab\tinside", "Line\u2028break"],
+            "content.amount_shape": ["Pays Rs. 500", "Pays 500 rupees", "Owes $12", "Owes USD 12"],
+            "content.unprintable_character": [
+                "Tab\tinside", "Line\u2028break", "Pays \u20b9500", "Call \uff19\uff18\uff17", "Mail a\uff20b.example",
+                "Caf\u00e9 visit",
+            ],
         }
         for rule, texts in cases.items():
             for text in texts:
@@ -498,6 +503,20 @@ class InputAndSchemaRuleTests(CoverageCase):
                     self.refused(lambda fixture: fixture.record("P02")["jobs"].append(text), rule, "P02")
         self.refused(lambda fixture: fixture.entry("PenniLogic/web#902").update(rationale="Mail a" + "@" + "b.example"),
                      "content.email_shape", "PenniLogic/web#902")
+
+    def test_plan_ids_follow_the_stable_id_grammar_and_are_scanned(self):
+        key = "AKIA" + "ABCDEFGHIJKLMNOP"
+        self.refused(lambda f: f.record("S-AND-002").update(design_ticket=ticket(key, None)), "schema.invalid",
+                     "S-AND-002")
+        self.refused(lambda f: f.record("S-AND-002").update(design_ticket=ticket("T-" + key, None)),
+                     "content.secret_shape", "S-AND-002")
+        self.refused(lambda f: f.record("S-AND-002").update(design_ticket=ticket("T-" + "AB12" * 8, None)),
+                     "content.secret_shape", "S-AND-002")
+        self.refused(lambda f: f.entry("PenniLogic/android#903").update(plan_id="t-syn-and-03"), "schema.invalid",
+                     "PenniLogic/android#903")
+        fixture = Fixture()
+        fixture.record("S-AND-002")["design_ticket"] = ticket("E33", None)
+        self.assertEqual(fixture.gaps(), {**EMPTY_GAPS, "readiness.ticket_unresolved": ["S-AND-002"]})
 
     def test_content_boundaries(self):
         fixture = Fixture()
@@ -1227,6 +1246,52 @@ class CommandLineTests(unittest.TestCase):
         registry["imported_from"]["commit"] = "f" * 40
         checkout.write(module.REGISTRY, encode(registry))
         self.assertRun(checkout.run("--structure"), 1, "", "Experience coverage check refused: import.unavailable\n")
+
+    def test_git_is_resolved_outside_the_repository(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        root = Path(folder.name) / "candidate"
+        planted = root / "tools"
+        planted.mkdir(parents=True)
+        name = "git.exe" if os.name == "nt" else "git"
+        (planted / name).write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (planted / name).chmod(0o755)
+        real = Path(shutil.which("git")).parent
+        with mock.patch.dict(os.environ, {"PATH": os.pathsep.join([str(real)])}):
+            self.assertEqual(Path(module.trusted_git(root)).parent, real)
+        for path in ([str(planted), str(real)], ["", ".", "tools", str(real)], [str(root), str(real)]):
+            with self.subTest(path=path), mock.patch.dict(os.environ, {"PATH": os.pathsep.join(path)}):
+                self.assertEqual(Path(module.trusted_git(root)).parent, real)
+        with mock.patch.dict(os.environ, {"PATH": os.pathsep.join([str(planted), "."])}):
+            with self.assertRaises(LookupError):
+                module.trusted_git(root)
+            with self.assertRaises(module.Refused) as caught:
+                module.read_base(module.GitSources(root), SCHEMA)
+            self.assertEqual(caught.exception.rule, "ledger.base_unavailable")
+
+    def test_unexpected_errors_fail_closed_without_echo(self):
+        checkout = Checkout(self, Fixture())
+        self.assertEqual(checkout.run("--structure")[0], 0)
+        token = planted_token()
+        for error in (KeyError(token), TypeError(token), AttributeError(token), IndexError(token)):
+            with self.subTest(error=type(error).__name__), mock.patch.object(module, "load_and_check",
+                                                                              side_effect=error):
+                self.assertRun(checkout.run("--structure"), 1, "",
+                               "Experience coverage check refused: input.unreadable_or_invalid\n")
+
+    def test_write_summary_never_follows_a_symlink(self):
+        checkout = Checkout(self, Fixture())
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        victim = Path(outside.name) / "victim.md"
+        victim.write_text("unchanged\n", encoding="utf-8")
+        self.assertEqual(checkout.run("--write-summary")[0], 0)
+        summary = checkout.root / module.SUMMARY
+        summary.unlink()
+        summary.symlink_to(victim)
+        self.assertRun(checkout.run("--write-summary"), 1, "",
+                       "Experience coverage check refused: input.unreadable_or_invalid\n")
+        self.assertEqual(victim.read_text(encoding="utf-8"), "unchanged\n")
 
     def test_usage_errors_exit_2(self):
         for argv in (["--structure", "--check-summary"], ["--write-summary", "--structure"], ["--unknown"]):

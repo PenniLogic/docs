@@ -98,7 +98,9 @@ FREE_TEXT = frozenset({
 GRAMMAR_CHECKED = frozenset({"route_hint"})
 FREE_TEXT_LIMIT = 400
 CONTENT_SHAPES = (
-    ("content.control_character", re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")),
+    # Printable ASCII only: control characters and look-alike digits, at signs or currency signs cannot slip past
+    # the ASCII shape patterns below.
+    ("content.unprintable_character", re.compile(r"[^\x20-\x7e]")),
     ("content.secret_shape", re.compile(
         r"\bgh[pousr]_[A-Za-z0-9]{8,}|\bgithub_pat_|-----BEGIN|\bAKIA[0-9A-Z]{16}\b|\bxox[abposr]-"
         r"|\bsk-[A-Za-z0-9_-]{20,}|[0-9a-fA-F]{32,}"
@@ -106,7 +108,7 @@ CONTENT_SHAPES = (
     ("content.url_shape", re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://|\bwww\.", re.IGNORECASE)),
     ("content.email_shape", re.compile(r"[^\s@]+@[^\s@]+\.[A-Za-z]{2,}")),
     ("content.amount_shape", re.compile(
-        r"[\u20b9$\u20ac\u00a3\u00a5]\s*[0-9]|\b(?:INR|USD|EUR|GBP|Rs\.?)\s*[0-9]"
+        r"\$\s*[0-9]|\b(?:INR|USD|EUR|GBP|Rs\.?)\s*[0-9]"
         r"|[0-9]\s*(?:INR|USD|EUR|GBP|rupees?|lakhs?|crores?)\b",
         re.IGNORECASE,
     )),
@@ -120,7 +122,7 @@ SCRUBBED_GIT_VARIABLES = (
 
 STRUCTURE_RULES = (
     "input.unreadable_or_invalid", "schema.invalid", "schema.free_text_unlisted",
-    "content.too_long", "content.control_character", "content.secret_shape", "content.url_shape",
+    "content.too_long", "content.unprintable_character", "content.secret_shape", "content.url_shape",
     "content.email_shape", "content.phone_shape", "content.amount_shape",
     "import.mismatch", "import.unavailable", "import.digest_mismatch", "import.invalid",
     "ledger.base_unavailable", "ledger.base_invalid", "inventory.invalid", "taxonomy.unreadable",
@@ -305,6 +307,8 @@ def guard_content(value, subject=()):
                 for text in item if isinstance(item, list) else [item]:
                     if isinstance(text, str):
                         _scan(text, subject)
+            elif key == "plan_id" and isinstance(item, str):
+                _scan(item, subject)  # unresolved plan IDs reach the summary without an inventory match
             elif key not in GRAMMAR_CHECKED:
                 guard_content(item, subject)
     elif isinstance(value, list):
@@ -312,18 +316,41 @@ def guard_content(value, subject=()):
             guard_content(item, subject)
 
 
+def trusted_git(root):
+    """Absolute path of git from absolute PATH entries outside the checked repository.
+
+    A bare "git" lets the operating system search relative PATH entries and, on Windows, the current
+    directory first, so a candidate-local executable could forge the ledger base or the import.
+    """
+    root = Path(root).resolve()
+    names = ("git.exe",) if os.name == "nt" else ("git",)
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        if not entry or not os.path.isabs(entry):
+            continue
+        directory = Path(entry).resolve()
+        if directory == root or root in directory.parents:
+            continue
+        for name in names:
+            candidate = directory / name
+            target = candidate.resolve()
+            if target.is_file() and os.access(target, os.X_OK) and root not in target.parents:
+                return str(candidate)
+    raise LookupError("git not found outside the repository")
+
+
 class GitSources:
     """Pinned blobs and the ledger base from the local Git object store; never fetches, writes or pushes."""
 
     def __init__(self, root, base=None):
-        self.root, self.base = Path(root), base
+        self.root, self.base, self.executable = Path(root), base, None
 
     def _git(self, *args):
+        self.executable = self.executable or trusted_git(self.root)
         env = {key: value for key, value in os.environ.items() if key not in SCRUBBED_GIT_VARIABLES}
         env["GIT_NO_LAZY_FETCH"] = "1"
         try:
             return subprocess.run(
-                ["git", "--no-pager", *args], cwd=self.root, capture_output=True, timeout=30, env=env,
+                [self.executable, "--no-pager", *args], cwd=self.root, capture_output=True, timeout=30, env=env,
             )
         except (OSError, subprocess.TimeoutExpired):
             raise LookupError("git unavailable") from None
@@ -645,8 +672,9 @@ def check_platforms(model):
                         "platform.implementation_repository", record["id"], ticket["issue"])
     for screen in model.screens.values():
         hint = screen["route_hint"]
+        require(len(hint) <= ROUTE_HINT_LIMIT, "route.hint_grammar", screen["id"])
         family = next((name for name, grammar in ROUTE_HINTS.items() if grammar.fullmatch(hint)), None)
-        require(len(hint) <= ROUTE_HINT_LIMIT and family is not None, "route.hint_grammar", screen["id"])
+        require(family is not None, "route.hint_grammar", screen["id"])
         require((family == "android") == (screen["platform"] == "android"), "platform.route_hint", screen["id"])
 
 
@@ -978,7 +1006,10 @@ def main(argv=None):
         summary = render_summary(model, gaps)
         status = NOT_GREEN if any(gaps.values()) else GREEN
         if args.write_summary:
-            (ROOT / SUMMARY).write_text(summary, encoding="utf-8", newline="\n")
+            target = ROOT / SUMMARY
+            if target.is_symlink():
+                raise OSError("refusing to write the summary through a symlink")
+            target.write_text(summary, encoding="utf-8", newline="\n")
             print(f"Experience coverage summary written to {SUMMARY} ({status}).")
             return 0
         try:
@@ -999,7 +1030,8 @@ def main(argv=None):
     except Refused as error:
         print(f"Experience coverage check refused: {error}", file=sys.stderr)
         return 1
-    except (OSError, ValueError, RecursionError):
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError, RecursionError):
+        # Fail closed without a traceback, whose message could echo input content.
         print("Experience coverage check refused: input.unreadable_or_invalid", file=sys.stderr)
         return 1
 

@@ -80,7 +80,11 @@
       "type": ["string", "null"],
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"
     },
-    "plan_id": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$(?![\\s\\S])"},
+    "plan_id": {
+      "description": "Planning stable identifier grammar (epic E<NN> or ticket T-...), as in planning/source/schema/enums.schema.json.",
+      "type": ["string", "null"],
+      "pattern": "^(?:E[0-9]{2,}|T-[A-Z0-9]+(?:-[A-Z0-9]+)*)$(?![\\s\\S])"
+    },
     "issue": {"type": ["string", "null"], "pattern": "^PenniLogic/(?:\\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*$(?![\\s\\S])"},
     "client_issue": {"type": "string", "pattern": "^PenniLogic/(?:android|web|admin)#[1-9][0-9]*$(?![\\s\\S])"},
     "ticket": {
