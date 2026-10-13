@@ -50,6 +50,8 @@ IMPORT_SHA256 = "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7
 BASE_REF = "refs/remotes/origin/main"
 # The registry author (DesignOps, PenniLogic/docs#75) is never a flow's independent QA owner.
 AUTHOR_ISSUE, AUTHOR_PLAN_ID = "PenniLogic/docs#75", "T-UXR-06"
+# The lead of the security_reason of a screen that is not security-critical, and of no other.
+NOT_SECURITY_CRITICAL = "Not security-critical"
 GREEN = "GREEN: readiness complete"
 NOT_GREEN = "NOT GREEN: readiness incomplete"
 
@@ -791,8 +793,10 @@ def check_screens(model):
         identifier, states = screen["id"], set(screen["states"])
         derived = any(model.flows[flow_id]["critical"] for flow_id in screen["flow_ids"])
         require(screen["critical"] == derived, "screen.critical_mismatch", identifier)
-        require(screen["security_critical"] == (screen["security_reason"] is not None), "security.reason_mismatch",
-                identifier)
+        # TS-M2: every classification records its basis, and only a negative one starts with the negative lead, so
+        # flipping the flag without a new reason is refused.
+        require(screen["security_critical"] != screen["security_reason"].startswith(NOT_SECURITY_CRITICAL),
+                "security.reason_mismatch", identifier)
         require(set(screen["privacy_states"]) <= states and set(screen["authorization_states"]) <= states,
                 "security.state_not_on_screen", identifier)
         # A proposal awaits confirmation of authored values, so it never names a null reason or an empty list.

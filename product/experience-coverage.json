@@ -5315,7 +5315,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows the launch, update and maintenance states of the application. Basis: primary-purpose rule in the registry schema; T-UXA-01.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -5338,7 +5338,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -5422,7 +5423,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Adaptive navigation shell around the user's screens. Owner question: T-UXA-01 requires account switch and privacy lock to remove prior-user data from all panes and deep links to reveal nothing before authentication and authorization, which may make the shell security-critical. Basis: primary-purpose rule in the registry schema; T-UXA-01.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -5445,7 +5446,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6040,7 +6042,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows the debt-free date and payoff progress on the home surface. Basis: primary-purpose rule in the registry schema; T-UXA-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6063,7 +6065,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6093,7 +6096,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists debts. Basis: primary-purpose rule in the registry schema; T-UXA-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6116,7 +6119,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6145,7 +6149,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows one debt and its repayment schedule. Basis: primary-purpose rule in the registry schema; T-UXA-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6168,7 +6172,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6197,7 +6202,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Creates, edits and archives debts. Basis: primary-purpose rule in the registry schema; T-UXA-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6220,7 +6225,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6248,7 +6254,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Compares debt payoff strategies. Basis: primary-purpose rule in the registry schema; T-UXA-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6271,7 +6277,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6299,7 +6306,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Simulates the effect of extra debt payments. Basis: primary-purpose rule in the registry schema; T-UXA-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6322,7 +6329,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6350,7 +6358,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Models advanced debt scenarios. Basis: primary-purpose rule in the registry schema; T-UXA-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6373,7 +6381,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6404,7 +6413,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists transactions as a timeline. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6427,7 +6436,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6460,7 +6470,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows a transaction and reverses it. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6487,7 +6497,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6515,7 +6526,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Records a transaction by hand. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6542,7 +6553,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6571,7 +6583,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages the financial accounts that transactions are booked to. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6594,7 +6606,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6623,7 +6636,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages transaction categories. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6646,7 +6659,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6675,7 +6689,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Maps the fields of an imported statement. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6698,7 +6712,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6728,7 +6743,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Previews and reports the result of a statement import. Basis: primary-purpose rule in the registry schema; T-UXA-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6751,7 +6766,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6846,7 +6862,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists captured transaction candidates that need clarification; it shows structured fields, never message text. Basis: primary-purpose rule in the registry schema; T-UXA-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6869,7 +6885,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6898,7 +6915,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Compares the candidate transactions for one payment by their structured fields. Basis: primary-purpose rule in the registry schema; T-UXA-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6921,7 +6938,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -6950,7 +6968,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Previews and rolls back capture rules. Basis: primary-purpose rule in the registry schema; T-UXA-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -6973,7 +6991,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7120,7 +7139,7 @@
       ],
       "critical": false,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Reviews a receipt candidate, which creates no transaction until the user confirms it. Basis: primary-purpose rule in the registry schema; T-UXA-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7143,7 +7162,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7172,7 +7192,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Sets up income. Basis: primary-purpose rule in the registry schema; T-UXA-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7195,7 +7215,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7225,7 +7246,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows budgets and what is safe to spend. Basis: primary-purpose rule in the registry schema; T-UXA-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7248,7 +7269,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7278,7 +7300,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages bills, recurring items and sinking funds. Basis: primary-purpose rule in the registry schema; T-UXA-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7301,7 +7323,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7331,7 +7354,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages financial goals. Basis: primary-purpose rule in the registry schema; T-UXA-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7354,7 +7377,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7384,7 +7408,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows net worth. Basis: primary-purpose rule in the registry schema; T-UXA-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7411,7 +7435,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7441,7 +7466,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Tracks holdings and their value. Basis: primary-purpose rule in the registry schema; T-UXA-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7464,7 +7489,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7494,7 +7520,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows financial reports. Basis: primary-purpose rule in the registry schema; T-UXA-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7517,7 +7543,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7546,7 +7573,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists split groups. Owner question: where split invitations are created is not recorded; if here, the screen hosts an ADR-019 section 9 step-up operation, and T-SPL-02 invitation links must expire and never enumerate users. Basis: primary-purpose rule in the registry schema; T-UXA-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7569,7 +7596,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7598,7 +7626,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Allocates a shared expense across split-group members. Owner question: it shows other members' expense data, which T-SPL-02 keeps out of device backup and crash reports. Basis: primary-purpose rule in the registry schema; T-UXA-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7621,7 +7649,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7649,7 +7678,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Settles balances within a split group. Owner question: it shows other members' balances, and T-UXA-09 requires the external payment handoff to be clearly non-custodial. Basis: primary-purpose rule in the registry schema; T-UXA-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7672,7 +7701,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -7701,7 +7731,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Raises and resolves disputes on split expenses. Owner question: dispute content is visible only to members of the affected expense (T-SPL-04 on web), an access rule on other members' data. Basis: primary-purpose rule in the registry schema; T-UXA-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -7724,7 +7754,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8003,7 +8034,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows the assistant's answers; prompts leave only through the backend provider routing governed on S-AND-052, which is proposed security-critical (ADR-022, T-UXA-11). Basis: primary-purpose rule in the registry schema; T-UXA-11.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8026,7 +8057,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8057,7 +8089,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Turns an assistant draft into a transaction only after explicit user confirmation. Owner question: a user-confirmed controlled action is an integrity rather than an access-control concern; prompts leave only through the routing governed on S-AND-052 (ADR-022). Basis: primary-purpose rule in the registry schema; T-UXA-11.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8080,7 +8112,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8171,7 +8204,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Purchases and manages the subscription plan through store billing; T-BIL-03 keeps purchase tokens out of logs and prices out of analytics. Basis: primary-purpose rule in the registry schema; T-UXA-12.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8194,7 +8227,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8223,7 +8257,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Sets notification preferences. Owner question: security notifications cannot be disabled and carry pointer-only payloads (T-UXA-12). Basis: primary-purpose rule in the registry schema; T-UXA-12.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8250,7 +8284,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8279,7 +8314,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows retention milestones and digests. Basis: primary-purpose rule in the registry schema; T-UXA-12.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8302,7 +8337,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8452,7 +8488,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Creates and follows support requests. Owner question: it is an egress path; T-SUP-02 makes its diagnostic allowlist keep raw SMS, notification and email content on the device (ADR-004) and rejects credentials and recovery codes. Basis: primary-purpose rule in the registry schema; T-UXA-13.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8475,7 +8511,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8504,7 +8541,7 @@
       ],
       "critical": false,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows degraded-resource and recovery states. Basis: primary-purpose rule in the registry schema; T-UXA-14.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8527,7 +8564,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8733,7 +8771,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Sets language, appearance and accessibility preferences. Basis: primary-purpose rule in the registry schema; T-UXA-13.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8760,7 +8798,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -8855,7 +8894,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Landing for a capture notification that needs clarification. Owner question: the notification payload is a pointer and the content is fetched after unlock (T-NOT-02). Basis: primary-purpose rule in the registry schema; T-UXA-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -8877,7 +8916,8 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9019,7 +9059,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Responsive navigation shell around the user's pages. Owner question: its URLs and deep links must carry no credential, recovery code or session value (T-UXW-01), the same shell question as S-AND-003. Basis: primary-purpose rule in the registry schema; T-UXW-01.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9042,7 +9082,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9072,7 +9113,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows the overview of the user's finances. Basis: primary-purpose rule in the registry schema; T-UXW-01.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9095,7 +9136,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9125,7 +9167,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages the financial accounts that transactions are booked to. Basis: primary-purpose rule in the registry schema; T-UXW-02.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9148,7 +9190,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9180,7 +9223,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists and filters transactions in a table; privacy mode masks sensitive values (T-UXW-02). Basis: primary-purpose rule in the registry schema; T-UXW-02.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9203,7 +9246,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9232,7 +9276,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Edits one transaction or many in bulk. Owner question: T-UXW-02 requires scoped step-up for bulk actions without leaking hidden rows, while ADR-019 section 9 does not list bulk edit. Basis: primary-purpose rule in the registry schema; T-UXW-02.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9255,7 +9299,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9285,7 +9330,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Imports a statement file. Basis: primary-purpose rule in the registry schema; T-UXW-02.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9308,7 +9353,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9394,7 +9440,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows debts and payoff progress. Basis: primary-purpose rule in the registry schema; T-UXW-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9417,7 +9463,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9445,7 +9492,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Compares debt payoff strategies. Basis: primary-purpose rule in the registry schema; T-UXW-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9468,7 +9515,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9495,7 +9543,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Simulates debt payoff and explains its derivation. Basis: primary-purpose rule in the registry schema; T-UXW-03.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9518,7 +9566,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9546,7 +9595,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Creates and edits debts. Basis: primary-purpose rule in the registry schema; T-UXW-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9569,7 +9618,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9597,7 +9647,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Models advanced debt scenarios. Basis: primary-purpose rule in the registry schema; T-UXW-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9620,7 +9670,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9650,7 +9701,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists captured transaction candidates that need clarification; only structured fields render (T-WEB-04). Basis: primary-purpose rule in the registry schema; T-UXW-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9673,7 +9724,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9701,7 +9753,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Rolls back capture rules; every resolution is owner-scoped and audited (T-WEB-04). Basis: primary-purpose rule in the registry schema; T-UXW-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9724,7 +9776,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9754,7 +9807,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages income, budgets and bills. Basis: primary-purpose rule in the registry schema; T-UXW-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9777,7 +9830,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9806,7 +9860,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages goals and goal scenarios. Basis: primary-purpose rule in the registry schema; T-UXW-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9829,7 +9883,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9858,7 +9913,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows net worth. Basis: primary-purpose rule in the registry schema; T-UXW-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9881,7 +9936,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9910,7 +9966,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Tracks holdings and revalues them. Basis: primary-purpose rule in the registry schema; T-UXW-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9933,7 +9989,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -9963,7 +10020,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows planning reports. Basis: primary-purpose rule in the registry schema; T-UXW-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -9990,7 +10047,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10018,7 +10076,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists split groups. Owner question: where split invitations are created is not recorded; if here, the screen hosts an ADR-019 section 9 step-up operation, and T-UXW-07 forbids group-wide implicit grants. Basis: primary-purpose rule in the registry schema; T-UXW-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10041,7 +10099,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10069,7 +10128,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Allocates and settles shared expenses in a split group. Owner question: it shows other members' expense data, which T-SPL-04 keeps out of browser storage beyond what the sharing model requires. Basis: primary-purpose rule in the registry schema; T-UXW-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10092,7 +10151,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10120,7 +10180,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Raises and resolves split disputes. Owner question: dispute content is visible only to members of the affected expense (T-SPL-04), an access rule on other members' data. Basis: primary-purpose rule in the registry schema; T-UXW-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10143,7 +10203,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10354,7 +10415,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows the assistant's answers; prompts leave only through the gateway routing governed on S-WEB-030, which is proposed security-critical (ADR-022, T-UXW-08). Basis: primary-purpose rule in the registry schema; T-UXW-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10377,7 +10438,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10407,7 +10469,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Turns an assistant draft into a transaction only after explicit user confirmation. Owner question: a user-confirmed controlled action is an integrity rather than an access-control concern; prompts leave only through the routing governed on S-WEB-030 (ADR-022). Basis: primary-purpose rule in the registry schema; T-UXW-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10430,7 +10492,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10520,7 +10583,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages the subscription plan, quotas and invoices; checkout redirects to the hosted payment page and the portal never handles card data (T-BIL-09). Basis: primary-purpose rule in the registry schema; T-UXW-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10543,7 +10606,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10570,7 +10634,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows invoices and credit notes; downloads need an authenticated session scoped to the owner (T-BIL-09). Basis: primary-purpose rule in the registry schema; T-UXW-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10593,7 +10657,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10621,7 +10686,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Sets notification preferences. Owner question: immutable security notifications cannot be disabled (T-UXW-09). Basis: primary-purpose rule in the registry schema; T-UXW-09.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10644,7 +10709,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10790,7 +10856,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Creates and follows support requests when signed in. Owner question: it is an egress path; T-SUP-03 rejects credentials, session tokens and recovery codes before submission and caches no support content beyond the session. Basis: primary-purpose rule in the registry schema; T-UXW-10.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10813,7 +10879,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10840,7 +10907,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Takes support requests without sign-in. Owner question: T-SUP-03 rate-limits this path and requires an identical response whether or not the address matches an account, an account-existence protection. Basis: primary-purpose rule in the registry schema; T-UXW-10.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10863,7 +10930,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10892,7 +10960,7 @@
       ],
       "critical": false,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows balances per currency. Basis: primary-purpose rule in the registry schema; T-UXW-11.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10915,7 +10983,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -10943,7 +11012,7 @@
       ],
       "critical": false,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Sets the reporting currency and its exchange rates. Basis: primary-purpose rule in the registry schema; T-UXW-11.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -10966,7 +11035,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11175,7 +11245,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Sets language, appearance and accessibility preferences. Basis: primary-purpose rule in the registry schema; T-UXW-10.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11202,7 +11272,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11292,7 +11363,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Landing for a capture notification that needs clarification. Owner question: it is reached from a notification link and reveals only structured fields authorized to the user (T-UXW-05), the same landing question as S-AND-065. Basis: primary-purpose rule in the registry schema; T-UXW-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11314,7 +11385,8 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11345,7 +11417,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Manages categories and automation rules. Basis: primary-purpose rule in the registry schema; T-UXW-05.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11368,7 +11440,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11457,7 +11530,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: The operator's own work queue. Owner question: queues route redacted work items; customer-data access goes through the proposed security-critical case-access screens S-ADM-004 to S-ADM-006 (ADR-020). Basis: primary-purpose rule in the registry schema; T-UXM-01.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11480,7 +11553,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11928,7 +12002,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists subscription plan versions. Owner question: plan, feature and quota changes alter every customer's entitlements (ADR-023), and T-ADM-07 records and confirms them like a destructive action, but they grant no data access. Basis: primary-purpose rule in the registry schema; T-UXM-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11951,7 +12025,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11980,7 +12055,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Builds a subscription plan version. Owner question: plan, feature and quota changes alter every customer's entitlements (ADR-023), and T-ADM-07 records and confirms them like a destructive action, but they grant no data access. Basis: primary-purpose rule in the registry schema; T-UXM-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12003,7 +12078,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12033,7 +12109,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Migrates customers between plan versions and retires versions. Owner question: plan, feature and quota changes alter every customer's entitlements (ADR-023), and T-ADM-07 records and confirms them like a destructive action, but they grant no data access. Basis: primary-purpose rule in the registry schema; T-UXM-04.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12056,7 +12132,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12203,7 +12280,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Lists support cases for operators. Owner question: queues route redacted work items; case data is reached through the proposed security-critical S-ADM-004 and S-ADM-016, and T-ADM-09 records every lookup. Basis: primary-purpose rule in the registry schema; T-UXM-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12226,7 +12303,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12313,7 +12391,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Operator refund and billing operations. Owner question: refunds move money rather than access (Money review territory); T-ADM-17 shows no payment credentials or financial history and requires support provenance. Basis: primary-purpose rule in the registry schema; T-UXM-06.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12336,7 +12414,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12365,7 +12444,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Routes rights requests and grievances to operators. Owner question: fulfilment happens on the proposed security-critical S-ADM-019 and S-ADM-020, and T-ADM-13 renders only verification references and request metadata. Basis: primary-purpose rule in the registry schema; T-UXM-07.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12388,7 +12467,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12874,7 +12954,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Shows red-team coverage of the console. Owner question: T-ADM-12 and T-ADM-18 confine it to synthetic operators and data, with no production access. Basis: primary-purpose rule in the registry schema; T-UXM-10.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12901,7 +12981,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12930,7 +13011,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Tracks red-team findings, their evidence and retests. Owner question: evidence is synthetic or redacted only, with no production access (T-ADM-18). Basis: primary-purpose rule in the registry schema; T-UXM-10.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12953,7 +13034,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12982,7 +13064,7 @@
       ],
       "critical": true,
       "security_critical": false,
-      "security_reason": null,
+      "security_reason": "Not security-critical: Runs the incident clock and incident actions. Owner question: evidence is synthetic or redacted only, with no production access (T-ADM-18). Basis: primary-purpose rule in the registry schema; T-UXM-10.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -13005,7 +13087,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },

@@ -15,7 +15,7 @@ snapshot; work that progresses without D6 (GitHub Project status) is not in it a
 | --- | --- |
 | Registry version | `1.0.0` |
 | Schema version | `2` |
-| Registry checksum | `sha256:394a4f79fae475773c9fb71e7e0fb4ee457e7467cfdbe7c507de1066baebd52b` |
+| Registry checksum | `sha256:05772e89f830238450dbc26589ebe3a480876bc0df6ca6b8e00400e9bee7f50c` |
 | Imported from | `planning/source/evidence/experience-coverage.json` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` |
 | Ledger | 319 active, 0 retired |
 

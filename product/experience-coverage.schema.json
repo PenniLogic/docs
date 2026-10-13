@@ -134,6 +134,11 @@
       ],
       "minLength": 1
     },
+    "security_reason": {
+      "description": "Recorded, reviewable basis of security_critical, required on every screen (TS-M2). Primary-purpose rule (a DesignOps proposal awaiting the platform design owners and Security/Privacy review): a screen is security-critical when its primary purpose is authentication, recovery or a credential, channel or session change (ADR-019); a cross-user grant, invitation, revocation, access log or safe exit (ADR-005, ADR-021); consent, age eligibility or a data-source permission (ADR-004); export, deletion or erasure (ADR-006, ADR-021); AI provider egress (ADR-022); operator identity, customer-data access, privileged production access or access monitoring (ADR-020); or local access to on-device data. Only the reason of a screen that is not security-critical starts with 'Not security-critical' (security.reason_mismatch), so changing the flag needs a new reason.",
+      "type": "string",
+      "minLength": 1
+    },
     "semver": {
       "description": "MAJOR.MINOR.PATCH without leading zeroes, each part at most three digits (the registry version is printed in the structure line and D20).",
       "type": "string",
@@ -829,7 +834,7 @@
           "type": "boolean"
         },
         "security_reason": {
-          "$ref": "#/definitions/optional_text"
+          "$ref": "#/definitions/security_reason"
         },
         "privacy_states": {
           "$ref": "#/definitions/states"

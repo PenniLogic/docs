@@ -139,11 +139,11 @@ def resolve_d6(model, *identifiers, dependency=True, handoff=True):
 def screen(identifier, flow, components, states, route_hint, implementation, *, critical=True, surface="page",
            security=None):
     platform = module.INFIX[identifier.split("-")[1]]
-    reason, privacy, authorization = security or (None, [], [])
+    reason, privacy, authorization = security or (ORDINARY, [], [])
     return {
         "id": identifier, "platform": platform, "name": f"Synthetic screen {identifier[-3:]}", "surface_type": surface,
         "route_hint": route_hint, "route_id": None, "flow_ids": [flow],
-        "component_ids": components, "states": states, "critical": critical, "security_critical": reason is not None,
+        "component_ids": components, "states": states, "critical": critical, "security_critical": security is not None,
         "security_reason": reason, "privacy_states": privacy, "authorization_states": authorization,
         "d6_dependency": None, "handoff_ref": None, "design_ticket": copy.deepcopy(DESIGN),
         "implementation_tickets": [copy.deepcopy(implementation)], "qa_ticket": copy.deepcopy(QA), "proposal": None,
@@ -175,6 +175,8 @@ def component(identifier, platforms, states, foundational=False):
     }
 
 
+# Every screen records the basis of its classification (TS-M2); only a negative one starts with the negative lead.
+ORDINARY = "Not security-critical: synthetic fixture screen. Basis: synthetic primary-purpose rule."
 SECURITY = ("Synthetic fixture: grants and revokes shared access.", ["revoked"], ["permission-denied"])
 OPERATOR = ("Synthetic fixture: operator queue behind role checks.", ["permission-denied"], ["permission-denied"])
 COLLECTIONS = {
@@ -1174,10 +1176,15 @@ class StateComponentScreenTests(CoverageCase):
         self.refused(lambda f: f.record("S-AND-002").update(critical=False), "screen.critical_mismatch", "S-AND-002")
 
     def test_security_critical_needs_a_reason_and_own_states(self):
+        """DF-R2-2 / TS-M2: every screen records the basis of its classification, and flipping the flag needs a new
+        reason: only a screen that is not security-critical has one starting with the negative lead."""
         self.refused(lambda f: f.record("S-AND-002").update(security_critical=True), "security.reason_mismatch",
                      "S-AND-002")
+        self.refused(lambda f: f.record("S-AND-001").update(security_critical=False), "security.reason_mismatch",
+                     "S-AND-001")
         self.refused(lambda f: f.record("S-AND-002").update(security_reason="Synthetic stale reason."),
                      "security.reason_mismatch", "S-AND-002")
+        self.refused(lambda f: f.record("S-AND-002").update(security_reason=None), "schema.invalid", "S-AND-002")
         self.refused(lambda f: f.record("S-AND-001")["privacy_states"].append("offline"),
                      "security.state_not_on_screen",
                      "S-AND-001")
@@ -1185,13 +1192,15 @@ class StateComponentScreenTests(CoverageCase):
                      "security.state_not_on_screen", "S-ADM-001")
 
     def test_proposal_lists_only_fields_that_carry_a_value(self):
-        """A proposal awaits confirmation of authored values; it cannot name a null reason or an empty state list."""
+        """A proposal awaits confirmation of authored values; it cannot name an empty state list (a reason is never
+        null: every screen records one)."""
         fixture = Fixture()
         fixture.record("S-AND-001")["proposal"] = {"proposed_by": "design_ops", "fields": list(
             SCHEMA["definitions"]["screen_proposal"]["properties"]["fields"]["items"]["enum"])}
-        fixture.record("S-AND-002")["proposal"] = {"proposed_by": "design_ops", "fields": ["security_critical"]}
-        fixture.check()  # S-AND-002 is a proposed security_critical false: a value, not an absence
-        for field in ("security_reason", "privacy_states", "authorization_states"):
+        fixture.record("S-AND-002")["proposal"] = {"proposed_by": "design_ops",
+                                                   "fields": ["security_critical", "security_reason"]}
+        fixture.check()  # S-AND-002 is a proposed security_critical false with its proposed basis
+        for field in ("privacy_states", "authorization_states"):
             with self.subTest(field=field):
                 self.refused(lambda f: f.record("S-AND-002").update(
                     proposal={"proposed_by": "design_ops", "fields": ["security_critical", field]}),
@@ -1935,6 +1944,18 @@ class PublishedDataTests(unittest.TestCase):
                 self.assertIn(" Basis: ", screen["security_reason"])
                 self.assertLessEqual(set(screen["privacy_states"]) | set(screen["authorization_states"]),
                                      {"permission-denied", "revoked", "destructive"})
+        # DF-R2-2: the 83 proposed negatives record their basis too (29 with an owner question), and every
+        # DesignOps classification lists its reason among the proposed fields.
+        negative = [screen for screen in model.screens.values() if not screen["security_critical"]]
+        self.assertEqual((len(negative), sum("Owner question: " in screen["security_reason"] for screen in negative)),
+                         (83, 29))
+        for screen in negative:
+            with self.subTest(screen=screen["id"]):
+                self.assertRegex(screen["security_reason"],
+                                 r"\ANot security-critical: .+ Basis: primary-purpose rule in the registry schema; "
+                                 + re.escape(screen["design_ticket"]["plan_id"]) + r"\.\Z")
+        self.assertEqual([screen["id"] for screen in model.screens.values() if not {"security_critical",
+                          "security_reason"} <= set(screen["proposal"]["fields"])], [])
         code, out, err = self.run_main()
         self.assertEqual((code, err), (1, ""), out)  # the complete check: a refusal would name its rule in err
         lines = out.splitlines()
