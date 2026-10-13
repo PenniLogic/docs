@@ -751,6 +751,62 @@ class SummaryAndCliTests(JourneyCase):
         self.assertNotRegex(first, r"20[0-9]{2}-[0-9]{2}-[0-9]{2}")
         self.assertIn("| readiness.gap_backlog_missing | 1 | GAP-J10-01 |", first)
 
+    def refused(self, rule):
+        return (1, "", f"Journey blueprint check refused: {rule}\n")
+
+    def replace_data(self, old, new):
+        target = self.root / module.DATA
+        raw = target.read_bytes()
+        self.assertEqual(raw.count(old), 1)
+        target.write_bytes(raw.replace(old, new))
+
+    def test_duplicate_key_in_data_fails_closed_without_echo(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        self.replace_data(b'"kind": "journey_blueprints",', b'"kind": "journey_blueprints",\n  "kind": "x",')
+        self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
+
+    def test_byte_order_mark_fails_closed(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        target = self.root / module.DATA
+        target.write_bytes(b"\xef\xbb\xbf" + target.read_bytes())
+        self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
+
+    def test_nan_constant_is_schema_invalid(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        self.replace_data(b'"schema_version": 1,', b'"schema_version": NaN,')
+        self.assertEqual(self.main("--structure"), self.refused("schema.invalid"))
+
+    def test_symlinked_input_file_refused(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        with tempfile.TemporaryDirectory() as outside:
+            copy_path = Path(outside) / "data.json"
+            copy_path.write_bytes((self.root / module.DATA).read_bytes())
+            (self.root / module.DATA).unlink()
+            os.symlink(copy_path, self.root / module.DATA)
+            self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
+
+    def test_symlinked_parent_directory_refused(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        with tempfile.TemporaryDirectory() as outside:
+            moved = Path(outside) / "product"
+            (self.root / "product").rename(moved)
+            os.symlink(moved, self.root / "product", target_is_directory=True)
+            self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
+
+    def test_write_summary_never_follows_a_symlinked_target(self):
+        self.assertEqual(self.main("--write-summary")[0], 0)
+        with tempfile.TemporaryDirectory() as outside:
+            victim = Path(outside) / "victim.md"
+            victim.write_bytes(b"unchanged\n")
+            (self.root / module.SUMMARY).unlink()
+            os.symlink(victim, self.root / module.SUMMARY)
+            self.assertEqual(self.main("--write-summary"), self.refused("input.unreadable_or_invalid"))
+            self.assertEqual(victim.read_bytes(), b"unchanged\n")
+
+    def test_natural_key_orders_ascii_digits_and_tolerates_other_digits(self):
+        self.assertEqual(sorted(["J10", "J02", "J1"], key=module.natural_key), ["J1", "J02", "J10"])
+        self.assertEqual(module.natural_key("J01\u00b2"), [(0, "J"), (1, "01"), (0, "\u00b2")])
+
     def test_invalid_input_fails_closed_without_echo(self):
         (self.root / module.DATA).write_text("{\"kind\": \"secret-ish text\",", encoding="utf-8", newline="\n")
         self.assertEqual(self.main("--structure"),

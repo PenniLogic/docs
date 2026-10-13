@@ -213,8 +213,12 @@ def require(condition, rule, *subjects):
 
 
 def natural_key(subject):
-    """Sort subjects by their digits and text, so J02 precedes J10 and S-AND-002 precedes S-AND-010."""
-    return [(int(part) if part.isdigit() else 0, part) for part in re.split(r"([0-9]+)", subject)]
+    """Sort subjects by their digits and text, so J02 precedes J10 and S-AND-002 precedes S-AND-010.
+
+    Only the captured ASCII digit runs (odd split positions) are numbers; str.isdigit() would also accept
+    non-ASCII digits that int() rejects.
+    """
+    return [(int(part) if index % 2 else 0, part) for index, part in enumerate(re.split(r"([0-9]+)", subject))]
 
 
 def loads(raw):
@@ -848,12 +852,22 @@ def adr_identifiers(root):
     return frozenset(path.stem for path in (Path(root) / ADR_DIRECTORY).glob("ADR-[0-9][0-9][0-9].md"))
 
 
+def repository_file(root, relative):
+    """The file at a fixed relative path, refusing a symlink at any component below the root or any path that
+    resolves outside it, so a planted link cannot redirect a read or the summary write (fail closed)."""
+    root, current = Path(root), Path(root)
+    for part in Path(relative).parts:
+        current = current / part
+        require(not current.is_symlink(), "input.unreadable_or_invalid")
+    require(root.resolve() in current.resolve().parents, "input.unreadable_or_invalid")
+    return current
+
+
 def load_and_check(root):
     root = Path(root)
-    return check(
-        support.load_json(root / DATA), support.load_json(root / GAPS), support.load_json(root / SCHEMA),
-        support.load_json(root / INVENTORY), adr_identifiers(root), GitSources(root),
-    )
+    data, gaps, schema, inventory = (support.load_json(repository_file(root, relative))
+                                     for relative in (DATA, GAPS, SCHEMA, INVENTORY))
+    return check(data, gaps, schema, inventory, adr_identifiers(root), GitSources(root))
 
 
 def main(argv=None):
@@ -872,14 +886,11 @@ def main(argv=None):
         summary = render_summary(model, gaps)
         status = NOT_GREEN if any(gaps.values()) else GREEN
         if args.write_summary:
-            target = ROOT / SUMMARY
-            if target.is_symlink():
-                raise OSError("refusing to write the summary through a symlink")
-            target.write_text(summary, encoding="utf-8", newline="\n")
+            repository_file(ROOT, SUMMARY).write_text(summary, encoding="utf-8", newline="\n")
             print(f"Journey blueprint summary written to {SUMMARY} ({status}).")
             return 0
         try:
-            current = (ROOT / SUMMARY).read_bytes()
+            current = repository_file(ROOT, SUMMARY).read_bytes()
         except OSError:
             current = None
         require(current == summary.encode("utf-8"), "summary.drift")
