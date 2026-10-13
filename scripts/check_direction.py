@@ -595,11 +595,13 @@ def render_probe(probe):
 
 
 def render_record(record):
+    count, decision = record["participant_count"], record["decision"]
     lines = [
-        "## Direction record (pending)", "",
+        f"## Direction record ({record['status']})", "",
         f"Version `{record['version']}`, gate `{record['gate']}`, status `{record['status']}`, prepared by role "
-        f"`{record['prepared_by']['role']}` ({record['prepared_by']['ref']}). Participant count: not recorded "
-        "(null; no study has run). Decision: none (null). Token contract: "
+        f"`{record['prepared_by']['role']}` ({record['prepared_by']['ref']}). Participant count: "
+        + ("not recorded (null; no study has run)" if count is None else str(count)) + ". Decision: "
+        + ("none (null)" if decision is None else f"`{decision['selected']}`") + ". Token contract: "
         f"`{record['token_contract']['state']}` ({record['token_contract']['owner_issue']}).", "",
         "Evidence:", "",
     ]
@@ -651,6 +653,17 @@ def render_markdown(model):
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
+def emit(text):
+    """Write UTF-8 with LF line endings on every platform, so the regenerated view stays byte-identical."""
+    stream = getattr(sys.stdout, "buffer", None)
+    if stream is None:
+        sys.stdout.write(text)
+        return
+    sys.stdout.flush()
+    stream.write(text.encode("utf-8"))
+    stream.flush()
+
+
 def load_and_check(root, sources=None):
     root = Path(root)
 
@@ -672,7 +685,7 @@ def main(argv=None, root=None, sources=None):
             print(structure_line(model) + "; readiness not evaluated.")
             return 0
         if args.render:
-            sys.stdout.write(render_markdown(model))
+            emit(render_markdown(model))
             return 0
         gaps = readiness(model)
         status = NOT_GREEN if any(gaps.values()) else GREEN

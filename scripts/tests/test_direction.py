@@ -748,6 +748,23 @@ class RenderTests(FilesCase):
             module.main(["--render", "--structure"], root=self.layout(Fixture()), sources=FakeSources())
         self.assertEqual(caught.exception.code, 2)
 
+    def test_render_emits_utf8_bytes_with_lf_through_a_binary_buffer(self):
+        fixture = Fixture()
+        raw = io.BytesIO()
+        stdout = io.TextIOWrapper(raw, encoding="cp1252", newline="\r\n")
+        with contextlib.redirect_stdout(stdout):
+            code = module.main(["--render"], root=self.layout(fixture), sources=FakeSources())
+        self.assertEqual(code, 0)
+        self.assertEqual(raw.getvalue(), module.render_markdown(fixture.check()).encode("utf-8"))
+        self.assertNotIn(b"\r", raw.getvalue())
+
+    def test_record_paragraph_follows_the_record(self):
+        record = Fixture().check().record
+        self.assertIn("Participant count: not recorded (null; no study has run). Decision: none (null).",
+                      "\n".join(module.render_record(record)))
+        record["participant_count"], record["decision"] = 12, {"selected": "DIR-03"}
+        self.assertIn("Participant count: 12. Decision: `DIR-03`.", "\n".join(module.render_record(record)))
+
     def test_table_cells_escape_pipes(self):
         self.assertEqual(module.table(("A",), [("x | y",)]), ["| A |", "|---|", "| x \\| y |"])
 
