@@ -121,12 +121,16 @@ CONTENT_SHAPES = (
 )
 TOKEN = re.compile(r"[A-Za-z0-9+/=_-]{32,}")
 HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
-# The no-raw-token rule (HC-m9): applies to every string of the direction record only.
+# The no-raw-token rule (HC-m9): applies to every string of the direction record and the probes; only candidates
+# may carry candidate-scoped illustrative values. Issue references are removed first, so `docs#126` is not a color
+# while `tone#F7F3E8` is; a repository name followed by a decimal number (`web#123`) is read as an issue reference.
 RAW_TOKEN = re.compile(
-    r"(?i)(?<![A-Za-z0-9])#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\s*\(|"
-    r"\b[0-9]+(?:\.[0-9]+)?\s?(?:px|dp|sp|pt|rem|em)\b|\bfont-(?:family|weight|size)\b|"
+    r"(?i)#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\s*\(|"
+    r"\b[0-9]+(?:\.[0-9]+)?\s*(?:px|dp|sp|pt|rem|em)\b|\bfont-(?:family|weight|size)\b|"
     r"\b(?:colou?r|spacing|radius|elevation|typography|font|motion|shadow)\.[a-z]|(?<![A-Za-z0-9])--[a-z][a-z0-9-]*"
 )
+TEXT_ISSUE_REF = re.compile(
+    r"(?:pending:)?(?:PenniLogic/)?\b(?:docs|android|web|admin|api|contracts|infra)#[1-9][0-9]*\b")
 # Probe text may not reference asset files: probes are static text descriptions without external assets.
 ASSET = re.compile(r"(?i)\.(?:png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf|js|mjs|css|html?|mp4|webm|lottie)\b")
 # Grounding pins are the only exempt strings, and only with their exact grammar.
@@ -141,7 +145,8 @@ CATEGORY_DEFAULT = re.compile(r"(?:^|_)(?:fintech|neobank|dashboard|banking_app|
 
 STRUCTURE_RULES = (
     "input.unreadable_or_invalid", "schema.invalid",
-    "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.mixed_script",
+    "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.invisible_character",
+    "content.mixed_script",
     "content.secret_shape",
     "content.markup", "content.url_shape", "content.email_shape", "content.account_shape", "content.gamification",
     "content.shame_language", "content.trust_theater",
@@ -152,7 +157,7 @@ STRUCTURE_RULES = (
     "grounding.not_accepted", "grounding.unavailable", "grounding.digest_mismatch",
     "contrast.duplicate_role", "contrast.unknown_role", "contrast.duplicate_pair", "contrast.required_pair_missing",
     "contrast.result_mismatch",
-    "probe.count", "probe.topic_mismatch", "probe.markup", "probe.external_asset", "probe.not_synthetic",
+    "probe.count", "probe.topic_mismatch", "probe.markup", "probe.external_asset", "probe.raw_value", "probe.not_synthetic",
     "probe.unsafe_access_depiction", "probe.candidate_coverage",
     "record.version_grammar", "record.raw_token", "record.candidate_mismatch", "record.unknown_role",
     "record.semantic_roles_incomplete", "record.final_token_contract", "record.participant_count_zero",
@@ -238,8 +243,10 @@ def _secret_token(text):
 def fold(text):
     """The NFKC compatibility form with every non-ASCII decimal digit as its ASCII digit.
 
-    Shape and lexicon scans run on the text and on this form, so fullwidth letters, ligatures, mathematical
-    alphanumerics or Devanagari digits cannot carry a refused word, raw value or account-like number past them.
+    Shape and lexicon scans run on the text, on this form and on its Latin skeleton (see forms), so fullwidth
+    letters, ligatures, mathematical alphanumerics or Devanagari digits do not carry a refused word, raw value or
+    account-like number past them; invisible marks are refused outright. Residual: look-alikes outside the
+    CONFUSABLE subset (for example Armenian or Cherokee letters, or rarer Cyrillic and Greek forms) are not mapped.
     """
     if text.isascii():
         return text
@@ -248,6 +255,33 @@ def fold(text):
 
 
 HOMOGLYPH_SCRIPTS = {"CYRILLIC", "GREEK"}
+# Unicode Default_Ignorable_Code_Point (DerivedCoreProperties): invisible marks that render as nothing, so a refused
+# word can hide behind them. Some are category Mn or Lo and pass str.isprintable(), hence an explicit list.
+DEFAULT_IGNORABLE = re.compile(
+    "[\u00ad\u034f\u061c\u115f\u1160\u17b4\u17b5\u180b-\u180f\u200b-\u200f\u202a-\u202e\u2060-\u206f"
+    "\u3164\ufe00-\ufe0f\ufeff\uffa0\ufff0-\ufff8\U0001bca0-\U0001bca3\U0001d173-\U0001d17a"
+    "\U000e0000-\U000e0fff]")
+# Cyrillic and Greek letters that render like Latin ones (a subset of Unicode confusables), mapped to the Latin letter
+# they imitate, so a whole word spelled in look-alikes is scanned as the Latin word it shows.
+CONFUSABLE = str.maketrans(dict(zip(
+    "\u0430\u0435\u043e\u0440\u0441\u0443\u0445\u0455\u0456\u0458\u04bb\u04cf\u0501\u051b\u051d"
+    "\u0410\u0412\u0415\u041a\u041c\u041d\u041e\u0420\u0421\u0422\u0425\u0405\u0406\u0408\u04ae"
+    "\u03b1\u03bf\u03c1\u03b9\u03ba\u03bd\u03c5\u03c4\u03c7"
+    "\u0391\u0392\u0395\u0396\u0397\u0399\u039a\u039c\u039d\u039f\u03a1\u03a4\u03a5\u03a7",
+    "aeopcyxsijhldqw" "ABEKMHOPCTXSIJY" "aopikvutx" "ABEZHIKMNOPTYX", strict=True)))
+
+
+def skeleton(text):
+    """The text with Cyrillic and Greek look-alike letters replaced by the Latin letters they imitate."""
+    return text if text.isascii() else text.translate(CONFUSABLE)
+
+
+def forms(text):
+    """The distinct forms every shape and lexicon scan runs on: as written, folded, and its Latin skeleton."""
+    if text.isascii():
+        return (text,)
+    folded = fold(text)
+    return tuple(dict.fromkeys((text, folded, skeleton(folded))))
 
 
 def mixed_script(text):
@@ -265,12 +299,12 @@ def scan_text(text, subject):
     require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
     require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
     require(text.isprintable(), "content.unprintable_character", *subject)
+    require(DEFAULT_IGNORABLE.search(text) is None, "content.invisible_character", *subject)
     require(not mixed_script(text), "content.mixed_script", *subject)
-    folded = fold(text)
-    forms = (text,) if folded == text else (text, folded)
-    require(not any(_secret_token(form) for form in forms), "content.secret_shape", *subject)
+    variants = forms(text)
+    require(not any(_secret_token(form) for form in variants), "content.secret_shape", *subject)
     for rule, pattern in CONTENT_SHAPES:
-        require(not any(pattern.search(form) for form in forms), rule, *subject)
+        require(not any(pattern.search(form) for form in variants), rule, *subject)
 
 
 def strings(document):
@@ -297,10 +331,15 @@ def guard_content(document):
             scan_text(text, subject)
 
 
+def raw_value(text):
+    """True when any form of the text, with issue references removed, shows a raw color, dimension, font or token."""
+    return any(RAW_TOKEN.search(TEXT_ISSUE_REF.sub(" ", form)) for form in forms(text))
+
+
 def guard_record_tokens(record):
     """The no-raw-token rule: the direction record exposes semantic roles only (HC-m9)."""
     for text, subject, _ in strings(record):
-        require(not any(RAW_TOKEN.search(form) for form in {text, fold(text)}), "record.raw_token", *subject)
+        require(not raw_value(text), "record.raw_token", *subject)
 
 
 def trusted_git(root):
@@ -442,7 +481,7 @@ def check_candidates(document, sources):
         identifier = candidate["id"]
         require(all(candidate[key] for key in ("risks", "accessibility_notes", "persona_assumptions")),
                 "candidate.incomplete", identifier)
-        name = candidate["name"].casefold()
+        name = fold(candidate["name"]).casefold()
         require(name not in names, "candidate.name_duplicate", identifier)
         require(candidate["material_tradition"] not in materials, "candidate.material_not_distinct", identifier)
         require(candidate["graphic_tradition"] not in graphics, "candidate.graphic_not_distinct", identifier)
@@ -477,7 +516,10 @@ def check_probes(document):
         require(probe["format"] == "text", "probe.markup", identifier)
         require(probe["data_origin"] == "synthetic", "probe.not_synthetic", identifier)
         texts = [probe["scenario"], *(item["description"] for item in probe["renderings"])]
-        require(not any(ASSET.search(text) for text in texts), "probe.external_asset", identifier)
+        require(not any(ASSET.search(form) for text in texts for form in forms(text)), "probe.external_asset",
+                identifier)
+        # Only candidates may carry candidate-scoped illustrative values; a probe is described in semantic terms.
+        require(not any(raw_value(text) for text, _, _ in strings(probe)), "probe.raw_value", identifier)
         depiction = probe["access_depiction"]
         require(depiction != "ordinary_browsing" and depiction == REQUIRED_DEPICTION.get(probe["topic"], depiction),
                 "probe.unsafe_access_depiction", identifier)

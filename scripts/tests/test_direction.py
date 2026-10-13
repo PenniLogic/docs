@@ -243,6 +243,29 @@ class SchemaAndContentTests(Case):
             with self.subTest(text=text):
                 self.refuses(lambda f, text=text: at(f, 4).update(intended_feel=text), rule, "DIR-04")
 
+    def test_invisible_marks_refused(self):
+        for mark in ("\ufe0f", "\u034f", "\u17b4", "\u3164", "\U000e0100", "\u180b"):
+            with self.subTest(mark=hex(ord(mark))):
+                self.refuses(lambda f, mark=mark: at(f, 4).update(intended_feel=f"Calm and pl{mark}ain."),
+                             "content.invisible_character", "DIR-04")
+
+    def test_whole_word_look_alikes_are_scanned_as_latin(self):
+        cases = (
+            ("content.trust_theater", "A \u0455\u04bb\u0456\u0435\u04cf\u0501 shows safety."),  # all-Cyrillic shield
+            ("content.gamification", "Your \u03c7\u03a1 grows."),  # Greek chi and rho for xP
+        )
+        for rule, text in cases:
+            with self.subTest(text=text):
+                self.refuses(lambda f, text=text: at(f, 4).update(intended_feel=text), rule, "DIR-04")
+
+    def test_fullwidth_category_default_name_refused(self):
+        self.refuses(lambda f: at(f, 3).update(name="\uff2e\uff45\uff4f\uff42\uff41\uff4e\uff4b Direction"),
+                     "candidate.category_default", "DIR-03")
+
+    def test_fullwidth_dot_asset_reference_refused(self):
+        self.refuses(lambda f: probe(f, 1)["renderings"][0].update(description="Shows hero\uff0epng full width."),
+                     "probe.external_asset", "PRB-01")
+
     def test_greek_or_cyrillic_words_on_their_own_are_allowed(self):
         fixture = Fixture()
         at(fixture, 4)["intended_feel"] = "Calm, like \u03b7\u03c1\u03b5\u03bc\u03af\u03b1 or \u0441\u043f\u043e\u043a\u043e\u0439\u043d\u043e."
@@ -439,6 +462,20 @@ class ProbeTests(Case):
         self.refuses(lambda f: probe(f, 1)["renderings"][2].update(description="Shows hero.png large."),
                      "probe.external_asset", "PRB-01")
 
+    def test_raw_values_refused_in_probes(self):
+        for text in ("Ledger rows on #F7F3E8 paper.", "Ink is rgb(31, 42, 68).", "Rows have 16dp padding.",
+                     "Set in font-family Georgia.", "Rows use 16 \uff50\uff58 padding.", "Ink is tone#1a2b3c."):
+            with self.subTest(text=text):
+                self.refuses(lambda f, text=text: probe(f, 2)["renderings"][3].update(description=text),
+                             "probe.raw_value", "PRB-02")
+        self.refuses(lambda f: probe(f, 4).update(scenario="An operator sees margin 8 pt."), "probe.raw_value",
+                     "PRB-04")
+
+    def test_issue_references_and_amounts_in_probes_are_not_raw_values(self):
+        fixture = Fixture()
+        probe(fixture, 1)["scenario"] = "Synthetic plan tracked in docs#53 and PenniLogic/infra#22: INR 1,000 left."
+        self.assertIsInstance(fixture.check(), module.Model)
+
     def test_sharing_as_ordinary_browsing_refused(self):
         self.refuses(lambda f: probe(f, 3).update(access_depiction="ordinary_browsing"),
                      "probe.unsafe_access_depiction", "PRB-03")
@@ -477,10 +514,16 @@ class RecordTests(Case):
     def test_raw_tokens_refused_in_the_record(self):
         for text in ("Surface is #1A1A1A.", "Use rgb(0, 0, 0).", "Pad 16dp.", "Set font-family here.",
                      "Use color.primary.", "Use --surface-bg.",
-                     "Surface is \uff03\uff11A1A1A.", "Pad \uff11\uff16dp.", "Pad \u0967\u096cdp."):
+                     "Surface is \uff03\uff11A1A1A.", "Pad \uff11\uff16dp.", "Pad \u0967\u096cdp.",
+                     "Platform themes reuse tone#F7F3E8.", "Use 48  dp touch targets.", "Pad 16   px.",
+                     "See docs#55abc.", "Ink is #fff."):
             with self.subTest(text=text):
                 self.refuses(lambda f, text=text: f.record["implementation_consequences"].append(text),
                              "record.raw_token")
+
+    def test_invisible_mark_inside_a_dimension_refused(self):
+        self.refuses(lambda f: f.record["implementation_consequences"].append("Pad 16\ufe0fdp around controls."),
+                     "content.invisible_character")
 
     def test_duplicate_references_refused(self):
         self.refuses(lambda f: f.record["held_gates"].append("pending:PenniLogic/docs#66"), "record.duplicate_entry")
