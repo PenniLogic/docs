@@ -868,10 +868,21 @@ def render_tail(model):
     ]
 
 
+def local_path(root, relative):
+    """root/relative, refused (OSError) when any component below the root is a symlink, so a planted link cannot
+    redirect a read or the summary write outside the repository."""
+    path = Path(root)
+    for part in Path(relative).parts:
+        path = path / part
+        if path.is_symlink():
+            raise OSError("refusing a symlinked path")
+    return path
+
+
 def load_and_check(root, base=None):
     root = Path(root)
     sources = GitSources(root, base)
-    document, schema = support.load_json(root / DATA), support.load_json(root / SCHEMA)
+    document, schema = support.load_json(local_path(root, DATA)), support.load_json(local_path(root, SCHEMA))
     return check(document, schema, sources, base=read_base(sources))
 
 
@@ -901,14 +912,12 @@ def main(argv=None, root=None, loader=None, today=None):
         summary = render_summary(model, gaps)
         status = NOT_GREEN if any(gaps.values()) else GREEN
         if args.write_summary:
-            target = root / SUMMARY
-            if target.is_symlink():
-                raise OSError("refusing to write the summary through a symlink")
+            target = local_path(root, SUMMARY)
             target.write_text(summary, encoding="utf-8", newline="\n")
             print(f"UX outcomes summary written to {SUMMARY} ({status}).")
             return 0
         try:
-            current = (root / SUMMARY).read_bytes()
+            current = local_path(root, SUMMARY).read_bytes()
         except OSError:
             current = None
         require(current == summary.encode("utf-8"), "summary.drift")

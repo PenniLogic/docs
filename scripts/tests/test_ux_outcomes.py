@@ -845,6 +845,31 @@ class CliTests(CatalogueCase):
         self.assertEqual((code, out.getvalue()), (1, ""))
         self.assertEqual(err.getvalue().strip(), "UX outcomes check refused: input.unreadable_or_invalid")
 
+    def symlink_or_skip(self, link, target):
+        try:
+            link.symlink_to(target, target_is_directory=target.is_dir())
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks unavailable")
+
+    def test_local_path_control_and_symlinked_parent(self):
+        # Self-review pass 2: only the summary file itself was checked, not its directory, and reads followed links.
+        self.assertEqual(module.local_path(self.root, module.SUMMARY), self.root / module.SUMMARY)
+        outside = self.root / "outside"
+        outside.mkdir()
+        (self.root / "governance").rmdir()
+        self.symlink_or_skip(self.root / "governance", outside)
+        with self.assertRaises(OSError):
+            module.local_path(self.root, module.DATA)
+
+    def test_write_summary_refuses_a_symlinked_directory(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        (self.root / "governance").rmdir()
+        self.symlink_or_skip(self.root / "governance", outside)
+        code, _, err = self.main("--write-summary")
+        self.assertEqual((code, err.strip()), (1, "UX outcomes check refused: input.unreadable_or_invalid"))
+        self.assertEqual(list(outside.iterdir()), [])
+
     def test_write_summary_refuses_a_symlink(self):
         target = self.root / module.SUMMARY
         try:
