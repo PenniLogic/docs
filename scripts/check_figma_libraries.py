@@ -13,8 +13,9 @@ absent from the pin, and pinned components without a governance record, are read
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that passed their own
 grammar (C-*, LIB-*, LIB-*@SemVer, TT-NN, design-gates role IDs, PenniLogic/<repo>#N); input text is never echoed.
-Readiness gaps (the docs#76 direction, the docs#55 token grammar, unrecorded approvals, a pending CDO decision, live
-Figma verification and registry coverage) are counted, never filled in, and keep the default mode NOT GREEN.
+Readiness gaps (the docs#76 direction, the docs#55 token grammar, unrecorded approvals, a pending CDO decision or
+migration plan, live Figma verification, the unchecked base-revision continuity of published records and registry
+coverage) are counted, never filled in, and keep the default mode NOT GREEN; GREEN is unreachable in this version.
 Nothing here contacts Figma or GitHub, records an approval, publishes a library, grants or revokes access, or proves
 live permission enforcement: the tabletop is synthetic and `live_verified` stays false.
 
@@ -170,7 +171,7 @@ STRUCTURE_RULES = (
 READINESS_RULES = (
     "readiness.direction_missing", "readiness.tokens_unpublished", "readiness.approval_not_recorded",
     "readiness.cdo_decision_pending", "readiness.cdo_decision_unverified", "readiness.migration_plan_pending",
-    "readiness.live_verification_missing",
+    "readiness.live_verification_missing", "readiness.continuity_unchecked",
     "readiness.component_not_in_registry", "readiness.registry_component_ungoverned",
 )
 
@@ -631,8 +632,8 @@ def decide(scenario, policy, libraries):
     library, role, action = scenario["library"], scenario["role"], scenario["action"]
     if scenario["offboarded"] or role not in policy.roles:
         return "refused"  # offboarding revokes every grant and session (design-operations.md section 7)
-    if action in ("public_link", "export"):
-        return "refused"  # E34-F06: public links, external sharing and asset export are disabled
+    if action in ("public_link", "external_share", "export"):
+        return "refused"  # E34-F06 (public links, external sharing) and the ticket (asset export) disable these
     if action == "publish":
         return "model_permitted" if role in libraries[library]["publish_roles"] else "refused"
     if action == "edit":
@@ -660,7 +661,7 @@ def check_tabletop(document, policy, libraries):
         require(any(item["action"] == "publish" and item["library"] == library and item["offboarded"]
                     and item["role"] in policy.library_maintainers(library) for item in scenarios),
                 "tabletop.coverage_missing", library)
-    for action in ("public_link", "export"):
+    for action in ("public_link", "external_share", "export"):
         require(any(item["action"] == action for item in scenarios), "tabletop.coverage_missing")
     # The contribution path itself: a feature squad edits its candidate in LIB-CANDIDATE.
     require(any(item["action"] == "edit" and item["library"] == "LIB-CANDIDATE" and not item["offboarded"]
@@ -742,8 +743,13 @@ def readiness(model):
         if (release["migration_plan_ref"] or "").startswith("pending:"):
             # Global rule 8: a `pending:` reference is a visible gap until the plan exists.
             gaps["readiness.migration_plan_pending"].add(f"{library}@{current}")
-    for scenario in document["tabletop"]:
-        gaps["readiness.live_verification_missing"].add(scenario["id"])
+    for library in SHARED:
+        # Live evidence per governed shared library (feature-squad publish denial, maintainer offboarding revocation,
+        # link/export/external-access audit); the synthetic tabletop never closes it (`tabletop.live_claim`).
+        gaps["readiness.live_verification_missing"].add(library)
+        # One document is checked, never its base revision: an in-place contract change, or the removal or reversion
+        # of a published or deprecated record, is not detected until a later checker change adds that comparison.
+        gaps["readiness.continuity_unchecked"].add(library)
     gaps["readiness.component_not_in_registry"].update(set(model.components) - set(model.pinned))
     gaps["readiness.registry_component_ungoverned"].update(set(model.pinned) - set(model.components))
     return {rule: sorted(subjects) for rule, subjects in gaps.items()}
@@ -802,7 +808,8 @@ def render_mirror(model):
                    [(key, item["kind"], str(TOPOLOGY[key][1]), item["figma_file"], item["figma_page"],
                      item["owner_role"], item["publish_roles"], item["consumes"], item["status"])
                     for key, item in model.libraries.items()])
-    lines += ["", "### D14 component dependency and variant map", ""]
+    # Library level only: records carry no component-to-component dependency, so that part of D14 is held.
+    lines += ["", "### D14 library consumption and variant map (library level)", ""]
     for key, item in model.libraries.items():
         members = sorted(identifier for identifier, component in model.components.items()
                          if component["library"] == key)

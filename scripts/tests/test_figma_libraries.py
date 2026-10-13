@@ -139,6 +139,7 @@ def tabletop():
         ("public_link", "systems", "LIB-COMPONENTS", False, "refused"),
         ("export", "systems", "LIB-FOUNDATION", False, "refused"),
         ("edit", "android_design", "LIB-CANDIDATE", False, "model_permitted"),
+        ("external_share", "web_design", "LIB-WEB", False, "refused"),
     ]
     return [{"id": f"TT-{index:02d}", "action": action, "role": role, "library": name, "offboarded": offboarded,
              "expected": expected, "evidence_class": "tabletop", "live_verified": False}
@@ -261,7 +262,8 @@ class BaselineTests(unittest.TestCase):
             "readiness.cdo_decision_pending": ["LIB-COMPONENTS@2.0.0"],
             "readiness.cdo_decision_unverified": ["LIB-ANDROID@1.0.0", "LIB-COMPONENTS@1.0.0"],
             "readiness.migration_plan_pending": ["LIB-COMPONENTS@2.0.0"],
-            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 17)],
+            "readiness.live_verification_missing": sorted(module.SHARED),
+            "readiness.continuity_unchecked": sorted(module.SHARED),
             "readiness.component_not_in_registry": ["C-SYN-BUTTON-AND", "C-SYN-LOCAL"],
             "readiness.registry_component_ungoverned": ["C-SYN-PINNED"],
         })
@@ -629,6 +631,20 @@ class TabletopTests(RuleCase):
     def test_contribution_path_case_is_required(self):
         self.assertRefused(lambda d: find(d, "tabletop", "TT-16").update(role="systems"),
                            "tabletop.coverage_missing", "LIB-CANDIDATE")
+
+    def test_external_share_case_is_required(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-17").update(action="export"),
+                           "tabletop.coverage_missing")
+
+    def test_external_share_is_refused_even_for_maintainers(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-17").update(role="systems", expected="model_permitted"),
+                           "tabletop.outcome_mismatch", "TT-17")
+
+    def test_more_tabletop_rows_do_not_change_live_verification_gaps(self):
+        document = fixture()
+        document["tabletop"].append(dict(find(document, "tabletop", "TT-13"), id="TT-18"))
+        self.assertEqual(module.readiness(run_check(document))["readiness.live_verification_missing"],
+                         sorted(module.SHARED))
 
     def test_export_case_is_required(self):
         self.assertRefused(lambda d: find(d, "tabletop", "TT-15").update(action="public_link"),
@@ -1141,7 +1157,8 @@ class CommandLineTests(unittest.TestCase):
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1", "readiness.approval_not_recorded: 5",
             "readiness.cdo_decision_pending: 1", "readiness.cdo_decision_unverified: 0",
             "readiness.migration_plan_pending: 0",
-            "readiness.live_verification_missing: 16", "readiness.component_not_in_registry: 0",
+            "readiness.live_verification_missing: 5", "readiness.continuity_unchecked: 5",
+            "readiness.component_not_in_registry: 0",
             "readiness.registry_component_ungoverned: 0",
         ])
 
@@ -1207,7 +1224,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(len(model.components), 57)
         self.assertEqual({(item["library"], item["status"]) for item in model.components.values()},
                          {("LIB-COMPONENTS", "draft")})
-        self.assertEqual(len(model.document["tabletop"]), 28)
+        self.assertEqual(len(model.document["tabletop"]), 29)
         self.assertFalse(any(item["live_verified"] for item in model.document["tabletop"]))
         self.assertIsNone(model.document["direction_ref"])
 
@@ -1228,7 +1245,8 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.cdo_decision_pending": sorted(f"{name}@1.0.0" for name in module.SHARED),
             "readiness.cdo_decision_unverified": [],
             "readiness.migration_plan_pending": [],
-            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 29)],
+            "readiness.live_verification_missing": sorted(module.SHARED),
+            "readiness.continuity_unchecked": sorted(module.SHARED),
             "readiness.component_not_in_registry": [],
             "readiness.registry_component_ungoverned": [],
         })
@@ -1253,7 +1271,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1",
             "readiness.approval_not_recorded: 5", "readiness.cdo_decision_pending: 5",
             "readiness.cdo_decision_unverified: 0", "readiness.migration_plan_pending: 0",
-            "readiness.live_verification_missing: 28",
+            "readiness.live_verification_missing: 5", "readiness.continuity_unchecked: 5",
             "readiness.component_not_in_registry: 0", "readiness.registry_component_ungoverned: 0",
         ])
 

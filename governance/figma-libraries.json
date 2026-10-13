@@ -1638,6 +1638,16 @@
       "expected": "model_permitted",
       "evidence_class": "tabletop",
       "live_verified": false
+    },
+    {
+      "id": "TT-29",
+      "action": "external_share",
+      "role": "systems",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
     }
   ],
   "approvals": [

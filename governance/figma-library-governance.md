@@ -34,7 +34,7 @@ candidate libraries consume both (`topology.invalid_consumption`, `topology.miss
 
 | Library | Layer | Role in the system | Reserved location |
 | --- | --- | --- | --- |
-| `LIB-FOUNDATION` | 0 | Foundations and assets; token values arrive from docs#55, never authored here | `02 - Foundations library` / `Foundations` |
+| `LIB-FOUNDATION` | 0 | Foundations; token values arrive from docs#55, never authored here. The reserved `Assets` page of the same file (in the `foundations_tokens` class) is not placed in a governed library by this version (held for Design Systems) | `02 - Foundations library` / `Foundations` |
 | `LIB-COMPONENTS` | 1 | Shared semantic components: one semantic contract per component, whichever platforms support it | `03 - Components library` / `Components` |
 | `LIB-ANDROID`, `LIB-WEB`, `LIB-ADMIN` | 2 | Platform variants; each record is a variant of one `LIB-COMPONENTS` component and supports only its own platform | `03 - Components library` / `Android variants`, `Web variants`, `Admin variants` |
 | `LIB-CANDIDATE` | 3 | Feature-squad contribution candidates; no shared file, never published | none (proposal branches only) |
@@ -102,8 +102,9 @@ no visual direction is selected.
    parent (`component.variant_parent_unpublished`). The lint matches words, not meaning: synonyms are
    left to the Design Systems review, and reviewers reuse the published component instead.
 3. **Review and test.** Design Systems (`systems`) reviews the candidate against the published-component
-   contract (section 3); Accessibility, UX Engineering and Design QA verification follow the gate rules of
-   [`design-operations.md`](design-operations.md) sections 3 and 6. Promotion needs the evidence that
+   contract (section 3). Under the `components` class of `design-gates.json`, Design QA verifies
+   component changes and UX Engineering is consulted; Accessibility verifies `foundations_tokens` changes.
+   The gate rules of [`design-operations.md`](design-operations.md) sections 3 and 6 apply. Promotion needs the evidence that
    section 6 lists (descriptions, property names, variants, accessibility notes, content limits, code
    targets, a versioned manifest, consumer compatibility evidence, independent verification, fresh gates).
 4. **Release.** Only the assigned Systems context prepares promotion and DesignOps serializes it from
@@ -134,7 +135,11 @@ Proposal: a library's first release is classified major and therefore carries a 
 empty shell's `1.0.0` is behind a `pending` CDO decision (section 11). If section 6 is confirmed to
 cover breaking changes only, the first-release row is dropped and those five gaps go with it.
 
-Breaking changes (criterion 3) must be major (`release.breaking_not_major`), carry a migration plan
+`breaking` is declared on the release record. The validator checks one document and never compares it
+with its base revision, so an undeclared breaking change (an in-place change of a published contract)
+is not detected; that comparison is held until publication is enabled (`readiness.continuity_unchecked`,
+section 10). Today no real record or release is published (`held.publication`), so there is nothing to
+change in place. Declared breaking changes (criterion 3) must be major (`release.breaking_not_major`), carry a migration plan
 reference (`release.migration_plan_missing`) and a CDO approval record (`release.cdo_approval_missing`).
 References are `PenniLogic/<repo>#N` or `pending:PenniLogic/<repo>#N`; free text is refused
 (`reference.invalid`). A CDO record is `pending` with no decision source, or `recorded` with a
@@ -152,8 +157,10 @@ platform/library/frame versions). Expand, migrate consumers, then retire: no sil
 
 ## 6. Deprecation and migration
 
-A deprecated component (criterion 4) keeps its record and its status `deprecated`; the deprecation
-record names:
+A deprecated component (criterion 4) must keep its record and its status `deprecated` until its removal
+release. That is a process obligation in this version: deleting or reverting a deprecated or published
+record is not detected across revisions (`readiness.continuity_unchecked`, section 10), and continued
+availability is the declared `available_until_removal` flag. The deprecation record names:
 
 - a replacement: another published component of the same library (`deprecation.replacement_missing`,
   `deprecation.replacement_invalid`);
@@ -191,7 +198,7 @@ is not detected across revisions; section 10).
 | edit a shared library | its maintainers only; squads contribute through proposal branches | tabletop |
 | edit `LIB-CANDIDATE` | feature squads (their candidates, on their own proposal branches) and the maintainers | tabletop |
 | view, comment | any known role that is not offboarded; real access still needs a default-deny grant under section 7 of `design-operations.md` | tabletop |
-| public link, external sharing, asset export | nobody (E34-F06) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
+| public link, external sharing, asset export | nobody: public links and external sharing (E34-F06); asset export (the ticket's security requirement and the coordinator appendix) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
 | any action after offboarding | nobody; offboarding revokes every grant and session | `access.offboarding_not_revoking` |
 
 `model_permitted` means only that this role model would allow the request once real access is verified
@@ -202,9 +209,19 @@ request fails until real access has been verified; nothing here changes that.
 The tabletop (section 11) applies the model to synthetic requests. Every scenario is
 `evidence_class: tabletop` with `live_verified: false` (`tabletop.live_claim`); its expected outcome must
 equal the model's decision (`tabletop.outcome_mismatch`), and it must cover a non-offboarded feature
-squad and an offboarded maintainer publishing to each shared library, a public link, an export and a
-feature squad editing a candidate in `LIB-CANDIDATE` (`tabletop.coverage_missing`). A tabletop is not Figma enforcement: live publishing, offboarding and
-external-access audit evidence stay missing (`readiness.live_verification_missing`).
+squad and an offboarded maintainer publishing to each shared library, a public link, an external share,
+an export and a feature squad editing a candidate in `LIB-CANDIDATE` (`tabletop.coverage_missing`). A
+tabletop is not Figma enforcement: for each governed shared library, live evidence of feature-squad
+publish denial, maintainer offboarding revocation and the link, export and external-access audit stays
+missing (`readiness.live_verification_missing`, one gap per shared library however many tabletop rows
+exist; no row can close it because `live_verified` stays false).
+
+Threat finding E34-F06 (`governance/threat-model/records/E34.json`, handed off to docs#78) maps as
+follows: no public-link sharing -> `access.public_links` and the `public_link` tabletop case; external
+sharing -> `access.external_sharing` and the `external_share` case; library changes through a branch, a
+review and a versioned publish -> section 4 (`contribution.*`) and section 5 (`release.*`); publish rights
+limited to named maintainers -> `permission.*`; contributor access reviewed -> **not modelled**: no rule
+or record covers the periodic contributor access review, which stays a held process item (section 10).
 
 ## 9. Observability (definitions only)
 
@@ -222,25 +239,38 @@ Measured per platform once real libraries exist; no data is collected or reporte
 
 The validator refuses a structure failure with a static rule ID plus, at most, identifiers that passed
 their own grammar; it never echoes input text and fails closed. Its default mode reports every readiness
-gap (section 11 lists the current counts) and stays `NOT GREEN` while any exists.
+gap (section 11 lists the current counts) and stays `NOT GREEN` while any exists. `GREEN` is
+unreachable in this version by design: `readiness.tokens_unpublished`,
+`readiness.live_verification_missing` and `readiness.continuity_unchecked` close only when a later
+checker change integrates the held inputs below.
 
 | Item | Status in this change |
 | --- | --- |
 | Criterion 1: published-component contract | Rules and synthetic published fixtures; no real component is published |
 | Criterion 2: duplicate rejected by review and lint | Registry lint and fixtures; review by Design Systems is process, not yet exercised |
-| Criterion 3: breaking change needs major, migration plan, CDO | Rules and fixtures; every real CDO approval is `pending` |
-| Criterion 4: deprecation replacement, removal version, availability | Rules and fixtures |
+| Criterion 3: breaking change needs major, migration plan, CDO | Partial. Rules and fixtures for releases declared `breaking`; a published release must sit on published releases. Detecting an undeclared breaking change (in-place contract change against the base revision) is held (`readiness.continuity_unchecked`); every real CDO approval is `pending` |
+| Criterion 4: deprecation replacement, removal version, availability | Partial. Rules and fixtures for the deprecation record; availability is the declared `available_until_removal` flag. Detecting removal or reversion of a deprecated or published record across revisions is held (`readiness.continuity_unchecked`) |
 | Criterion 5: feature squads cannot publish to shared libraries | Permission model and synthetic tabletop only; live Figma enforcement unverified |
 | DoD 1: topology and contribution contract operational | Authored as a draft; not operational until live access, publishing and the decisions below exist |
 | DoD 2: Design Systems, DesignOps, Accessibility, UX Engineering, CDO approvals | `not_recorded` (section 11) |
 | DoD 3: versioning, permission and duplicate tests pass | `scripts/tests/test_figma_libraries.py` (synthetic fixtures; no network) |
 | DoD 4: native blocked-by edges | Administrative; not changed here |
+| Scope: component content limits | Not modelled: the record has no content-limit field; held for Design Systems content (T-DSY-04 to T-DSY-06) |
+| Scope: promotion evidence of `design-operations.md` section 6 (code targets, versioned manifest, consumer compatibility evidence) | Not modelled on the record; promotion is held (`held.publication`) until a later change adds them |
+| Scope: Design Systems Lead minor-release decision right | Stated in section 5; not recorded per release (only the CDO record exists), so a minor or patch release carries no decision record yet; held |
+| D14: component dependency and variant map | Library level only (section 11): consumption edges and platform variants. The component-to-component dependency map is held: records carry no dependency reference and `instance` properties name no target |
+| E34-F06: contributor access reviewed | Not modelled; held process item (section 8) |
 
 Held: the docs#76 direction decision (`direction_ref` stays `null`); the docs#55 token grammar
 (`token_refs` stay empty); authorized access to the real governed Figma libraries and live verification
 of publishing, offboarding and external-access audit; the Design Systems, DesignOps, Accessibility,
-UX Engineering and CDO decisions; independent reviews and native CI on the exact head; re-pinning the
-registry after docs#75 integrates.
+UX Engineering and CDO decisions (including confirmation of the section 5 proposals); independent
+reviews and native CI on the exact head; re-pinning the registry after docs#75 integrates; a base-revision
+continuity check (in-place contract changes, removal or reversion of published and deprecated records,
+for example against the merge-base with `origin/main` as the registry ledger does) before any
+publication is enabled; component content limits, code targets, versioned manifests and consumer
+compatibility evidence; the per-release Design Systems Lead decision record; the component dependency
+map; the contributor access review; placement of the reserved `Assets` page.
 
 ## 11. Generated records (do not edit)
 
@@ -262,7 +292,7 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | LIB-ADMIN | platform_variant | 2 | 03 - Components library | Admin variants | systems | systems | LIB-FOUNDATION, LIB-COMPONENTS | shell |
 | LIB-CANDIDATE | candidate | 3 | - | - | systems | - | LIB-FOUNDATION, LIB-COMPONENTS | shell |
 
-### D14 component dependency and variant map
+### D14 library consumption and variant map (library level)
 
 - LIB-FOUNDATION consumes -; 0 component records; variants: -
 - LIB-COMPONENTS consumes LIB-FOUNDATION; 57 component records; variants: -
@@ -375,6 +405,7 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | TT-26 | export | systems | LIB-FOUNDATION | no | refused | no |
 | TT-27 | export | admin_design | LIB-ADMIN | no | refused | no |
 | TT-28 | edit | android_design | LIB-CANDIDATE | no | model_permitted | no |
+| TT-29 | external_share | systems | LIB-COMPONENTS | no | refused | no |
 
 ### Required approvals
 
@@ -396,7 +427,8 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | readiness.cdo_decision_pending | 5 |
 | readiness.cdo_decision_unverified | 0 |
 | readiness.migration_plan_pending | 0 |
-| readiness.live_verification_missing | 28 |
+| readiness.live_verification_missing | 5 |
+| readiness.continuity_unchecked | 5 |
 | readiness.component_not_in_registry | 0 |
 | readiness.registry_component_ungoverned | 0 |
 

@@ -547,6 +547,7 @@
             "edit",
             "publish",
             "public_link",
+            "external_share",
             "export"
           ]
         },
