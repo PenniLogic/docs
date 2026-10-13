@@ -6,349 +6,1036 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "kind", "schema_version", "registry_version", "source_issue", "description", "imported_from",
-    "required_states", "component_states", "taxonomy_state_map", "id_ranges", "id_ledger",
-    "personas", "journeys", "user_stories", "flows", "screens", "components", "diagrams"
+    "kind",
+    "schema_version",
+    "registry_version",
+    "source_issue",
+    "description",
+    "imported_from",
+    "required_states",
+    "component_states",
+    "taxonomy_state_map",
+    "id_ranges",
+    "id_ledger",
+    "personas",
+    "journeys",
+    "user_stories",
+    "flows",
+    "screens",
+    "components",
+    "diagrams"
   ],
   "properties": {
-    "kind": {"const": "experience_coverage"},
-    "schema_version": {"const": 2},
-    "registry_version": {"$ref": "#/definitions/semver"},
-    "source_issue": {"const": "PenniLogic/docs#75"},
-    "description": {"$ref": "#/definitions/text"},
-    "imported_from": {"$ref": "#/definitions/source"},
-    "required_states": {"$ref": "#/definitions/state_vocabulary"},
-    "component_states": {"$ref": "#/definitions/state_vocabulary"},
-    "taxonomy_state_map": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/taxonomy_mapping"}},
-    "id_ranges": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/id_range"}},
-    "id_ledger": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/ledger_entry"}},
-    "personas": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/persona"}},
-    "journeys": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/journey"}},
-    "user_stories": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/user_story"}},
-    "flows": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/flow"}},
-    "screens": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/screen"}},
-    "components": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/component"}},
-    "diagrams": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/diagram"}}
+    "kind": {
+      "const": "experience_coverage"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 2
+    },
+    "registry_version": {
+      "$ref": "#/definitions/semver"
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#75"
+    },
+    "description": {
+      "$ref": "#/definitions/text"
+    },
+    "imported_from": {
+      "$ref": "#/definitions/source"
+    },
+    "required_states": {
+      "$ref": "#/definitions/state_vocabulary"
+    },
+    "component_states": {
+      "$ref": "#/definitions/state_vocabulary"
+    },
+    "taxonomy_state_map": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/taxonomy_mapping"
+      }
+    },
+    "id_ranges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/id_range"
+      }
+    },
+    "id_ledger": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/ledger_entry"
+      }
+    },
+    "personas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/persona"
+      }
+    },
+    "journeys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/journey"
+      }
+    },
+    "user_stories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/user_story"
+      }
+    },
+    "flows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/flow"
+      }
+    },
+    "screens": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/screen"
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/component"
+      }
+    },
+    "diagrams": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/diagram"
+      }
+    }
   },
   "definitions": {
-    "text": {"type": "string", "minLength": 1},
-    "optional_text": {"type": ["string", "null"], "minLength": 1},
-    "semver": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"},
-    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$(?![\\s\\S])"},
-    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"},
-    "portable_path": {"type": "string", "pattern": "^(?!\\.\\.?(?:/|$))[A-Za-z0-9_.-]+(?:/(?!\\.\\.?(?:/|$))[A-Za-z0-9_.-]+)*$(?![\\s\\S])"},
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "optional_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$(?![\\s\\S])"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"
+    },
+    "portable_path": {
+      "type": "string",
+      "pattern": "^(?!\\.\\.?(?:/|$))[A-Za-z0-9_.-]+(?:/(?!\\.\\.?(?:/|$))[A-Za-z0-9_.-]+)*$(?![\\s\\S])"
+    },
     "source": {
       "description": "design-gates `source` shape: a portable Git path at a full commit with the sha256 of the blob bytes.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["commit", "path", "sha256"],
+      "required": [
+        "commit",
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "commit": {"$ref": "#/definitions/commit"},
-        "path": {"$ref": "#/definitions/portable_path"},
-        "sha256": {"$ref": "#/definitions/digest"}
+        "commit": {
+          "$ref": "#/definitions/commit"
+        },
+        "path": {
+          "$ref": "#/definitions/portable_path"
+        },
+        "sha256": {
+          "$ref": "#/definitions/digest"
+        }
       }
     },
     "optional_source": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
-      "required": ["commit", "path", "sha256"],
+      "required": [
+        "commit",
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "commit": {"$ref": "#/definitions/commit"},
-        "path": {"$ref": "#/definitions/portable_path"},
-        "sha256": {"$ref": "#/definitions/digest"}
+        "commit": {
+          "$ref": "#/definitions/commit"
+        },
+        "path": {
+          "$ref": "#/definitions/portable_path"
+        },
+        "sha256": {
+          "$ref": "#/definitions/digest"
+        }
       }
     },
-    "gate_artifact_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"},
+    "gate_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"
+    },
     "optional_dependency": {
       "description": "design-gates `dependency` shape {artifact_id, gate_id, scope_sha256}. The validator refuses a present value (held.d6_reference) until it can resolve a pinned docs#86 / T-DQA-12 (docs#137) gate record, so it stays null.",
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
-      "required": ["artifact_id", "gate_id", "scope_sha256"],
+      "required": [
+        "artifact_id",
+        "gate_id",
+        "scope_sha256"
+      ],
       "properties": {
-        "artifact_id": {"$ref": "#/definitions/gate_artifact_id"},
-        "gate_id": {"$ref": "#/definitions/gate_artifact_id"},
-        "scope_sha256": {"$ref": "#/definitions/digest"}
+        "artifact_id": {
+          "$ref": "#/definitions/gate_artifact_id"
+        },
+        "gate_id": {
+          "$ref": "#/definitions/gate_artifact_id"
+        },
+        "scope_sha256": {
+          "$ref": "#/definitions/digest"
+        }
       }
     },
     "handoff_ref": {
       "description": "docs#86-owned D6 handoff grammar HND-<AND|WEB|ADM>-NNN@MAJOR.MINOR.PATCH. Refused when present (held.d6_reference) until the handoff can be resolved, so it stays null.",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^HND-(AND|WEB|ADM)-[0-9]{3}@(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"
     },
     "route_id": {
       "description": "Provisional opaque route identifier owned by docs#74. Refused when present (held.route_id) until an approved IA can be resolved, so it stays null.",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"
     },
     "plan_id": {
       "description": "Planning stable identifier grammar (epic E<NN> or ticket T-...), as in planning/source/schema/enums.schema.json.",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^(?:E[0-9]{2,}|T-[A-Z0-9]+(?:-[A-Z0-9]+)*)$(?![\\s\\S])"
     },
-    "issue": {"type": ["string", "null"], "pattern": "^PenniLogic/(?:\\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]*$(?![\\s\\S])"},
-    "client_issue": {"type": "string", "pattern": "^PenniLogic/(?:android|web|admin)#[1-9][0-9]*$(?![\\s\\S])"},
+    "issue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^PenniLogic/(?:\\.github|docs|contracts|api|ai-service|android|web|admin|infra)#[1-9][0-9]{0,5}$(?![\\s\\S])"
+    },
+    "client_issue": {
+      "type": "string",
+      "pattern": "^PenniLogic/(?:android|web|admin)#[1-9][0-9]{0,5}$(?![\\s\\S])"
+    },
     "ticket": {
       "description": "A ticket reference resolved offline against planning/issue-inventory.json; bare repo#N is not accepted.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["plan_id", "issue"],
+      "required": [
+        "plan_id",
+        "issue"
+      ],
       "properties": {
-        "plan_id": {"$ref": "#/definitions/plan_id"},
-        "issue": {"$ref": "#/definitions/issue"}
+        "plan_id": {
+          "$ref": "#/definitions/plan_id"
+        },
+        "issue": {
+          "$ref": "#/definitions/issue"
+        }
       }
     },
     "optional_ticket": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
-      "required": ["plan_id", "issue"],
+      "required": [
+        "plan_id",
+        "issue"
+      ],
       "properties": {
-        "plan_id": {"$ref": "#/definitions/plan_id"},
-        "issue": {"$ref": "#/definitions/issue"}
+        "plan_id": {
+          "$ref": "#/definitions/plan_id"
+        },
+        "issue": {
+          "$ref": "#/definitions/issue"
+        }
       }
     },
-    "tickets": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/ticket"}},
-    "platform": {"enum": ["android", "web", "admin"]},
-    "platforms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["shared", "android", "web", "admin"]}},
-    "state": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"},
-    "state_vocabulary": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/state"}},
-    "states": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/state"}},
-    "persona_id": {"type": "string", "pattern": "^P[0-9]{2}$(?![\\s\\S])"},
-    "journey_id": {"type": "string", "pattern": "^J[0-9]{2}$(?![\\s\\S])"},
-    "user_story_id": {"type": "string", "pattern": "^US-(AND|WEB|ADM)-[0-9]{2}$(?![\\s\\S])"},
-    "flow_id": {"type": "string", "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}$(?![\\s\\S])"},
-    "screen_id": {"type": "string", "pattern": "^S-(AND|WEB|ADM)-[0-9]{3}$(?![\\s\\S])"},
-    "component_id": {"type": "string", "pattern": "^C-[A-Z0-9]+(?:-[A-Z0-9]+)*$(?![\\s\\S])"},
-    "diagram_id": {"type": "string", "pattern": "^D[0-9]{2}$(?![\\s\\S])"},
+    "tickets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/ticket"
+      }
+    },
+    "platform": {
+      "enum": [
+        "android",
+        "web",
+        "admin"
+      ]
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "shared",
+          "android",
+          "web",
+          "admin"
+        ]
+      }
+    },
+    "state": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"
+    },
+    "state_vocabulary": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/state"
+      }
+    },
+    "states": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/state"
+      }
+    },
+    "persona_id": {
+      "type": "string",
+      "pattern": "^P[0-9]{2}$(?![\\s\\S])"
+    },
+    "journey_id": {
+      "type": "string",
+      "pattern": "^J[0-9]{2}$(?![\\s\\S])"
+    },
+    "user_story_id": {
+      "type": "string",
+      "pattern": "^US-(AND|WEB|ADM)-[0-9]{2}$(?![\\s\\S])"
+    },
+    "flow_id": {
+      "type": "string",
+      "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}$(?![\\s\\S])"
+    },
+    "screen_id": {
+      "type": "string",
+      "pattern": "^S-(AND|WEB|ADM)-[0-9]{3}$(?![\\s\\S])"
+    },
+    "component_id": {
+      "type": "string",
+      "pattern": "^C-[A-Z][A-Z0-9]{0,11}(?:-[A-Z][A-Z0-9]{0,11}){0,3}$(?![\\s\\S])"
+    },
+    "diagram_id": {
+      "type": "string",
+      "pattern": "^D[0-9]{2}$(?![\\s\\S])"
+    },
     "record_id": {
       "type": "string",
-      "pattern": "^(?:P[0-9]{2}|J[0-9]{2}|US-(?:AND|WEB|ADM)-[0-9]{2}|F-(?:AND|WEB|ADM)-[0-9]{2}|S-(?:AND|WEB|ADM)-[0-9]{3}|C-[A-Z0-9]+(?:-[A-Z0-9]+)*|D[0-9]{2})$(?![\\s\\S])"
+      "pattern": "^(?:P[0-9]{2}|J[0-9]{2}|US-(?:AND|WEB|ADM)-[0-9]{2}|F-(?:AND|WEB|ADM)-[0-9]{2}|S-(?:AND|WEB|ADM)-[0-9]{3}|C-[A-Z][A-Z0-9]{0,11}(?:-[A-Z][A-Z0-9]{0,11}){0,3}|D[0-9]{2})$(?![\\s\\S])"
     },
-    "kind": {"enum": ["persona", "journey", "user_story", "flow", "screen", "component", "diagram"]},
+    "kind": {
+      "enum": [
+        "persona",
+        "journey",
+        "user_story",
+        "flow",
+        "screen",
+        "component",
+        "diagram"
+      ]
+    },
     "taxonomy_mapping": {
       "description": "One shared client state: the registry state name and the product/client-state-taxonomy.json identifier.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "taxonomy_state"],
+      "required": [
+        "state",
+        "taxonomy_state"
+      ],
       "properties": {
-        "state": {"$ref": "#/definitions/state"},
-        "taxonomy_state": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$(?![\\s\\S])"}
+        "state": {
+          "$ref": "#/definitions/state"
+        },
+        "taxonomy_state": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$(?![\\s\\S])"
+        }
       }
     },
     "id_range": {
       "description": "ID space a role allocates from: numeric bounds for numbered kinds (null for component IDs); bounds are enforced in code.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "platform", "first", "last", "owner_role"],
+      "required": [
+        "kind",
+        "platform",
+        "first",
+        "last",
+        "owner_role"
+      ],
       "properties": {
-        "kind": {"$ref": "#/definitions/kind"},
-        "platform": {"enum": ["android", "web", "admin", null]},
-        "first": {"type": ["integer", "null"]},
-        "last": {"type": ["integer", "null"]},
-        "owner_role": {"type": "string", "pattern": "^[a-z][a-z_]*$(?![\\s\\S])"}
+        "kind": {
+          "$ref": "#/definitions/kind"
+        },
+        "platform": {
+          "enum": [
+            "android",
+            "web",
+            "admin",
+            null
+          ]
+        },
+        "first": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "last": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "owner_role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z_]*$(?![\\s\\S])"
+        }
       }
     },
     "ledger_entry": {
       "description": "Every ID ever issued; append-only against the base registry, retired IDs are never reused. name_sha256 is the sha256 of the UTF-8 bytes of the record's name (a user story's i_want) when the ID was first issued (the frozen import for imported IDs); it never changes and the active record must still match it, so a rename or repoint retires the ID and issues a new one.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "kind", "platform", "name_sha256", "status", "retired_reason"],
+      "required": [
+        "id",
+        "kind",
+        "platform",
+        "name_sha256",
+        "status",
+        "retired_reason"
+      ],
       "properties": {
-        "id": {"$ref": "#/definitions/record_id"},
-        "kind": {"$ref": "#/definitions/kind"},
-        "platform": {"enum": ["android", "web", "admin", null]},
-        "name_sha256": {"$ref": "#/definitions/digest"},
-        "status": {"enum": ["active", "retired"]},
-        "retired_reason": {"$ref": "#/definitions/optional_text"}
+        "id": {
+          "$ref": "#/definitions/record_id"
+        },
+        "kind": {
+          "$ref": "#/definitions/kind"
+        },
+        "platform": {
+          "enum": [
+            "android",
+            "web",
+            "admin",
+            null
+          ]
+        },
+        "name_sha256": {
+          "$ref": "#/definitions/digest"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "retired"
+          ]
+        },
+        "retired_reason": {
+          "$ref": "#/definitions/optional_text"
+        }
       }
     },
     "screen_proposal": {
       "description": "DesignOps-proposed values on this record awaiting confirmation by the owning discipline; null when none. Every listed field carries a value (never a null reason or an empty state list).",
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
-      "required": ["proposed_by", "fields"],
+      "required": [
+        "proposed_by",
+        "fields"
+      ],
       "properties": {
-        "proposed_by": {"const": "design_ops"},
+        "proposed_by": {
+          "const": "design_ops"
+        },
         "fields": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"enum": ["surface_type", "security_critical", "security_reason", "privacy_states", "authorization_states"]}
+          "items": {
+            "enum": [
+              "surface_type",
+              "security_critical",
+              "security_reason",
+              "privacy_states",
+              "authorization_states"
+            ]
+          }
         }
       }
     },
     "component_proposal": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
-      "required": ["proposed_by", "fields"],
+      "required": [
+        "proposed_by",
+        "fields"
+      ],
       "properties": {
-        "proposed_by": {"const": "design_ops"},
-        "fields": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["foundational"]}}
+        "proposed_by": {
+          "const": "design_ops"
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "foundational"
+            ]
+          }
+        }
       }
     },
     "qa_independence": {
       "description": "Independence of the QA owner as recorded evidence. Status verified is refused (held.qa_verification) until docs#126 defines a record the validator can resolve, so it stays unverified.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "evidence"],
+      "required": [
+        "status",
+        "evidence"
+      ],
       "properties": {
-        "status": {"enum": ["unverified", "verified"]},
-        "evidence": {"$ref": "#/definitions/optional_source"}
+        "status": {
+          "enum": [
+            "unverified",
+            "verified"
+          ]
+        },
+        "evidence": {
+          "$ref": "#/definitions/optional_source"
+        }
       }
     },
     "persona": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "jobs", "platforms", "owner_ticket"],
+      "required": [
+        "id",
+        "name",
+        "jobs",
+        "platforms",
+        "owner_ticket"
+      ],
       "properties": {
-        "id": {"$ref": "#/definitions/persona_id"},
-        "name": {"$ref": "#/definitions/text"},
-        "jobs": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/text"}},
-        "platforms": {"$ref": "#/definitions/platforms"},
-        "owner_ticket": {"$ref": "#/definitions/ticket"}
+        "id": {
+          "$ref": "#/definitions/persona_id"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "platforms": {
+          "$ref": "#/definitions/platforms"
+        },
+        "owner_ticket": {
+          "$ref": "#/definitions/ticket"
+        }
       }
     },
     "journey": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "critical", "persona_ids", "flow_ids", "owner_ticket"],
+      "required": [
+        "id",
+        "name",
+        "critical",
+        "persona_ids",
+        "flow_ids",
+        "owner_ticket"
+      ],
       "properties": {
-        "id": {"$ref": "#/definitions/journey_id"},
-        "name": {"$ref": "#/definitions/text"},
-        "critical": {"type": "boolean"},
-        "persona_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/persona_id"}},
-        "flow_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/flow_id"}},
-        "owner_ticket": {"$ref": "#/definitions/ticket"}
+        "id": {
+          "$ref": "#/definitions/journey_id"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "critical": {
+          "type": "boolean"
+        },
+        "persona_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/persona_id"
+          }
+        },
+        "flow_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/flow_id"
+          }
+        },
+        "owner_ticket": {
+          "$ref": "#/definitions/ticket"
+        }
       }
     },
     "user_story": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "platform", "as_a", "i_want", "so_that", "persona_ids", "journey_ids", "flow_id", "owner_ticket"],
+      "required": [
+        "id",
+        "platform",
+        "as_a",
+        "i_want",
+        "so_that",
+        "persona_ids",
+        "journey_ids",
+        "flow_id",
+        "owner_ticket"
+      ],
       "properties": {
-        "id": {"$ref": "#/definitions/user_story_id"},
-        "platform": {"$ref": "#/definitions/platform"},
-        "as_a": {"$ref": "#/definitions/text"},
-        "i_want": {"$ref": "#/definitions/text"},
-        "so_that": {"$ref": "#/definitions/text"},
-        "persona_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/persona_id"}},
-        "journey_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/journey_id"}},
-        "flow_id": {"$ref": "#/definitions/flow_id"},
-        "owner_ticket": {"$ref": "#/definitions/ticket"}
+        "id": {
+          "$ref": "#/definitions/user_story_id"
+        },
+        "platform": {
+          "$ref": "#/definitions/platform"
+        },
+        "as_a": {
+          "$ref": "#/definitions/text"
+        },
+        "i_want": {
+          "$ref": "#/definitions/text"
+        },
+        "so_that": {
+          "$ref": "#/definitions/text"
+        },
+        "persona_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/persona_id"
+          }
+        },
+        "journey_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/journey_id"
+          }
+        },
+        "flow_id": {
+          "$ref": "#/definitions/flow_id"
+        },
+        "owner_ticket": {
+          "$ref": "#/definitions/ticket"
+        }
       }
     },
     "flow": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id", "platform", "name", "critical", "journey_ids", "screen_ids", "design_ticket",
-        "implementation_tickets", "qa_ticket", "qa_independence"
+        "id",
+        "platform",
+        "name",
+        "critical",
+        "journey_ids",
+        "screen_ids",
+        "design_ticket",
+        "implementation_tickets",
+        "qa_ticket",
+        "qa_independence"
       ],
       "properties": {
-        "id": {"$ref": "#/definitions/flow_id"},
-        "platform": {"$ref": "#/definitions/platform"},
-        "name": {"$ref": "#/definitions/text"},
-        "critical": {"type": "boolean"},
-        "journey_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/journey_id"}},
-        "screen_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/screen_id"}},
-        "design_ticket": {"$ref": "#/definitions/optional_ticket"},
-        "implementation_tickets": {"$ref": "#/definitions/tickets"},
-        "qa_ticket": {"$ref": "#/definitions/optional_ticket"},
-        "qa_independence": {"$ref": "#/definitions/qa_independence"}
+        "id": {
+          "$ref": "#/definitions/flow_id"
+        },
+        "platform": {
+          "$ref": "#/definitions/platform"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "critical": {
+          "type": "boolean"
+        },
+        "journey_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/journey_id"
+          }
+        },
+        "screen_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/screen_id"
+          }
+        },
+        "design_ticket": {
+          "$ref": "#/definitions/optional_ticket"
+        },
+        "implementation_tickets": {
+          "$ref": "#/definitions/tickets"
+        },
+        "qa_ticket": {
+          "$ref": "#/definitions/optional_ticket"
+        },
+        "qa_independence": {
+          "$ref": "#/definitions/qa_independence"
+        }
       }
     },
     "screen": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id", "platform", "name", "surface_type", "route_hint", "route_id", "flow_ids", "component_ids", "states",
-        "critical", "security_critical", "security_reason", "privacy_states", "authorization_states",
-        "d6_dependency", "handoff_ref", "design_ticket", "implementation_tickets", "qa_ticket", "proposal"
+        "id",
+        "platform",
+        "name",
+        "surface_type",
+        "route_hint",
+        "route_id",
+        "flow_ids",
+        "component_ids",
+        "states",
+        "critical",
+        "security_critical",
+        "security_reason",
+        "privacy_states",
+        "authorization_states",
+        "d6_dependency",
+        "handoff_ref",
+        "design_ticket",
+        "implementation_tickets",
+        "qa_ticket",
+        "proposal"
       ],
       "properties": {
-        "id": {"$ref": "#/definitions/screen_id"},
-        "platform": {"$ref": "#/definitions/platform"},
-        "name": {"$ref": "#/definitions/text"},
-        "surface_type": {"enum": ["page", "sheet", "dialog", "overlay", "system-handoff", "widget", "notification-landing"]},
-        "route_hint": {"type": "string", "minLength": 1},
-        "route_id": {"$ref": "#/definitions/route_id"},
-        "flow_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/flow_id"}},
-        "component_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/component_id"}},
-        "states": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"$ref": "#/definitions/state"}},
-        "critical": {"type": "boolean"},
-        "security_critical": {"type": "boolean"},
-        "security_reason": {"$ref": "#/definitions/optional_text"},
-        "privacy_states": {"$ref": "#/definitions/states"},
-        "authorization_states": {"$ref": "#/definitions/states"},
-        "d6_dependency": {"$ref": "#/definitions/optional_dependency"},
-        "handoff_ref": {"$ref": "#/definitions/handoff_ref"},
-        "design_ticket": {"$ref": "#/definitions/optional_ticket"},
-        "implementation_tickets": {"$ref": "#/definitions/tickets"},
-        "qa_ticket": {"$ref": "#/definitions/optional_ticket"},
-        "proposal": {"$ref": "#/definitions/screen_proposal"}
+        "id": {
+          "$ref": "#/definitions/screen_id"
+        },
+        "platform": {
+          "$ref": "#/definitions/platform"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "surface_type": {
+          "enum": [
+            "page",
+            "sheet",
+            "dialog",
+            "overlay",
+            "system-handoff",
+            "widget",
+            "notification-landing"
+          ]
+        },
+        "route_hint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "route_id": {
+          "$ref": "#/definitions/route_id"
+        },
+        "flow_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/flow_id"
+          }
+        },
+        "component_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/component_id"
+          }
+        },
+        "states": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/state"
+          }
+        },
+        "critical": {
+          "type": "boolean"
+        },
+        "security_critical": {
+          "type": "boolean"
+        },
+        "security_reason": {
+          "$ref": "#/definitions/optional_text"
+        },
+        "privacy_states": {
+          "$ref": "#/definitions/states"
+        },
+        "authorization_states": {
+          "$ref": "#/definitions/states"
+        },
+        "d6_dependency": {
+          "$ref": "#/definitions/optional_dependency"
+        },
+        "handoff_ref": {
+          "$ref": "#/definitions/handoff_ref"
+        },
+        "design_ticket": {
+          "$ref": "#/definitions/optional_ticket"
+        },
+        "implementation_tickets": {
+          "$ref": "#/definitions/tickets"
+        },
+        "qa_ticket": {
+          "$ref": "#/definitions/optional_ticket"
+        },
+        "proposal": {
+          "$ref": "#/definitions/screen_proposal"
+        }
       }
     },
     "component": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "platforms", "required_states", "foundational", "design_ticket", "proposal"],
+      "required": [
+        "id",
+        "name",
+        "platforms",
+        "required_states",
+        "foundational",
+        "design_ticket",
+        "proposal"
+      ],
       "properties": {
-        "id": {"$ref": "#/definitions/component_id"},
-        "name": {"$ref": "#/definitions/text"},
-        "platforms": {"$ref": "#/definitions/platforms"},
-        "required_states": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/state"}},
-        "foundational": {"type": "boolean"},
-        "design_ticket": {"$ref": "#/definitions/optional_ticket"},
-        "proposal": {"$ref": "#/definitions/component_proposal"}
+        "id": {
+          "$ref": "#/definitions/component_id"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "platforms": {
+          "$ref": "#/definitions/platforms"
+        },
+        "required_states": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/state"
+          }
+        },
+        "foundational": {
+          "type": "boolean"
+        },
+        "design_ticket": {
+          "$ref": "#/definitions/optional_ticket"
+        },
+        "proposal": {
+          "$ref": "#/definitions/component_proposal"
+        }
       }
     },
     "diagram": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "type", "name", "artifact_path", "owner_ticket"],
+      "required": [
+        "id",
+        "type",
+        "name",
+        "artifact_path",
+        "owner_ticket"
+      ],
       "properties": {
-        "id": {"$ref": "#/definitions/diagram_id"},
+        "id": {
+          "$ref": "#/definitions/diagram_id"
+        },
         "type": {
           "enum": [
-            "context", "persona-map", "journey-map", "service-blueprint", "sitemap", "flow", "wireflow-index", "state",
-            "component-map", "token-flow", "content-flow", "parity-matrix", "coverage-matrix", "handoff", "approval"
+            "context",
+            "persona-map",
+            "journey-map",
+            "service-blueprint",
+            "sitemap",
+            "flow",
+            "wireflow-index",
+            "state",
+            "component-map",
+            "token-flow",
+            "content-flow",
+            "parity-matrix",
+            "coverage-matrix",
+            "handoff",
+            "approval"
           ]
         },
-        "name": {"$ref": "#/definitions/text"},
-        "artifact_path": {"$ref": "#/definitions/text"},
-        "owner_ticket": {"$ref": "#/definitions/ticket"}
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "artifact_path": {
+          "$ref": "#/definitions/text"
+        },
+        "owner_ticket": {
+          "$ref": "#/definitions/ticket"
+        }
       }
     },
     "partition": {
       "description": "Disposition of every Android, web and admin issue of the committed inventory; the frontend mapping is derived from registry implementation tickets.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "schema_version", "source_issue", "description", "repositories", "post_snapshot_issues", "entries"],
+      "required": [
+        "kind",
+        "schema_version",
+        "source_issue",
+        "description",
+        "repositories",
+        "post_snapshot_issues",
+        "entries"
+      ],
       "properties": {
-        "kind": {"const": "experience_coverage_partition"},
-        "schema_version": {"const": 1},
-        "source_issue": {"const": "PenniLogic/docs#75"},
-        "description": {"$ref": "#/definitions/text"},
-        "repositories": {"const": ["PenniLogic/android", "PenniLogic/web", "PenniLogic/admin"]},
-        "post_snapshot_issues": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/client_issue"}},
-        "entries": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/partition_entry"}}
+        "kind": {
+          "const": "experience_coverage_partition"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "source_issue": {
+          "const": "PenniLogic/docs#75"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "repositories": {
+          "const": [
+            "PenniLogic/android",
+            "PenniLogic/web",
+            "PenniLogic/admin"
+          ]
+        },
+        "post_snapshot_issues": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/client_issue"
+          }
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/partition_entry"
+          }
+        }
       }
     },
     "partition_entry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["issue", "plan_id", "disposition", "rationale_class", "rationale", "proposed_by"],
+      "required": [
+        "issue",
+        "plan_id",
+        "disposition",
+        "rationale_class",
+        "rationale",
+        "proposed_by"
+      ],
       "properties": {
-        "issue": {"$ref": "#/definitions/client_issue"},
-        "plan_id": {"$ref": "#/definitions/plan_id"},
-        "disposition": {"enum": ["frontend", "non_frontend"]},
-        "rationale_class": {
+        "issue": {
+          "$ref": "#/definitions/client_issue"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/plan_id"
+        },
+        "disposition": {
           "enum": [
-            "governance_or_tooling", "quality_or_test_infrastructure", "build_or_release", "platform_security_or_storage",
-            "capture_or_device_runtime", "backend_integration", "epic_or_tracking", "other", null
+            "frontend",
+            "non_frontend"
           ]
         },
-        "rationale": {"$ref": "#/definitions/optional_text"},
-        "proposed_by": {"enum": ["design_ops", null]}
+        "rationale_class": {
+          "enum": [
+            "governance_or_tooling",
+            "quality_or_test_infrastructure",
+            "build_or_release",
+            "platform_security_or_storage",
+            "capture_or_device_runtime",
+            "backend_integration",
+            "epic_or_tracking",
+            "other",
+            null
+          ]
+        },
+        "rationale": {
+          "$ref": "#/definitions/optional_text"
+        },
+        "proposed_by": {
+          "enum": [
+            "design_ops",
+            null
+          ]
+        }
       }
     }
   }

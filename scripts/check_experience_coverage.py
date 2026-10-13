@@ -73,7 +73,8 @@ GRAMMAR = {
     "user_story": re.compile(r"US-(AND|WEB|ADM)-([0-9]{2})"),
     "flow": re.compile(r"F-(AND|WEB|ADM)-([0-9]{2})"),
     "screen": re.compile(r"S-(AND|WEB|ADM)-([0-9]{3})"),
-    "component": re.compile(r"C-[A-Z0-9]+(?:-[A-Z0-9]+)*"),
+    # Letter-led segments of at most 12 characters: a component ID can name a part, never carry a token or number.
+    "component": re.compile(r"C-[A-Z][A-Z0-9]{0,11}(?:-[A-Z][A-Z0-9]{0,11}){0,3}"),
     "diagram": re.compile(r"D([0-9]{2})"),
 }
 DIGITS = {"persona": 2, "journey": 2, "user_story": 2, "flow": 2, "screen": 3, "diagram": 2}
@@ -84,14 +85,17 @@ CLIENT_REPOSITORIES = tuple(f"PenniLogic/{platform}" for platform in PLATFORMS)
 SYNTHETIC_PREFIX = "C-SYN-"
 # The identifying text fingerprinted when an ID is first issued (TS-M3): a user story has no name.
 IDENTITY_FIELD = {"user_story": "i_want"}
+# Issue numbers are bounded (six digits), so a phone-length number is never a printable identifier.
 ISSUE_REF = re.compile(
-    r"PenniLogic/(" + "|".join(re.escape(name.split("/")[1]) for name in strategy.REPOSITORY_IDS) + r")#([1-9][0-9]*)"
+    r"PenniLogic/(" + "|".join(re.escape(name.split("/")[1]) for name in strategy.REPOSITORY_IDS)
+    + r")#([1-9][0-9]{0,5})"
 )
 HANDOFF = re.compile(r"HND-(AND|WEB|ADM)-([0-9]{3})@(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
 COMMIT = re.compile(r"[0-9a-f]{40}")
 REVISION = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/-]{0,199}")
-_SEGMENT = r"[a-z0-9]+(?:-[a-z0-9]+)*"
-_ELEMENT = rf"(?:{_SEGMENT}|:[a-z][a-z0-9]*(?:-[a-z0-9]+)*)"
+# Letters only: a hint names a place, never an identifier, number, amount or token (it is not content-scanned).
+_SEGMENT = r"[a-z]+(?:-[a-z]+)*"
+_ELEMENT = rf"(?:{_SEGMENT}|:{_SEGMENT})"
 # route_hint is the imported provisional hint, not a docs#74 route: Android deep links or web/admin paths.
 ROUTE_HINTS = {
     "android": re.compile(rf"(?:android|android-widget)://{_SEGMENT}(?:/{_ELEMENT})*"),
@@ -104,6 +108,7 @@ FREE_TEXT = frozenset({
 })
 GRAMMAR_CHECKED = frozenset({"route_hint"})
 FREE_TEXT_LIMIT = 400
+_CURRENCIES = "INR|USD|EUR|GBP|AED|SGD|AUD|CAD|JPY|CNY|CHF|SAR|QAR|KWD|BHD|OMR|NZD|HKD|ZAR"
 CONTENT_SHAPES = (
     # Printable ASCII only: control characters and look-alike digits, at signs or currency signs cannot slip past
     # the ASCII shape patterns below.
@@ -112,16 +117,28 @@ CONTENT_SHAPES = (
         r"\bgh[pousr]_[A-Za-z0-9]{8,}|\bgithub_pat_|-----BEGIN|\bAKIA[0-9A-Z]{16}\b|\bxox[abposr]-"
         r"|\bsk-[A-Za-z0-9_-]{20,}|[0-9a-fA-F]{32,}"
     )),
-    ("content.url_shape", re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://|\bwww\.", re.IGNORECASE)),
-    ("content.email_shape", re.compile(r"[^\s@]+@[^\s@]+\.[A-Za-z]{2,}")),
-    ("content.amount_shape", re.compile(
-        r"\$\s*[0-9]|\b(?:INR|USD|EUR|GBP|Rs\.?)\s*[0-9]"
-        r"|[0-9]\s*(?:INR|USD|EUR|GBP|rupees?|lakhs?|crores?)\b",
+    ("content.url_shape", re.compile(
+        r"[A-Za-z][A-Za-z0-9+.-]*://|\bwww\.|\b(?:mailto|javascript|vbscript|tel|sms|file|intent|ftp):"
+        r"|\bdata:[a-z]+/|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:com|org|net|io|co|dev|app|ai|gov|edu|info|biz|me|us"
+        r"|uk|in|xyz)\b",
         re.IGNORECASE,
     )),
+    # Any at sign: email addresses, UPI handles and user@host forms alike.
+    ("content.email_shape", re.compile(r"@")),
+    ("content.amount_shape", re.compile(
+        r"\$\s*[0-9]|\b(?:" + _CURRENCIES + r"|Rs\.?)\s*[0-9]|[0-9]\s*(?:" + _CURRENCIES + r")\b"
+        r"|[0-9]\s*(?:k|lakhs?|lacs?|crores?|rupees?|paise|dollars?|euros?|pounds?|cents?|bucks?|dirhams?)\b",
+        re.IGNORECASE,
+    )),
+    ("content.personal_id_shape", re.compile(r"\b[A-Z]{5}[0-9]{4}[A-Z]\b")),  # Indian PAN layout
 )
-PHONE = re.compile(r"\+?[0-9][0-9 ().-]{6,}[0-9]")
+# Nine or more digits, whatever short non-alphanumeric separators sit between them.
+PHONE = re.compile(r"[0-9](?:[^A-Za-z0-9]{0,2}[0-9]){8,}")
 TOKEN = re.compile(r"[A-Za-z0-9+=_]{32,}")
+# A disclosed post-snapshot issue is at most this many numbers past its repository's highest inventory issue.
+POST_SNAPSHOT_MARGIN = 200
+# A string schema whose pattern accepts any of these is free text, whatever its anchoring.
+FREE_TEXT_PROBES = ("a b", "a\tb", "a\nb")
 SCRUBBED_GIT_VARIABLES = (
     "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
     "GIT_COMMON_DIR", "GIT_NAMESPACE",
@@ -129,8 +146,9 @@ SCRUBBED_GIT_VARIABLES = (
 
 STRUCTURE_RULES = (
     "input.unreadable_or_invalid", "schema.invalid", "schema.free_text_unlisted",
-    "content.too_long", "content.unprintable_character", "content.secret_shape", "content.url_shape",
-    "content.email_shape", "content.phone_shape", "content.amount_shape",
+    "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.secret_shape",
+    "content.url_shape", "content.email_shape", "content.phone_shape", "content.amount_shape",
+    "content.personal_id_shape",
     "import.mismatch", "import.unavailable", "import.digest_mismatch", "import.invalid",
     "ledger.base_unavailable", "ledger.base_invalid", "inventory.invalid", "taxonomy.unreadable",
     "id.duplicate", "id.platform_infix_mismatch", "id.synthetic_reserved", "id.out_of_range",
@@ -262,11 +280,22 @@ def unconstrained_text(schema):
             node = definitions.get(str(node["$ref"]).rsplit("/", 1)[-1], {})
         return node if isinstance(node, dict) else {}
 
+    def permissive(pattern):
+        try:
+            return any(re.search(pattern, probe) for probe in FREE_TEXT_PROBES)
+        except (re.error, TypeError):
+            return True
+
     def free(node):
+        """True when the node can hold a string the content guard must scan: untyped, or a string without an
+        enum or const and without a pattern that excludes whitespace."""
         node = resolve(node)
-        types = node.get("type", [])
-        types = types if isinstance(types, list) else [types]
-        if "string" in types and not {"pattern", "enum", "const"} & node.keys():
+        if {"enum", "const"} & node.keys():
+            return False
+        if "type" not in node:
+            return True
+        types = node["type"] if isinstance(node["type"], list) else [node["type"]]
+        if "string" in types and ("pattern" not in node or permissive(node["pattern"])):
             return True
         return "array" in types and free(node.get("items", {}))
 
@@ -279,11 +308,15 @@ def unconstrained_text(schema):
             if free(child):
                 found.add(name)
             walk(child)
+        types = node.get("type", [])
+        is_object = "properties" in node or "object" in (types if isinstance(types, list) else [types])
         extra = node.get("additionalProperties")
         if isinstance(extra, dict):
             if free(extra):
                 found.add("*")
             walk(extra)
+        elif is_object and extra is not False:
+            found.add("*")  # an open object accepts any key, so its strings would go unscanned
         walk(node.get("items"))
 
     walk(schema)
@@ -294,14 +327,16 @@ def unconstrained_text(schema):
 
 def _scan(text, subject):
     require(len(text) <= FREE_TEXT_LIMIT, "content.too_long", *subject)
+    require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
     for rule, pattern in CONTENT_SHAPES:
         require(pattern.search(text) is None, rule, *subject)
-    for match in PHONE.finditer(text):
-        require(sum(character.isdigit() for character in match.group()) < 9, "content.phone_shape", *subject)
-    for match in TOKEN.finditer(text):
-        token = match.group()
-        mixed = all(any(test(c) for c in token) for test in (str.isdigit, str.islower, str.isupper))
-        require(not mixed, "content.secret_shape", *subject)
+    require(PHONE.search(text) is None, "content.phone_shape", *subject)
+    # Also with separators removed, so a key split by hyphens, slashes or underscores is still one token.
+    for candidate in (text, re.sub(r"[-/_]", "", text)):
+        for match in TOKEN.finditer(candidate):
+            token = match.group()
+            mixed = all(any(test(c) for c in token) for test in (str.isdigit, str.islower, str.isupper))
+            require(not mixed, "content.secret_shape", *subject)
 
 
 def guard_content(value, subject=()):
@@ -848,7 +883,8 @@ def check_partition(model):
         highest[item["repository"]] = max(highest[item["repository"]], item["number"])
     for issue in model.partition["post_snapshot_issues"]:
         repository, number = issue.split("#")
-        require(issue not in index and int(number) > highest[repository], "partition.post_snapshot_invalid", issue)
+        require(issue not in index and highest[repository] < int(number) <= highest[repository] + POST_SNAPSHOT_MARGIN,
+                "partition.post_snapshot_invalid", issue)
 
 
 def delivered(found):

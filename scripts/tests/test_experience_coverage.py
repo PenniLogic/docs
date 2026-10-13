@@ -512,6 +512,18 @@ class InputAndSchemaRuleTests(CoverageCase):
             fixture.entry("PenniLogic/web#902")["disposition"] = "excluded"
         self.refused(partition, "schema.invalid", "PenniLogic/web#902")
 
+    def test_schema_versions_are_integers(self):
+        """AV-11: an equal float or boolean would pass a bare const and change the canonical registry digest."""
+        self.refused(lambda f: f.registry.update(schema_version=2.0), "schema.invalid")
+        self.refused(lambda f: f.partition.update(schema_version=True), "schema.invalid")
+
+    def test_published_json_files_are_canonical(self):
+        """F1 / plan data hygiene: json.dumps(indent=2, ensure_ascii=True) plus a final newline, LF only."""
+        for relative in (module.SCHEMA, module.REGISTRY, module.PARTITION):
+            with self.subTest(path=relative):
+                raw = (ROOT / relative).read_bytes()
+                self.assertEqual(raw, encode(json.loads(raw.decode("utf-8"))))
+
     def test_identifier_with_terminal_newline_is_refused_without_echo(self):
         def mutate(fixture):
             fixture.record("S-AND-002")["id"] = "S-AND-002\n"
@@ -525,14 +537,32 @@ class InputAndSchemaRuleTests(CoverageCase):
         def free_map(fixture):
             fixture.schema["definitions"]["screen"]["additionalProperties"] = {"type": "string"}
         self.refused(free_map, "schema.free_text_unlisted")
+        # AV-09: an untyped property, a pattern that accepts whitespace and an open object all admit free text.
+        self.refused(lambda f: f.schema["definitions"]["screen"]["properties"].update(notes={}),
+                     "schema.free_text_unlisted")
+        self.refused(lambda f: f.schema["definitions"]["screen"]["properties"].update(
+            notes={"type": "string", "pattern": "^[\\s\\S]*$(?![\\s\\S])"}), "schema.free_text_unlisted")
+        self.refused(lambda f: f.schema["definitions"]["screen"].pop("additionalProperties"),
+                     "schema.free_text_unlisted")
 
     def test_forbidden_content_pattern_fails(self):
         cases = {
-            "content.secret_shape": [planted_token(), "Key " + "a1" * 16, "Token " + "Zq9" * 11, "-----" + "BEGIN key"],
-            "content.url_shape": ["See https://example.invalid/x", "See www.example.invalid"],
-            "content.email_shape": ["Mail fixture" + "@" + "example.invalid"],
-            "content.phone_shape": ["Call +91 98765 43210"],
-            "content.amount_shape": ["Pays Rs. 500", "Pays 500 rupees", "Owes $12", "Owes USD 12"],
+            "content.secret_shape": [
+                planted_token(), "Key " + "a1" * 16, "Token " + "Zq9" * 11, "-----" + "BEGIN key",
+                "Key " + "Ab1" * 6 + "-" + "Cd2" * 6, "Key " + "Ab1" * 6 + "/" + "Cd2" * 6, "Key " + "Ab1_" * 9,
+            ],
+            "content.url_shape": [
+                "See https://example.invalid/x", "See www.example.invalid", "See drive.example.com/file/d/abc",
+                "Open mailto" + ":someone", "javascript" + ":alert(1)", "Load data" + ":text/html,x",
+            ],
+            "content.email_shape": ["Mail fixture" + "@" + "example.invalid", "Pay someone" + "@okaxis",
+                                    "Mail someone" + "@localhost"],
+            "content.phone_shape": ["Call +91 98765 43210", "Call 98765/43210", "Call 030/12345678",
+                                    "Call 98765_43210"],
+            "content.amount_shape": ["Pays Rs. 500", "Pays 500 rupees", "Owes $12", "Owes USD 12", "Owes 500 dollars",
+                                     "Pays 10k INR", "Refund of 500 paise", "Fee AED 500"],
+            "content.personal_id_shape": ["PAN ABCDE" + "1234F"],
+            "content.blank_or_padded": [" ", " Padded job", "Padded job "],
             "content.unprintable_character": [
                 "Tab\tinside", "Line\u2028break", "Pays \u20b9500", "Call \uff19\uff18\uff17", "Mail a\uff20b.example",
                 "Caf\u00e9 visit",
@@ -544,6 +574,11 @@ class InputAndSchemaRuleTests(CoverageCase):
                     self.refused(lambda fixture: fixture.record("P02")["jobs"].append(text), rule, "P02")
         self.refused(lambda fixture: fixture.entry("PenniLogic/web#902").update(rationale="Mail a" + "@" + "b.example"),
                      "content.email_shape", "PenniLogic/web#902")
+        # AV-10: a required rationale or security reason must say something.
+        self.refused(lambda fixture: fixture.entry("PenniLogic/web#902").update(rationale=" "),
+                     "content.blank_or_padded", "PenniLogic/web#902")
+        self.refused(lambda fixture: fixture.record("S-AND-001").update(security_reason=" "),
+                     "content.blank_or_padded", "S-AND-001")
 
     def test_plan_ids_follow_the_stable_id_grammar_and_are_scanned(self):
         key = "AKIA" + "ABCDEFGHIJKLMNOP"
@@ -569,6 +604,8 @@ class InputAndSchemaRuleTests(CoverageCase):
                      "content.too_long", "D01")
         self.refused(lambda f: f.record("US-ADM-01").update(so_that="runs 123-456-789 in a row"),
                      "content.phone_shape", "US-ADM-01")
+        self.refused(lambda f: f.record("US-ADM-01").update(so_that="runs 1234/5678_9 in a row"),
+                     "content.phone_shape", "US-ADM-01")
 
     def test_route_hint_is_exempt_from_the_url_scan_but_grammar_checked(self):
         fixture = Fixture()
@@ -577,7 +614,8 @@ class InputAndSchemaRuleTests(CoverageCase):
         valid = ["android://a", "android://a/:id/b-c", "android-widget://w", "/a", "/a/:token/b", "/a/*",
                  "/" + "a" * (module.ROUTE_HINT_LIMIT - 1)]
         invalid = ["android://Home", "android://", "android:/a", "/a/", "/a/*/b", "/a/:", "/a/:1", "https://a",
-                   "/a b", "/a\n", "/" + "a" * module.ROUTE_HINT_LIMIT]
+                   "/a b", "/a\n", "/" + "a" * module.ROUTE_HINT_LIMIT,
+                   "/9876543210", "/refund/500rupees", "/a/" + "0f" * 24, "android://a1", "/a/:id2"]
         for hint in valid + invalid:
             target = "S-WEB-001" if hint.startswith("/") or hint.startswith("https") else "S-AND-002"
             with self.subTest(hint=hint):
@@ -657,6 +695,26 @@ class IdentityAndLedgerTests(CoverageCase):
         fixture = self.refused(retired_fixture_id, "id.synthetic_reserved", "C-SYN-FIXTURE")
         fixture.synthetic_ok = True
         fixture.check()  # test fixtures may hold it
+
+    def test_component_ids_are_bounded_and_letter_led(self):
+        """AV-08: a component ID passes its grammar only as letter-led segments of at most 12 characters, so it
+        cannot carry a key, card or phone number into refusals or the summary (and is refused without echo)."""
+        def component_id(value):
+            def mutate(fixture):
+                fixture.registry["components"].append(component(value, ["web"], ["default"], foundational=True))
+                fixture.registry["id_ledger"].append({
+                    "id": value, "kind": "component", "platform": None, "status": "active", "retired_reason": None,
+                    "name_sha256": fingerprint(f"Synthetic component {value}"),
+                })
+            return mutate
+        fixture = Fixture()
+        component_id("C-OPERATORQUEU-A-B-C")(fixture)
+        fixture.check()
+        for value in ("C-AKIA" + "ABCDEFGHIJKLMNOP", "C-98765-43210", "C-4111111111111111", "C-A-B-C-D-E",
+                      "C-OPERATORQUEUE"):
+            with self.subTest(value=value):
+                self.refused(component_id(value), "schema.invalid", None)
+        self.assertIsNone(module.classify("C-AKIA" + "ABCDEFGHIJKLMNOP"))
 
     def test_id_outside_platform_range_fails(self):
         def narrow(last):
@@ -1064,6 +1122,14 @@ class PartitionAndReleaseGateTests(CoverageCase):
         self.refused(lambda f: f.partition.update(post_snapshot_issues=["PenniLogic/android#900"]),
                      "partition.post_snapshot_invalid", "PenniLogic/android#900")
         self.refused(lambda f: f.partition.update(post_snapshot_issues=["PenniLogic/docs#999"]), "schema.invalid")
+        # AV-08: at most POST_SNAPSHOT_MARGIN past the snapshot, and never a phone-length number.
+        fixture.partition["post_snapshot_issues"] = [f"PenniLogic/android#{904 + module.POST_SNAPSHOT_MARGIN}"]
+        fixture.check()
+        self.refused(lambda f: f.partition.update(
+            post_snapshot_issues=[f"PenniLogic/android#{905 + module.POST_SNAPSHOT_MARGIN}"]),
+                     "partition.post_snapshot_invalid", f"PenniLogic/android#{905 + module.POST_SNAPSHOT_MARGIN}")
+        self.refused(lambda f: f.partition.update(post_snapshot_issues=["PenniLogic/android#9876543210"]),
+                     "schema.invalid")
 
     def test_release_gate_bypass_closed_issue_without_d6_fails(self):
         """No screen can carry D6 yet, so an implementation issue closed as delivered always bypassed the gate."""
@@ -1374,7 +1440,8 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(str(module.Refused("id.duplicate", "S-AND-001")), "id.duplicate S-AND-001")
         self.assertEqual(str(module.Refused("ticket.dangling", "S-AND-001", "PenniLogic/docs#9")),
                          "ticket.dangling S-AND-001 PenniLogic/docs#9")
-        for subjects in (("S-AND-001\n",), (token,), ("S-AND-001", token), ("T-SYN-DSN-01",), ("docs#9",), (None,)):
+        for subjects in (("S-AND-001\n",), (token,), ("S-AND-001", token), ("T-SYN-DSN-01",), ("docs#9",), (None,),
+                         ("PenniLogic/android#9876543210",), ("C-AKIA" + "ABCDEFGHIJKLMNOP",)):
             with self.subTest(subjects=subjects):
                 error = module.Refused("id.duplicate", *subjects)
                 self.assertEqual((str(error), error.subject), ("id.duplicate", None))
