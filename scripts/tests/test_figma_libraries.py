@@ -442,6 +442,27 @@ class RegistryTests(RuleCase):
         self.assertEqual(self.refused_registry(encode({"components": [{"id": "C-SYN-ACTION", "platforms": ["web"]}]})),
                          "registry.invalid")
 
+    def test_registry_shape_is_validated(self):
+        """SC3-03 (a): each malformed root, record, ID, platform list or name differs from a passing record by one
+        change and is refused as registry.invalid (these checks guard the docs#75 re-pin)."""
+        valid = {"id": "C-SYN-ACTION", "name": "Action", "platforms": ["web"]}
+        for platforms in (["web"], ["shared"], ["android", "web", "admin"]):
+            blob = encode({"components": [dict(valid, platforms=platforms)]})
+            pin = {"commit": SYNTHETIC_COMMIT, "path": REGISTRY_PATH,
+                   "sha256": "sha256:" + hashlib.sha256(blob).hexdigest()}
+            document = fixture()
+            document["registry_ref"] = pin
+            model = module.check(document, SCHEMA, POLICY, POLICY_SCHEMA,
+                                 Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}), pin=pin, fixture=True)
+            self.assertIn("C-SYN-ACTION", model.pinned)
+        roots = ({"no_components": [valid]}, {"components": None}, [valid], {"components": ["C-SYN-ACTION"]})
+        records = [dict(valid, id=value) for value in ("X-SYN-ACTION", 7, "C-syn-action")]
+        records += [dict(valid, platforms=value) for value in ([], ["ios"], ["shared", "web"], "web", {"web": True})]
+        records += [dict(valid, name=""), dict(valid, name=7)]
+        for registry in (*roots, *({"components": [record]} for record in records)):
+            with self.subTest(registry=registry):
+                self.assertEqual(self.refused_registry(encode(registry)), "registry.invalid")
+
     def test_registry_grammar_ids_are_gaps_not_failures(self):
         ids = ("C-SYN-OP-2FA", "C-SYN-DATA-VISUALIZATION", "C-SYN-INPUT-OTP-6", "C-SYN--B")
         blob, pin = pinned([(identifier, ["admin"]) for identifier in ids])
@@ -489,6 +510,23 @@ class RealRegistryTests(unittest.TestCase):
         real_git = Path(shutil.which("git")).parent
         for path in ([str(real_git)], [str(planted), str(real_git)], ["", ".", "tools", str(real_git)],
                      [str(root), str(real_git)]):
+            with self.subTest(path=path), mock.patch.dict(os.environ, {"PATH": os.pathsep.join(path)}):
+                self.assertEqual(Path(module.trusted_git(root)).parent, real_git)
+        # SC3-04: relative entries resolve against the working directory, so run from a directory outside the
+        # repository that holds an executable git; absolute entries without a usable git (none, a directory named
+        # git, a non-executable git) precede the real one.
+        cwd = Path(folder.name) / "attacker-cwd"
+        cwd.mkdir()
+        (cwd / name).write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (cwd / name).chmod(0o755)
+        empty, directory, unexecutable = (Path(folder.name) / part for part in ("empty", "directory", "plain"))
+        for path in (empty, directory / name, unexecutable):
+            path.mkdir(parents=True)
+        (unexecutable / name).write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (unexecutable / name).chmod(0o644)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(cwd)
+        for path in (["", ".", str(real_git)], [str(empty), str(directory), str(unexecutable), str(real_git)]):
             with self.subTest(path=path), mock.patch.dict(os.environ, {"PATH": os.pathsep.join(path)}):
                 self.assertEqual(Path(module.trusted_git(root)).parent, real_git)
         outside = Path(folder.name) / "outside"
@@ -814,6 +852,18 @@ class ReleaseTests(RuleCase):
     def test_first_release_is_a_major_at_one_or_later(self):
         self.assertRefused(lambda d: append_release(d, "LIB-WEB@0.1.0", None, "major", "draft"),
                            "release.class_mismatch", "LIB-WEB@0.1.0")
+        # SC3-03 (b): the boundary pair 1.0.0 (passes) and 0.0.0 (refused).
+        def web_root():
+            document = fixture()
+            append_release(document, "LIB-WEB@1.0.0", None, "major", "draft")
+            return document
+        self.assertRefused(lambda d: find_release(d, "LIB-WEB@1.0.0").update(version="0.0.0"),
+                           "release.class_mismatch", "LIB-WEB@0.0.0", base=web_root)
+
+    def test_rolled_back_root_release_has_no_target(self):
+        """SC3-03 (d): a rolled-back first release has no prior published version to restore."""
+        self.assertRefused(lambda d: find_release(d, "LIB-ANDROID@1.0.0").update(status="rolled_back"),
+                           "release.rollback_target", "LIB-ANDROID@1.0.0")
 
     def test_breaking_change_requires_a_migration_plan(self):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(migration_plan_ref=None),
@@ -983,6 +1033,16 @@ class ComponentTests(RuleCase):
         for index, mutate in enumerate(mutations):
             with self.subTest(mutation=index):
                 self.assertRefused(mutate, "component.property_contract", "C-SYN-BUTTON")
+
+    def test_text_property_may_carry_a_default(self):
+        """SC3-03 (c): section 3 lets a text property carry a default; the same default on a slot is refused."""
+        def labelled():
+            document = fixture()
+            button(document)["properties"].append(
+                {"name": "label", "type": "text", "values": [], "default": "Label", "required": False})
+            return document
+        self.assertRefused(lambda d: button(d)["properties"][-1].update(type="slot"), "component.property_contract",
+                           "C-SYN-BUTTON", base=labelled)
 
     def test_property_names_differing_only_in_case_collide(self):
         self.assertRefused(lambda d: button(d)["properties"].append(
