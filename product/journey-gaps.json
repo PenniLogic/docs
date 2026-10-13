@@ -162,6 +162,16 @@
       "summary": "Regulator and customer notice deadlines for incidents are not published in an accepted source; the incident clock step cannot state them.",
       "backlog_item": null,
       "status": "open"
+    },
+    {
+      "id": "GAP-J12-02",
+      "journey_id": "J12",
+      "step_id": "J12.T.03",
+      "category": "policy",
+      "owner_issue": "PenniLogic/api#60",
+      "summary": "Obligation O-21 requires advance notice and grandfathering on a price or entitlement change, but no accepted source publishes the notice period, so the J12 migration clock states it as pending.",
+      "backlog_item": null,
+      "status": "open"
     }
   ]
 }

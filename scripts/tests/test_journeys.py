@@ -933,7 +933,7 @@ def _ids(prefix, count):
 
 PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J05-01", "GAP-J06-01",
                   "GAP-J07-01", "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J10-02", "GAP-J11-01",
-                  "GAP-J11-02", "GAP-J12-01"]
+                  "GAP-J11-02", "GAP-J12-01", "GAP-J12-02"]
 PUBLISHED_READINESS = {
     "readiness.registry_unintegrated": ["PenniLogic/docs#75"],
     "readiness.research_pending": ["PenniLogic/docs#66"],
@@ -966,7 +966,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(
             module.structure_line(self.model),
             "Journey blueprints 0.1.0 structure valid: 12 blueprints, 126 steps (69 customer, 57 team), 95 branches, "
-            "28 abuse paths, 16 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
+            "28 abuse paths, 17 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
         self.assertEqual(module.readiness(self.model), PUBLISHED_READINESS)
@@ -1051,6 +1051,13 @@ class PublishedDataTests(unittest.TestCase):
             for step in blueprint["steps"]:
                 if step["handoff"] is not None:
                     self.assertIn(step["handoff"]["authoritative_service"], systems, step["id"])
+
+    def test_plan_migration_carries_a_pending_advance_notice_clock(self):
+        # Obligation O-21 (T-BIL-10 = PenniLogic/api#60): advance notice on a price or entitlement change.
+        self.assertEqual(self.model.blueprints["J12"]["policy_class"], "billing")
+        self.assertIn("O-21", self.model.steps["J12.T.03"]["controls"]["clock"])
+        self.assertIn(("J12.T.03", "PenniLogic/api#60", "open"),
+                      [(gap["step_id"], gap["owner_issue"], gap["status"]) for gap in self.gaps["gaps"]])
 
     def test_safe_exit_runs_under_step_up(self):
         for step_id in ("J07.C.05", "J07.T.04"):

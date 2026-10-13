@@ -5646,7 +5646,7 @@
         "D03",
         "D21"
       ],
-      "policy_class": null,
+      "policy_class": "billing",
       "outcome": {
         "success": "Plan, provider and spend changes reach customers without silent impact, and audit, incident and release evidence is complete before release.",
         "failure_recovery": "Invalid plan versions are never published; migrations are reversible until their boundary; the kill switch refuses new remote AI calls at admission and stops in-flight traffic within the ADR-022 60-second bound; a failed retest blocks release.",
@@ -5777,7 +5777,12 @@
             "authoritative_service": "api-entitlements",
             "may_show": "Counts of affected subscriptions by plan version; no customer identities"
           },
-          "controls": null,
+          "controls": {
+            "clock": "Advance notice before a price or entitlement change takes effect, per obligation O-21; the notice period is pending on T-BIL-10",
+            "audit": "Every migration is one audited change naming the source and target plan versions",
+            "notification": "Affected customers are told before the change takes effect",
+            "reversal": "A migration is reversible until its effective boundary; untouched subscriptions keep their pinned version"
+          },
           "boundary": {
             "raw_message_egress": false,
             "client_money_arithmetic": false,

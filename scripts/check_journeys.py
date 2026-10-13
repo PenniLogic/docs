@@ -84,7 +84,9 @@ LANE_CHANNELS = {"customer": frozenset({"android", "web", "notification"}), "tea
 SURFACES = frozenset({"android", "web", "admin", "notification"})
 PLATFORM_CHANNEL = {"AND": "android", "WEB": "web", "ADM": "admin"}
 # docs#67 scope: rights, sharing and billing blueprints carry clock, audit, notification and reversal controls.
-POLICY_CLASS = {"J06": "sharing", "J07": "sharing", "J09": "billing", "J10": "rights", "J11": "rights"}
+# J12 carries billing plan migration (F-ADM-04), whose advance-notice clock is obligation O-21 (T-BIL-10).
+POLICY_CLASS = {"J06": "sharing", "J07": "sharing", "J09": "billing", "J10": "rights", "J11": "rights",
+                "J12": "billing"}
 BOUNDARY_RULES = (
     ("raw_message_egress", "boundary.raw_message_egress"),
     ("client_money_arithmetic", "boundary.client_money_arithmetic"),

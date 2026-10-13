@@ -18,8 +18,8 @@ Personas are planning hypotheses, not research evidence: every persona basis sta
 | readiness.approval_pending | 5 | architecture, ia, operations, product, security |
 | readiness.metric_pending | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.event_pending | 32 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
-| readiness.gap_open | 16 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
-| readiness.gap_backlog_missing | 16 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
+| readiness.gap_open | 17 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
+| readiness.gap_backlog_missing | 17 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
 | readiness.figma_held | 5 | D01, D03, D04, D05, D21 |
 
 Drift of the live registry from the pin (readiness.registry_id_added, readiness.registry_id_retired, readiness.registry_record_changed) is reported by the default mode only, never by this file.
@@ -1169,7 +1169,7 @@ flowchart LR
 ### BP-J12 System configuration, audit and release operations
 
 - Journey J12, operator audience; personas P11, P12 (provisional, pending:PenniLogic/docs#66).
-- Flows: F-ADM-04, F-ADM-05, F-ADM-08, F-ADM-10. Diagrams: D01, D03, D21. Policy class: none.
+- Flows: F-ADM-04, F-ADM-05, F-ADM-08, F-ADM-10. Diagrams: D01, D03, D21. Policy class: billing.
 - Success: Plan, provider and spend changes reach customers without silent impact, and audit, incident and release evidence is complete before release.
 - Failure recovery: Invalid plan versions are never published; migrations are reversible until their boundary; the kill switch refuses new remote AI calls at admission and stops in-flight traffic within the ADR-022 60-second bound; a failed retest blocks release.
 - Metric: pending:PenniLogic/docs#77
@@ -1239,6 +1239,10 @@ flowchart LR
 | J12.T.03 | api-entitlements | Counts of affected subscriptions by plan version; no customer identities |
 | J12.C.01 | api-entitlements | The plan change and its effective boundary; no other customer data |
 | J12.T.06 | audit-trail | Chain verification results and anomaly alerts; analytics are aggregates only |
+
+| Step | Clock | Audit | Notification | Reversal |
+|---|---|---|---|---|
+| J12.T.03 | Advance notice before a price or entitlement change takes effect, per obligation O-21; the notice period is pending on T-BIL-10 | Every migration is one audited change naming the source and target plan versions | Affected customers are told before the change takes effect | A migration is reversible until its effective boundary; untouched subscriptions keep their pinned version |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
 |---|---|---|---|---|
@@ -1339,3 +1343,4 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | GAP-J11-01 | J11 | J11.T.04 | policy | PenniLogic/api#47 | none | open | ADR-020 section 16 sets elevation, unmask and break-glass limits but no expiry for an unapproved access request; J11 states it as pending. |
 | GAP-J11-02 | J11 | none | registry_content | PenniLogic/docs#75 | none | open | The docs#67 scope names operator blueprints for refunds, provider change and incidents, but the registry assigns those flows to J10 and J12, not J11. |
 | GAP-J12-01 | J12 | J12.T.07 | policy | PenniLogic/docs#44 | none | open | Regulator and customer notice deadlines for incidents are not published in an accepted source; the incident clock step cannot state them. |
+| GAP-J12-02 | J12 | J12.T.03 | policy | PenniLogic/api#60 | none | open | Obligation O-21 requires advance notice and grandfathering on a price or entitlement change, but no accepted source publishes the notice period, so the J12 migration clock states it as pending. |
