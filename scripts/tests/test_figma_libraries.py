@@ -134,6 +134,7 @@ def tabletop():
         ("comment", "admin_design", "LIB-COMPONENTS", False, "model_permitted"),
         ("public_link", "systems", "LIB-COMPONENTS", False, "refused"),
         ("export", "systems", "LIB-FOUNDATION", False, "refused"),
+        ("edit", "android_design", "LIB-CANDIDATE", False, "model_permitted"),
     ]
     return [{"id": f"TT-{index:02d}", "action": action, "role": role, "library": name, "offboarded": offboarded,
              "expected": expected, "evidence_class": "tabletop", "live_verified": False}
@@ -202,9 +203,10 @@ def planted_token():
 
 
 class RuleCase(unittest.TestCase):
-    def assertRefused(self, mutate, rule, *subjects, fixture_mode=True):
-        """Control passes, exactly one mutation, then the exact rule and offending IDs (and no echoed input)."""
-        document = fixture() if fixture_mode else real()
+    def assertRefused(self, mutate, rule, *subjects, fixture_mode=True, base=None):
+        """Control passes, exactly one mutation, then the exact rule and offending IDs (and no echoed input).
+        `base` builds a different passing control than the plain fixture or real document."""
+        document = base() if base is not None else fixture() if fixture_mode else real()
         run_check(copy.deepcopy(document), fixture_mode)
         mutate(document)
         with self.assertRaises(module.Refused) as caught:
@@ -255,7 +257,7 @@ class BaselineTests(unittest.TestCase):
             "readiness.cdo_decision_pending": ["LIB-COMPONENTS@2.0.0"],
             "readiness.cdo_decision_unverified": ["LIB-ANDROID@1.0.0", "LIB-COMPONENTS@1.0.0"],
             "readiness.migration_plan_pending": ["LIB-COMPONENTS@2.0.0"],
-            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 16)],
+            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 17)],
             "readiness.component_not_in_registry": ["C-SYN-BUTTON-AND", "C-SYN-LOCAL"],
             "readiness.registry_component_ungoverned": ["C-SYN-PINNED"],
         })
@@ -533,6 +535,24 @@ class TabletopTests(RuleCase):
         self.assertRefused(lambda d: find(d, "tabletop", "TT-10").update(offboarded=False, expected="model_permitted"),
                            "tabletop.coverage_missing", "LIB-ADMIN")
 
+    def test_offboarding_case_is_a_maintainer(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-10").update(role="design_ops"),
+                           "tabletop.coverage_missing", "LIB-ADMIN")
+
+    def test_feature_squad_edits_its_candidate(self):
+        policy = module.Policy(POLICY, POLICY_SCHEMA)
+        known = {item["id"]: item for item in libraries()}
+        request = {"action": "edit", "role": "android_design", "library": "LIB-CANDIDATE", "offboarded": False}
+        self.assertEqual(module.decide(request, policy, known), "model_permitted")
+        self.assertEqual(module.decide(dict(request, library="LIB-COMPONENTS"), policy, known), "refused")
+        self.assertEqual(module.decide(dict(request, offboarded=True), policy, known), "refused")
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-16").update(expected="refused"),
+                           "tabletop.outcome_mismatch", "TT-16")
+
+    def test_contribution_path_case_is_required(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-16").update(role="systems"),
+                           "tabletop.coverage_missing", "LIB-CANDIDATE")
+
     def test_export_case_is_required(self):
         self.assertRefused(lambda d: find(d, "tabletop", "TT-15").update(action="public_link"),
                            "tabletop.coverage_missing")
@@ -769,6 +789,29 @@ class ComponentTests(RuleCase):
             with self.subTest(mutation=index):
                 self.assertRefused(mutate, "component.property_contract", "C-SYN-BUTTON")
 
+    def test_property_names_differing_only_in_case_collide(self):
+        self.assertRefused(lambda d: button(d)["properties"].append(
+            {"name": "emphasiS", "type": "text", "values": [], "default": None, "required": False}),
+            "component.property_contract", "C-SYN-BUTTON")
+
+    def test_variant_supports_only_its_parents_platforms(self):
+        self.assertRefused(lambda d: d["components"].append(component(
+            "C-SYN-DRAFT-AND", "Android notice", library_id="LIB-ANDROID", status="draft", role="notice strip",
+            platforms=["android"], variant_of="C-SYN-DRAFT", since=None, properties=[])),
+            "component.variant_invalid", "C-SYN-DRAFT-AND")
+
+    def test_published_variant_needs_a_published_parent(self):
+        def web_active():
+            document = fixture()
+            find(document, "libraries", "LIB-WEB")["status"] = "active"
+            append_release(document, "LIB-WEB@1.0.0", None, "major", "published")
+            return document
+        self.assertRefused(lambda d: d["components"].append(component(
+            "C-SYN-DRAFT-WEB", "Web notice", library_id="LIB-WEB", platforms=["web"], variant_of="C-SYN-DRAFT",
+            role="notice strip", properties=[{"name": "tone", "type": "enum", "values": ["info", "warning"],
+                                              "default": "info", "required": True}])),
+            "component.variant_parent_unpublished", "C-SYN-DRAFT-WEB", base=web_active)
+
     def test_variant_names_a_shared_semantic_component(self):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON-AND").update(variant_of=None),
                            "component.variant_invalid", "C-SYN-BUTTON-AND")
@@ -857,10 +900,54 @@ class DuplicateTests(RuleCase):
         self.assertRefused(lambda d: local(d).update(name="BUTTON"), "duplicate.semantic_component", "C-SYN-LOCAL",
                            "C-SYN-BUTTON")
 
-    def test_same_property_signature_is_a_duplicate(self):
-        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(
-            properties=copy.deepcopy(button(d)["properties"])),
-            "duplicate.semantic_component", "C-SYN-DRAFT", "C-SYN-BUTTON")
+    def test_published_signature_with_a_shared_word_is_a_duplicate(self):
+        def superset(document):
+            local(document).update(name="Action card", properties=[
+                *copy.deepcopy(button(document)["properties"]),
+                {"name": "body", "type": "slot", "values": [], "default": None, "required": True}])
+        self.assertRefused(superset, "duplicate.semantic_component", "C-SYN-LOCAL", "C-SYN-BUTTON")
+
+    def test_equal_signature_alone_is_not_a_duplicate(self):
+        document = fixture()
+        document["components"].append(component("C-SYN-LINK", "Link", role="navigation link", properties=[
+            {"name": "emphasis", "type": "enum", "values": ["subtle", "strong"], "default": "subtle",
+             "required": True}]))
+        self.assertIn("C-SYN-LINK", run_check(document).components)
+
+    def test_word_order_does_not_hide_a_duplicate(self):
+        self.assertRefused(lambda d: local(d).update(semantic_role="action primary"), "duplicate.semantic_component",
+                           "C-SYN-LOCAL", "C-SYN-BUTTON")
+
+    def test_plurals_do_not_hide_a_duplicate(self):
+        self.assertRefused(lambda d: local(d).update(name="Buttons"), "duplicate.semantic_component", "C-SYN-LOCAL",
+                           "C-SYN-BUTTON")
+
+    def test_copy_of_a_published_platform_variant_is_a_duplicate(self):
+        def distinct_variant():
+            document = fixture()
+            find(document, "components", "C-SYN-BUTTON-AND").update(
+                name="Android floating button", semantic_role="floating primary action", properties=[
+                    {"name": "extended", "type": "boolean", "values": [], "default": "false", "required": False}])
+            return document
+
+        def copy_variant(document):
+            variant = find(document, "components", "C-SYN-BUTTON-AND")
+            local(document).update(name=variant["name"], semantic_role=variant["semantic_role"],
+                                   properties=copy.deepcopy(variant["properties"]))
+        self.assertRefused(copy_variant, "duplicate.semantic_component", "C-SYN-LOCAL", "C-SYN-BUTTON-AND",
+                           base=distinct_variant)
+
+    def test_twin_platform_variants_are_duplicates(self):
+        def twin(document):
+            other = copy.deepcopy(find(document, "components", "C-SYN-BUTTON-AND"))
+            other["id"] = "C-SYN-BUTTON-ANDTWO"
+            document["components"].append(other)
+        self.assertRefused(twin, "duplicate.semantic_component", "C-SYN-BUTTON-AND", "C-SYN-BUTTON-ANDTWO")
+
+    def test_replacement_pair_sharing_a_name_is_exempt(self):
+        document = fixture()
+        find(document, "components", "C-SYN-CHIP")["name"] = "Button"
+        self.assertEqual(run_check(document).components["C-SYN-CHIP"]["name"], "Button")
 
     def test_duplicate_of_a_deprecated_published_component(self):
         self.assertRefused(lambda d: local(d).update(semantic_role="filter toggle"), "duplicate.semantic_component",
@@ -884,6 +971,29 @@ class DuplicateTests(RuleCase):
 
 
 class ContributionTests(RuleCase):
+    def test_candidate_status_belongs_to_the_candidate_library(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(status="candidate"),
+                           "contribution.candidate_library", "C-SYN-DRAFT")
+
+    def test_candidate_library_holds_only_candidates(self):
+        self.assertRefused(lambda d: local(d).update(status="draft"), "contribution.candidate_library", "C-SYN-LOCAL")
+
+    def test_candidate_names_its_proposal_branch(self):
+        self.assertRefused(lambda d: local(d).update(proposal_branch=None), "contribution.candidate_incomplete",
+                           "C-SYN-LOCAL")
+
+    def test_candidate_names_its_proposing_owner(self):
+        self.assertRefused(lambda d: local(d).update(owner_role=None), "contribution.candidate_incomplete",
+                           "C-SYN-LOCAL")
+
+    def test_candidate_cannot_omit_its_semantic_role(self):
+        self.assertRefused(lambda d: local(d).update(name="Primary CTA", semantic_role=None),
+                           "contribution.candidate_incomplete", "C-SYN-LOCAL")
+
+    def test_candidate_cannot_omit_its_property_contract(self):
+        self.assertRefused(lambda d: local(d).update(properties=[]), "contribution.candidate_incomplete",
+                           "C-SYN-LOCAL")
+
     def test_proposal_branches_belong_to_candidates(self):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(
             proposal_branch="T-DSY-02__systems__draft-banner"), "contribution.branch_outside_candidates",
@@ -900,12 +1010,12 @@ class ContributionTests(RuleCase):
                            "contribution.squad_mismatch", "C-SYN-LOCAL")
         self.assertRefused(lambda d: local(d).update(owner_role="web_design"), "contribution.squad_mismatch",
                            "C-SYN-LOCAL")
-        self.assertRefused(lambda d: local(d).update(owner_role=None), "contribution.squad_mismatch", "C-SYN-LOCAL")
 
     def test_proposal_branch_is_not_reused(self):
         def reuse(document):
             other = copy.deepcopy(local(document))
-            other.update(id="C-SYN-LOCAL-TWO", name="Other card", semantic_role="other summary", properties=[])
+            other.update(id="C-SYN-LOCAL-TWO", name="Other card", semantic_role="other summary", properties=[
+                {"name": "content", "type": "slot", "values": [], "default": None, "required": True}])
             document["components"].append(other)
         self.assertRefused(reuse, "contribution.branch_duplicate", "C-SYN-LOCAL-TWO")
 
@@ -946,7 +1056,7 @@ class CommandLineTests(unittest.TestCase):
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1", "readiness.approval_not_recorded: 5",
             "readiness.cdo_decision_pending: 1", "readiness.cdo_decision_unverified: 0",
             "readiness.migration_plan_pending: 0",
-            "readiness.live_verification_missing: 15", "readiness.component_not_in_registry: 0",
+            "readiness.live_verification_missing: 16", "readiness.component_not_in_registry: 0",
             "readiness.registry_component_ungoverned: 0",
         ])
 
@@ -1012,7 +1122,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(len(model.components), 57)
         self.assertEqual({(item["library"], item["status"]) for item in model.components.values()},
                          {("LIB-COMPONENTS", "draft")})
-        self.assertEqual(len(model.document["tabletop"]), 27)
+        self.assertEqual(len(model.document["tabletop"]), 28)
         self.assertFalse(any(item["live_verified"] for item in model.document["tabletop"]))
         self.assertIsNone(model.document["direction_ref"])
 
@@ -1032,7 +1142,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.cdo_decision_pending": sorted(f"{name}@1.0.0" for name in module.SHARED),
             "readiness.cdo_decision_unverified": [],
             "readiness.migration_plan_pending": [],
-            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 28)],
+            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 29)],
             "readiness.component_not_in_registry": [],
             "readiness.registry_component_ungoverned": [],
         })
@@ -1057,7 +1167,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1",
             "readiness.approval_not_recorded: 5", "readiness.cdo_decision_pending: 5",
             "readiness.cdo_decision_unverified: 0", "readiness.migration_plan_pending: 0",
-            "readiness.live_verification_missing: 27",
+            "readiness.live_verification_missing: 28",
             "readiness.component_not_in_registry: 0", "readiness.registry_component_ungoverned: 0",
         ])
 

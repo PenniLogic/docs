@@ -1628,6 +1628,16 @@
       "expected": "refused",
       "evidence_class": "tabletop",
       "live_verified": false
+    },
+    {
+      "id": "TT-28",
+      "action": "edit",
+      "role": "android_design",
+      "library": "LIB-CANDIDATE",
+      "offboarded": false,
+      "expected": "model_permitted",
+      "evidence_class": "tabletop",
+      "live_verified": false
     }
   ],
   "approvals": [

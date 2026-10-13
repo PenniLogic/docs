@@ -53,13 +53,15 @@ this data (`id.synthetic_reserved`). A record keyed by a pinned ID supports exac
 readiness gaps, never structure failures.
 
 Lifecycle: `draft` (imported, unpublished) -> `candidate` (`LIB-CANDIDATE` only) -> `published` ->
-`deprecated`. A published or deprecated record (criterion 1) must name an owner role that maintains its
+`deprecated`. Status `candidate` holds exactly in `LIB-CANDIDATE` (`contribution.candidate_library`).
+The ticket's rollout phrase "existing drafts import as unpublished candidates" is implemented as
+status `draft` in `LIB-COMPONENTS`, not as this contract's `candidate` state (a squad proposal). A published or deprecated record (criterion 1) must name an owner role that maintains its
 library, a description, a semantic role, a non-empty property contract, accessibility behavior (role,
 accessible name, focus, announcements), supported platforms, and a `since_version` that is a published
 release of its library (`published.*` rules). Property contracts have unique names; enums carry at
 least two values and a default from that list (or none); booleans default to `true`, `false` or none;
-text may carry a default; slots and instances carry no values and no default
-(`component.property_contract`).
+text may carry a default; slots and instances carry no values and no default; names are unique after
+case and punctuation normalization (`component.property_contract`).
 
 **Proposed placement (awaiting Design Systems confirmation).** All pinned components are imported as
 unpublished `draft` records in `LIB-COMPONENTS` with their pinned platforms (`shared` = android, web and
@@ -75,18 +77,26 @@ no visual direction is selected.
 
 1. **Request.** A feature squad (`android_design`, `web_design`, `admin_design`: the owners of the
    platform product files) proposes a component as a `candidate` in `LIB-CANDIDATE`, owned by the
-   proposing role, on a proposal branch or proposal file named by the
+   proposing role (`owner_role`), with a semantic role and a non-empty property contract so the
+   duplicate lint can judge it (`contribution.candidate_incomplete`), on a proposal branch or proposal file named by the
    [`design-operations.md`](design-operations.md) section 6 grammar
    `<plan-ticket>__<squad>__<change-slug>` with a known squad (`contribution.branch_grammar`). The
    branch's squad is the squad of the proposing owner role's reserved file (`contribution.squad_mismatch`),
    and a branch backs one record only, because a reused branch stops promotion
    (`contribution.branch_duplicate`). Proposal branches belong to candidates only
-   (`contribution.branch_outside_candidates`). Squads never edit or publish a shared library directly.
+   (`contribution.branch_outside_candidates`). The permission model lets feature squads edit
+   `LIB-CANDIDATE` (their candidates) but never edit or publish a shared library directly (section 8).
 2. **Duplicate review (criterion 2).** Before review, the registry lint compares every record with every
-   published `LIB-COMPONENTS` component by normalized name, normalized semantic role and property
-   signature (property names and types). Any shared key is refused
-   (`duplicate.semantic_component`) unless the record is that component's own platform variant or one of
-   the two is the other's declared replacement. Reviewers reuse the published component instead.
+   published or deprecated record of every shared library (`LIB-COMPONENTS` and the platform libraries).
+   Names and semantic roles are compared as lower-case word sets with a plural `s` dropped, so word
+   order, case, punctuation and plurals do not hide a duplicate. A record is a duplicate when its name or
+   semantic role equals the other's, or when it contains the other's whole property signature (property
+   names and types) and shares a name or role word with it; an equal signature alone is not a duplicate,
+   because distinct components may share property names and types (`duplicate.semantic_component`). The
+   only exemptions are a record and its own platform parent or variant, and a declared replacement pair;
+   two variants of one parent are compared like any other pair. A published variant needs a published
+   parent (`component.variant_parent_unpublished`). The lint matches words, not meaning: synonyms are
+   left to the Design Systems review, and reviewers reuse the published component instead.
 3. **Review and test.** Design Systems (`systems`) reviews the candidate against the published-component
    contract (section 3); Accessibility, UX Engineering and Design QA verification follow the gate rules of
    [`design-operations.md`](design-operations.md) sections 3 and 6. Promotion needs the evidence that
@@ -94,8 +104,9 @@ no visual direction is selected.
    targets, a versioned manifest, consumer compatibility evidence, independent verification, fresh gates).
 4. **Release.** Only the assigned Systems context prepares promotion and DesignOps serializes it from
    the last recorded canonical revision (section 6). The accepted candidate becomes a new record in the
-   target library under its registry ID; the candidate stays in history and is never published itself
-   (`component.candidate_published`).
+   target library under its registry ID. The candidate record leaves `figma-libraries.json` in the same
+   change and survives only in Git history (kept beside its promoted record it would be refused as a
+   duplicate); it is never published itself (`component.candidate_published`).
 
 ## 5. Versioning, release notes and dependency updates
 
@@ -174,6 +185,7 @@ is not detected across revisions; section 10).
 | publish to a shared library by a feature squad | never | `permission.feature_squad_publish` |
 | publish to `LIB-CANDIDATE` | never; candidates have no publish roles | `permission.candidate_publish` |
 | edit a shared library | its maintainers only; squads contribute through proposal branches | tabletop |
+| edit `LIB-CANDIDATE` | feature squads (their candidates, on their own proposal branches) and the maintainers | tabletop |
 | view, comment | any known role that is not offboarded; real access still needs a default-deny grant under section 7 of `design-operations.md` | tabletop |
 | public link, external sharing, asset export | nobody (E34-F06) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
 | any action after offboarding | nobody; offboarding revokes every grant and session | `access.offboarding_not_revoking` |
@@ -186,8 +198,8 @@ request fails until real access has been verified; nothing here changes that.
 The tabletop (section 11) applies the model to synthetic requests. Every scenario is
 `evidence_class: tabletop` with `live_verified: false` (`tabletop.live_claim`); its expected outcome must
 equal the model's decision (`tabletop.outcome_mismatch`), and it must cover a non-offboarded feature
-squad and an offboarded maintainer publishing to each shared library, a public link and an export
-(`tabletop.coverage_missing`). A tabletop is not Figma enforcement: live publishing, offboarding and
+squad and an offboarded maintainer publishing to each shared library, a public link, an export and a
+feature squad editing a candidate in `LIB-CANDIDATE` (`tabletop.coverage_missing`). A tabletop is not Figma enforcement: live publishing, offboarding and
 external-access audit evidence stay missing (`readiness.live_verification_missing`).
 
 ## 9. Observability (definitions only)
@@ -358,6 +370,7 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | TT-25 | public_link | web_design | LIB-WEB | no | refused | no |
 | TT-26 | export | systems | LIB-FOUNDATION | no | refused | no |
 | TT-27 | export | admin_design | LIB-ADMIN | no | refused | no |
+| TT-28 | edit | android_design | LIB-CANDIDATE | no | model_permitted | no |
 
 ### Required approvals
 
@@ -379,7 +392,7 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | readiness.cdo_decision_pending | 5 |
 | readiness.cdo_decision_unverified | 0 |
 | readiness.migration_plan_pending | 0 |
-| readiness.live_verification_missing | 27 |
+| readiness.live_verification_missing | 28 |
 | readiness.component_not_in_registry | 0 |
 | readiness.registry_component_ungoverned | 0 |
 

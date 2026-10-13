@@ -141,7 +141,7 @@ STRUCTURE_RULES = (
     "reference.invalid",
     "component.library_invalid", "component.candidate_published", "component.platform_mismatch",
     "component.registry_platform_mismatch",
-    "component.variant_invalid", "component.owner_not_maintainer", "component.property_contract",
+    "component.variant_invalid", "component.variant_parent_unpublished", "component.owner_not_maintainer", "component.property_contract",
     "published.owner_missing", "published.description_missing", "published.properties_missing",
     "published.accessibility_missing", "published.platforms_missing", "published.semantic_role_missing",
     "published.release_missing",
@@ -150,7 +150,8 @@ STRUCTURE_RULES = (
     "deprecation.unavailable",
     "duplicate.semantic_component",
     "contribution.branch_grammar", "contribution.branch_outside_candidates", "contribution.squad_mismatch",
-    "contribution.branch_duplicate",
+    "contribution.branch_duplicate", "contribution.candidate_library",
+    "contribution.candidate_incomplete",
     "tabletop.duplicate", "tabletop.live_claim", "tabletop.outcome_mismatch", "tabletop.coverage_missing",
     "approval.roles_mismatch",
 )
@@ -470,11 +471,12 @@ PUBLISHED = ("published", "deprecated")
 
 
 def check_properties(component):
-    """The property contract: unique names; enum values and defaults; booleans default to true/false or null."""
+    """The property contract: names unique after normalization (case and punctuation, as the duplicate lint compares
+    them); enum values and defaults; booleans default to true/false or null."""
     names = set()
     for item in component["properties"]:
-        require(item["name"] not in names, "component.property_contract", component["id"])
-        names.add(item["name"])
+        require(_normal(item["name"]) not in names, "component.property_contract", component["id"])
+        names.add(_normal(item["name"]))
         if item["type"] == "enum":
             valid = len(item["values"]) >= 2 and item["default"] in (None, *item["values"])
         elif item["type"] == "boolean":
@@ -494,6 +496,14 @@ def check_component(component, schema, policy, releases, fixture):
     # docs#55 has not published a token grammar: no token reference can be resolved, so none is recorded.
     require(not component["token_refs"], "held.token_refs", identifier)
     require(library != "LIB-CANDIDATE" or not published, "component.candidate_published", identifier)
+    # Lifecycle: a `candidate` lives in LIB-CANDIDATE and LIB-CANDIDATE holds only candidates.
+    candidate = component["status"] == "candidate"
+    require(candidate == (library == "LIB-CANDIDATE"), "contribution.candidate_library", identifier)
+    # A candidate names its proposing owner and branch, and declares what the duplicate lint compares: omitting the
+    # semantic role or property contract cannot hide a duplicate (criterion 2).
+    require(not candidate or (component["owner_role"] is not None and component["proposal_branch"] is not None
+                              and component["semantic_role"] is not None and bool(component["properties"])),
+            "contribution.candidate_incomplete", identifier)
     platform = TOPOLOGY[library][5]
     require(platform is None or component["platforms"] == [platform], "component.platform_mismatch", identifier)
     owner = component["owner_role"]
@@ -535,15 +545,23 @@ def _normal(text):
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def semantic_keys(component):
-    """Normalized semantic role, name and property signature (criterion 2's duplicate identity)."""
-    keys = {("name", _normal(component["name"]))}
-    if component["semantic_role"] is not None:
-        keys.add(("role", _normal(component["semantic_role"])))
-    if component["properties"]:
-        keys.add(("signature", tuple(sorted((_normal(item["name"]), item["type"])
-                                            for item in component["properties"]))))
-    return keys
+def _words(text):
+    """Lower-case word set with a plural `s` dropped, so word order and plurals do not hide a duplicate."""
+    return frozenset(word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
+                     for word in re.findall(r"[a-z0-9]+", (text or "").lower()))
+
+
+def duplicates(component, other):
+    """Criterion 2 against one published record: the same name or semantic role (as word sets), or the published
+    property signature contained in this one together with a shared name or role word. An equal signature alone
+    is not a duplicate: distinct components may share property names and types."""
+    name, other_name = _words(component["name"]), _words(other["name"])
+    role, other_role = _words(component["semantic_role"]), _words(other["semantic_role"])
+    if (name and name == other_name) or (role and role == other_role):
+        return True
+    signature = {(_normal(item["name"]), item["type"]) for item in component["properties"]}
+    other_signature = {(_normal(item["name"]), item["type"]) for item in other["properties"]}
+    return bool(other_signature) and other_signature <= signature and bool((name | role) & (other_name | other_role))
 
 
 def _replaces(component, other):
@@ -560,6 +578,9 @@ def check_component_graph(components, releases):
             require(target is not None and target["library"] == "LIB-COMPONENTS"
                     and set(component["platforms"]) <= set(target["platforms"]), "component.variant_invalid",
                     identifier)
+            # A published variant never carries a semantic its parent has not published.
+            require(component["status"] not in PUBLISHED or target["status"] in PUBLISHED,
+                    "component.variant_parent_unpublished", identifier)
         else:
             require(variant is None, "component.variant_invalid", identifier)
         deprecation = component["deprecation"]
@@ -579,16 +600,16 @@ def check_component_graph(components, releases):
         require(version(removal)[1:] == (0, 0) and version(removal)[0] > current, "deprecation.removal_version_invalid",
                 identifier)
         require(deprecation["available_until_removal"], "deprecation.unavailable", identifier)
-    published = [item for item in components.values()
-                 if item["library"] == "LIB-COMPONENTS" and item["status"] in PUBLISHED]
+    # Every record is linted against every published or deprecated record of every shared library (semantic and
+    # platform), except its own parent or variant and a declared replacement pair.
+    published = [item for item in components.values() if item["status"] in PUBLISHED]
     for identifier, component in components.items():
-        keys = semantic_keys(component)
         for other in published:
-            if other["id"] == identifier or component["variant_of"] == other["id"]:
+            if other["id"] in (identifier, component["variant_of"]) or other["variant_of"] == identifier:
                 continue
             if _replaces(component, other) or _replaces(other, component):
                 continue
-            require(not (keys & semantic_keys(other)), "duplicate.semantic_component", identifier, other["id"])
+            require(not duplicates(component, other), "duplicate.semantic_component", identifier, other["id"])
 
 
 def decide(scenario, policy, libraries):
@@ -601,8 +622,10 @@ def decide(scenario, policy, libraries):
     if action == "publish":
         return "model_permitted" if role in libraries[library]["publish_roles"] else "refused"
     if action == "edit":
-        # Feature squads contribute through proposal branches, never by editing a shared library.
-        return "model_permitted" if role in policy.library_maintainers(library) else "refused"
+        # Feature squads contribute candidates in LIB-CANDIDATE (on their proposal branches), never by editing a
+        # shared library; the library's maintainers review and edit both.
+        squads = policy.feature_squads if library == "LIB-CANDIDATE" else frozenset()
+        return "model_permitted" if role in policy.library_maintainers(library) | squads else "refused"
     return "model_permitted"
 
 
@@ -625,6 +648,10 @@ def check_tabletop(document, policy, libraries):
                 "tabletop.coverage_missing", library)
     for action in ("public_link", "export"):
         require(any(item["action"] == action for item in scenarios), "tabletop.coverage_missing")
+    # The contribution path itself: a feature squad edits its candidate in LIB-CANDIDATE.
+    require(any(item["action"] == "edit" and item["library"] == "LIB-CANDIDATE" and not item["offboarded"]
+                and item["role"] in policy.feature_squads for item in scenarios), "tabletop.coverage_missing",
+            "LIB-CANDIDATE")
 
 
 def check_approvals(document):
