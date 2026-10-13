@@ -148,7 +148,8 @@ STRUCTURE_RULES = (
     "deprecation.replacement_invalid", "deprecation.removal_version_missing", "deprecation.removal_version_invalid",
     "deprecation.unavailable",
     "duplicate.semantic_component",
-    "contribution.branch_grammar", "contribution.branch_outside_candidates",
+    "contribution.branch_grammar", "contribution.branch_outside_candidates", "contribution.squad_mismatch",
+    "contribution.branch_duplicate",
     "tabletop.duplicate", "tabletop.live_claim", "tabletop.outcome_mismatch", "tabletop.coverage_missing",
     "approval.roles_mismatch",
 )
@@ -345,6 +346,8 @@ class Policy:
         # Feature squads: the owner roles of the platform product files; they contribute, never publish.
         self.feature_squads = frozenset(item["owner_role"] for item in self.files.values() if item["kind"] == "product")
         self.squads = frozenset(item["squad"] for item in self.files.values())
+        # The squad a role works in: the squad of the reserved file it owns (design-operations.md section 6).
+        self.squad_of = {item["owner_role"]: item["squad"] for item in self.files.values()}
         self.branch = re.compile(data["topology"]["branch_pattern"])
         require(not data["access"]["public_links_enabled"] and not data["access"]["external_sharing_enabled"],
                 "policy.invalid")
@@ -503,6 +506,9 @@ def check_component(component, schema, policy, releases, fixture):
         match = policy.branch.fullmatch(branch)
         require(match is not None and branch.split("__")[1] in policy.squads, "contribution.branch_grammar",
                 identifier)
+        # "Squad and branch identity must agree": the branch's squad is the proposing owner role's squad.
+        require(owner is not None and policy.squad_of.get(owner) == branch.split("__")[1],
+                "contribution.squad_mismatch", identifier)
     if published:
         # Criterion 1: owner, description, property contract, accessibility behaviour and supported platforms.
         require(owner is not None, "published.owner_missing", identifier)
@@ -643,11 +649,15 @@ def check(document, schema, policy_data, policy_schema, sources, pin=None, fixtu
         released = any(key[0] == identifier and item["status"] == "published" for key, item in releases.items())
         require(library["status"] == "frozen" or released == (library["status"] == "active"),
                 "library.status_mismatch", identifier)
-    components = {}
+    components, branches = {}, set()
     for component in document["components"]:
         require(component["id"] not in components, "id.duplicate", component["id"])
         components[component["id"]] = component
         check_component(component, schema, policy, releases, fixture)
+        # A reused branch stops promotion (design-operations.md section 6): one proposal branch, one record.
+        branch = component["proposal_branch"]
+        require(branch is None or branch not in branches, "contribution.branch_duplicate", component["id"])
+        branches.add(branch)
         # A record keyed by a pinned registry ID supports exactly the platforms the registry assigns to it.
         require(component["id"] not in pinned or set(component["platforms"]) == set(pinned[component["id"]]),
                 "component.registry_platform_mismatch", component["id"])
@@ -696,7 +706,8 @@ MIRROR = "governance/figma-library-governance.md"
 MIRROR_BEGIN = "<!-- BEGIN GENERATED: governance/figma-libraries.json (check_figma_libraries.py --mirror) -->"
 MIRROR_END = "<!-- END GENERATED: governance/figma-libraries.json -->"
 # Free text cannot break a table cell or the generated-section markers, nor add emphasis, code or links.
-_CELL_ESCAPES = str.maketrans({character: "\\" + character for character in "\\|`*[]"} | {"<": "&lt;", ">": "&gt;"})
+_CELL_ESCAPES = str.maketrans({character: "\\" + character for character in "\\|`*[]"}
+                              | {"&": "&amp;", "<": "&lt;", ">": "&gt;"})
 
 
 def cell(value):

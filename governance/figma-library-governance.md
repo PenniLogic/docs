@@ -77,9 +77,11 @@ no visual direction is selected.
    platform product files) proposes a component as a `candidate` in `LIB-CANDIDATE`, owned by the
    proposing role, on a proposal branch or proposal file named by the
    [`design-operations.md`](design-operations.md) section 6 grammar
-   `<plan-ticket>__<squad>__<change-slug>` with a known squad (`contribution.branch_grammar`). Proposal
-   branches belong to candidates only (`contribution.branch_outside_candidates`). Squads never edit or
-   publish a shared library directly.
+   `<plan-ticket>__<squad>__<change-slug>` with a known squad (`contribution.branch_grammar`). The
+   branch's squad is the squad of the proposing owner role's reserved file (`contribution.squad_mismatch`),
+   and a branch backs one record only, because a reused branch stops promotion
+   (`contribution.branch_duplicate`). Proposal branches belong to candidates only
+   (`contribution.branch_outside_candidates`). Squads never edit or publish a shared library directly.
 2. **Duplicate review (criterion 2).** Before review, the registry lint compares every record with every
    published `LIB-COMPONENTS` component by normalized name, normalized semantic role and property
    signature (property names and types). Any shared key is refused

@@ -813,6 +813,20 @@ class ContributionTests(RuleCase):
                 self.assertRefused(lambda d: local(d).update(proposal_branch=branch), "contribution.branch_grammar",
                                    "C-SYN-LOCAL")
 
+    def test_branch_squad_is_the_owner_roles_squad(self):
+        self.assertRefused(lambda d: local(d).update(proposal_branch="T-DSY-02__web__local-card"),
+                           "contribution.squad_mismatch", "C-SYN-LOCAL")
+        self.assertRefused(lambda d: local(d).update(owner_role="web_design"), "contribution.squad_mismatch",
+                           "C-SYN-LOCAL")
+        self.assertRefused(lambda d: local(d).update(owner_role=None), "contribution.squad_mismatch", "C-SYN-LOCAL")
+
+    def test_proposal_branch_is_not_reused(self):
+        def reuse(document):
+            other = copy.deepcopy(local(document))
+            other.update(id="C-SYN-LOCAL-TWO", name="Other card", semantic_role="other summary", properties=[])
+            document["components"].append(other)
+        self.assertRefused(reuse, "contribution.branch_duplicate", "C-SYN-LOCAL-TWO")
+
 
 class CommandLineTests(unittest.TestCase):
     """main() in process against a temporary root outside the repository; the registry comes from memory."""
@@ -945,6 +959,8 @@ class PublishedDataTests(unittest.TestCase):
     def test_governance_document_mirrors_the_json(self):
         text = (ROOT / module.MIRROR).read_bytes().decode("utf-8")
         self.assertNotIn("\r", text)
+        self.assertFalse(text.startswith("\ufeff"))
+        self.assertTrue(text.isascii() and text.endswith("\n") and not text.endswith("\n\n"))
         self.assertEqual(module.mirror_section(text), module.render_mirror(self.model))
 
     def test_command_line_reports_not_green_with_exact_counts(self):
@@ -975,11 +991,11 @@ class MirrorTests(unittest.TestCase):
     def test_hostile_names_cannot_break_cells_or_markers(self):
         document = fixture()
         self.render(copy.deepcopy(document))
-        find(document, "components", "C-SYN-DRAFT")["name"] = f"A | b `c` *d* [e] {module.MIRROR_END}"
+        find(document, "components", "C-SYN-DRAFT")["name"] = f"A | b `c` *d* [e] &amp; {module.MIRROR_END}"
         text = self.render(document)
         self.assertEqual((text.count(module.MIRROR_BEGIN), text.count(module.MIRROR_END)), (1, 1))
         row = next(line for line in text.splitlines() if line.startswith("| C-SYN-DRAFT |"))
-        self.assertIn("A \\| b \\`c\\` \\*d\\* \\[e\\] &lt;!-- END GENERATED", row)
+        self.assertIn("A \\| b \\`c\\` \\*d\\* \\[e\\] &amp;amp; &lt;!-- END GENERATED", row)
         # Eight columns: nine unescaped pipes.
         self.assertEqual(len(re.findall(r"(?<!\\)\|", row)), 9)
         self.assertEqual(module.mirror_section(text), text)
