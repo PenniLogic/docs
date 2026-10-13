@@ -261,6 +261,17 @@ class ShapeAndContentTests(JourneyCase):
     def test_unknown_gap_key_is_schema_invalid_with_gap_id(self):
         self.assertRefused("schema.invalid", "GAP-J10-01", lambda gaps: gaps["gaps"][0].update(extra=None), "gaps")
 
+    def test_zero_width_character_in_action_refused(self):
+        self.assertRefused("content.unprintable_character", "J01.C.01",
+                           setter(("J01.C.01", "action"), "Opens the app\u200b"))
+
+    def test_fullwidth_digit_in_metric_ref_refused(self):
+        self.assertRefused("content.unprintable_character", "BP-J01",
+                           setter(("BP-J01", "outcome", "metric_ref"), "pending:PenniLogic/docs#\uff17\uff17"))
+
+    def test_phone_shape_in_action_refused(self):
+        self.assertRefused("content.phone_shape", "J01.C.01", setter(("J01.C.01", "action"), "Call 98765 43210"))
+
     def test_url_in_action_refused(self):
         self.assertRefused("content.url_shape", "J01.C.01", setter(("J01.C.01", "action"), "Opens www.example"))
 
@@ -751,7 +762,7 @@ class SummaryAndCliTests(JourneyCase):
         (self.root / "product").mkdir()
         (self.root / "adr").mkdir()
         (self.root / "planning").mkdir()
-        (self.root / "adr" / "ADR-015.md").write_text("synthetic\n", encoding="utf-8", newline="\n")
+        self.write_adr("ADR-015", "ACCEPTED")
         (self.root / module.DATA).write_bytes(encode(DOCUMENT))
         (self.root / module.GAPS).write_bytes(encode(GAPS))
         (self.root / module.SCHEMA).write_bytes((ROOT / module.SCHEMA).read_bytes())
@@ -768,6 +779,10 @@ class SummaryAndCliTests(JourneyCase):
         for patch in reversed(self.patches):
             patch.stop()
         self.directory.cleanup()
+
+    def write_adr(self, number, status, superseded_by="null", name=None):
+        text = f"---\nnumber: {number}\ntitle: Synthetic\nstatus: {status}\nsuperseded-by: {superseded_by}\n---\nBody\n"
+        (self.root / "adr" / f"{name or number}.md").write_text(text, encoding="utf-8", newline="\n")
 
     def main(self, *argv):
         out, err = io.StringIO(), io.StringIO()
@@ -839,6 +854,26 @@ class SummaryAndCliTests(JourneyCase):
             copy_path.write_bytes((self.root / module.DATA).read_bytes())
             (self.root / module.DATA).unlink()
             os.symlink(copy_path, self.root / module.DATA)
+            self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
+
+    def test_only_accepted_unsuperseded_adrs_are_citable(self):
+        self.write_adr("ADR-016", "PROPOSED")
+        self.write_adr("ADR-017", "ACCEPTED", superseded_by="ADR-018")
+        self.write_adr("ADR-019", "ACCEPTED", name="ADR-020")
+        (self.root / "adr" / "ADR-021.md").write_text("not an ADR\n", encoding="utf-8", newline="\n")
+        self.assertEqual(module.adr_identifiers(self.root), frozenset({"ADR-015"}))
+
+    def test_proposed_adr_citation_refused(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        self.write_adr("ADR-015", "PROPOSED")
+        self.assertEqual(self.main("--structure"), self.refused("policy.unknown_adr J01.T.01 ADR-015"))
+
+    def test_symlinked_adr_directory_refused(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        with tempfile.TemporaryDirectory() as outside:
+            moved = Path(outside) / "adr"
+            (self.root / "adr").rename(moved)
+            os.symlink(moved, self.root / "adr", target_is_directory=True)
             self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
 
     def test_symlinked_parent_directory_refused(self):

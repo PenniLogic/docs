@@ -903,7 +903,17 @@ def render_summary(model, gaps):
 
 
 def adr_identifiers(root):
-    return frozenset(path.stem for path in (Path(root) / ADR_DIRECTORY).glob("ADR-[0-9][0-9][0-9].md"))
+    """Accepted, unsuperseded ADRs only: front matter whose number equals the file name, status ACCEPTED and
+    superseded-by null. The directory and every record are read through repository_file, so a symlinked adr/
+    or record is refused; a proposed, superseded or non-ADR file is simply not citable (policy.unknown_adr)."""
+    accepted = set()
+    for path in sorted(repository_file(root, ADR_DIRECTORY).glob("ADR-[0-9][0-9][0-9].md")):
+        lines = repository_file(root, f"{ADR_DIRECTORY}/{path.name}").read_text(encoding="utf-8").split("\n")
+        end = lines.index("---", 1) if lines[0] == "---" and "---" in lines[1:] else 0
+        fields = dict(line.split(": ", 1) for line in lines[1:end] if ": " in line)
+        if (fields.get("number"), fields.get("status"), fields.get("superseded-by")) == (path.stem, "ACCEPTED", "null"):
+            accepted.add(path.stem)
+    return frozenset(accepted)
 
 
 def repository_file(root, relative):
