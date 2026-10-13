@@ -7,8 +7,8 @@ library or live evidence.
 
 Records live in [`figma-libraries.json`](figma-libraries.json), validated against
 [`figma-libraries.schema.json`](figma-libraries.schema.json) by `python scripts/check_figma_libraries.py`
-(complete check; prints `NOT GREEN: readiness incomplete` with exact gap counts until every held input
-exists) or `--structure` (structure only). Section 11 is generated from the JSON by `--mirror` and a unit
+(complete check; prints `NOT GREEN: readiness incomplete` with exact gap counts; GREEN is unreachable
+in this version, section 10) or `--structure` (structure only). Section 11 is generated from the JSON by `--mirror` and a unit
 test fails when it drifts; the other sections are the contract text.
 
 ## 1. Sources and boundaries
@@ -18,7 +18,7 @@ test fails when it drifts; the other sections are the contract text.
 | [`design-gates.json`](design-gates.json) | Role IDs, the `components` and `foundations_tokens` artifact classes (accountable and responsible roles), reserved Figma files and pages, the proposal-branch pattern, the `shared_system_major` CDO-equivalent scope | docs#64 (accepted, byte-pinned; read only) |
 | [`design-operations.md`](design-operations.md) section 6 | Figma topology, branch grammar, SemVer classes, promotion, archive, restoration and rollback freeze | docs#64 (read only; section 5 below adds H07's labelled proposals on top of it) |
 | [`design-operations.md`](design-operations.md) section 7 | Default-deny grants, no public links or external sharing, offboarding revocation | docs#64 (read only) |
-| Imported registry `planning/source/evidence/experience-coverage.json` at `1722fc79` | Component IDs (`C-*`) and their platforms, pinned by commit, path and sha256 (`registry_ref`) | docs#75 (moves to `product/experience-coverage.json` when docs#75 integrates; the re-pin changes `registry_ref` and the checker's `REGISTRY_PIN` together, then regenerates section 11 and updates the published-data test expectations) |
+| Imported registry `planning/source/evidence/experience-coverage.json` at `1722fc79` | Component IDs (`C-*`), their names and their platforms, pinned by commit, path and sha256 (`registry_ref`) | docs#75 (moves to `product/experience-coverage.json` when docs#75 integrates; the re-pin changes `registry_ref` and the checker's `REGISTRY_PIN` together, then regenerates section 11 and updates the published-data test expectations) |
 | docs#76 visual direction (D2) | `direction_ref`; stays `null` until the decision exists | docs#76 (held) |
 | docs#55 token grammar | `token_refs`; stays empty until a grammar is published | docs#55 (held) |
 
@@ -96,7 +96,8 @@ no visual direction is selected.
    and a branch backs one record only, because a reused branch stops promotion
    (`contribution.branch_duplicate`). Proposal branches belong to candidates only
    (`contribution.branch_outside_candidates`). The permission model lets feature squads edit
-   `LIB-CANDIDATE` (their candidates) but never edit or publish a shared library directly (section 8).
+   `LIB-CANDIDATE` at library level (it has no per-candidate dimension; candidate ownership is bound on the
+   record only, section 8) but never edit or publish a shared library directly (section 8).
 2. **Duplicate review (criterion 2).** Before review, the registry lint compares every record with every
    published or deprecated record of every shared library (`LIB-COMPONENTS` and the platform libraries).
    Names and semantic roles are compared as sets of content words (function words such as `and`, `or`,
@@ -212,7 +213,7 @@ is not detected across revisions; section 10).
 | publish to a shared library by a feature squad | never | `permission.feature_squad_publish` |
 | publish to `LIB-CANDIDATE` | never; candidates have no publish roles | `permission.candidate_publish` |
 | edit a shared library | its maintainers only; squads contribute through proposal branches | tabletop |
-| edit `LIB-CANDIDATE` | feature squads (their candidates, on their own proposal branches) and the maintainers | tabletop |
+| edit `LIB-CANDIDATE` | every feature squad and the maintainers, at library level: requests name a library, not a candidate, so the model cannot express "only their own candidates". Candidate ownership is bound on the record only (`owner_role`, `proposal_branch`, `contribution.squad_mismatch`); per-candidate edit rights (cross-squad library edits fail under section 7 of `design-operations.md`) are not modelled and held (section 10) | tabletop |
 | view, comment | any known role that is not offboarded; real access still needs a default-deny grant under section 7 of `design-operations.md` | tabletop |
 | public link, external sharing, asset export | nobody: public links and external sharing (E34-F06); asset export (the ticket's security requirement and the coordinator appendix) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
 | any action after offboarding | nobody; offboarding revokes every grant and session | `access.offboarding_not_revoking` |
@@ -235,7 +236,11 @@ exist; no row can close it because `live_verified` stays false).
 Threat finding E34-F06 (`governance/threat-model/records/E34.json`, handed off to docs#78) maps as
 follows: no public-link sharing -> `access.public_links` and the `public_link` tabletop case; external
 sharing -> `access.external_sharing` and the `external_share` case; library changes through a branch, a
-review and a versioned publish -> section 4 (`contribution.*`) and section 5 (`release.*`); publish rights
+review and a versioned publish -> **partial**: the versioned publish is section 5 (`release.*`); the branch
+and the review are modelled only for squad candidates (section 4, `contribution.*`) and for majors (the CDO
+record). For maintainer changes and minor or patch releases the branch and the review are process
+obligations (the Git pull request and the section 6 promotion of `design-operations.md`), not checked, and
+held with the per-release Design Systems Lead decision record (section 10); publish rights
 limited to named maintainers -> `permission.*`; contributor access reviewed -> **not modelled**: no rule
 or record covers the periodic contributor access review, which stays a held process item (section 10).
 
@@ -256,9 +261,11 @@ Measured per platform once real libraries exist; no data is collected or reporte
 The validator refuses a structure failure with a static rule ID plus, at most, identifiers that passed
 their own grammar; it never echoes input text and fails closed. Its default mode reports every readiness
 gap (section 11 lists the current counts) and stays `NOT GREEN` while any exists. `GREEN` is
-unreachable in this version by design: `readiness.tokens_unpublished`,
-`readiness.live_verification_missing` and `readiness.continuity_unchecked` close only when a later
-checker change integrates the held inputs below.
+unreachable in this version by design: five gaps cannot close without a later checker or schema change.
+`readiness.direction_missing` and `readiness.approval_not_recorded` close only when the direction or an
+approval is recorded, and recording either is refused today (`held.direction_ref`; the schema admits
+only `not_recorded` approvals); `readiness.tokens_unpublished`, `readiness.live_verification_missing`
+and `readiness.continuity_unchecked` close only when a later change integrates the held inputs below.
 
 | Item | Status in this change |
 | --- | --- |
@@ -276,6 +283,12 @@ checker change integrates the held inputs below.
 | Scope: Design Systems Lead minor-release decision right | Stated in section 5; not recorded per release (only the CDO record exists), so a minor or patch release carries no decision record yet; held |
 | D14: component dependency and variant map | Library level only (section 11): consumption edges and platform variants. The component-to-component dependency map is held: records carry no dependency reference and `instance` properties name no target |
 | E34-F06: contributor access reviewed | Not modelled; held process item (section 8) |
+| E34-F06: branch and review for maintainer changes and minor or patch releases | Not modelled; process obligations (Git pull request, `design-operations.md` section 6 promotion), held with the Design Systems Lead decision record (section 8) |
+| Per-candidate edit rights | Not modelled: the tabletop is library level; ownership is bound on the candidate record only (section 8); held |
+| Design Systems Lead breaking-change approval (`product/08-experience-design-and-sdlc-plan.md` section 3: shared component API and breaking-change approval cannot be delegated) | Not recorded: a major carries only the CDO record (section 5); held until a record for it exists |
+| Platform-variant divergence recorded and approved (`product/08-experience-design-and-sdlc-plan.md` section 15) | Not modelled: variant records carry no divergence rationale or approval; held for Design Systems content (T-DSY-04 to T-DSY-06) |
+| Variant coverage of published components (`product/08-experience-design-and-sdlc-plan.md` section 5) | Not modelled on the record; held with the other promotion evidence |
+| Scope: component naming | Component names come from the pinned registry and are copied verbatim (section 3); this change defines no Figma component naming convention; held for Design Systems |
 
 Held: the docs#76 direction decision (`direction_ref` stays `null`); the docs#55 token grammar
 (`token_refs` stay empty); authorized access to the real governed Figma libraries and live verification
@@ -286,7 +299,10 @@ continuity check (in-place contract changes, removal or reversion of published a
 for example against the merge-base with `origin/main` as the registry ledger does) before any
 publication is enabled; component content limits, code targets, versioned manifests and consumer
 compatibility evidence; the per-release Design Systems Lead decision record; the component dependency
-map; the contributor access review; placement of the reserved `Assets` page.
+map; the contributor access review; per-candidate edit rights; branch and review records for maintainer
+changes and minor or patch releases; the Design Systems Lead breaking-change approval record; recorded and
+approved platform-variant divergence; variant coverage; a Figma component naming convention; placement of
+the reserved `Assets` page.
 
 ## 11. Generated records (do not edit)
 

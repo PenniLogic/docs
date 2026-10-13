@@ -4,8 +4,9 @@ PenniLogic/docs#78 records the library topology (LIB-* libraries and which may c
 (library, SemVer), component governance records keyed by the experience-coverage registry's C-* IDs, a synthetic
 permission/offboarding tabletop and the required approvals in governance/figma-libraries.json, validated against
 governance/figma-libraries.schema.json (a self-contained draft-07 subset). Roles, the CDO-equivalent scope, artifact
-classes and the reserved Figma topology are read from governance/design-gates.json; the SemVer and branch rules are
-those of governance/design-operations.md section 6. Neither file is edited.
+classes and the reserved Figma topology are read from governance/design-gates.json; the SemVer classes (by content)
+and the branch grammar come from governance/design-operations.md section 6, while the exact version arithmetic and the
+first-release rule are H07 proposals (governance/figma-library-governance.md section 5). Neither file is edited.
 
 The registry is the imported planning/source/evidence/experience-coverage.json pinned by commit, path and sha256 and
 read from the local Git object store through an absolute git outside the checkout (no replace refs or grafts). IDs

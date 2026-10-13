@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/PenniLogic/docs/blob/main/governance/figma-libraries.schema.json",
   "title": "Governed Figma libraries, component contribution and release records",
-  "description": "T-DSY-02 (PenniLogic/docs#78) source contract. Self-contained draft-07 subset; nullable objects (accessibility, deprecation, cdo_approval, decision_source) are shape-checked in scripts/check_figma_libraries.py against the named definitions. SemVer and branch rules are those of governance/design-operations.md section 6; roles come from governance/design-gates.json.",
+  "description": "T-DSY-02 (PenniLogic/docs#78) source contract. Self-contained draft-07 subset; nullable objects (accessibility, deprecation, cdo_approval, decision_source) are shape-checked in scripts/check_figma_libraries.py against the named definitions. SemVer classes (by content) and the branch grammar come from governance/design-operations.md section 6; the exact version arithmetic and the first-release rule are H07 proposals (governance/figma-library-governance.md section 5); roles come from governance/design-gates.json.",
   "type": "object",
   "additionalProperties": false,
   "required": [
