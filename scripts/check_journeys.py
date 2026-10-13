@@ -72,8 +72,12 @@ gates = _sibling("journey_design_gates", "check_design_gates.py")
 strategy = _sibling("journey_test_strategy", "check_test_strategy.py")
 INVENTORY = strategy.INVENTORY
 
-# The blueprint-owned diagrams (docs#67 "Owns diagram"); renderings here are markdown text, Figma is held.
+# The blueprint-owned diagrams (docs#67 "Owns diagram"); renderings here are markdown text. A diagram whose
+# registry artifact is a Figma page is held (Figma is disabled); one whose artifact is a Git file has no Figma state.
 OWNED_DIAGRAMS = ("D01", "D03", "D04", "D05", "D21")
+FIGMA_PREFIX = "Figma "
+# The service-blueprint diagrams are rendered by the blueprints of the journeys they name.
+BLUEPRINT_DIAGRAMS = {"D04": ("J03",), "D05": ("J10", "J11")}
 APPROVAL_ROLES = ("product", "architecture", "security", "operations", "ia")
 BRANCH_KINDS = ("failure", "offline", "timeout", "revocation", "partial", "escalation", "rollback",
                 "permission_denied")
@@ -163,7 +167,7 @@ STRUCTURE_RULES = (
     "persona.basis_ref", "approval.order", "approval.ia_before_backlog",
     "held.approval", "held.research_evidence", "held.status", "held.persona_basis", "held.backlog_item",
     "held.gap_status",
-    "diagram.set_mismatch", "diagram.registry_mismatch",
+    "diagram.set_mismatch", "diagram.registry_mismatch", "diagram.figma_mismatch", "diagram.rendering_missing",
     "map.supersedes_mismatch", "metric.minted", "metric.ref_not_pending",
     "step.journey_mismatch", "step.lane_mismatch", "step.channel_lane_mismatch", "step.flow_missing",
     "step.flow_on_service", "step.flow_outside_journey", "step.flow_channel_mismatch", "step.screen_missing",
@@ -397,6 +401,7 @@ def index_registry(registry):
         require(isinstance(flow.get("critical"), bool), "registry.invalid")
     for diagram in diagrams.values():
         require(isinstance(diagram.get("owner_ticket"), str), "registry.invalid")
+        require(isinstance(diagram.get("artifact_path"), str), "registry.invalid")
     return {"personas": personas, "journeys": journeys, "flows": flows, "screens": screens, "diagrams": diagrams}
 
 
@@ -482,6 +487,14 @@ def check_header(model):
         record = registry["diagrams"].get(identifier)
         require(record is not None and record["owner_ticket"] == OWNER_PLAN_ID, "diagram.registry_mismatch",
                 identifier)
+    for diagram in document["diagrams"]:
+        figma = registry["diagrams"][diagram["id"]]["artifact_path"].startswith(FIGMA_PREFIX)
+        require(diagram["figma"] == ("held" if figma else "not_applicable"), "diagram.figma_mismatch", diagram["id"])
+    for identifier, journeys in BLUEPRINT_DIAGRAMS.items():
+        for journey_id in journeys:
+            blueprint = next((item for item in document["blueprints"] if item["journey_id"] == journey_id), None)
+            require(blueprint is None or identifier in blueprint["diagram_ids"], "diagram.rendering_missing",
+                    f"BP-{journey_id}", identifier)
 
 
 def _flow_platform(flow_id):
@@ -861,8 +874,8 @@ def render_summary(model, gaps):
         f"Registry pin: commit {pin['commit']}, path {pin['path']}, {pin['sha256']}.", "",
         "Personas are planning hypotheses, not research evidence: every persona basis stays provisional until "
         f"{RESEARCH_ISSUE} evidence exists. Metric references stay pending on PenniLogic/docs#77 and event "
-        "references pending on their owner issues. Diagrams here are markdown text renderings; their Figma "
-        "artifacts are held. No approval, review, tabletop or backlog issue is recorded by this file.", "",
+        "references pending on their owner issues. Diagrams here are markdown text renderings; a Figma page "
+        "named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, review, tabletop or backlog issue is recorded by this file.", "",
         "## Readiness gaps", "",
     ]
     lines += _table(("Rule", "Count", "Subjects"), [

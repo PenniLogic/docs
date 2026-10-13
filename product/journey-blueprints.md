@@ -6,7 +6,7 @@ Blueprint version 0.1.0 (provisional) for PenniLogic/docs#67 (T-UXR-04). Readine
 
 Registry pin: commit 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4, path planning/source/evidence/experience-coverage.json, sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a.
 
-Personas are planning hypotheses, not research evidence: every persona basis stays provisional until PenniLogic/docs#66 evidence exists. Metric references stay pending on PenniLogic/docs#77 and event references pending on their owner issues. Diagrams here are markdown text renderings; their Figma artifacts are held. No approval, review, tabletop or backlog issue is recorded by this file.
+Personas are planning hypotheses, not research evidence: every persona basis stays provisional until PenniLogic/docs#66 evidence exists. Metric references stay pending on PenniLogic/docs#77 and event references pending on their owner issues. Diagrams here are markdown text renderings; a Figma page named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, review, tabletop or backlog issue is recorded by this file.
 
 ## Readiness gaps
 
@@ -18,9 +18,9 @@ Personas are planning hypotheses, not research evidence: every persona basis sta
 | readiness.approval_pending | 5 | architecture, ia, operations, product, security |
 | readiness.metric_pending | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.event_pending | 32 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
-| readiness.gap_open | 17 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
-| readiness.gap_backlog_missing | 17 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
-| readiness.figma_held | 5 | D01, D03, D04, D05, D21 |
+| readiness.gap_open | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
+| readiness.gap_backlog_missing | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
+| readiness.figma_held | 4 | D03, D04, D05, D21 |
 
 Drift of the live registry from the pin (readiness.registry_id_added, readiness.registry_id_retired, readiness.registry_record_changed) is reported by the default mode only, never by this file.
 
@@ -40,7 +40,7 @@ Research gate PenniLogic/docs#66: pending, 0 evidence records.
 
 | Diagram | Rendering | Figma |
 |---|---|---|
-| D01 | markdown_text | held |
+| D01 | markdown_text | not_applicable |
 | D03 | markdown_text | held |
 | D04 | markdown_text | held |
 | D05 | markdown_text | held |
@@ -1329,6 +1329,7 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 |---|---|---|---|---|---|---|---|
 | GAP-J01-01 | J01 | J01.T.01 | contract_event | PenniLogic/api#57 | none | open | No published contract names account, recovery or session lifecycle events, so the J01 identity step carries no event reference yet. |
 | GAP-J01-02 | J01 | none | contract_event | PenniLogic/api#82 | none | open | Journey signals have no published analytics event schema; the content-free field set in these blueprints is a proposal for the ingestion owner. |
+| GAP-J01-03 | J01 | none | registry_content | PenniLogic/docs#75 | none | open | Registry diagrams D01, D03, D04, D05 and D21 name product/08 or Figma pages as their artifact, but their renderings are the Git text in product/journey-blueprints.md while Figma is held; docs#75 owns repointing artifact_path. |
 | GAP-J02-01 | J02 | J02.T.02 | contract_event | PenniLogic/api#57 | none | open | Recovery start, cancellation and completion have no published event, so the J02 recovery steps carry no event reference yet. |
 | GAP-J02-02 | J02 | J02.C.04 | registry_content | PenniLogic/docs#75 | none | open | The registry has no notification or email channel flow or screen, so notification steps in J02, J06, J09, J10 and J12 map to no flow. |
 | GAP-J03-01 | J03 | none | registry_content | PenniLogic/docs#75 | none | open | Stories US-WEB-02 and US-WEB-05 on flows F-WEB-02 and F-WEB-05 name persona P05, but journey J03 lists only P03 and P04; the blueprint copies the journey list until docs#75 adds P05 to J03 or moves the stories, and docs#66 validates the persona. |

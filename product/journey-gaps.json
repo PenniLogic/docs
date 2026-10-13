@@ -24,6 +24,16 @@
       "status": "open"
     },
     {
+      "id": "GAP-J01-03",
+      "journey_id": "J01",
+      "step_id": null,
+      "category": "registry_content",
+      "owner_issue": "PenniLogic/docs#75",
+      "summary": "Registry diagrams D01, D03, D04, D05 and D21 name product/08 or Figma pages as their artifact, but their renderings are the Git text in product/journey-blueprints.md while Figma is held; docs#75 owns repointing artifact_path.",
+      "backlog_item": null,
+      "status": "open"
+    },
+    {
       "id": "GAP-J02-01",
       "journey_id": "J02",
       "step_id": "J02.T.02",

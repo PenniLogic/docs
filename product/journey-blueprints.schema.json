@@ -203,8 +203,10 @@
         "figma": {
           "type": "string",
           "enum": [
-            "held"
-          ]
+            "held",
+            "not_applicable"
+          ],
+          "description": "held: the registry artifact is a Figma page, held while Figma is disabled; not_applicable: the registry artifact is a controlled-Git file, so no Figma artifact exists to hold."
         }
       }
     },

@@ -56,9 +56,10 @@ def registry_fixture():
         "flows": [{"id": flow_id, "journey_ids": journeys, "screen_ids": screens, "critical": flow_id != "F-AND-02"}
                   for flow_id, journeys, screens in flows],
         "screens": [{"id": screen} for _, _, screens in flows for screen in screens],
-        "diagrams": [{"id": identifier, "owner_ticket": "T-UXR-04"}
-                     for identifier in ("D01", "D03", "D04", "D05", "D21")]
-        + [{"id": "D02", "owner_ticket": "T-UXR-03"}],
+        "diagrams": [{"id": "D01", "owner_ticket": "T-UXR-04", "artifact_path": "product/synthetic-plan.md"}]
+        + [{"id": identifier, "owner_ticket": "T-UXR-04", "artifact_path": "Figma synthetic page"}
+           for identifier in ("D03", "D04", "D05", "D21")]
+        + [{"id": "D02", "owner_ticket": "T-UXR-03", "artifact_path": "Figma synthetic page"}],
     }
 
 
@@ -153,7 +154,8 @@ def documents(pin):
         "research_gate": {"issue": "PenniLogic/docs#66", "status": "pending", "evidence": []},
         "approvals": [{"role": role, "status": "pending", "source": None}
                       for role in ("product", "architecture", "security", "operations", "ia")],
-        "diagrams": [{"id": identifier, "rendering": "markdown_text", "figma": "held"}
+        "diagrams": [{"id": identifier, "rendering": "markdown_text",
+                      "figma": "not_applicable" if identifier == "D01" else "held"}
                      for identifier in ("D01", "D03", "D04", "D05", "D21")],
         "blueprints": [
             blueprint("J01", "Synthetic first run", ["P01"], ["F-AND-01", "F-WEB-01"], "customer", None, j01,
@@ -169,6 +171,7 @@ def documents(pin):
          "owner_issue": "PenniLogic/docs#75", "summary": "Synthetic registry gap", "backlog_item": None,
          "status": "open"},
     ]}
+    document["blueprints"][1]["diagram_ids"] = ["D03", "D05"]
     return document, gaps
 
 
@@ -395,6 +398,15 @@ class HeaderTests(JourneyCase):
 
     def test_diagram_set_mismatch(self):
         self.assertRefused("diagram.set_mismatch", None, lambda d: d["diagrams"].pop())
+
+    def test_git_artifact_diagram_marked_held(self):
+        self.assertRefused("diagram.figma_mismatch", "D01", setter(("diagrams", 0, "figma"), "held"))
+
+    def test_figma_artifact_diagram_marked_not_applicable(self):
+        self.assertRefused("diagram.figma_mismatch", "D04", setter(("diagrams", 2, "figma"), "not_applicable"))
+
+    def test_service_blueprint_diagram_not_rendered(self):
+        self.assertRefused("diagram.rendering_missing", "BP-J10 D05", setter(("BP-J10", "diagram_ids"), ["D03"]))
 
     def test_diagram_owned_elsewhere_in_registry(self):
         self.assertRefused("diagram.registry_mismatch", "D04",
@@ -703,7 +715,7 @@ EXPECTED_GAPS = {
     "readiness.event_pending": ["J01.T.01", "J10.T.01"],
     "readiness.gap_open": ["GAP-J10-01"],
     "readiness.gap_backlog_missing": ["GAP-J10-01"],
-    "readiness.figma_held": ["D01", "D03", "D04", "D05", "D21"],
+    "readiness.figma_held": ["D03", "D04", "D05", "D21"],
     "readiness.registry_id_added": [],
     "readiness.registry_id_retired": [],
     "readiness.registry_record_changed": [],
@@ -931,7 +943,7 @@ def _ids(prefix, count):
     return [f"{prefix}{index:02d}" for index in range(1, count + 1)]
 
 
-PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J05-01", "GAP-J06-01",
+PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J01-03", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J05-01", "GAP-J06-01",
                   "GAP-J07-01", "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J10-02", "GAP-J11-01",
                   "GAP-J11-02", "GAP-J12-01", "GAP-J12-02"]
 PUBLISHED_READINESS = {
@@ -947,7 +959,7 @@ PUBLISHED_READINESS = {
         "J10.T.06", "J10.T.08", "J11.T.04", "J11.T.06", "J12.T.02"],
     "readiness.gap_open": PUBLISHED_GAPS,
     "readiness.gap_backlog_missing": PUBLISHED_GAPS,
-    "readiness.figma_held": ["D01", "D03", "D04", "D05", "D21"],
+    "readiness.figma_held": ["D03", "D04", "D05", "D21"],
     "readiness.registry_id_added": [],
     "readiness.registry_id_retired": [],
     "readiness.registry_record_changed": [],
@@ -966,7 +978,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(
             module.structure_line(self.model),
             "Journey blueprints 0.1.0 structure valid: 12 blueprints, 126 steps (69 customer, 57 team), 95 branches, "
-            "28 abuse paths, 17 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
+            "28 abuse paths, 18 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
         self.assertEqual(module.readiness(self.model), PUBLISHED_READINESS)
@@ -1000,7 +1012,8 @@ class PublishedDataTests(unittest.TestCase):
                                                           "evidence": []})
         self.assertTrue(all(item["status"] == "pending" and item["source"] is None
                             for item in self.document["approvals"]))
-        self.assertTrue(all(item["figma"] == "held" for item in self.document["diagrams"]))
+        self.assertEqual([item["figma"] for item in self.document["diagrams"]],
+                         ["not_applicable", "held", "held", "held", "held"])
         for blueprint in self.document["blueprints"]:
             self.assertEqual((blueprint["persona_basis"], blueprint["persona_basis_ref"]),
                              ("provisional", "pending:PenniLogic/docs#66"))
