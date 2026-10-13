@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/blob/main/product/navigation/platform-allocation.schema.json",
+  "title": "Provisional cross-platform capability allocation (D19 parity and divergence matrix)",
+  "description": "T-UXR-05 (PenniLogic/docs#74) source contract: per capability and platform, parity, divergent or absent with the registry flows that deliver it, the user/job rationale of every divergence and its CDO approval record. Uses the strict draft-07 subset of scripts/check_client_states.py; references, flow coverage, rationale and approval rules are checked by scripts/check_navigation.py. An approval or validated assumption is recognised here only so the validator can refuse it with its own rule: no CDO approval, persona validation or blueprint integration is recorded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "source_issue",
+    "plan_id",
+    "diagram_id",
+    "registry_ref",
+    "capabilities"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "const": "provisional"
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#74"
+    },
+    "plan_id": {
+      "const": "T-UXR-05"
+    },
+    "diagram_id": {
+      "const": "D19"
+    },
+    "registry_ref": {
+      "$ref": "#/definitions/registry_ref"
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/capability"
+      }
+    }
+  },
+  "definitions": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullable_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$(?![\\s\\S])"
+    },
+    "registry_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "commit": {
+          "$ref": "#/definitions/commit"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/definitions/digest"
+        }
+      }
+    },
+    "capability_id": {
+      "type": "string",
+      "pattern": "^CAP-[0-9]{3}$(?![\\s\\S])"
+    },
+    "journey_id": {
+      "type": "string",
+      "pattern": "^J[0-9]{2}$(?![\\s\\S])"
+    },
+    "flow_id": {
+      "type": "string",
+      "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}$(?![\\s\\S])"
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "flow_ids"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "parity",
+            "divergent",
+            "absent"
+          ]
+        },
+        "flow_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/flow_id"
+          }
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "journey_ids",
+        "platforms",
+        "rationale",
+        "cdo_approval",
+        "assumptions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/capability_id"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "journey_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/journey_id"
+          }
+        },
+        "platforms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "android",
+            "web",
+            "admin"
+          ],
+          "properties": {
+            "android": {
+              "$ref": "#/definitions/allocation"
+            },
+            "web": {
+              "$ref": "#/definitions/allocation"
+            },
+            "admin": {
+              "$ref": "#/definitions/allocation"
+            }
+          }
+        },
+        "rationale": {
+          "$ref": "#/definitions/nullable_text"
+        },
+        "cdo_approval": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/definitions/approval_or_null"
+        },
+        "assumptions": {
+          "enum": [
+            "provisional",
+            "validated"
+          ]
+        }
+      }
+    },
+    "approval_or_null": {
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "ref"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "approved"
+          ]
+        },
+        "ref": {
+          "$ref": "#/definitions/nullable_text"
+        }
+      }
+    }
+  }
+}

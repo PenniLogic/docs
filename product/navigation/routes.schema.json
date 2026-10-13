@@ -1,0 +1,561 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/blob/main/product/navigation/routes.schema.json",
+  "title": "Provisional route topology, screen placements and deep-link compatibility",
+  "description": "T-UXR-05 (PenniLogic/docs#74) source contract for the Android, customer-web and admin route trees. Uses the strict draft-07 subset of scripts/check_client_states.py; identifiers, grammars, references, counts, reachability, role absence, deep-link compatibility and the held approval, research and message-key fields are checked by scripts/check_navigation.py. Values recognised here but refused there (unauthorized \"disabled\", \"greyed\" or \"hidden\"; narrow \"hidden\"; entry \"global_search\"; any approval, completed research or message key) exist only so the refusal carries its own rule. No approval is recorded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ia_version",
+    "status",
+    "source_issue",
+    "plan_id",
+    "registry_ref",
+    "roles",
+    "routes",
+    "screen_placements",
+    "redirects",
+    "retired_route_ids",
+    "research",
+    "decisions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "ia_version": {
+      "$ref": "#/definitions/version"
+    },
+    "status": {
+      "const": "provisional"
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#74"
+    },
+    "plan_id": {
+      "const": "T-UXR-05"
+    },
+    "registry_ref": {
+      "$ref": "#/definitions/registry_ref"
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/role"
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/route"
+      }
+    },
+    "screen_placements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/placement"
+      }
+    },
+    "redirects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/redirect"
+      }
+    },
+    "retired_route_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/route_id"
+      }
+    },
+    "research": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/research"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/decision"
+      }
+    }
+  },
+  "definitions": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullable_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$(?![\\s\\S])"
+    },
+    "platform": {
+      "enum": [
+        "android",
+        "web",
+        "admin"
+      ]
+    },
+    "registry_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "commit": {
+          "$ref": "#/definitions/commit"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/definitions/digest"
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"
+    },
+    "route_id": {
+      "type": "string",
+      "pattern": "^R-(AND|WEB|ADM)-[0-9]{3}$(?![\\s\\S])"
+    },
+    "screen_id": {
+      "type": "string",
+      "pattern": "^S-(AND|WEB|ADM)-[0-9]{3}$(?![\\s\\S])"
+    },
+    "role_id": {
+      "type": "string",
+      "pattern": "^ROLE-(SYN-)?[0-9]{2}$(?![\\s\\S])"
+    },
+    "deep_link": {
+      "type": "string",
+      "minLength": 2
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "status",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/role_id"
+        },
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "status": {
+          "enum": [
+            "provisional",
+            "accepted"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "status",
+        "message_key"
+      ],
+      "properties": {
+        "text": {
+          "$ref": "#/definitions/text"
+        },
+        "status": {
+          "enum": [
+            "provisional",
+            "approved"
+          ]
+        },
+        "message_key": {
+          "$ref": "#/definitions/nullable_text"
+        }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compact",
+        "expanded",
+        "narrow",
+        "wide"
+      ],
+      "properties": {
+        "compact": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "navigation_bar",
+            "stack",
+            "tab",
+            "modal",
+            null
+          ]
+        },
+        "expanded": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "navigation_rail",
+            "navigation_drawer",
+            "stack",
+            "list_detail",
+            "supporting_pane",
+            "tab",
+            "modal",
+            null
+          ]
+        },
+        "narrow": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "collapsed_menu",
+            "stack",
+            "tab",
+            "modal",
+            "hidden",
+            null
+          ]
+        },
+        "wide": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "side_navigation",
+            "top_navigation",
+            "stack",
+            "list_detail",
+            "tab",
+            "modal",
+            null
+          ]
+        }
+      }
+    },
+    "access": {
+      "additionalProperties": false,
+      "required": [
+        "roles",
+        "unauthorized"
+      ],
+      "properties": {
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/role_id"
+          }
+        },
+        "unauthorized": {
+          "enum": [
+            "absent",
+            "disabled",
+            "greyed",
+            "hidden"
+          ]
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "parent_route_id",
+        "entry_from_parent",
+        "label",
+        "audience",
+        "primary",
+        "presentation",
+        "patterns",
+        "access"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/route_id"
+        },
+        "platform": {
+          "$ref": "#/definitions/platform"
+        },
+        "parent_route_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^R-(AND|WEB|ADM)-[0-9]{3}$(?![\\s\\S])"
+        },
+        "entry_from_parent": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "primary_navigation",
+            "navigation_link",
+            "list_item",
+            "tab",
+            "menu",
+            "global_search",
+            null
+          ]
+        },
+        "label": {
+          "$ref": "#/definitions/label"
+        },
+        "audience": {
+          "enum": [
+            "signed_out",
+            "signed_in"
+          ]
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "presentation": {
+          "$ref": "#/definitions/presentation"
+        },
+        "patterns": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/deep_link"
+          }
+        },
+        "access": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/definitions/access"
+        }
+      }
+    },
+    "external": {
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "rationale"
+      ],
+      "properties": {
+        "entry": {
+          "enum": [
+            "deep_link",
+            "notification",
+            "system_handoff",
+            "widget"
+          ]
+        },
+        "rationale": {
+          "$ref": "#/definitions/nullable_text"
+        }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "screen_id",
+        "host_route_id",
+        "external"
+      ],
+      "properties": {
+        "screen_id": {
+          "$ref": "#/definitions/screen_id"
+        },
+        "host_route_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^R-(AND|WEB|ADM)-[0-9]{3}$(?![\\s\\S])"
+        },
+        "external": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/definitions/external"
+        }
+      }
+    },
+    "redirect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from_pattern",
+        "to_route_id",
+        "reason"
+      ],
+      "properties": {
+        "from_pattern": {
+          "$ref": "#/definitions/deep_link"
+        },
+        "to_route_id": {
+          "$ref": "#/definitions/route_id"
+        },
+        "reason": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence_ref"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not_run",
+            "completed"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/definitions/nullable_text"
+        }
+      }
+    },
+    "tree_test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence_ref",
+        "metrics"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not_run",
+            "completed"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/definitions/nullable_text"
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "task_success",
+            "first_click_correctness",
+            "backtrack_rate"
+          ],
+          "properties": {
+            "task_success": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "first_click_correctness": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "backtrack_rate": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "tree_test",
+        "card_sort"
+      ],
+      "properties": {
+        "platform": {
+          "$ref": "#/definitions/platform"
+        },
+        "tree_test": {
+          "$ref": "#/definitions/tree_test"
+        },
+        "card_sort": {
+          "$ref": "#/definitions/evidence"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "status",
+        "ref"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "information_architecture",
+            "security",
+            "accessibility"
+          ]
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "approved"
+          ]
+        },
+        "ref": {
+          "$ref": "#/definitions/nullable_text"
+        }
+      }
+    }
+  }
+}
