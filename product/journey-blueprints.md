@@ -18,8 +18,8 @@ Personas are planning hypotheses, not research evidence: every persona basis sta
 | readiness.approval_pending | 5 | architecture, ia, operations, product, security |
 | readiness.metric_pending | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.event_pending | 32 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
-| readiness.gap_open | 14 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
-| readiness.gap_backlog_missing | 14 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
+| readiness.gap_open | 16 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
+| readiness.gap_backlog_missing | 16 | GAP-J01-01, GAP-J01-02, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01 |
 | readiness.figma_held | 5 | D01, D03, D04, D05, D21 |
 
 ## Approvals and research gate
@@ -113,12 +113,12 @@ flowchart LR
 | BP-J04 | J04 | customer | Planned baseline: strategy, simulator and advanced scenario screens per platform, with derivation shown on web only. | One decision journey where every figure is server-derived and explainable, and a chosen plan is versioned rather than overwritten. | The customer compares strategies, chooses one and sees the re-derived debt-free date on both platforms. | Incomplete debt terms are named and fixed in place; offline comparison stays read-only and stale-marked; a previous plan version can be restored. |
 | BP-J05 | J05 | customer | Planned baseline: income, budget, goal, net-worth and multi-currency screens are separate registry flows per platform. | One planning journey where budgets, safe to spend, net worth and reporting-currency totals are derived on the server and stay per currency unless a dated rate exists. | The customer sets income, budgets and a goal and sees net worth and reports that agree on Android and web. | Missing income dates give a ranged result that names the gap; slow derivation shows the last confirmed values; a missing exchange rate shows per-currency totals only. |
 | BP-J06 | J06 | customer | Planned baseline: split group, allocation, settlement, dispute and invitation screens per platform with no shared clock or reversal model. | One sharing journey with single-use invites, server-derived shares, append-only settlement history and a member exit that keeps the facts others depend on. | A group is created, invitees accept, expenses are allocated and every member settles to a zero balance. | Unsent or expired invites can be resent; partial settlements stay open and visible; disputes stay open until the organiser decides, with every change as a new entry. |
-| BP-J07 | J07 | customer | Planned baseline from product/08 section 9.2: the household grant state machine from private to revoked and evicted, without channel or service ownership. | The same state machine as a cross-channel blueprint with explicit aggregate and detail consents, an access log, safe exit and a server-enforced eviction path. | A household shares only the aggregates each member granted, tracks a joint goal, and any member can leave safely at any time. | Declined or expired invites share nothing; revocation denies reads at once and purges cached data at next contact or lease expiry; safe exit needs no one else's approval. |
+| BP-J07 | J07 | customer | Planned baseline from product/08 section 9.2: the household grant state machine from private to revoked and evicted, without channel or service ownership. | The same state machine as a cross-channel blueprint with explicit aggregate and detail consents, an access log, safe exit and a server-enforced eviction path. | A household shares only the aggregates each member granted, tracks a joint goal, and any member can leave safely at any time. | Declined or expired invites share nothing; after revocation server reads stop within the published online bound and cached data is evicted by the offline lease bound; safe exit needs no one else's approval. |
 | BP-J08 | J08 | customer | Planned baseline: assistant answer, draft and history screens per platform with the AI egress path decided in ADR-022 but not drawn as a journey. | One assistant journey where scope comes from the server session, every remote call leaves through the egress proxy and nothing posts without the customer's confirmation. | The customer gets a cited explanation and, if they choose, confirms a draft that posts as a normal transaction with AI provenance. | Quota, provider or tool failures refuse explicitly with a retry or plan path; a posted draft is reversed like any transaction; history can be turned off or erased. |
 | BP-J09 | J09 | customer | Planned baseline: purchase, preference, retention and billing portal screens per platform with entitlement rules in ADR-007 and ADR-023. | One billing and messaging journey where entitlement is resolved only on the server against a pinned plan version and every notice respects the customer's preferences. | The customer buys or changes a plan, sees the server-resolved entitlement and controls which notices and digests they receive. | Unverified purchases grant nothing and stay pending; undeliverable notices retry without duplicates; cancellations can be undone before the period boundary. |
-| BP-J10 | J10 | customer | Planned baseline from product/08 section 9.3: rights request and operator fulfillment as one flow, with support and refunds in separate registry flows. | One trust journey joining the customer trust centre, rights and support requests and the redacted operator queues, with clocks, audit, notices and reversal on every consequential step. | A customer's export, deletion or support request is validated, fulfilled by a qualified operator on redacted data and closed with a notice inside its clock. | Invalid requests are returned before the clock starts; requests near breach are escalated; refusals carry reasons and a way to contest; shared records keep placeholder facts. |
-| BP-J11 | J11 | operator | Planned baseline: operator sign-in, redaction and elevation, lifecycle, rights fulfillment and production access are separate admin flows under ADR-020. | One operator journey from sign-in to fulfilled request where every access is purpose-bound, approved by someone else, expiring and audited before data is read. | Operators reach only the work their role allows, gain detail or production access only through independent, expiring approval, and close rights requests inside their clock. | Denied or expired requests grant nothing; break glass is reviewed after the fact; a restore that fails the scrub barrier is discarded; leavers lose access at once. |
-| BP-J12 | J12 | operator | Planned baseline: plan, AI provider, audit and incident admin flows as separate registry entries with no customer-facing consequence drawn. | One configuration and release journey where every change is versioned, audited and visible to the customers it affects before it takes effect. | Plan, provider and spend changes reach customers without silent impact, and audit, incident and release evidence is complete before release. | Invalid plan versions are never published; migrations are reversible until their boundary; the kill switch stops remote AI calls at once; a failed retest blocks release. |
+| BP-J10 | J10 | customer | Planned baseline from product/08 section 9.3: rights request and operator fulfillment as one flow, with support and refunds in separate registry flows. | One trust journey joining the customer trust centre, rights and support requests and the redacted operator queues, with clocks, audit, notices and reversal on every consequential step. | A customer's export, deletion or support request is validated, fulfilled by a qualified operator on redacted data and closed with a notice inside its clock. | Every request is acknowledged and its clock runs from acknowledgement; an unverifiable request ends in a reasoned refusal; requests near breach are escalated; refusals carry reasons and a way to contest; shared records keep placeholder facts. |
+| BP-J11 | J11 | operator | Planned baseline: operator sign-in, redaction and elevation, lifecycle, rights fulfillment and production access are separate admin flows under ADR-020. | One operator journey from sign-in to fulfilled request where every access is purpose-bound, approved by someone else, expiring and audited before data is read. | Operators reach only the work their role allows, gain detail or production access only through independent, expiring approval, and close rights requests inside their clock. | Denied or expired requests grant nothing; break glass is reviewed after the fact; a restore that fails the scrub barrier is discarded; a leaver's revoked session is denied on its next request. |
+| BP-J12 | J12 | operator | Planned baseline: plan, AI provider, audit and incident admin flows as separate registry entries with no customer-facing consequence drawn. | One configuration and release journey where every change is versioned, audited and visible to the customers it affects before it takes effect. | Plan, provider and spend changes reach customers without silent impact, and audit, incident and release evidence is complete before release. | Invalid plan versions are never published; migrations are reversible until their boundary; the kill switch refuses new remote AI calls at admission and stops in-flight traffic within the ADR-022 60-second bound; a failed retest blocks release. |
 
 ### D21 critical journey task flow and wireflow index (text rendering)
 
@@ -690,7 +690,7 @@ flowchart LR
 | J06.T.02 | offline | terminal | An expense added offline syncs idempotently; balances refresh only from the server | sync_team |
 | J06.T.03 | partial | J06.C.05 | A partial settlement leaves the rest open and visible to both members | sharing_team |
 | J06.C.05 | escalation | terminal | An unresolved dispute stays open for the organiser to decide; no operator sees member finances | sharing_team |
-| J06.C.06 | revocation | J06.T.04 | A member leaves or is removed and their access ends at once | sharing_team |
+| J06.C.06 | revocation | J06.T.04 | A member leaves or is removed and their access ends within the published online revocation bound | sharing_team |
 | J06.T.04 | rollback | terminal | A removal made in error is undone by a fresh invite; placeholder history stays | sharing_team |
 
 | Receiving step | Authoritative service | Receiving surface may show |
@@ -722,7 +722,7 @@ flowchart LR
 - Journey J07, customer audience; personas P06, P07 (provisional, pending:PenniLogic/docs#66).
 - Flows: F-AND-12, F-WEB-08. Diagrams: D01, D03, D21. Policy class: sharing.
 - Success: A household shares only the aggregates each member granted, tracks a joint goal, and any member can leave safely at any time.
-- Failure recovery: Declined or expired invites share nothing; revocation denies reads at once and purges cached data at next contact or lease expiry; safe exit needs no one else's approval.
+- Failure recovery: Declined or expired invites share nothing; after revocation server reads stop within the published online bound and cached data is evicted by the offline lease bound; safe exit needs no one else's approval.
 - Metric: pending:PenniLogic/docs#77
 - Current map (planned_baseline): Planned baseline from product/08 section 9.2: the household grant state machine from private to revoked and evicted, without channel or service ownership.
 - Target map (supersedes BP-J07.current_map): The same state machine as a cross-channel blueprint with explicit aggregate and detail consents, an access log, safe exit and a server-enforced eviction path.
@@ -730,7 +730,7 @@ flowchart LR
 Moments of truth:
 
 - J07.C.02: The member sees exactly what would be shared before anything is shared.
-- J07.C.05: Leaving is immediate and needs no one else's approval.
+- J07.C.05: Leaving needs no one else's approval, runs as one step-up request and is quiet by design.
 
 ```mermaid
 flowchart LR
@@ -770,9 +770,9 @@ flowchart LR
 | J07.T.03 | team | service | api-household | Household service in the core API | Computes household aggregates and joint-goal progress under the active grants | none | none | confidential | Server-mediated read under the grant predicate | pending:PenniLogic/contracts#8 | ADR-005, ADR-021 | none |
 | J07.C.03 | customer | android | android-app | Household owner or member | Views the household dashboard and joint goal | F-AND-12 | S-AND-047 | confidential | Active grant for each shared category | none | none | completion |
 | J07.C.04 | customer | android | android-app | Household member (provisional persona) | Reviews the cross-user access log | F-AND-12 | S-AND-048 | confidential | Signed-in owner on a device-bound session | none | none | none |
-| J07.C.05 | customer | android | android-app | Household member (provisional persona) | Uses safe exit to leave and conceal the household view | F-AND-12 | S-AND-049 | confidential | Signed-in owner on a device-bound session | none | none | none |
-| J07.T.04 | team | service | api-sharing | Sharing service in the core API | Revokes the grants, denies further reads and starts client purge | none | none | restricted | Unilateral revocation by either party | pending:PenniLogic/contracts#8 | ADR-005, ADR-021 | none |
-| J07.C.06 | customer | web | web-app | Former household member | Confirms access ended and manages own grants on web | F-WEB-08 | S-WEB-025, S-WEB-026, S-WEB-027 | confidential | Signed-in owner on a device-bound session | none | none | recovery |
+| J07.C.05 | customer | android | android-app | Household member (provisional persona) | Uses safe exit to leave and conceal the household view | F-AND-12 | S-AND-049 | confidential | Signed-in member on a device-bound session with ADR-019 step-up | none | ADR-019, ADR-021 | none |
+| J07.T.04 | team | service | api-sharing | Sharing service in the core API | Revokes the grants, denies further reads and starts client purge | none | none | restricted | Unilateral revocation by either party in one request under ADR-019 step-up | pending:PenniLogic/contracts#8 | ADR-005, ADR-019, ADR-021 | none |
+| J07.C.06 | customer | web | web-app | Former household member | Confirms access ended and manages own grants on web | F-WEB-08 | S-WEB-025, S-WEB-026, S-WEB-027 | confidential | Signed-in owner on a device-bound session | none | none | none |
 
 | Step | Branch | To | Recovery | Recovery owner |
 |---|---|---|---|---|
@@ -783,7 +783,7 @@ flowchart LR
 | J07.T.03 | offline | terminal | Offline views use a short lease; when it expires cached shared data is hidden | sharing_team |
 | J07.C.05 | escalation | terminal | A member at risk is pointed to support without revealing the household to the other person | support_operator |
 | J07.T.04 | partial | J07.C.06 | A device still holding shared data purges it at next contact or lease expiry | sharing_team |
-| J07.T.04 | revocation | J07.C.06 | Every grant in both directions ends and reads are denied at once | sharing_team |
+| J07.T.04 | revocation | J07.C.06 | Every grant in both directions ends; server reads stop within the published online revocation bound | sharing_team |
 
 | Receiving step | Authoritative service | Receiving surface may show |
 |---|---|---|
@@ -793,21 +793,22 @@ flowchart LR
 
 | Step | Clock | Audit | Notification | Reversal |
 |---|---|---|---|---|
-| J07.T.01 | Invite expiry and offline lease length are set by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered, accepted or narrowed | Revocation is immediate and unilateral; sharing again needs a new invite |
-| J07.T.02 | Invite expiry and offline lease length are set by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered, accepted or narrowed | Revocation is immediate and unilateral; sharing again needs a new invite |
-| J07.T.04 | Revocation takes effect at once; the offline lease length is pending | The exit is audited and visible to the member who left | What the other person is told, and when, is a pending safe-exit policy decision | A revoked grant is never restored; sharing again needs a new invite and acceptance |
+| J07.T.01 | Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered, accepted or narrowed | Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite |
+| J07.T.02 | Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered, accepted or narrowed | Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite |
+| J07.T.04 | Server reads stop within the published online revocation bound and cached copies within the offline lease bound; both values are pending on the sharing contract | The exit is audited and visible to the member who left | Quiet by design: no notification describes the exit and nothing beyond a content-free pointer is sent; whether the other person sees any pointer is a pending design decision | A revoked grant is never restored; sharing again needs a new invite and acceptance |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
 |---|---|---|---|---|
 | AB-J07-01 | J07.C.01 | Coercive household owner | Pressures a member into granting detail access | Detail access needs the member's separate consent, shows in the access log and ends with safe exit |
 | AB-J07-02 | J07.C.03 | Household owner | Tries to read a member's transactions through the dashboard | Only granted aggregates are returned; detail reads need a detail grant and are logged |
 | AB-J07-03 | J07.C.05 | Person sharing the member's device | Discovers that the member used safe exit | Safe exit conceals the household view and emits no journey signal |
-| AB-J07-04 | J07.T.04 | Revoked grantee with a cached copy | Keeps reading shared data offline | The server denies reads at once and the cached copy is purged at next contact or lease expiry |
+| AB-J07-04 | J07.T.04 | Revoked grantee with a cached copy | Keeps reading shared data offline | Server reads stop within the published online revocation bound and the cached copy is evicted at next contact or when the offline lease bound elapses |
 
 | Not applicable | Kind | Reason |
 |---|---|---|
 | signal | correction | A grant journey corrects no financial record |
 | signal | escalation | Safe exit emits no journey signal so its use cannot be inferred |
+| signal | recovery | The confirmation reached only after safe exit emits no signal, so safe exit cannot be inferred from it |
 
 ### BP-J08 Assistant explanation and controlled action
 
@@ -975,14 +976,14 @@ flowchart LR
 - Journey J10, customer audience; personas P03, P07, P10 (provisional, pending:PenniLogic/docs#66).
 - Flows: F-AND-15, F-WEB-11, F-ADM-06, F-ADM-07. Diagrams: D01, D03, D05, D21. Policy class: rights.
 - Success: A customer's export, deletion or support request is validated, fulfilled by a qualified operator on redacted data and closed with a notice inside its clock.
-- Failure recovery: Invalid requests are returned before the clock starts; requests near breach are escalated; refusals carry reasons and a way to contest; shared records keep placeholder facts.
+- Failure recovery: Every request is acknowledged and its clock runs from acknowledgement; an unverifiable request ends in a reasoned refusal; requests near breach are escalated; refusals carry reasons and a way to contest; shared records keep placeholder facts.
 - Metric: pending:PenniLogic/docs#77
 - Current map (planned_baseline): Planned baseline from product/08 section 9.3: rights request and operator fulfillment as one flow, with support and refunds in separate registry flows.
 - Target map (supersedes BP-J10.current_map): One trust journey joining the customer trust centre, rights and support requests and the redacted operator queues, with clocks, audit, notices and reversal on every consequential step.
 
 Moments of truth:
 
-- J10.T.01: The clock starts only once identity and scope are validated.
+- J10.T.01: The response clock starts when the request is acknowledged, before any validation.
 - J10.C.03: The customer always gets an outcome or a reasoned refusal.
 
 ```mermaid
@@ -995,7 +996,7 @@ flowchart LR
         J10_C_05["J10.C.05 web: Checks the support outcome on web, signed in or through the unauthenticated route"]
     end
     subgraph team[team lane]
-        J10_T_01["J10.T.01 service: Validates identity, scope and the request clock"]
+        J10_T_01["J10.T.01 service: Acknowledges the request, starts its response clock and validates identity and scope"]
         J10_T_02["J10.T.02 admin: Picks the request from the redacted rights queue"]
         J10_T_03["J10.T.03 admin: Performs the bounded action, with independent approval when access is required"]
         J10_T_04["J10.T.04 service: Executes the export or the crypto-shredding erasure and records evidence"]
@@ -1023,7 +1024,7 @@ flowchart LR
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | J10.C.01 | customer | android | android-app | Customer (provisional persona) | Reviews the trust centre and preferences and can open a support request | F-AND-15 | S-AND-056, S-AND-058, S-AND-063 | confidential | Signed-in owner on a device-bound session | none | none | none |
 | J10.C.02 | customer | android | android-app | Customer (provisional persona) | Requests an export or deletion of own data | F-AND-15 | S-AND-057 | confidential | Signed-in owner on a device-bound session | none | ADR-006 | abandonment |
-| J10.T.01 | team | service | api-rights | Rights service in the core API | Validates identity, scope and the request clock | none | none | restricted | Signed-in data principal; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006 | none |
+| J10.T.01 | team | service | api-rights | Rights service in the core API | Acknowledges the request, starts its response clock and validates identity and scope | none | none | restricted | Signed-in data principal; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006 | none |
 | J10.T.02 | team | admin | admin-console | Support and privacy operator (provisional persona) | Picks the request from the redacted rights queue | F-ADM-07 | S-ADM-018 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.03 | team | admin | admin-console | Support and privacy operator (provisional persona) | Performs the bounded action, with independent approval when access is required | F-ADM-07 | S-ADM-019 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.04 | team | service | api-rights | Rights service in the core API | Executes the export or the crypto-shredding erasure and records evidence | none | none | restricted | Approved rights action | pending:PenniLogic/contracts#14 | ADR-006, ADR-021 | none |
@@ -1039,7 +1040,7 @@ flowchart LR
 |---|---|---|---|---|
 | J10.C.01 | offline | terminal | Settings show the last confirmed state; changes wait for a connection | customer |
 | J10.C.01 | revocation | terminal | Withdrawing a purpose consent stops that processing and is recorded | privacy_team |
-| J10.T.01 | failure | terminal | An unverifiable request is returned with a coded reason and the clock does not start | rights_team |
+| J10.T.01 | failure | terminal | An unverifiable request ends in a refusal with a coded reason inside its running clock | rights_team |
 | J10.T.02 | escalation | terminal | A request nearing its clock is escalated before breach | privacy_lead |
 | J10.T.03 | permission_denied | terminal | Access beyond the redacted view without independent approval is denied | security_team |
 | J10.T.04 | partial | J10.T.05 | Shared records keep placeholder facts others depend on; the response explains what was retained and why | rights_team |
@@ -1058,9 +1059,9 @@ flowchart LR
 
 | Step | Clock | Audit | Notification | Reversal |
 |---|---|---|---|---|
-| J10.T.01 | The statutory response clock starts at validation; its value is owned by the compliance floor pack and pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
-| J10.T.03 | The statutory response clock starts at validation; its value is owned by the compliance floor pack and pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
-| J10.T.04 | The statutory response clock starts at validation; its value is owned by the compliance floor pack and pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
+| J10.T.01 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
+| J10.T.03 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
+| J10.T.04 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
 | J10.T.08 | Refund windows follow the store and the pinned plan version; values pending | Every refund is one audited write and unwinds entitlement and quota | The customer is told of the refund and any plan change | A refund is reversed only by a new audited correction, never an edit |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
@@ -1079,7 +1080,7 @@ flowchart LR
 - Journey J11, operator audience; personas P10, P11 (provisional, pending:PenniLogic/docs#66).
 - Flows: F-ADM-01, F-ADM-02, F-ADM-03, F-ADM-07, F-ADM-09. Diagrams: D01, D03, D05, D21. Policy class: rights.
 - Success: Operators reach only the work their role allows, gain detail or production access only through independent, expiring approval, and close rights requests inside their clock.
-- Failure recovery: Denied or expired requests grant nothing; break glass is reviewed after the fact; a restore that fails the scrub barrier is discarded; leavers lose access at once.
+- Failure recovery: Denied or expired requests grant nothing; break glass is reviewed after the fact; a restore that fails the scrub barrier is discarded; a leaver's revoked session is denied on its next request.
 - Metric: pending:PenniLogic/docs#77
 - Current map (planned_baseline): Planned baseline: operator sign-in, redaction and elevation, lifecycle, rights fulfillment and production access are separate admin flows under ADR-020.
 - Target map (supersedes BP-J11.current_map): One operator journey from sign-in to fulfilled request where every access is purpose-bound, approved by someone else, expiring and audited before data is read.
@@ -1145,9 +1146,9 @@ flowchart LR
 
 | Step | Clock | Audit | Notification | Reversal |
 |---|---|---|---|---|
-| J11.T.04 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation expires or is revoked at once; access already used is reported, never hidden |
-| J11.T.05 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation expires or is revoked at once; access already used is reported, never hidden |
-| J11.T.06 | The statutory response clock starts at validation; its value is owned by the compliance floor pack and pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
+| J11.T.04 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation ends at its ADR-020 section 16 limit or on revocation and the next request is denied; access already used is reported, never hidden |
+| J11.T.05 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation ends at its ADR-020 section 16 limit or on revocation and the next request is denied; access already used is reported, never hidden |
+| J11.T.06 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
 |---|---|---|---|---|
@@ -1166,7 +1167,7 @@ flowchart LR
 - Journey J12, operator audience; personas P11, P12 (provisional, pending:PenniLogic/docs#66).
 - Flows: F-ADM-04, F-ADM-05, F-ADM-08, F-ADM-10. Diagrams: D01, D03, D21. Policy class: none.
 - Success: Plan, provider and spend changes reach customers without silent impact, and audit, incident and release evidence is complete before release.
-- Failure recovery: Invalid plan versions are never published; migrations are reversible until their boundary; the kill switch stops remote AI calls at once; a failed retest blocks release.
+- Failure recovery: Invalid plan versions are never published; migrations are reversible until their boundary; the kill switch refuses new remote AI calls at admission and stops in-flight traffic within the ADR-022 60-second bound; a failed retest blocks release.
 - Metric: pending:PenniLogic/docs#77
 - Current map (planned_baseline): Planned baseline: plan, AI provider, audit and incident admin flows as separate registry entries with no customer-facing consequence drawn.
 - Target map (supersedes BP-J12.current_map): One configuration and release journey where every change is versioned, audited and visible to the customers it affects before it takes effect.
@@ -1186,7 +1187,7 @@ flowchart LR
         J12_T_02["J12.T.02 service: Publishes the immutable plan version; existing subscriptions keep their pin"]
         J12_T_03["J12.T.03 admin: Migrates or retires a plan version with customer impact shown first"]
         J12_T_04["J12.T.04 admin: Changes AI provider routing, spend caps or the kill switch"]
-        J12_T_05["J12.T.05 service: Applies routing and spend caps; the kill switch stops remote calls at once"]
+        J12_T_05["J12.T.05 service: Applies routing and spend caps; the kill switch refuses new remote calls at admission"]
         J12_T_06["J12.T.06 admin: Reviews the audit chain, access anomalies and aggregate analytics"]
         J12_T_07["J12.T.07 admin: Runs the incident clock and its actions"]
         J12_T_08["J12.T.08 admin: Records red-team coverage, finding evidence and retest before release"]
@@ -1209,7 +1210,7 @@ flowchart LR
 | J12.T.03 | team | admin | admin-console | Billing and AI operations manager (provisional persona) | Migrates or retires a plan version with customer impact shown first | F-ADM-04 | S-ADM-012 | internal | Qualified operator role through the default-deny policy point; redacted by default | none | none | none |
 | J12.C.01 | customer | notification | notification-outbox | Affected customer | Receives notice of a plan migration before it takes effect | none | none | internal | Delivery to affected subscribers only | none | none | none |
 | J12.T.04 | team | admin | admin-console | Billing and AI operations manager (provisional persona) | Changes AI provider routing, spend caps or the kill switch | F-ADM-05 | S-ADM-013, S-ADM-014 | internal | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-022 | none |
-| J12.T.05 | team | service | ai-gateway | AI gateway | Applies routing and spend caps; the kill switch stops remote calls at once | none | none | internal | Approved operations change | none | ADR-022 | none |
+| J12.T.05 | team | service | ai-gateway | AI gateway | Applies routing and spend caps; the kill switch refuses new remote calls at admission | none | none | internal | Approved operations change | none | ADR-022 | none |
 | J12.T.06 | team | admin | admin-console | Security and compliance approver (provisional persona) | Reviews the audit chain, access anomalies and aggregate analytics | F-ADM-08 | S-ADM-021, S-ADM-022, S-ADM-023 | confidential | Security reviewer role; aggregates only | none | ADR-020 | escalation |
 | J12.T.07 | team | admin | admin-console | Security and compliance approver (provisional persona) | Runs the incident clock and its actions | F-ADM-10 | S-ADM-029 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | none | none |
 | J12.T.08 | team | admin | admin-console | Security and compliance approver (provisional persona) | Records red-team coverage, finding evidence and retest before release | F-ADM-10 | S-ADM-027, S-ADM-028 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | none | completion |
@@ -1219,8 +1220,8 @@ flowchart LR
 | J12.T.01 | permission_denied | terminal | A change outside the operator's role is not addressable | security_team |
 | J12.T.02 | failure | terminal | A plan version that fails validation is never published | billing_team |
 | J12.T.03 | rollback | terminal | A migration is reversible until its effective boundary | billing_team |
-| J12.T.04 | revocation | terminal | A revoked provider key or approval leaves routing at once | ai_platform_team |
-| J12.T.05 | partial | terminal | In-flight requests finish or refuse; none bypasses the new cap | ai_platform_team |
+| J12.T.04 | revocation | terminal | A revoked provider key or approval is refused at admission for every new request | ai_platform_team |
+| J12.T.05 | partial | terminal | In-flight traffic is terminated within the ADR-022 60-second bound; no new request bypasses the new cap | ai_platform_team |
 | J12.T.06 | escalation | J12.T.07 | An anomaly or broken chain opens an incident | security_team |
 | J12.T.07 | timeout | terminal | A notice deadline at risk is escalated to the compliance owner | compliance_lead |
 | J12.T.08 | failure | terminal | A failed retest blocks release until it is fixed | security_team |
@@ -1303,7 +1304,7 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | policy | ADR-016 | BP-J03, BP-J05, BP-J08 |
 | policy | ADR-017 | BP-J01, BP-J03, BP-J04, BP-J05 |
 | policy | ADR-018 | BP-J03, BP-J07 |
-| policy | ADR-019 | BP-J01, BP-J02 |
+| policy | ADR-019 | BP-J01, BP-J02, BP-J07 |
 | policy | ADR-020 | BP-J10, BP-J11, BP-J12 |
 | policy | ADR-021 | BP-J06, BP-J07, BP-J10 |
 | policy | ADR-022 | BP-J08, BP-J12 |
@@ -1318,13 +1319,15 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | GAP-J01-02 | J01 | none | contract_event | PenniLogic/api#82 | none | open | Journey signals have no published analytics event schema; the content-free field set in these blueprints is a proposal for the ingestion owner. |
 | GAP-J02-01 | J02 | J02.T.02 | contract_event | PenniLogic/api#57 | none | open | Recovery start, cancellation and completion have no published event, so the J02 recovery steps carry no event reference yet. |
 | GAP-J02-02 | J02 | J02.C.04 | registry_content | PenniLogic/docs#75 | none | open | The registry has no notification or email channel flow or screen, so notification steps in J02, J06, J09, J10 and J12 map to no flow. |
+| GAP-J03-01 | J03 | none | registry_content | PenniLogic/docs#75 | none | open | Stories US-WEB-02 and US-WEB-05 on flows F-WEB-02 and F-WEB-05 name persona P05, but journey J03 lists only P03 and P04; the blueprint copies the journey list until docs#75 adds P05 to J03 or moves the stories, and docs#66 validates the persona. |
 | GAP-J05-01 | J05 | J05.T.03 | policy | PenniLogic/contracts#9 | none | open | Reporting-currency conversion needs currencies beyond the single-currency MVP ledger of ADR-017; admission and rate source are pending. |
 | GAP-J06-01 | J06 | J06.T.02 | policy | PenniLogic/contracts#8 | none | open | Settlement and dispute windows for split groups have no published value, so the J06 clock controls state them as pending. |
-| GAP-J07-01 | J07 | J07.T.04 | policy | PenniLogic/docs#96 | none | open | What the other household member is told after a safe exit, and when, is undecided; the blueprint states it as a pending policy decision. |
-| GAP-J07-02 | J07 | J07.T.03 | policy | PenniLogic/contracts#8 | none | open | The offline lease length after which cached shared household data is hidden has no published value. |
+| GAP-J07-01 | J07 | J07.T.04 | policy | PenniLogic/docs#96 | none | open | ADR-021 makes safe exit quiet by design with no notification content beyond a pointer; whether the other member sees any pointer after a safe exit, and its wording, is an open design decision. |
+| GAP-J07-02 | J07 | J07.T.03 | policy | PenniLogic/contracts#8 | none | open | The online revocation bound and the offline lease bound after which cached shared household data is hidden are both published by T-CON-04 and have no value yet. |
 | GAP-J07-03 | J07 | none | research | PenniLogic/docs#66 | none | open | Safe-exit and coercive-control assumptions are unvalidated; research must not recruit both household members into one session. |
 | GAP-J09-01 | J09 | J09.T.03 | registry_content | PenniLogic/docs#75 | none | open | J09 lists no operator refund flow; refund operations F-ADM-06 belong to J10 only, so billing reversal relies on the J10 operator step. |
-| GAP-J10-01 | J10 | J10.T.01 | policy | PenniLogic/docs#44 | none | open | Statutory response clock values for export, deletion and grievance requests are not published in an accepted source; controls state them as pending. |
+| GAP-J10-01 | J10 | J10.T.01 | policy | PenniLogic/docs#44 | none | open | Response clock values for export, deletion and grievance requests are not published in an accepted source; T-CMP-01 starts each clock at acknowledgement, and controls state the values as pending. |
+| GAP-J10-02 | J10 | J10.T.08 | registry_content | PenniLogic/docs#75 | none | open | Story US-ADM-06 on refund flow F-ADM-06 names persona P12, but journey J10 lists only P03, P07 and P10, so the refund step names the support operator; docs#75 owns adding P12 to J10 and docs#66 validates the persona. |
 | GAP-J11-01 | J11 | J11.T.04 | policy | PenniLogic/api#47 | none | open | ADR-020 section 16 sets elevation, unmask and break-glass limits but no expiry for an unapproved access request; J11 states it as pending. |
 | GAP-J11-02 | J11 | none | registry_content | PenniLogic/docs#75 | none | open | The docs#67 scope names operator blueprints for refunds, provider change and incidents, but the registry assigns those flows to J10 and J12, not J11. |
 | GAP-J12-01 | J12 | J12.T.07 | policy | PenniLogic/docs#44 | none | open | Regulator and customer notice deadlines for incidents are not published in an accepted source; the incident clock step cannot state them. |

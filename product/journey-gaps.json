@@ -44,6 +44,16 @@
       "status": "open"
     },
     {
+      "id": "GAP-J03-01",
+      "journey_id": "J03",
+      "step_id": null,
+      "category": "registry_content",
+      "owner_issue": "PenniLogic/docs#75",
+      "summary": "Stories US-WEB-02 and US-WEB-05 on flows F-WEB-02 and F-WEB-05 name persona P05, but journey J03 lists only P03 and P04; the blueprint copies the journey list until docs#75 adds P05 to J03 or moves the stories, and docs#66 validates the persona.",
+      "backlog_item": null,
+      "status": "open"
+    },
+    {
       "id": "GAP-J05-01",
       "journey_id": "J05",
       "step_id": "J05.T.03",
@@ -69,7 +79,7 @@
       "step_id": "J07.T.04",
       "category": "policy",
       "owner_issue": "PenniLogic/docs#96",
-      "summary": "What the other household member is told after a safe exit, and when, is undecided; the blueprint states it as a pending policy decision.",
+      "summary": "ADR-021 makes safe exit quiet by design with no notification content beyond a pointer; whether the other member sees any pointer after a safe exit, and its wording, is an open design decision.",
       "backlog_item": null,
       "status": "open"
     },
@@ -79,7 +89,7 @@
       "step_id": "J07.T.03",
       "category": "policy",
       "owner_issue": "PenniLogic/contracts#8",
-      "summary": "The offline lease length after which cached shared household data is hidden has no published value.",
+      "summary": "The online revocation bound and the offline lease bound after which cached shared household data is hidden are both published by T-CON-04 and have no value yet.",
       "backlog_item": null,
       "status": "open"
     },
@@ -109,7 +119,17 @@
       "step_id": "J10.T.01",
       "category": "policy",
       "owner_issue": "PenniLogic/docs#44",
-      "summary": "Statutory response clock values for export, deletion and grievance requests are not published in an accepted source; controls state them as pending.",
+      "summary": "Response clock values for export, deletion and grievance requests are not published in an accepted source; T-CMP-01 starts each clock at acknowledgement, and controls state the values as pending.",
+      "backlog_item": null,
+      "status": "open"
+    },
+    {
+      "id": "GAP-J10-02",
+      "journey_id": "J10",
+      "step_id": "J10.T.08",
+      "category": "registry_content",
+      "owner_issue": "PenniLogic/docs#75",
+      "summary": "Story US-ADM-06 on refund flow F-ADM-06 names persona P12, but journey J10 lists only P03, P07 and P10, so the refund step names the support operator; docs#75 owns adding P12 to J10 and docs#66 validates the persona.",
       "backlog_item": null,
       "status": "open"
     },

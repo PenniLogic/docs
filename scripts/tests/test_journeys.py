@@ -7,6 +7,7 @@ tests run against temporary directories outside this repository. Nothing here to
 inside the repository. No fixture is research evidence, an approval, a review or a real blueprint.
 """
 
+from collections import defaultdict
 import contextlib
 import copy
 import hashlib
@@ -15,6 +16,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 import unittest
 from unittest import mock
@@ -817,8 +819,9 @@ def _ids(prefix, count):
     return [f"{prefix}{index:02d}" for index in range(1, count + 1)]
 
 
-PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J02-01", "GAP-J02-02", "GAP-J05-01", "GAP-J06-01", "GAP-J07-01",
-                  "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J11-01", "GAP-J11-02", "GAP-J12-01"]
+PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J05-01", "GAP-J06-01",
+                  "GAP-J07-01", "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J10-02", "GAP-J11-01",
+                  "GAP-J11-02", "GAP-J12-01"]
 PUBLISHED_READINESS = {
     "readiness.registry_unintegrated": ["PenniLogic/docs#75"],
     "readiness.research_pending": ["PenniLogic/docs#66"],
@@ -848,7 +851,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(
             module.structure_line(self.model),
             "Journey blueprints 0.1.0 structure valid: 12 blueprints, 125 steps (69 customer, 56 team), 94 branches, "
-            "28 abuse paths, 14 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
+            "28 abuse paths, 16 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
         self.assertEqual(module.readiness(self.model), PUBLISHED_READINESS)
@@ -908,6 +911,73 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual([item["audience"] for item in by_journey.values()].count("operator"), 2)
         kinds = {branch["kind"] for step in by_journey["J07"]["steps"] for branch in step["branches"]}
         self.assertIn("revocation", kinds)
+
+    def _texts(self):
+        def walk(value):
+            if isinstance(value, dict):
+                for item in value.values():
+                    yield from walk(item)
+            elif isinstance(value, list):
+                for item in value:
+                    yield from walk(item)
+            elif isinstance(value, str):
+                yield value
+        return list(walk(self.document)) + list(walk(self.gaps))
+
+    def test_no_text_calls_revocation_or_a_stop_immediate(self):
+        # ADR-021 section 2.1 and the domain model rule 3: two published bounds, never "immediate"; ADR-022: the
+        # kill switch refuses new requests at admission and stops in-flight traffic within a 60-second bound.
+        pattern = re.compile(r"\b(?:immediate(?:ly)?|at once|instant(?:ly)?)\b", re.IGNORECASE)
+        self.assertEqual([text for text in self._texts() if pattern.search(text)], [])
+
+    def test_safe_exit_runs_under_step_up(self):
+        for step_id in ("J07.C.05", "J07.T.04"):
+            step = self.model.steps[step_id]
+            self.assertIn("ADR-019", step["policy_refs"])
+            self.assertIn("step-up", step["authorization"])
+
+    def test_rights_clocks_start_at_acknowledgement(self):
+        # T-CMP-01 (PenniLogic/api#24): every data-principal request and grievance starts its clock at acknowledgement.
+        clocks = [step["controls"]["clock"] for journey_id in ("J10", "J11")
+                  for step in self.model.blueprints[journey_id]["steps"]
+                  if step["controls"] is not None and "response clock" in step["controls"]["clock"]]
+        self.assertEqual(len(clocks), 4)
+        self.assertTrue(all("starts at acknowledgement" in clock for clock in clocks))
+        pattern = re.compile(r"clock (?:does not start|starts only|starts at validation)|before the clock starts")
+        self.assertEqual([text for text in self._texts() if pattern.search(text)], [])
+
+    def test_no_signal_follows_safe_exit(self):
+        # Steps reachable only through safe exit must not emit a journey signal, or its use could be inferred.
+        blueprint = self.model.blueprints["J07"]
+        successors = defaultdict(set)
+        for step in blueprint["steps"]:
+            if step["id"] != "J07.C.05":
+                successors[step["id"]].update(step["next"])
+                successors[step["id"]].update(item["to"] for item in step["branches"] if item["to"])
+        reached, frontier = set(), [blueprint["steps"][0]["id"]]
+        while frontier:
+            current = frontier.pop()
+            if current not in reached:
+                reached.add(current)
+                frontier.extend(successors[current])
+        after = [step for step in blueprint["steps"] if step["id"] not in reached or step["id"] == "J07.C.05"]
+        self.assertEqual([step["id"] for step in after], ["J07.C.05", "J07.T.04", "J07.C.06"])
+        self.assertEqual([step["telemetry"] for step in after], [None, None, None])
+
+    def test_stories_outside_their_journey_personas_are_recorded_gaps(self):
+        # TS-M1: the registry's own stories name personas their journey lacks; each one is a visible gap.
+        registry = module.loads(module.GitSources(ROOT).blob(module.REGISTRY_PIN["commit"], module.REGISTRY_PIN["path"]))
+        personas = {journey["id"]: set(journey["persona_ids"]) for journey in registry["journeys"]}
+        flows = {flow["id"]: flow["journey_ids"] for flow in registry["flows"]}
+        outside = {}
+        for story in registry["user_stories"]:
+            allowed = set().union(*(personas[journey_id] for journey_id in flows[story["flow_id"]]))
+            if not set(story["persona_ids"]) <= allowed:
+                outside[story["id"]] = flows[story["flow_id"]]
+        self.assertEqual(outside, {"US-WEB-02": ["J03"], "US-WEB-05": ["J03"], "US-ADM-06": ["J10"]})
+        for story_id, journeys in outside.items():
+            self.assertTrue(any(story_id in gap["summary"] and gap["journey_id"] in journeys
+                                for gap in self.gaps["gaps"]), story_id)
 
 
 if __name__ == "__main__":
