@@ -346,9 +346,11 @@ class CoverageCase(unittest.TestCase):
         self.assertEqual((caught.exception.rule, caught.exception.subject), (rule, subject))
         return fixture
 
-    def gap(self, mutate, rule, subject):
+    def gap(self, mutate, rule, subject, prepare=None):
         """Ready baseline has no gap; one mutation yields exactly one gap of one rule."""
         fixture = Fixture()
+        if prepare is not None:
+            prepare(fixture)
         self.assertEqual(fixture.gaps(), EMPTY_GAPS)
         mutate(fixture)
         self.assertEqual(fixture.gaps(), {**EMPTY_GAPS, rule: [subject]})
@@ -790,8 +792,17 @@ class GraphAndPlatformTests(CoverageCase):
         self.refused(lambda f: f.record("F-AND-02")["screen_ids"].append("S-AND-002"), "graph.link_mismatch",
                      "F-AND-02 S-AND-002")
 
+    def test_story_lists_exactly_its_flow_journeys(self):
+        """Relisting a story's journeys must not move it away from its flow's journeys (and their personas)."""
+        def link_second_journey(fixture):
+            fixture.record("F-AND-01")["journey_ids"].append("J02")
+            fixture.record("J02")["flow_ids"].append("F-AND-01")
+        self.refused(link_second_journey, "graph.link_mismatch", "US-AND-01 F-AND-01")
+        self.refused(lambda f: f.record("US-AND-01").update(journey_ids=["J02"]), "graph.link_mismatch",
+                     "US-AND-01 F-AND-01")
+
     def test_platform_mismatch_fails(self):
-        self.refused(lambda f: f.record("US-WEB-01").update(flow_id="F-ADM-01"), "platform.story_flow", "US-WEB-01")
+        self.refused(lambda f: f.record("US-WEB-01").update(flow_id="F-AND-01"), "platform.story_flow", "US-WEB-01")
         self.refused(lambda f: f.record("US-AND-01")["persona_ids"].append("P02"), "platform.story_persona",
                      "US-AND-01 P02")
 
@@ -985,11 +996,33 @@ class ReadinessTests(CoverageCase):
 
     def test_persona_outside_its_journey_is_a_readiness_gap(self):
         self.gap(lambda f: f.record("US-AND-01")["persona_ids"].append("P03"), "readiness.persona_outside_journey",
-                 "US-AND-01 J01")
+                 "US-AND-01")
+
+    def test_persona_rule_uses_the_union_of_the_flow_journeys(self):
+        """TS-M1: P01 is only in J01 and P03 only in J02, so neither journey alone covers US-AND-01 but the union
+        of its flow's journeys does; the per-journey reading would report two gaps here."""
+        def two_journeys(fixture):
+            fixture.record("F-AND-01")["journey_ids"].append("J02")
+            fixture.record("J02")["flow_ids"].append("F-AND-01")
+            fixture.record("US-AND-01").update(journey_ids=["J01", "J02"], persona_ids=["P01", "P03"])
+        self.gap(lambda f: f.record("J02")["persona_ids"].remove("P03"), "readiness.persona_outside_journey",
+                 "US-AND-01", prepare=two_journeys)
 
     def test_screen_ticket_outside_its_flows_is_a_readiness_gap(self):
         self.gap(lambda f: f.record("S-AND-003")["implementation_tickets"].append(copy.deepcopy(AND1)),
                  "readiness.screen_ticket_outside_flows", "S-AND-003 PenniLogic/android#901")
+
+    def test_screen_ticket_rule_uses_the_union_of_the_screen_flows(self):
+        """S-AND-002 on two flows carries each flow's ticket; each ticket is on only one flow but within the union."""
+        def two_flows(fixture):
+            fixture.record("F-AND-02")["screen_ids"].append("S-AND-002")
+            fixture.record("S-AND-002").update(flow_ids=["F-AND-01", "F-AND-02"],
+                                               implementation_tickets=[copy.deepcopy(AND1), copy.deepcopy(AND3)])
+
+        def unlink(fixture):
+            fixture.record("F-AND-02")["screen_ids"].remove("S-AND-002")
+            fixture.record("S-AND-002")["flow_ids"].remove("F-AND-02")
+        self.gap(unlink, "readiness.screen_ticket_outside_flows", "S-AND-002 PenniLogic/android#903", prepare=two_flows)
 
     def test_security_critical_screen_missing_privacy_authorization_states_fails(self):
         self.gap(lambda f: f.record("S-AND-001").update(privacy_states=[]), "readiness.security_states_missing",
@@ -1373,7 +1406,7 @@ class CommandLineTests(unittest.TestCase):
 # The recorded state of the published registry (HC-B1): changing any count is a reviewed change to this file.
 PUBLISHED_GAPS = {
     "readiness.d6_missing": 141, "readiness.route_missing": 141, "readiness.qa_unverified": 35,
-    "readiness.persona_outside_journey": 7, "readiness.screen_ticket_outside_flows": 1,
+    "readiness.persona_outside_journey": 3, "readiness.screen_ticket_outside_flows": 1,
     "readiness.security_states_missing": 7, "readiness.proposal_unconfirmed": 232, "readiness.ticket_unresolved": 0,
     "readiness.post_snapshot_issue": 1,
 }
@@ -1444,10 +1477,9 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(gaps["readiness.route_missing"], screens)
         self.assertEqual(gaps["readiness.qa_unverified"],
                          sorted((key for key, flow in model.flows.items() if flow["critical"]), key=module.natural_key))
-        self.assertEqual(gaps["readiness.persona_outside_journey"], [
-            "US-AND-16 J05", "US-WEB-01 J01", "US-WEB-02 J03", "US-WEB-03 J01", "US-WEB-05 J03", "US-ADM-06 J10",
-            "US-ADM-07 J10",
-        ])
+        # TS-M1 union rule: the final plan's "(7)" came from the critique's one-journey-per-story table; US-AND-16,
+        # US-WEB-01, US-WEB-03 and US-ADM-07 are covered by the union of their flows' journeys.
+        self.assertEqual(gaps["readiness.persona_outside_journey"], ["US-WEB-02", "US-WEB-05", "US-ADM-06"])
         self.assertEqual(gaps["readiness.screen_ticket_outside_flows"], ["S-AND-041 PenniLogic/android#42"])
         self.assertEqual(gaps["readiness.security_states_missing"], [
             "S-AND-005", "S-AND-057", "S-WEB-009", "S-WEB-035", "S-ADM-021", "S-ADM-022", "S-ADM-024",

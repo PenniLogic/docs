@@ -649,6 +649,9 @@ def check_graph(model):
         for flow_id in screen["flow_ids"]:
             require(screen["id"] in flows[flow_id]["screen_ids"], "graph.link_mismatch", screen["id"], flow_id)
     for story in model.by_kind["user_story"].values():
+        # A story lists exactly its flow's journeys, so the persona rule cannot be dodged by relisting a story.
+        require(set(story["journey_ids"]) == set(flows[story["flow_id"]]["journey_ids"]), "graph.link_mismatch",
+                story["id"], story["flow_id"])
         model.stories_by_flow[story["flow_id"]].append(story)
 
 
@@ -837,10 +840,12 @@ def readiness(model):
     for flow in flows.values():
         if flow["critical"] and flow["qa_independence"]["status"] != "verified":
             gaps["readiness.qa_unverified"].add(flow["id"])
+    # TS-M1 as accepted: a flow's personas (those of its stories) lie within the union of its journeys' personas.
     for story in model.by_kind["user_story"].values():
-        for journey_id in story["journey_ids"]:
-            if not set(story["persona_ids"]) <= set(journeys[journey_id]["persona_ids"]):
-                gaps["readiness.persona_outside_journey"].add(f"{story['id']} {journey_id}")
+        allowed = set().union(*(journeys[journey_id]["persona_ids"]
+                                for journey_id in flows[story["flow_id"]]["journey_ids"]))
+        if not set(story["persona_ids"]) <= allowed:
+            gaps["readiness.persona_outside_journey"].add(story["id"])
     for component in model.by_kind["component"].values():
         if component["proposal"] is not None:
             gaps["readiness.proposal_unconfirmed"].add(component["id"])
