@@ -47,7 +47,7 @@ None.
 | `reg.deletion.confirm` | disclosure | RC-006 (draft) | 72/145/290 | `term.account_deletion` | no | android, web, admin | provisional | content |
 | `reg.disclaimer.not_investment_advice` | disclosure | RC-003 (draft) | 41/83/166 | none | no | android, web, admin | provisional | content |
 | `reg.incident.notice` | disclosure | RC-008 (draft) | 69/139/278 | none | no | android, web, admin | provisional | content |
-| `reg.permission.message_access` | disclosure | RC-002 (draft) | 60/120/240 | `term.permission` | no | android, web, admin | provisional | content |
+| `reg.permission.message_access` | disclosure | RC-002 (draft) | 60/120/240 | `term.permission` | no | android | provisional | content |
 | `reg.plan_change.effective` | disclosure | RC-004 (draft) | 61/123/246 | `term.plan` | no | android, web, admin | provisional | content |
 | `reg.refund.recorded` | disclosure | RC-005 (draft) | 53/106/212 | `term.refund` | no | android, web, admin | provisional | content |
 | `state.degraded.action` | action | taxonomy | 4/9/19 | none | no | android, web, admin | provisional | content |

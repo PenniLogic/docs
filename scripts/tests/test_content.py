@@ -277,6 +277,18 @@ class GlossaryTests(Harness):
         self.assertRefused(lambda d: d["glossary"]["terms"][7].update(definition="Owed because of a loan."),
                            "term.forbidden_term", "term.debt")
 
+    def test_definition_with_banned_voice_phrase(self):
+        self.assertRefused(lambda d: terms_of(d)["term.debt"].update(definition="Owed money, repaid as guaranteed."),
+                           "term.banned_pattern", "term.debt")
+
+    def test_label_with_banned_voice_phrase(self):
+        self.assertRefused(lambda d: terms_of(d)["term.debt"].update(preferred_label="amazing debt"),
+                           "term.banned_pattern", "term.debt")
+
+    def test_definition_with_another_terms_forbidden_alias(self):
+        self.assertRefused(lambda d: terms_of(d)["term.payoff"].update(definition="When the loan burden ends."),
+                           "term.forbidden_alias", "term.payoff")
+
     def test_contract_field_grammar(self):
         self.assertRefused(lambda d: d["glossary"]["terms"][7].update(contract_field_names=["debtId"]),
                            "term.contract_field_grammar", "term.debt")
@@ -520,6 +532,10 @@ class MessageKeyTests(Harness):
     def test_copy_with_exclamation_mark(self):
         self.assertRefused(lambda d: keys_of(d)["debt.delete.next"].update(copy="Review {item}!"),
                            "key.forbidden_term", "debt.delete.next")
+
+    def test_key_reaching_a_client_where_its_term_is_not_used(self):
+        self.assertRefused(lambda d: terms_of(d)["term.debt"].update(surfaces=["android", "contracts", "support"]),
+                           "key.term_surface_missing", "debt.delete.status term.debt")
 
     def test_copy_with_forbidden_glossary_alias(self):
         self.assertRefused(lambda d: keys_of(d)["debt.delete.next"].update(copy="Review loan burden"),

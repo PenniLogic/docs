@@ -746,9 +746,7 @@
       },
       "owner": "content",
       "platforms": [
-        "android",
-        "web",
-        "admin"
+        "android"
       ],
       "neutral_safe_exit": false
     },

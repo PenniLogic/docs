@@ -118,7 +118,8 @@ STRUCTURE_RULES = (
     "content.url_shape", "content.email_shape", "content.number_shape",
     "version.grammar", "owner.unknown_role",
     "term.id_grammar", "term.duplicate_id", "term.duplicate_label", "term.alias_is_label", "term.alias_collision",
-    "term.forbidden_term", "term.contract_field_grammar", "term.contract_field_conflict",
+    "term.forbidden_term", "term.banned_pattern", "term.forbidden_alias", "term.contract_field_grammar",
+    "term.contract_field_conflict",
     "term.comprehension_term_missing", "term.comprehension_not_required", "held.comprehension_evidence",
     "held.term_approval",
     "voice.id_grammar", "voice.duplicate_id", "voice.sentence_limit_range", "held.reading_level",
@@ -127,7 +128,8 @@ STRUCTURE_RULES = (
     "pattern.duplicate", "pattern.missing", "pattern.state_mismatch", "pattern.state_copy_forked",
     "pattern.slot_missing", "pattern.unknown_key",
     "placeholder.grammar", "placeholder.duplicate", "placeholder.shadows_taxonomy", "placeholder.prohibited",
-    "key.grammar", "key.duplicate", "key.prefix_conflict", "key.foreign_root", "key.state_not_in_taxonomy",
+    "key.term_surface_missing", "key.grammar", "key.duplicate", "key.prefix_conflict", "key.foreign_root",
+    "key.state_not_in_taxonomy",
     "key.state_copy_forked", "held.nav_key", "key.regulated_outside_root", "key.regulated_root_without_record",
     "key.regulated_copy_forked", "key.common_not_shared", "key.copy_missing", "key.range_order",
     "key.copy_out_of_range", "key.unknown_term", "key.term_label_missing", "key.forbidden_term",
@@ -375,6 +377,15 @@ def check_voice(voice, facts):
     return [pattern["phrase"] for pattern in voice["banned_patterns"]]
 
 
+def check_term_wording(glossary, banned):
+    """Labels and definitions follow the voice too: no banned phrase and no term's forbidden alias."""
+    aliases = [alias.casefold() for term in glossary["terms"] for alias in term["forbidden_aliases"]]
+    for term in glossary["terms"]:
+        for text in (term["preferred_label"], term["definition"]):
+            require(banned_in(text, banned) is None, "term.banned_pattern", term["id"])
+            require(forbidden_in(text, aliases) is None, "term.forbidden_alias", term["id"])
+
+
 def banned_in(text, phrases):
     """The first banned voice phrase in text, matched like the taxonomy's forbidden terms."""
     return support.forbidden_term(text, [phrase.casefold() for phrase in phrases])
@@ -446,6 +457,9 @@ def check_keys(catalogue, facts, terms, context, roles, regulated_ids):
         require(1 <= bounds["min"] <= bounds["typical"] <= bounds["max"] <= RANGE_LIMIT, "key.range_order", key)
         for reference in entry["term_refs"]:
             require(reference in terms, "key.unknown_term", key, *((reference,) if printable(reference) else ()))
+            # One term across platforms: a key may only reach clients where its terms are defined for use.
+            require(set(entry["platforms"]) <= set(terms[reference]["surfaces"]), "key.term_surface_missing", key,
+                    reference)
         if copy is not None:
             require(bounds["min"] <= len(copy) <= bounds["max"], "key.copy_out_of_range", key)
             for reference in entry["term_refs"]:
@@ -750,6 +764,7 @@ def check(documents, schemas, taxonomy, gates, now, sources, owner=None):
     catalogue, regulated = documents["message-keys"], documents["regulated-copy"]
     terms = check_glossary(glossary, facts, roles)
     banned = check_voice(voice, facts)
+    check_term_wording(glossary, banned)
     for pattern in voice["patterns"]:
         state = pattern["taxonomy_state"]
         require(state is None or state in facts["states"], "pattern.state_mismatch", pattern["id"])
@@ -917,8 +932,11 @@ def render_keys(catalogue, regulated):
 
 def render_regulated(regulated):
     lines = [f"# Regulated copy {regulated['regulated_version']}", ""]
-    lines += banner("regulated-copy", "Every record is a draft: not legal text, not approved and never shown; a "
-                                      "consumer shows its fail-closed key instead.")
+    records = regulated["records"]
+    approved = sum(record["status"] == "approved" for record in records)
+    lines += banner("regulated-copy", f"{approved} of {len(records)} records approved. Only approved copy inside its "
+                                      "approval window may be shown; for any other record a consumer shows its "
+                                      "fail-closed key. Draft copy is not legal text.")
     lines += [
         f"Approver role: {code(regulated['approver_role'])} (qualified legal/compliance owner; unassigned in "
         f"{code(GATES)}, so no record can be approved).", "",
