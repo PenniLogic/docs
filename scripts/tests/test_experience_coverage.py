@@ -1092,6 +1092,9 @@ class ReferenceAndOwnershipTests(CoverageCase):
     def test_critical_flow_needs_a_persona(self):
         self.refused(lambda f: f.record("US-AND-01").update(flow_id="F-AND-02"), "flow.critical_without_persona",
                      "F-AND-01")
+        fixture = Fixture()
+        fixture.record("US-AND-02")["flow_id"] = "F-AND-01"
+        fixture.check()  # the non-critical F-AND-02 may have no story, hence no persona: the rule is for critical flows
 
 
 class GraphAndPlatformTests(CoverageCase):
