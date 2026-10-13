@@ -285,6 +285,13 @@ class StructureTests(RuleCase):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON")["accessibility"].pop("focus"),
                            "schema.invalid", "C-SYN-BUTTON")
 
+    def test_nullable_deprecation_and_decision_source_shapes_are_checked_in_code(self):
+        """SC2-02: the other nullable objects are shape-checked with their record ID."""
+        self.assertRefused(lambda d: chip_deprecation(d).pop("available_until_removal"), "schema.invalid",
+                           "C-SYN-CHIP")
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0")["cdo_approval"]["decision_source"].pop(
+            "path"), "schema.invalid", "LIB-COMPONENTS@1.0.0")
+
     def test_secret_shape_is_refused_without_echo(self):
         token = planted_token()
         error = self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON").update(description=token),
@@ -410,44 +417,45 @@ class RegistryTests(RuleCase):
         self.assertEqual(str(caught.exception), "registry.invalid")
 
     def refused_registry(self, blob):
-        """A real-mode document re-pinned to `blob` (control: the plain real document passes)."""
-        document = real()
-        run_check(copy.deepcopy(document), False)
+        """A fixture-mode document re-pinned to `blob` (control: the plain fixture passes); fixture mode admits the
+        reserved C-SYN-* IDs, so no real registry ID appears in a synthetic registry."""
+        document = fixture()
+        run_check(copy.deepcopy(document))
         pin = {"commit": SYNTHETIC_COMMIT, "path": REGISTRY_PATH,
                "sha256": "sha256:" + hashlib.sha256(blob).hexdigest()}
         document["registry_ref"] = pin
         with self.assertRaises(module.Refused) as caught:
             module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}),
-                         pin=pin)
+                         pin=pin, fixture=True)
         return str(caught.exception)
 
     def test_duplicate_registry_ids_are_invalid(self):
-        record = {"id": "C-ACTION", "name": "Action", "platforms": ["web"]}
+        record = {"id": "C-SYN-ACTION", "name": "Action", "platforms": ["web"]}
         self.assertEqual(self.refused_registry(encode({"components": [record, record]})), "registry.invalid")
 
     def test_duplicate_registry_keys_are_invalid(self):
-        blob = b'{"components": [{"id": "C-ACTION", "id": "C-OTHER", "name": "Action", "platforms": ["web"]}]}'
+        blob = b'{"components": [{"id": "C-SYN-ACTION", "id": "C-SYN-OTHER", "name": "Action", "platforms": ["web"]}]}'
         self.assertEqual(self.refused_registry(blob), "registry.invalid")
 
     def test_registry_names_are_required(self):
-        self.assertEqual(self.refused_registry(encode({"components": [{"id": "C-ACTION", "platforms": ["web"]}]})),
+        self.assertEqual(self.refused_registry(encode({"components": [{"id": "C-SYN-ACTION", "platforms": ["web"]}]})),
                          "registry.invalid")
 
     def test_registry_grammar_ids_are_gaps_not_failures(self):
-        blob, pin = pinned([("C-OP-2FA", ["admin"]), ("C-DATA-VISUALIZATION", ["web"]), ("C-INPUT-OTP-6", ["web"]),
-                            ("C-A--B", ["web"])])
-        document = real()
+        ids = ("C-SYN-OP-2FA", "C-SYN-DATA-VISUALIZATION", "C-SYN-INPUT-OTP-6", "C-SYN--B")
+        blob, pin = pinned([(identifier, ["admin"]) for identifier in ids])
+        document = fixture()
         document["registry_ref"] = pin
-        model = module.check(document, SCHEMA, POLICY, POLICY_SCHEMA,
-                             Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}), pin=pin)
-        self.assertEqual(module.readiness(model)["readiness.registry_component_ungoverned"],
-                         ["C-A--B", "C-DATA-VISUALIZATION", "C-INPUT-OTP-6", "C-OP-2FA"])
-        record = component("C-OP-2FA", "Synthetic pinned component", status="draft", platforms=["admin"], since=None)
+        sources = Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob})
+        model = module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, sources, pin=pin, fixture=True)
+        self.assertEqual(module.readiness(model)["readiness.registry_component_ungoverned"], sorted(ids))
+        record = component("C-SYN-OP-2FA", "Synthetic pinned component", status="draft", platforms=["admin"],
+                           since=None)
         record.update(semantic_role=None, description=None, properties=[], accessibility=None)
         document["components"].append(record)
-        self.assertIn("C-OP-2FA", module.check(document, SCHEMA, POLICY, POLICY_SCHEMA,
-                                               Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}), pin=pin).components)
-        self.assertFalse(module.printable("C-A--B"))
+        self.assertIn("C-SYN-OP-2FA", module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, sources, pin=pin,
+                                                   fixture=True).components)
+        self.assertFalse(module.printable("C-SYN--B"))
 
     def test_record_name_is_the_registry_name(self):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Floating banner"),
@@ -645,6 +653,17 @@ class TabletopTests(RuleCase):
         self.assertRefused(lambda d: find(d, "tabletop", "TT-16").update(expected="refused"),
                            "tabletop.outcome_mismatch", "TT-16")
 
+    def test_coverage_cases_are_live_requests(self):
+        """SC2-02: an offboarded feature-squad publish or candidate edit covers neither required case."""
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-03").update(offboarded=True),
+                           "tabletop.coverage_missing", "LIB-COMPONENTS")
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-16").update(offboarded=True, expected="refused"),
+                           "tabletop.coverage_missing", "LIB-CANDIDATE")
+
+    def test_public_link_case_is_required(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-14").update(action="export"),
+                           "tabletop.coverage_missing")
+
     def test_contribution_path_case_is_required(self):
         self.assertRefused(lambda d: find(d, "tabletop", "TT-16").update(role="systems"),
                            "tabletop.coverage_missing", "LIB-CANDIDATE")
@@ -687,8 +706,8 @@ class HeldTests(RuleCase):
                            "held.cdo_recorded", "LIB-COMPONENTS@1.0.0", fixture_mode=False)
 
     def test_real_data_never_publishes_a_component(self):
-        record = component("C-ACTION", "Action", since="1.0.0")
-        self.assertRefused(lambda d: d["components"].append(record), "held.publication", "C-ACTION",
+        record = component("C-SYN-PUBLISHED", "Published synthetic", since="1.0.0")
+        self.assertRefused(lambda d: d["components"].append(record), "held.publication", "C-SYN-PUBLISHED",
                            fixture_mode=False)
 
     def test_real_data_refuses_synthetic_component_ids(self):
@@ -1026,6 +1045,19 @@ class DeprecationTests(RuleCase):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(breaking=False,
                                                                                     migration_plan_ref=None),
                            "deprecation.removal_not_breaking", "C-SYN-CHIP")
+
+    def test_replacement_is_not_itself_deprecated(self):
+        """SC2-02 N1: a deprecated component never names a deprecated replacement."""
+        def second_deprecation():
+            document = fixture()
+            old = component("C-SYN-OLD", "Legacy toggle", status="deprecated", role="legacy setting", properties=[
+                {"name": "pressed", "type": "boolean", "values": [], "default": "false", "required": False}])
+            old["deprecation"] = {"replacement": "C-SYN-BUTTON", "removal_version": "2.0.0",
+                                  "available_until_removal": True}
+            document["components"].append(old)
+            return document
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-OLD")["deprecation"].update(
+            replacement="C-SYN-CHIP"), "deprecation.replacement_invalid", "C-SYN-OLD", base=second_deprecation)
 
     def test_removal_version_is_required(self):
         self.assertRefused(lambda d: chip_deprecation(d).update(removal_version=None),

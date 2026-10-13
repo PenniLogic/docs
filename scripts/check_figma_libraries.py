@@ -159,9 +159,9 @@ STRUCTURE_RULES = (
     "component.registry_platform_mismatch", "component.registry_name_mismatch",
     "component.variant_invalid", "component.variant_parent_unpublished", "component.owner_not_maintainer",
     "component.property_contract",
-    "published.owner_missing", "published.name_missing", "published.description_missing", "published.properties_missing",
-    "published.accessibility_missing", "published.platforms_missing", "published.semantic_role_missing",
-    "published.release_missing",
+    "published.owner_missing", "published.name_missing", "published.description_missing",
+    "published.properties_missing", "published.accessibility_missing", "published.platforms_missing",
+    "published.semantic_role_missing", "published.release_missing",
     "deprecation.unexpected", "deprecation.missing", "deprecation.replacement_missing",
     "deprecation.replacement_invalid", "deprecation.removal_version_missing", "deprecation.removal_version_invalid",
     "deprecation.removal_not_breaking", "deprecation.unavailable",
@@ -511,10 +511,10 @@ def check_properties(component):
 def check_component(component, schema, policy, releases, fixture):
     """One record's own rules: reserved IDs, library placement, holds, ownership, contract and completeness."""
     identifier, library = component["id"], component["library"]
-    require(fixture or not identifier.startswith(SYNTHETIC_PREFIX), "id.synthetic_reserved", identifier)
-    require(library != "LIB-FOUNDATION", "component.library_invalid", identifier)
     published = component["status"] in PUBLISHED
     require(fixture or not published, "held.publication", identifier)
+    require(fixture or not identifier.startswith(SYNTHETIC_PREFIX), "id.synthetic_reserved", identifier)
+    require(library != "LIB-FOUNDATION", "component.library_invalid", identifier)
     # docs#55 has not published a token grammar: no token reference can be resolved, so none is recorded.
     require(not component["token_refs"], "held.token_refs", identifier)
     require(library != "LIB-CANDIDATE" or not published, "component.candidate_published", identifier)
