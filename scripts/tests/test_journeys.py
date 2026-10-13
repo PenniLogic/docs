@@ -757,5 +757,102 @@ class SummaryAndCliTests(JourneyCase):
                          (1, "", "Journey blueprint check refused: input.unreadable_or_invalid\n"))
 
 
+def _ids(prefix, count):
+    return [f"{prefix}{index:02d}" for index in range(1, count + 1)]
+
+
+PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J02-01", "GAP-J02-02", "GAP-J05-01", "GAP-J06-01", "GAP-J07-01",
+                  "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J11-01", "GAP-J11-02", "GAP-J12-01"]
+PUBLISHED_READINESS = {
+    "readiness.registry_unintegrated": ["PenniLogic/docs#75"],
+    "readiness.research_pending": ["PenniLogic/docs#66"],
+    "readiness.persona_provisional": _ids("J", 12),
+    "readiness.approval_pending": ["architecture", "ia", "operations", "product", "security"],
+    "readiness.metric_pending": _ids("J", 12),
+    "readiness.event_pending": [
+        "J01.T.02", "J01.T.03", "J03.T.02", "J03.T.03", "J03.T.04", "J03.T.05", "J04.T.01", "J04.T.02", "J05.T.01",
+        "J05.T.02", "J05.T.03", "J06.T.01", "J06.T.02", "J06.T.03", "J06.T.04", "J07.T.01", "J07.T.02", "J07.T.03",
+        "J07.T.04", "J08.C.04", "J08.T.01", "J08.T.03", "J09.T.01", "J09.T.02", "J09.T.03", "J10.T.01", "J10.T.04",
+        "J10.T.06", "J10.T.08", "J11.T.04", "J11.T.06", "J12.T.02"],
+    "readiness.gap_open": PUBLISHED_GAPS,
+    "readiness.gap_backlog_missing": PUBLISHED_GAPS,
+    "readiness.figma_held": ["D01", "D03", "D04", "D05", "D21"],
+}
+
+
+class PublishedDataTests(unittest.TestCase):
+    """The committed J01-J12 blueprints and gaps, read (never written) and checked against the real pinned registry."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = module.load_and_check(ROOT)
+        cls.document, cls.gaps = cls.model.document, cls.model.gaps
+
+    def test_structure_line_is_exact(self):
+        self.assertEqual(
+            module.structure_line(self.model),
+            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 125 steps (69 customer, 56 team), 94 branches, "
+            "28 abuse paths, 14 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
+
+    def test_readiness_gaps_are_exact(self):
+        self.assertEqual(module.readiness(self.model), PUBLISHED_READINESS)
+
+    def test_committed_summary_matches_the_data(self):
+        expected = module.render_summary(self.model, module.readiness(self.model))
+        self.assertEqual((ROOT / module.SUMMARY).read_bytes(), expected.encode("utf-8"))
+
+    def test_default_mode_reports_not_green_with_exact_counts(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = module.main([])
+        self.assertEqual((code, err.getvalue()), (1, ""))
+        lines = out.getvalue().splitlines()
+        self.assertEqual(lines[0], module.NOT_GREEN)
+        self.assertEqual(lines[2:], [f"{rule}: {len(PUBLISHED_READINESS[rule])}" for rule in module.READINESS_RULES])
+
+    def test_one_blueprint_per_registry_journey_in_order(self):
+        self.assertEqual([item["id"] for item in self.document["blueprints"]], _ids("BP-J", 12))
+        self.assertEqual(sorted(self.model.registry["journeys"]), _ids("J", 12))
+
+    def test_every_critical_registry_flow_has_a_step(self):
+        used = {step["flow_id"] for step in self.model.steps.values()}
+        critical = {flow_id for flow_id, flow in self.model.registry["flows"].items() if flow["critical"]}
+        self.assertEqual(len(critical), 35)
+        self.assertLessEqual(critical, used)
+
+    def test_held_inputs_stay_visibly_incomplete(self):
+        self.assertEqual(self.document["status"], "provisional")
+        self.assertEqual(self.document["research_gate"], {"issue": "PenniLogic/docs#66", "status": "pending",
+                                                          "evidence": []})
+        self.assertTrue(all(item["status"] == "pending" and item["source"] is None
+                            for item in self.document["approvals"]))
+        self.assertTrue(all(item["figma"] == "held" for item in self.document["diagrams"]))
+        for blueprint in self.document["blueprints"]:
+            self.assertEqual((blueprint["persona_basis"], blueprint["persona_basis_ref"]),
+                             ("provisional", "pending:PenniLogic/docs#66"))
+            self.assertEqual(blueprint["outcome"]["metric_ref"], "pending:PenniLogic/docs#77")
+
+    def test_no_backlog_item_is_claimed_for_any_gap(self):
+        # docs#67 criterion 5 stays unmet: this change creates no issue, so every gap is open without a backlog item.
+        self.assertEqual([gap["id"] for gap in self.gaps["gaps"]], PUBLISHED_GAPS)
+        self.assertTrue(all(gap["status"] == "open" and gap["backlog_item"] is None for gap in self.gaps["gaps"]))
+
+    def test_event_references_are_pending_owner_issues_only(self):
+        values = {value for step in self.model.steps.values() for value in step["event_refs"]}
+        self.assertTrue(values)
+        self.assertTrue(all(module.PENDING_REF.fullmatch(value) for value in values))
+
+    def test_policy_operator_and_household_blueprints_carry_controls_and_abuse_paths(self):
+        by_journey = self.model.blueprints
+        for journey_id, policy_class in module.POLICY_CLASS.items():
+            self.assertEqual(by_journey[journey_id]["policy_class"], policy_class)
+            self.assertTrue(any(step["controls"] for step in by_journey[journey_id]["steps"]))
+        for journey_id in ("J07", "J10", "J11", "J12"):
+            self.assertGreaterEqual(len(by_journey[journey_id]["abuse_paths"]), 3)
+        self.assertEqual([item["audience"] for item in by_journey.values()].count("operator"), 2)
+        kinds = {branch["kind"] for step in by_journey["J07"]["steps"] for branch in step["branches"]}
+        self.assertIn("revocation", kinds)
+
+
 if __name__ == "__main__":
     unittest.main()
