@@ -479,6 +479,10 @@ class InputAndSchemaRuleTests(CoverageCase):
             fixture.schema["definitions"]["screen"]["properties"]["notes"] = {"type": "string"}
         self.refused(mutate, "schema.free_text_unlisted")
 
+        def free_map(fixture):
+            fixture.schema["definitions"]["screen"]["additionalProperties"] = {"type": "string"}
+        self.refused(free_map, "schema.free_text_unlisted")
+
     def test_forbidden_content_pattern_fails(self):
         cases = {
             "content.secret_shape": [planted_token(), "Key " + "a1" * 16, "Token " + "Zq9" * 11, "-----" + "BEGIN key"],
@@ -1194,6 +1198,15 @@ class CommandLineTests(unittest.TestCase):
             with self.subTest(revision=revision):
                 self.assertRun(checkout.run("--structure", f"--base={revision}"), 1, "", unavailable)
         self.assertRun(checkout.run("--structure", "--base", checkout.base), 1, "", removed)
+
+    def test_ledger_base_ignores_a_local_branch_named_origin_main(self):
+        fixture = Fixture()
+        fixture.drop_screen("S-AND-004")
+        checkout = Checkout(self, fixture, base_registry=REGISTRY)
+        removed = "Experience coverage check refused: ledger.entry_removed S-AND-004\n"
+        self.assertRun(checkout.run("--structure"), 1, "", removed)
+        git(checkout.root, "branch", "origin/main", "HEAD")
+        self.assertRun(checkout.run("--structure"), 1, "", removed)
 
     def test_base_without_a_registry_falls_back_to_import_continuity(self):
         fixture = Fixture()

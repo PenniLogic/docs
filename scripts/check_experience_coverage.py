@@ -36,7 +36,8 @@ TAXONOMY = "product/client-state-taxonomy.json"
 # planning/** is an unchanged historical contract, so the imported bytes are pinned here.
 IMPORT_PATH = "planning/source/evidence/experience-coverage.json"
 IMPORT_SHA256 = "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
-BASE_REF = "origin/main"
+# The full remote-tracking ref: a local branch named origin/main must not shadow it.
+BASE_REF = "refs/remotes/origin/main"
 # The registry author (DesignOps, PenniLogic/docs#75) is never a flow's independent QA owner.
 AUTHOR_ISSUE, AUTHOR_PLAN_ID = "PenniLogic/docs#75", "T-UXR-06"
 GREEN = "GREEN: readiness complete"
@@ -267,6 +268,11 @@ def unconstrained_text(schema):
             if free(child):
                 found.add(name)
             walk(child)
+        extra = node.get("additionalProperties")
+        if isinstance(extra, dict):
+            if free(extra):
+                found.add("*")
+            walk(extra)
         walk(node.get("items"))
 
     walk(schema)
@@ -735,7 +741,6 @@ def check_partition(model):
     for issue in model.partition["post_snapshot_issues"]:
         repository, number = issue.split("#")
         require(issue not in index and int(number) > highest[repository], "partition.post_snapshot_invalid", issue)
-    model.partition_entries = entries
 
 
 def check_release_gate(model):
