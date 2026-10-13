@@ -1,8 +1,10 @@
 """T-UXR-06 validator tests: synthetic rule fixtures plus read-only checks of the published registry files.
 
-Every rule test builds a fresh deep copy of one synthetic, fully ready registry, proves it passes (the control),
-applies exactly one mutation and asserts the exact static rule identifier and offending identifier; the synthetic
-fixtures hold no real coverage, approvals, gate records, people, money or contact data. Command-line tests run
+Every rule test builds a fresh deep copy of one synthetic registry, proves it passes (the control), applies exactly
+one mutation and asserts the exact static rule identifier and offending identifier. The registry is complete except
+for the held interfaces: no D6, handoff, route or verified-QA reference can be resolved yet, so none is recorded and
+the baseline keeps exactly those readiness gaps. The synthetic fixtures hold no real coverage, approvals, gate
+records, people, money or contact data. Command-line tests run
 against hermetic temporary Git checkouts outside this repository. PublishedDataTests read this checkout's committed
 product/experience-coverage.* files and inputs (and, for the real-Git paths, its local object store and
 refs/remotes/origin/main) without writing anything. Nothing here touches the network.
@@ -36,6 +38,13 @@ SCHEMA_BYTES = (ROOT / module.SCHEMA).read_bytes()
 PLANNING_SCHEMA = module.support.load_json(ROOT / "planning/source/schema/experience-coverage.schema.json")
 GATES_SCHEMA = module.support.load_json(ROOT / module.gates.SCHEMA)
 EMPTY_GAPS = {rule: [] for rule in module.READINESS_RULES}
+# References to held interfaces are refused, so the synthetic registry keeps these gaps and is never GREEN.
+SCREEN_IDS = ["S-AND-001", "S-AND-002", "S-AND-003", "S-AND-004", "S-WEB-001", "S-ADM-001"]
+HELD_GAPS = {
+    "readiness.d6_missing": SCREEN_IDS, "readiness.route_missing": SCREEN_IDS,
+    "readiness.qa_unverified": ["F-AND-01", "F-WEB-01", "F-ADM-01"],
+}
+BASELINE_GAPS = {**EMPTY_GAPS, **HELD_GAPS}
 IMPORT_COMMIT = "1" * 40
 EVIDENCE_COMMIT = "2" * 40
 EVIDENCE_PATH = "research/fixtures/qa-independence-synthetic.txt"
@@ -100,32 +109,39 @@ STATES = ["empty", "loading", "error", "offline", "stale", "permission-denied", 
 TAXONOMY = {"states": [{"id": state, "name": state.replace("_", "-")} for state in module.support.REQUIRED_STATES]}
 
 
+def d6_reference(identifier):
+    """A well-formed design-gates dependency for a screen; refused while no D6 gate record can be resolved."""
+    scope = module.gates.digest(f"synthetic D6 scope {identifier}")
+    return {"artifact_id": identifier, "gate_id": "D6", "scope_sha256": scope}
+
+
+def verified_qa():
+    """A verified QA independence with pinned, matching evidence; refused while docs#126 defines no record."""
+    return {"status": "verified", "evidence": {
+        "commit": EVIDENCE_COMMIT, "path": EVIDENCE_PATH, "sha256": module.gates.digest(EVIDENCE_BYTES),
+    }}
+
+
 def screen(identifier, flow, components, states, route_hint, implementation, *, critical=True, surface="page",
-           handoff=None, security=None):
+           security=None):
     platform = module.INFIX[identifier.split("-")[1]]
     reason, privacy, authorization = security or (None, [], [])
     return {
         "id": identifier, "platform": platform, "name": f"Synthetic screen {identifier[-3:]}", "surface_type": surface,
-        "route_hint": route_hint, "route_id": "route-" + identifier.lower(), "flow_ids": [flow],
+        "route_hint": route_hint, "route_id": None, "flow_ids": [flow],
         "component_ids": components, "states": states, "critical": critical, "security_critical": reason is not None,
         "security_reason": reason, "privacy_states": privacy, "authorization_states": authorization,
-        "d6_dependency": {
-            "artifact_id": identifier, "gate_id": "D6",
-            "scope_sha256": module.gates.digest(f"synthetic D6 scope {identifier}"),
-        },
-        "handoff_ref": handoff, "design_ticket": copy.deepcopy(DESIGN),
+        "d6_dependency": None, "handoff_ref": None, "design_ticket": copy.deepcopy(DESIGN),
         "implementation_tickets": [copy.deepcopy(implementation)], "qa_ticket": copy.deepcopy(QA), "proposal": None,
     }
 
 
-def flow(identifier, journey, screens, implementation, critical=True, verified=True):
-    evidence = {"commit": EVIDENCE_COMMIT, "path": EVIDENCE_PATH, "sha256": module.gates.digest(EVIDENCE_BYTES)}
+def flow(identifier, journey, screens, implementation, critical=True):
     return {
         "id": identifier, "platform": module.INFIX[identifier.split("-")[1]], "name": f"Synthetic flow {identifier}",
         "critical": critical, "journey_ids": [journey], "screen_ids": screens, "design_ticket": copy.deepcopy(DESIGN),
         "implementation_tickets": [copy.deepcopy(implementation)], "qa_ticket": copy.deepcopy(QA),
-        "qa_independence": {"status": "verified", "evidence": evidence} if verified else
-        {"status": "unverified", "evidence": None},
+        "qa_independence": {"status": "unverified", "evidence": None},
     }
 
 
@@ -168,24 +184,22 @@ COLLECTIONS = {
     ],
     "flows": [
         flow("F-AND-01", "J01", ["S-AND-001", "S-AND-002"], AND1),
-        flow("F-AND-02", "J01", ["S-AND-003", "S-AND-004"], AND3, critical=False, verified=False),
+        flow("F-AND-02", "J01", ["S-AND-003", "S-AND-004"], AND3, critical=False),
         flow("F-WEB-01", "J01", ["S-WEB-001"], WEB1),
         flow("F-ADM-01", "J02", ["S-ADM-001"], ADM1),
     ],
     "screens": [
         screen("S-AND-001", "F-AND-01", ["C-NAV-ANDROID", "C-ACTION-PRIMARY"],
                ["loading", "error", "permission-denied", "revoked", "success"], "android://home", AND1,
-               handoff="HND-AND-001@1.0.0", security=SECURITY),
-        screen("S-AND-002", "F-AND-01", ["C-ACTION-PRIMARY"], ["loading", "error"], "android://settings/:id", AND1,
-               handoff="HND-AND-001@1.0.0"),
+               security=SECURITY),
+        screen("S-AND-002", "F-AND-01", ["C-ACTION-PRIMARY"], ["loading", "error"], "android://settings/:id", AND1),
         screen("S-AND-003", "F-AND-02", ["C-ACTION-PRIMARY"], ["empty", "success"], "android-widget://balance", AND3,
-               critical=False, surface="widget", handoff="HND-AND-002@1.0.0"),
+               critical=False, surface="widget"),
         screen("S-AND-004", "F-AND-02", ["C-NAV-ANDROID"], ["offline", "stale"], "android://balance/history", AND3,
-               critical=False, handoff="HND-AND-002@1.0.0"),
-        screen("S-WEB-001", "F-WEB-01", ["C-ACTION-PRIMARY"], ["loading", "error", "empty"], "/home", WEB1,
-               handoff="HND-WEB-001@1.0.0"),
+               critical=False),
+        screen("S-WEB-001", "F-WEB-01", ["C-ACTION-PRIMARY"], ["loading", "error", "empty"], "/home", WEB1),
         screen("S-ADM-001", "F-ADM-01", ["C-OP-QUEUE", "C-ACTION-PRIMARY"], ["loading", "error", "permission-denied"],
-               "/operator/*", ADM1, handoff="HND-ADM-001@2.1.0", security=OPERATOR),
+               "/operator/*", ADM1, security=OPERATOR),
     ],
     "components": [
         component("C-NAV-ANDROID", ["android"], ["default", "focus"]),
@@ -275,7 +289,7 @@ class Sources:
 
 
 class Fixture:
-    """A fresh deep copy of the synthetic, fully ready registry and its inputs."""
+    """A fresh deep copy of the synthetic registry (complete except for the held interfaces) and its inputs."""
 
     def __init__(self):
         self.registry, self.partition = copy.deepcopy(REGISTRY), copy.deepcopy(PARTITION)
@@ -347,20 +361,25 @@ class CoverageCase(unittest.TestCase):
         return fixture
 
     def gap(self, mutate, rule, subject, prepare=None):
-        """Ready baseline has no gap; one mutation yields exactly one gap of one rule."""
+        """The baseline has only the held-interface gaps; one mutation adds exactly one gap of one other rule."""
+        self.assertNotIn(rule, HELD_GAPS)
         fixture = Fixture()
         if prepare is not None:
             prepare(fixture)
-        self.assertEqual(fixture.gaps(), EMPTY_GAPS)
+        self.assertEqual(fixture.gaps(), BASELINE_GAPS)
         mutate(fixture)
-        self.assertEqual(fixture.gaps(), {**EMPTY_GAPS, rule: [subject]})
+        self.assertEqual(fixture.gaps(), {**BASELINE_GAPS, rule: [subject]})
 
 
 class BaselineAndSchemaTests(CoverageCase):
-    def test_synthetic_ready_registry_passes_structure_and_readiness(self):
+    def test_synthetic_registry_is_ready_except_the_held_interfaces(self):
+        """The in-test baseline: structurally complete with only the held-interface gaps, so never GREEN."""
         model = Fixture().check()
-        self.assertEqual(module.readiness(model), EMPTY_GAPS)
+        gaps = module.readiness(model)
+        self.assertEqual(gaps, BASELINE_GAPS)
         self.assertEqual(model.ledger_base, "frozen import")
+        self.assertEqual(module.render_summary(model, gaps).splitlines()[0], module.NOT_GREEN)
+        # The GREEN line stays for a later registry version that resolves the held interfaces' records.
         self.assertEqual(module.render_summary(model, EMPTY_GAPS).splitlines()[0], module.GREEN)
 
     def test_schema_is_a_self_contained_subset_with_its_own_identity(self):
@@ -521,7 +540,7 @@ class InputAndSchemaRuleTests(CoverageCase):
                      "PenniLogic/android#903")
         fixture = Fixture()
         fixture.record("S-AND-002")["design_ticket"] = ticket("E33", None)
-        self.assertEqual(fixture.gaps(), {**EMPTY_GAPS, "readiness.ticket_unresolved": ["S-AND-002"]})
+        self.assertEqual(fixture.gaps(), {**BASELINE_GAPS, "readiness.ticket_unresolved": ["S-AND-002"]})
 
     def test_content_boundaries(self):
         fixture = Fixture()
@@ -876,12 +895,13 @@ class StateComponentScreenTests(CoverageCase):
                              "proposal.field_without_value", "S-AND-002")
 
     def test_d6_dependency_uses_the_design_gates_shape_for_this_screen(self):
-        self.refused(lambda f: f.record("S-AND-001")["d6_dependency"].update(gate_id="D5"), "d6.dependency_mismatch",
-                     "S-AND-001")
-        self.refused(lambda f: f.record("S-AND-001")["d6_dependency"].update(artifact_id="S-AND-002"),
-                     "d6.dependency_mismatch", "S-AND-001")
-        self.refused(lambda f: f.record("S-AND-001")["d6_dependency"].update(scope_sha256="sha256:abc"),
-                     "schema.invalid", "S-AND-001")
+        def dependency(**changes):
+            return lambda f: f.record("S-AND-001").update(d6_dependency={**d6_reference("S-AND-001"), **changes})
+        self.refused(dependency(gate_id="D5"), "d6.dependency_mismatch", "S-AND-001")
+        self.refused(dependency(artifact_id="S-AND-002"), "d6.dependency_mismatch", "S-AND-001")
+        self.refused(dependency(scope_sha256="sha256:abc"), "schema.invalid", "S-AND-001")
+        # A well-formed dependency is still a self-asserted digest until a D6 gate record can be resolved (AV-01).
+        self.refused(dependency(), "held.d6_reference", "S-AND-001")
 
     def test_handoff_grammar_and_platform_infix(self):
         self.refused(lambda f: f.record("S-AND-001").update(handoff_ref="HND-WEB-001@1.0.0"),
@@ -890,15 +910,27 @@ class StateComponentScreenTests(CoverageCase):
         for value in malformed:
             with self.subTest(value=value):
                 self.refused(lambda f: f.record("S-AND-001").update(handoff_ref=value), "schema.invalid", "S-AND-001")
+        self.refused(lambda f: f.record("S-AND-001").update(handoff_ref="HND-AND-001@1.0.0"), "held.d6_reference",
+                     "S-AND-001")
 
     def test_qa_independence_needs_pinned_evidence(self):
         self.refused(lambda f: f.record("F-AND-02")["qa_independence"].update(status="verified"),
                      "qa.independence_evidence", "F-AND-02")
-        self.refused(lambda f: f.record("F-WEB-01")["qa_independence"].update(status="unverified"),
+        self.refused(lambda f: f.record("F-WEB-01")["qa_independence"].update(evidence=verified_qa()["evidence"]),
                      "qa.independence_evidence", "F-WEB-01")
-        self.refused(lambda f: f.blobs.pop((EVIDENCE_COMMIT, EVIDENCE_PATH)), "qa.evidence_unavailable", "F-AND-01")
-        self.refused(lambda f: f.record("F-ADM-01")["qa_independence"]["evidence"].update(sha256="sha256:" + "d" * 64),
-                     "qa.evidence_digest_mismatch", "F-ADM-01")
+
+        def missing_blob(fixture):
+            fixture.record("F-AND-01")["qa_independence"] = verified_qa()
+            fixture.blobs.pop((EVIDENCE_COMMIT, EVIDENCE_PATH))
+        self.refused(missing_blob, "qa.evidence_unavailable", "F-AND-01")
+
+        def wrong_digest(fixture):
+            fixture.record("F-ADM-01")["qa_independence"] = verified_qa()
+            fixture.record("F-ADM-01")["qa_independence"]["evidence"]["sha256"] = "sha256:" + "d" * 64
+        self.refused(wrong_digest, "qa.evidence_digest_mismatch", "F-ADM-01")
+        # Any pinned, matching blob would pass, so verified is refused until docs#126 defines its record (AV-06).
+        self.refused(lambda f: f.record("F-WEB-01").update(qa_independence=verified_qa()), "held.qa_verification",
+                     "F-WEB-01")
 
     def test_d20_points_at_the_generated_summary(self):
         self.refused(lambda f: f.record("D20").update(artifact_path="planning-automation/backlog-v2/evidence/x.json"),
@@ -956,43 +988,41 @@ class PartitionAndReleaseGateTests(CoverageCase):
         self.refused(lambda f: f.partition.update(post_snapshot_issues=["PenniLogic/docs#999"]), "schema.invalid")
 
     def test_release_gate_bypass_closed_issue_without_d6_fails(self):
-        def closed(fixture):
-            fixture.issue("PenniLogic/android#901").update(state="closed", state_reason="completed")
-        self.refused(lambda f: f.record("S-AND-002").update(d6_dependency=None), "release_gate.bypass",
-                     "PenniLogic/android#901 S-AND-002", prepare=closed)
-        self.refused(lambda f: f.record("S-AND-001").update(handoff_ref=None), "release_gate.bypass",
-                     "PenniLogic/android#901 S-AND-001", prepare=closed)
+        """No screen can carry D6 yet, so an implementation issue closed as delivered always bypassed the gate."""
+        self.refused(lambda f: f.issue("PenniLogic/android#901").update(state="closed", state_reason="completed"),
+                     "release_gate.bypass", "PenniLogic/android#901 S-AND-001")
+        self.refused(lambda f: f.issue("PenniLogic/web#901").update(state="closed", state_reason=None),
+                     "release_gate.bypass", "PenniLogic/web#901 S-WEB-001")
 
-        def closed_without_reason(fixture):
-            fixture.issue("PenniLogic/web#901").update(state="closed", state_reason=None)
-        self.refused(lambda f: f.record("S-WEB-001").update(d6_dependency=None), "release_gate.bypass",
-                     "PenniLogic/web#901 S-WEB-001", prepare=closed_without_reason)
-        fixture = Fixture()
-        fixture.record("S-WEB-001")["d6_dependency"] = None
+        def asserted_d6(fixture):
+            """AV-01: self-asserted references on every screen of the closed issue cannot clear the gate."""
+            fixture.issue("PenniLogic/android#901").update(state="closed", state_reason="completed")
+            for identifier in ("S-AND-001", "S-AND-002"):
+                fixture.record(identifier).update(d6_dependency=d6_reference(identifier),
+                                                  handoff_ref="HND-AND-001@1.0.0")
+        self.refused(asserted_d6, "held.d6_reference", "S-AND-001")
         # An open implementation issue without D6 is a readiness gap, not a bypass.
-        self.assertEqual(fixture.gaps(), {**EMPTY_GAPS, "readiness.d6_missing": ["S-WEB-001"]})
+        self.assertIn("S-WEB-001", Fixture().gaps()["readiness.d6_missing"])
 
 
 class ReadinessTests(CoverageCase):
     def test_missing_d6_dependency_fails(self):
-        """A missing D6 dependency or handoff is a readiness gap; the default mode then exits 1 (NOT GREEN)."""
-        self.gap(lambda f: f.record("S-AND-002").update(d6_dependency=None), "readiness.d6_missing", "S-AND-002")
-        self.gap(lambda f: f.record("S-ADM-001").update(handoff_ref=None), "readiness.d6_missing", "S-ADM-001")
-        fixture = Fixture()
-        fixture.record("S-AND-002")["d6_dependency"] = None
-        checkout = Checkout(self, fixture)
+        """Every screen lacks D6 (a reference is refused until it can be resolved); the default mode exits 1."""
+        self.assertEqual(Fixture().gaps()["readiness.d6_missing"], SCREEN_IDS)
+        checkout = Checkout(self, Fixture())
         self.assertEqual(checkout.run("--write-summary")[0], 0)
         self.assertEqual(checkout.run("--structure")[0], 0)
         code, out, err = checkout.run()
         self.assertEqual((code, err, out.splitlines()[0]), (1, "", module.NOT_GREEN))
-        self.assertIn("readiness.d6_missing: 1", out.splitlines())
+        self.assertIn("readiness.d6_missing: 6", out.splitlines())
 
     def test_missing_route_id_is_a_readiness_gap(self):
-        self.gap(lambda f: f.record("S-WEB-001").update(route_id=None), "readiness.route_missing", "S-WEB-001")
+        self.assertEqual(Fixture().gaps()["readiness.route_missing"], SCREEN_IDS)
+        self.refused(lambda f: f.record("S-WEB-001").update(route_id="route-s-web-001"), "held.route_id", "S-WEB-001")
 
     def test_unverified_critical_flow_qa_is_a_readiness_gap(self):
-        self.gap(lambda f: f.record("F-WEB-01").update(qa_independence={"status": "unverified", "evidence": None}),
-                 "readiness.qa_unverified", "F-WEB-01")
+        flows = Fixture().gaps()["readiness.qa_unverified"]
+        self.assertEqual(flows, ["F-AND-01", "F-WEB-01", "F-ADM-01"])  # F-AND-02 is not critical
 
     def test_persona_outside_its_journey_is_a_readiness_gap(self):
         self.gap(lambda f: f.record("US-AND-01")["persona_ids"].append("P03"), "readiness.persona_outside_journey",
@@ -1053,22 +1083,19 @@ class ReadinessTests(CoverageCase):
 
     def test_partial_registry_not_green(self):
         fixture = Fixture()
-        for identifier in ("S-AND-002", "S-AND-001"):
-            fixture.record(identifier)["d6_dependency"] = None
-        fixture.record("S-WEB-001")["route_id"] = None
+        fixture.partition["post_snapshot_issues"] = ["PenniLogic/android#905"]
         gaps = fixture.gaps()
-        self.assertEqual(gaps, {**EMPTY_GAPS, "readiness.d6_missing": ["S-AND-001", "S-AND-002"],
-                                "readiness.route_missing": ["S-WEB-001"]})
+        self.assertEqual(gaps, {**BASELINE_GAPS, "readiness.post_snapshot_issue": ["PenniLogic/android#905"]})
         summary = module.render_summary(fixture.check(), gaps)
         self.assertEqual(summary.splitlines()[0], module.NOT_GREEN)
-        self.assertIn("| `readiness.d6_missing` | 2 |", summary)
-        self.assertIn("- `readiness.d6_missing` (2): S-AND-001, S-AND-002", summary)
+        self.assertIn("| `readiness.d6_missing` | 6 |", summary)
+        self.assertIn("- `readiness.d6_missing` (6): " + ", ".join(SCREEN_IDS), summary)
+        self.assertIn("- `readiness.post_snapshot_issue` (1): PenniLogic/android#905", summary)
 
 
 class SummaryTests(CoverageCase):
     def test_summary_snapshot_deterministic(self):
         fixture = Fixture()
-        fixture.record("S-AND-002")["route_id"] = None
         model = fixture.check()
         summary = module.render_summary(model, module.readiness(model))
         shuffled = Fixture()
@@ -1080,16 +1107,16 @@ class SummaryTests(CoverageCase):
         self.assertEqual(summary.splitlines()[0], module.NOT_GREEN)
         for line in (
             "| Registry checksum | `" + module.registry_checksum(fixture.registry) + "` |",
-            "| `readiness.route_missing` | 1 |",
-            "| android | 4 | 4 | 10000 | 3 | 7500 |",
-            "| critical | 4 | 4 | 10000 | 3 | 7500 |",
-            "| standard | 2 | 2 | 10000 | 2 | 10000 |",
-            "| `loading` | 4 | 4 | 10000 | 3 | 7500 |",
-            "| `PenniLogic/android#903` | none | 2 | 2 | 10000 | 2 | 10000 |",
-            "| `PenniLogic/docs#904` | `T-SYN-DSN-01` | 6 | 6 | 10000 | 5 | 8333 |",
-            "| android | 2 | 1 | 1 | 10000 |",
+            "| `readiness.route_missing` | 6 |",
+            "| android | 4 | 0 | 0 | 0 | 0 |",
+            "| critical | 4 | 0 | 0 | 0 | 0 |",
+            "| standard | 2 | 0 | 0 | 0 | 0 |",
+            "| `loading` | 4 | 0 | 0 | 0 | 0 |",
+            "| `PenniLogic/android#903` | none | 2 | 0 | 0 | 0 | 0 |",
+            "| `PenniLogic/docs#904` | `T-SYN-DSN-01` | 6 | 0 | 0 | 0 | 0 |",
+            "| android | 2 | 1 | 0 | 0 |",
             "| `PenniLogic/android` | 4 | 2 | 2 | 0 | 0 |",
-            "- `readiness.route_missing` (1): S-AND-002",
+            "- `readiness.route_missing` (6): " + ", ".join(SCREEN_IDS),
         ):
             self.assertIn(line, summary.splitlines())
         self.assertNotIn("Synthetic screen", summary)
@@ -1099,6 +1126,10 @@ class SummaryTests(CoverageCase):
     def test_basis_points_round_down_and_handle_empty_groups(self):
         self.assertEqual([module.basis_points(*pair) for pair in ((0, 0), (1, 3), (2, 3), (3, 3))],
                          [0, 3333, 6666, 10000])
+        # Coverage counting for a later version that resolves references (none can be recorded in 1.0.0).
+        resolved = {"d6_dependency": d6_reference("S-AND-001"), "handoff_ref": "HND-AND-001@1.0.0", "route_id": "r"}
+        empty = {"d6_dependency": None, "handoff_ref": None, "route_id": None}
+        self.assertEqual(module._coverage([resolved, empty, {**resolved, "handoff_ref": None}]), [3, 1, 3333, 2, 6666])
 
 
 def git(root, *args):
@@ -1177,7 +1208,7 @@ class CommandLineTests(unittest.TestCase):
             self.assertEqual(result[1], stdout)
         self.assertEqual(result[2], stderr)
 
-    def test_main_modes_on_the_ready_registry(self):
+    def test_main_modes_on_the_synthetic_registry(self):
         checkout = Checkout(self, Fixture())
         code, out, _ = checkout.run("--structure")
         self.assertEqual(code, 0)
@@ -1186,21 +1217,23 @@ class CommandLineTests(unittest.TestCase):
         self.assertIn("checked against the frozen import", out)
         self.assertRun(checkout.run("--check-summary"), 1, "", "Experience coverage check refused: summary.drift\n")
         self.assertRun(checkout.run("--write-summary"), 0,
-                       f"Experience coverage summary written to {module.SUMMARY} ({module.GREEN}).\n")
+                       f"Experience coverage summary written to {module.SUMMARY} ({module.NOT_GREEN}).\n")
         written = (checkout.root / module.SUMMARY).read_bytes()
-        self.assertEqual(written.splitlines()[0], module.GREEN.encode("ascii"))
+        self.assertEqual(written.splitlines()[0], module.NOT_GREEN.encode("ascii"))
         self.assertNotIn(b"\r", written)
         self.assertRun(checkout.run("--check-summary"), 0,
-                       f"Experience coverage summary {module.SUMMARY} matches the registry ({module.GREEN}).\n")
+                       f"Experience coverage summary {module.SUMMARY} matches the registry ({module.NOT_GREEN}).\n")
         code, out, _ = checkout.run()
-        self.assertEqual(code, 0)
-        self.assertEqual(out.splitlines()[0], module.GREEN)
-        self.assertEqual(len(out.splitlines()), 2)
+        self.assertEqual((code, out.splitlines()[0]), (1, module.NOT_GREEN))
+        # No registry can reach GREEN while the interfaces are held; the branch runs with readiness stubbed.
+        with mock.patch.object(module, "readiness", return_value=EMPTY_GAPS):
+            self.assertRun(checkout.run("--write-summary"), 0,
+                           f"Experience coverage summary written to {module.SUMMARY} ({module.GREEN}).\n")
+            code, out, _ = checkout.run()
+            self.assertEqual((code, out.splitlines()[0], len(out.splitlines())), (0, module.GREEN, 2))
 
     def test_partial_registry_default_mode_is_not_green_with_exact_counts(self):
         fixture = Fixture()
-        fixture.record("S-AND-002")["route_id"] = None
-        fixture.record("F-WEB-01")["qa_independence"] = {"status": "unverified", "evidence": None}
         fixture.partition["post_snapshot_issues"] = ["PenniLogic/android#905"]
         checkout = Checkout(self, fixture)
         self.assertEqual(checkout.run("--write-summary")[0], 0)
@@ -1210,10 +1243,8 @@ class CommandLineTests(unittest.TestCase):
         lines = out.splitlines()
         self.assertEqual(lines[0], module.NOT_GREEN)
         self.assertTrue(lines[1].startswith("Experience coverage 1.0.0 structure valid: "))
-        expected = {rule: 0 for rule in module.READINESS_RULES}
-        expected.update({
-            "readiness.route_missing": 1, "readiness.qa_unverified": 1, "readiness.post_snapshot_issue": 1,
-        })
+        expected = {rule: len(subjects) for rule, subjects in BASELINE_GAPS.items()}
+        expected["readiness.post_snapshot_issue"] = 1
         self.assertEqual(lines[2:], [f"{rule}: {count}" for rule, count in expected.items()])
         self.assertEqual((checkout.root / module.SUMMARY).read_text(encoding="utf-8").splitlines()[0], module.NOT_GREEN)
 
@@ -1227,7 +1258,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertRun(checkout.run(), 1, "", refusal)
         self.assertEqual(checkout.run("--write-summary")[0], 0)
         self.assertEqual(checkout.run("--check-summary")[0], 0)
-        checkout.fixture.record("S-WEB-001")["route_id"] = None
+        checkout.fixture.partition["post_snapshot_issues"] = ["PenniLogic/android#905"]
         checkout.save()
         self.assertRun(checkout.run("--check-summary"), 1, "", refusal)
         summary.unlink()
@@ -1388,11 +1419,12 @@ class CommandLineTests(unittest.TestCase):
         fixture = Fixture()
         checkout = Checkout(self, fixture)
         self.assertEqual(checkout.run("--write-summary")[0], 0)
-        self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])], [0, 0, 0])
-        fixture.record("S-WEB-001")["route_id"] = None
-        checkout.save()
-        self.assertEqual(checkout.run("--write-summary")[0], 0)
         self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])], [1, 0, 0])
+        with mock.patch.object(module, "readiness", return_value=EMPTY_GAPS):  # GREEN is unreachable from data
+            self.assertEqual(checkout.run("--write-summary")[0], 0)
+            self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])],
+                             [0, 0, 0])
+        self.assertEqual(checkout.run("--write-summary")[0], 0)
         fixture.record("C-TRUST-FOUNDATION")["foundational"] = False
         checkout.save()
         self.assertEqual([checkout.run(*argv)[0] for argv in ([], ["--structure"], ["--check-summary"])], [1, 1, 1])
@@ -1545,6 +1577,14 @@ class PublishedDataTests(unittest.TestCase):
             fixture.check()
         self.assertEqual((caught.exception.rule, caught.exception.subject),
                          ("release_gate.bypass", "PenniLogic/admin#10 S-ADM-018"))
+        # AV-01: self-asserted D6 references on every screen of the closed issue cannot clear the gate.
+        for record in fixture.registry["screens"]:
+            if record["id"] in ("S-ADM-018", "S-ADM-019", "S-ADM-020"):
+                record.update(handoff_ref="HND-ADM-999@9.9.9", d6_dependency={
+                    "artifact_id": record["id"], "gate_id": "D6", "scope_sha256": "sha256:" + "0" * 64})
+        with self.assertRaises(module.Refused) as caught:
+            fixture.check()
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("held.d6_reference", "S-ADM-018"))
 
 
 if __name__ == "__main__":

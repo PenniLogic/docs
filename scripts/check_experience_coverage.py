@@ -7,6 +7,11 @@ product/experience-coverage.schema.json, a self-contained draft-07 subset) and t
 summary as product/experience-coverage.md. The registry cites the frozen planning import
 planning/source/evidence/experience-coverage.json by commit, path and sha256 and never edits it.
 
+References this validator cannot resolve are refused, not counted: a D6 dependency or handoff (no docs#86 or
+T-DQA-12 docs#137 gate record exists to resolve), a route ID (docs#74 has no approved IA) and a `verified`
+independent-QA status (docs#126 has no record format). Those fields stay empty, so registry 1.0.0 cannot reach
+GREEN until a later version resolves the owning interface's pinned records.
+
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match
 the registry ID or `PenniLogic/<repo>#N` grammar; input text is never echoed. Readiness gaps (D6
 dependencies and handoffs, docs#74 route IDs, verified independent QA, owner confirmation of DesignOps
@@ -140,7 +145,8 @@ STRUCTURE_RULES = (
     "state.unknown_screen_state", "state.unknown_component_state", "taxonomy.map_mismatch", "component.unused",
     "screen.critical_mismatch", "security.reason_mismatch", "security.state_not_on_screen",
     "proposal.field_without_value", "d6.dependency_mismatch", "handoff.platform_mismatch",
-    "qa.independence_evidence", "qa.evidence_unavailable", "qa.evidence_digest_mismatch",
+    "held.d6_reference", "held.route_id", "qa.independence_evidence", "qa.evidence_unavailable",
+    "qa.evidence_digest_mismatch", "held.qa_verification",
     "flow.critical_without_persona", "ownership.qa_not_independent", "diagram.d20_artifact",
     "partition.duplicate_issue", "partition.unknown_issue", "partition.plan_id_mismatch",
     "partition.rationale_missing", "partition.rationale_on_frontend", "partition.unclassified_issue",
@@ -719,6 +725,10 @@ def check_screens(model):
             match = HANDOFF.fullmatch(screen["handoff_ref"])
             require(match is not None and INFIX[match.group(1)] == screen["platform"], "handoff.platform_mismatch",
                     identifier)
+        # HC-M3: until a pinned docs#86 / T-DQA-12 gate record can be resolved (design-gates close_gate), a present
+        # reference is a self-asserted, digest-only claim that would clear readiness and the release gate.
+        require(dependency is None and screen["handoff_ref"] is None, "held.d6_reference", identifier)
+        require(screen["route_id"] is None, "held.route_id", identifier)  # no approved docs#74 IA to resolve against
 
 
 def check_flows(model, sources):
@@ -734,6 +744,8 @@ def check_flows(model, sources):
                 raise Refused("qa.evidence_unavailable", identifier) from None
             require(isinstance(blob, bytes) and gates.digest(blob) == evidence["sha256"], "qa.evidence_digest_mismatch",
                     identifier)
+        # docs#126 has no independent-QA record format yet: any pinned blob would pass as the verification.
+        require(independence["status"] != "verified", "held.qa_verification", identifier)
         if flow["critical"]:
             require(bool(model.stories_by_flow[identifier]), "flow.critical_without_persona", identifier)
             qa, design = flow["qa_ticket"], flow["design_ticket"]
@@ -915,8 +927,9 @@ def render_summary(model, gaps):
         f"Generated from `{REGISTRY}` and `{PARTITION}` by",
         "`python scripts/check_experience_coverage.py --write-summary`. Never edit this file by hand: the default",
         "mode, `--check-summary` and `scripts/tests/test_experience_coverage.py` compare it byte for byte.",
-        "Counts are integers and coverage is in basis points (10000 = 100 percent, rounded down). A present D6",
-        "dependency, handoff reference or route ID is a recorded reference, not a gate closure or an approval.",
+        "Counts are integers and coverage is in basis points (10000 = 100 percent, rounded down). D6 dependencies,",
+        "handoff references, route IDs and verified independent QA are refused while docs#86 and docs#137, docs#74",
+        "and docs#126 publish no record this validator can resolve, so those columns stay 0 and readiness stays open.",
         "",
     ]
     ledger = registry["id_ledger"]

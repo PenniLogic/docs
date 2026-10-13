@@ -5,8 +5,9 @@ NOT GREEN: readiness incomplete
 Generated from `product/experience-coverage.json` and `product/experience-coverage-partition.json` by
 `python scripts/check_experience_coverage.py --write-summary`. Never edit this file by hand: the default
 mode, `--check-summary` and `scripts/tests/test_experience_coverage.py` compare it byte for byte.
-Counts are integers and coverage is in basis points (10000 = 100 percent, rounded down). A present D6
-dependency, handoff reference or route ID is a recorded reference, not a gate closure or an approval.
+Counts are integers and coverage is in basis points (10000 = 100 percent, rounded down). D6 dependencies,
+handoff references, route IDs and verified independent QA are refused while docs#86 and docs#137, docs#74
+and docs#126 publish no record this validator can resolve, so those columns stay 0 and readiness stays open.
 
 | Registry | Value |
 | --- | --- |

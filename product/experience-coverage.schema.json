@@ -60,7 +60,7 @@
     },
     "gate_artifact_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"},
     "optional_dependency": {
-      "description": "design-gates `dependency` shape {artifact_id, gate_id, scope_sha256}; null while the D6 record is missing.",
+      "description": "design-gates `dependency` shape {artifact_id, gate_id, scope_sha256}. The validator refuses a present value (held.d6_reference) until it can resolve a pinned docs#86 / T-DQA-12 (docs#137) gate record, so it stays null.",
       "type": ["object", "null"],
       "additionalProperties": false,
       "required": ["artifact_id", "gate_id", "scope_sha256"],
@@ -71,12 +71,12 @@
       }
     },
     "handoff_ref": {
-      "description": "docs#86-owned D6 handoff grammar HND-<AND|WEB|ADM>-NNN@MAJOR.MINOR.PATCH; null while missing.",
+      "description": "docs#86-owned D6 handoff grammar HND-<AND|WEB|ADM>-NNN@MAJOR.MINOR.PATCH. Refused when present (held.d6_reference) until the handoff can be resolved, so it stays null.",
       "type": ["string", "null"],
       "pattern": "^HND-(AND|WEB|ADM)-[0-9]{3}@(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"
     },
     "route_id": {
-      "description": "Provisional opaque route identifier owned by docs#74; null until the approved IA exists.",
+      "description": "Provisional opaque route identifier owned by docs#74. Refused when present (held.route_id) until an approved IA can be resolved, so it stays null.",
       "type": ["string", "null"],
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$(?![\\s\\S])"
     },
@@ -185,7 +185,7 @@
       }
     },
     "qa_independence": {
-      "description": "Independence of the QA owner as recorded evidence; unverified until a pinned independent record exists.",
+      "description": "Independence of the QA owner as recorded evidence. Status verified is refused (held.qa_verification) until docs#126 defines a record the validator can resolve, so it stays unverified.",
       "type": "object",
       "additionalProperties": false,
       "required": ["status", "evidence"],
