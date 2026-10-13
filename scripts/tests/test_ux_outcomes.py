@@ -246,6 +246,21 @@ class EventPrivacyTests(CatalogueCase):
             with self.subTest(name=name):
                 self.assertRefused(rule, "EV-001", mutate(self.document, add_field(name)))
 
+    def test_planted_abbreviations_and_credentials_are_refused(self):
+        # Self-review pass 2: abbreviations, telecom/tax identifiers and credentials passed the first vocabulary.
+        cases = (
+            ("amt_band", "event.money_field"), ("acct_kind", "event.money_field"), ("accno", "event.money_field"),
+            ("ifsc", "event.money_field"), ("vpa_kind", "event.money_field"), ("imei", "event.identity_field"),
+            ("msisdn_prefix", "event.identity_field"), ("ssn", "event.identity_field"),
+            ("passport_kind", "event.identity_field"), ("gstin", "event.identity_field"),
+            ("otp_sent", "event.identity_field"), ("pin_set", "event.identity_field"),
+            ("userpassword", "event.identity_field"), ("passcode_kind", "event.identity_field"),
+            ("secret_kind", "event.identity_field"), ("credentialstore", "event.identity_field"),
+        )
+        for name, rule in cases:
+            with self.subTest(name=name):
+                self.assertRefused(rule, "EV-001", mutate(self.document, add_field(name)))
+
     def test_planted_sensitive_value_is_refused(self):
         self.assertRefused("event.money_field", "EV-001", mutate(self.document, lambda d: d["events"][0]["fields"][0]
                                                                   ["values"].append("merchant_known")))

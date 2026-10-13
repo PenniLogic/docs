@@ -371,18 +371,22 @@ VALUE_LIMIT = 32
 SENSITIVE = (
     ("event.money_field", ("amount", "balance", "money", "currency", "price", "cost", "fee", "salary", "income",
                            "payment", "debt", "loan", "emi", "interest", "spend", "spent", "merchant", "payee",
-                           "counterparty", "account", "iban", "upi", "card", "wallet", "networth")),
+                           "counterparty", "account", "iban", "upi", "card", "wallet", "networth",
+                           "amt", "acct", "accno", "ifsc", "vpa")),
     ("event.content_field", ("text", "message", "body", "content", "note", "memo", "description", "comment",
                              "query", "search", "transcript", "sms", "raw", "narration", "subject", "freeform")),
     ("event.prompt_field", ("prompt", "completion", "response", "reply", "chat", "utterance", "conversation")),
     ("event.identity_field", ("name", "email", "phone", "mobile", "address", "user", "uid", "id", "ids", "uuid",
                               "device", "ip", "identifier", "token", "pan", "aadhaar", "dob", "birth", "location",
-                              "lat", "lon", "latitude", "longitude", "gps", "contact", "handle")),
+                              "lat", "lon", "latitude", "longitude", "gps", "contact", "handle",
+                              "imei", "msisdn", "ssn", "passport", "gstin",
+                              "otp", "pin", "password", "passcode", "secret", "credential")),
     ("event.household_field", ("household", "member", "relationship", "partner", "spouse", "child", "children",
                                "parent", "family", "invitee", "grantee", "guardian", "dependant", "dependent")),
 )
 SUBSTRINGS = frozenset({"amount", "balance", "merchant", "salary", "counterparty", "transcript", "message", "prompt",
-                        "email", "aadhaar", "household", "relationship", "spouse"})
+                        "email", "aadhaar", "household", "relationship", "spouse", "password", "passcode", "passport",
+                        "msisdn", "credential"})
 
 
 def sensitive_rule(token):
