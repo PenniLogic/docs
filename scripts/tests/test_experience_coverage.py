@@ -1,8 +1,11 @@
-"""Synthetic T-UXR-06 registry fixtures: no real coverage, approvals, gate records, people, money or contact data.
+"""T-UXR-06 validator tests: synthetic rule fixtures plus read-only checks of the published registry files.
 
 Every rule test builds a fresh deep copy of one synthetic, fully ready registry, proves it passes (the control),
-applies exactly one mutation and asserts the exact static rule identifier and offending identifier. Command-line
-tests run against hermetic temporary Git checkouts outside this repository; nothing here touches the network.
+applies exactly one mutation and asserts the exact static rule identifier and offending identifier; the synthetic
+fixtures hold no real coverage, approvals, gate records, people, money or contact data. Command-line tests run
+against hermetic temporary Git checkouts outside this repository. PublishedDataTests read this checkout's committed
+product/experience-coverage.* files and inputs (and, for the real-Git paths, its local object store and
+refs/remotes/origin/main) without writing anything. Nothing here touches the network.
 """
 
 import ast
@@ -848,6 +851,19 @@ class StateComponentScreenTests(CoverageCase):
         self.refused(lambda f: f.record("S-ADM-001")["authorization_states"].append("revoked"),
                      "security.state_not_on_screen", "S-ADM-001")
 
+    def test_proposal_lists_only_fields_that_carry_a_value(self):
+        """A proposal awaits confirmation of authored values; it cannot name a null reason or an empty state list."""
+        fixture = Fixture()
+        fixture.record("S-AND-001")["proposal"] = {"proposed_by": "design_ops", "fields": list(
+            SCHEMA["definitions"]["screen_proposal"]["properties"]["fields"]["items"]["enum"])}
+        fixture.record("S-AND-002")["proposal"] = {"proposed_by": "design_ops", "fields": ["security_critical"]}
+        fixture.check()  # S-AND-002 is a proposed security_critical false: a value, not an absence
+        for field in ("security_reason", "privacy_states", "authorization_states"):
+            with self.subTest(field=field):
+                self.refused(lambda f: f.record("S-AND-002").update(
+                    proposal={"proposed_by": "design_ops", "fields": ["security_critical", field]}),
+                             "proposal.field_without_value", "S-AND-002")
+
     def test_d6_dependency_uses_the_design_gates_shape_for_this_screen(self):
         self.refused(lambda f: f.record("S-AND-001")["d6_dependency"].update(gate_id="D5"), "d6.dependency_mismatch",
                      "S-AND-001")
@@ -1396,10 +1412,11 @@ class PublishedDataTests(unittest.TestCase):
         model = Published().check()
         gaps = module.readiness(model)
         self.assertEqual({rule: len(subjects) for rule, subjects in gaps.items()}, PUBLISHED_GAPS)
-        screens, flows = list(model.screens), list(model.flows)
+        screens = sorted(model.screens, key=module.natural_key)
         self.assertEqual(gaps["readiness.d6_missing"], screens)
         self.assertEqual(gaps["readiness.route_missing"], screens)
-        self.assertEqual(gaps["readiness.qa_unverified"], [flow for flow in flows if model.flows[flow]["critical"]])
+        self.assertEqual(gaps["readiness.qa_unverified"],
+                         sorted((key for key, flow in model.flows.items() if flow["critical"]), key=module.natural_key))
         self.assertEqual(gaps["readiness.persona_outside_journey"], [
             "US-AND-16 J05", "US-WEB-01 J01", "US-WEB-02 J03", "US-WEB-03 J01", "US-WEB-05 J03", "US-ADM-06 J10",
             "US-ADM-07 J10",
@@ -1436,7 +1453,8 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual((ROOT / module.SUMMARY).read_bytes(), summary.encode("utf-8"))
         lines = summary.splitlines()
         self.assertEqual(lines[0], module.NOT_GREEN)
-        self.assertIn("| Registry checksum | `" + module.registry_checksum(model.registry) + "` |", lines)
+        canonical = json.dumps(model.registry, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("ascii")
+        self.assertIn(f"| Registry checksum | `sha256:{hashlib.sha256(canonical).hexdigest()}` |", lines)
         for rule, count in PUBLISHED_GAPS.items():
             self.assertIn(f"| `{rule}` | {count} |", lines)
         self.assertIn("- `readiness.security_states_missing` (7): S-AND-005, S-AND-057, S-WEB-009, S-WEB-035, "

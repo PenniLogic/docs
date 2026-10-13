@@ -161,7 +161,7 @@
       }
     },
     "screen_proposal": {
-      "description": "DesignOps-proposed values on this record awaiting confirmation by the owning discipline; null when none.",
+      "description": "DesignOps-proposed values on this record awaiting confirmation by the owning discipline; null when none. Every listed field carries a value (never a null reason or an empty state list).",
       "type": ["object", "null"],
       "additionalProperties": false,
       "required": ["proposed_by", "fields"],

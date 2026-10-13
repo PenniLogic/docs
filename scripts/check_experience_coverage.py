@@ -139,7 +139,7 @@ STRUCTURE_RULES = (
     "platform.screen_component", "platform.implementation_repository", "route.hint_grammar", "platform.route_hint",
     "state.unknown_screen_state", "state.unknown_component_state", "taxonomy.map_mismatch", "component.unused",
     "screen.critical_mismatch", "security.reason_mismatch", "security.state_not_on_screen",
-    "d6.dependency_mismatch", "handoff.platform_mismatch",
+    "proposal.field_without_value", "d6.dependency_mismatch", "handoff.platform_mismatch",
     "qa.independence_evidence", "qa.evidence_unavailable", "qa.evidence_digest_mismatch",
     "flow.critical_without_persona", "ownership.qa_not_independent", "diagram.d20_artifact",
     "partition.duplicate_issue", "partition.unknown_issue", "partition.plan_id_mismatch",
@@ -703,6 +703,9 @@ def check_screens(model):
                 identifier)
         require(set(screen["privacy_states"]) <= states and set(screen["authorization_states"]) <= states,
                 "security.state_not_on_screen", identifier)
+        # A proposal awaits confirmation of authored values, so it never names a null reason or an empty list.
+        for field in screen["proposal"]["fields"] if screen["proposal"] is not None else ():
+            require(screen[field] is not None and screen[field] != [], "proposal.field_without_value", identifier)
         dependency = screen["d6_dependency"]
         if dependency is not None:
             require(dependency["gate_id"] == "D6" and dependency["artifact_id"] == identifier, "d6.dependency_mismatch",
