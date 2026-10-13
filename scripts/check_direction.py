@@ -32,8 +32,10 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
+import unicodedata
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -118,13 +120,14 @@ CATEGORY_DEFAULT = re.compile(r"(?:^|_)(?:fintech|neobank|dashboard|banking_app|
 
 STRUCTURE_RULES = (
     "input.unreadable_or_invalid", "schema.invalid",
-    "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.secret_shape",
+    "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.mixed_script",
+    "content.secret_shape",
     "content.markup", "content.url_shape", "content.email_shape", "content.account_shape", "content.gamification",
     "content.shame_language", "content.trust_theater",
     "candidate.count", "candidate.id_sequence", "candidate.incomplete", "candidate.name_duplicate",
     "candidate.material_not_distinct", "candidate.graphic_not_distinct", "candidate.category_default",
     "candidate.binding_values", "held.persona_validation",
-    "grounding.missing", "grounding.unavailable", "grounding.digest_mismatch",
+    "grounding.missing", "grounding.path_not_canonical", "grounding.unavailable", "grounding.digest_mismatch",
     "contrast.duplicate_role", "contrast.unknown_role", "contrast.duplicate_pair", "contrast.required_pair_missing",
     "contrast.result_mismatch",
     "probe.count", "probe.topic_mismatch", "probe.markup", "probe.external_asset", "probe.not_synthetic",
@@ -133,7 +136,7 @@ STRUCTURE_RULES = (
     "record.semantic_roles_incomplete", "record.final_token_contract", "record.participant_count_zero",
     "record.participant_count_pending", "record.pending_with_decision", "record.decision_missing",
     "evidence.ai", "evidence.internal_vote", "evidence.synthetic", "evidence.mood_board", "evidence.missing",
-    "held.study_evidence",
+    "held.study_evidence", "record.duplicate_entry",
     "review.missing_role", "review.duplicate_role", "review.self_review", "held.review_record",
     "decision.invalid", "decision.unknown_candidate", "decision.rejected_mismatch", "decision.self_approval",
     "decision.platform_self_approval", "decision.wrong_approver", "held.d2_decision",
@@ -177,7 +180,9 @@ def loads(raw):
                 raise ValueError("duplicate JSON key")
             value[key] = item
         return value
-    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
+    def finite_only(name):
+        raise ValueError("non-finite JSON number")
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique, parse_constant=finite_only)
 
 
 def shape(value, schema, definition):
@@ -207,13 +212,42 @@ def _secret_token(text):
     return False
 
 
+def fold(text):
+    """The NFKC compatibility form with every non-ASCII decimal digit as its ASCII digit.
+
+    Shape and lexicon scans run on the text and on this form, so fullwidth letters, ligatures, mathematical
+    alphanumerics or Devanagari digits cannot carry a refused word, raw value or account-like number past them.
+    """
+    if text.isascii():
+        return text
+    text = unicodedata.normalize("NFKC", text)
+    return "".join(str(unicodedata.decimal(c)) if c.isdecimal() and not c.isascii() else c for c in text)
+
+
+HOMOGLYPH_SCRIPTS = {"CYRILLIC", "GREEK"}
+
+
+def mixed_script(text):
+    """True when one word mixes Latin letters with Cyrillic or Greek ones (a homoglyph-spelled word)."""
+    if text.isascii():
+        return False
+    for word in re.findall(r"\w+", text):
+        scripts = {unicodedata.name(c, "").split(" ")[0] for c in word if c.isalpha()}
+        if "LATIN" in scripts and scripts & HOMOGLYPH_SCRIPTS:
+            return True
+    return False
+
+
 def scan_text(text, subject):
     require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
     require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
     require(text.isprintable(), "content.unprintable_character", *subject)
-    require(not _secret_token(text), "content.secret_shape", *subject)
+    require(not mixed_script(text), "content.mixed_script", *subject)
+    folded = fold(text)
+    forms = (text,) if folded == text else (text, folded)
+    require(not any(_secret_token(form) for form in forms), "content.secret_shape", *subject)
     for rule, pattern in CONTENT_SHAPES:
-        require(pattern.search(text) is None, rule, *subject)
+        require(not any(pattern.search(form) for form in forms), rule, *subject)
 
 
 def strings(document):
@@ -243,7 +277,7 @@ def guard_content(document):
 def guard_record_tokens(record):
     """The no-raw-token rule: the direction record exposes semantic roles only (HC-m9)."""
     for text, subject, _ in strings(record):
-        require(RAW_TOKEN.search(text) is None, "record.raw_token", *subject)
+        require(not any(RAW_TOKEN.search(form) for form in {text, fold(text)}), "record.raw_token", *subject)
 
 
 def trusted_git(root):
@@ -351,6 +385,8 @@ def check_grounding(candidate, sources, verified):
     identifier = candidate["id"]
     require(candidate["grounding"], "grounding.missing", identifier)
     for pin in candidate["grounding"]:
+        # A pin names one canonical tree path: no `.` or `..` segment that git might resolve differently.
+        require(not {".", ".."} & set(pin["path"].split("/")), "grounding.path_not_canonical", identifier)
         key = (pin["commit"], pin["path"])
         if key not in verified:
             try:
@@ -483,6 +519,9 @@ def check_record(record, schema):
     contract = record["token_contract"]
     require(contract["state"] != "final" and contract["reference"] is None, "record.final_token_contract")
     check_evidence(record)
+    # Duplicates would inflate the readiness gap counts; checked after the evidence kinds so those refuse first.
+    for entries in ([item["study_ref"] for item in record["evidence"]], record["consumers"], record["held_gates"]):
+        require(len(entries) == len(set(entries)), "record.duplicate_entry")
     check_reviews(record)
     check_decision(record, schema)
 
@@ -538,8 +577,8 @@ RENDER_COMMAND = "python scripts/check_direction.py --render > product/direction
 
 
 def cell(text):
-    """A markdown table cell: pipes escaped; checked content has no newlines or markup."""
-    return str(text).replace("|", "\\|")
+    """A markdown table cell: backslashes and pipes escaped; checked content has no newlines or markup."""
+    return str(text).replace("\\", "\\\\").replace("|", "\\|")
 
 
 def table(header, rows):
@@ -664,11 +703,31 @@ def emit(text):
     stream.flush()
 
 
+MAX_INPUT_BYTES = 1 << 20
+
+
+def read_input(root, relative):
+    """Bytes of one input file: no symlink anywhere below the root, regular file, at most MAX_INPUT_BYTES."""
+    current = Path(root)
+    for part in Path(relative).parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError("symlinked input")
+    descriptor = os.open(current, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
+    with os.fdopen(descriptor, "rb") as handle:
+        if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+            raise ValueError("not a regular file")
+        raw = handle.read(MAX_INPUT_BYTES + 1)
+    if len(raw) > MAX_INPUT_BYTES:
+        raise ValueError("input too large")
+    return raw
+
+
 def load_and_check(root, sources=None):
     root = Path(root)
 
     def read(relative):
-        return loads((root / relative).read_bytes())
+        return loads(read_input(root, relative))
 
     return check(read(CANDIDATES), read(PROBES), read(RECORD), read(SCHEMA), sources or GitSources(root))
 

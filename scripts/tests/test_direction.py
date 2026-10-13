@@ -220,6 +220,23 @@ class SchemaAndContentTests(Case):
             with self.subTest(rule=rule):
                 self.refuses(lambda f, text=text: at(f, 4).update(intended_feel=text), rule, "DIR-04")
 
+    def test_compatibility_and_homoglyph_forms_cannot_carry_refused_content(self):
+        cases = (
+            ("content.mixed_script", "A \u0455hield shows safety."),  # Cyrillic dze for Latin s
+            ("content.mixed_script", "Keep your \u03b1chievement."),  # Greek alpha for Latin a
+            ("content.gamification", "Keep your \uff53\uff54\uff52\uff45\uff41\uff4b alive."),  # fullwidth
+            ("content.trust_theater", "A \U0001d42c\U0001d421ield shows safety."),  # mathematical bold s, h
+            ("content.account_shape", "account \u0967\u0968\u0969\u096a \u096b\u096c\u096d\u096e \u096f\u0966"),
+        )
+        for rule, text in cases:
+            with self.subTest(text=text):
+                self.refuses(lambda f, text=text: at(f, 4).update(intended_feel=text), rule, "DIR-04")
+
+    def test_greek_or_cyrillic_words_on_their_own_are_allowed(self):
+        fixture = Fixture()
+        at(fixture, 4)["intended_feel"] = "Calm, like \u03b7\u03c1\u03b5\u03bc\u03af\u03b1 or \u0441\u043f\u043e\u043a\u043e\u0439\u043d\u043e."
+        self.assertIsInstance(fixture.check(), module.Model)
+
     def test_content_guard_scans_probes_and_record(self):
         self.refuses(lambda f: probe(f, 2).update(scenario="Earn points daily."), "content.gamification", "PRB-02")
         self.refuses(lambda f: f.record["unresolved_risks"].append("Bank-grade safety."), "content.trust_theater")
@@ -286,6 +303,12 @@ class GroundingTests(Case):
 
     def test_unavailable_blob_refused(self):
         self.refuses(lambda f: setattr(f, "sources", FakeSources({})), "grounding.unavailable", "DIR-01")
+
+    def test_dot_segment_path_refused(self):
+        self.refuses(lambda f: at(f, 2)["grounding"][0].update(path="product/../" + SOURCE_PATH),
+                     "grounding.path_not_canonical", "DIR-02")
+        self.refuses(lambda f: at(f, 2)["grounding"][0].update(path="./" + SOURCE_PATH),
+                     "grounding.path_not_canonical", "DIR-02")
 
     def test_digest_mismatch_refused(self):
         self.refuses(lambda f: at(f, 5)["grounding"][0].update(sha256="sha256:" + "0" * 64),
@@ -419,10 +442,16 @@ class RecordTests(Case):
 
     def test_raw_tokens_refused_in_the_record(self):
         for text in ("Surface is #1A1A1A.", "Use rgb(0, 0, 0).", "Pad 16dp.", "Set font-family here.",
-                     "Use color.primary.", "Use --surface-bg."):
+                     "Use color.primary.", "Use --surface-bg.",
+                     "Surface is \uff03\uff11A1A1A.", "Pad \uff11\uff16dp.", "Pad \u0967\u096cdp."):
             with self.subTest(text=text):
                 self.refuses(lambda f, text=text: f.record["implementation_consequences"].append(text),
                              "record.raw_token")
+
+    def test_duplicate_references_refused(self):
+        self.refuses(lambda f: f.record["held_gates"].append("pending:PenniLogic/docs#66"), "record.duplicate_entry")
+        self.refuses(lambda f: f.record["consumers"].append("PenniLogic/docs#55"), "record.duplicate_entry")
+        self.refuses(lambda f: f.record["evidence"].append(dict(evidence(f))), "record.duplicate_entry")
 
     def test_issue_references_are_not_raw_tokens(self):
         fixture = Fixture()
@@ -635,6 +664,32 @@ class CliTests(FilesCase):
         self.assertEqual(self.run_main(self.layout(fixture, {module.RECORD: raw}), "--structure"),
                          (1, "", "Direction check refused: input.unreadable_or_invalid\n"))
 
+    def test_non_finite_number_fails_closed(self):
+        fixture = Fixture()
+        raw = encode(fixture.record).replace(b'"participant_count": null', b'"participant_count": NaN', 1)
+        self.assertEqual(self.run_main(self.layout(fixture, {module.RECORD: raw}), "--structure"),
+                         (1, "", "Direction check refused: input.unreadable_or_invalid\n"))
+
+    def test_oversized_input_fails_closed(self):
+        fixture = Fixture()
+        raw = encode(fixture.probes)
+        raw = raw + b" " * (module.MAX_INPUT_BYTES + 1 - len(raw))
+        self.assertEqual(self.run_main(self.layout(fixture, {module.PROBES: raw}), "--structure"),
+                         (1, "", "Direction check refused: input.unreadable_or_invalid\n"))
+
+    def test_symlinked_input_fails_closed(self):
+        root = self.layout(Fixture())
+        self.assertEqual(self.run_main(root, "--structure")[0], 0)
+        target = root / module.CANDIDATES
+        moved = root / "elsewhere.json"
+        target.rename(moved)
+        try:
+            os.symlink(moved, target)
+        except (OSError, NotImplementedError):
+            self.skipTest("symbolic links unavailable on this platform")
+        self.assertEqual(self.run_main(root, "--structure"),
+                         (1, "", "Direction check refused: input.unreadable_or_invalid\n"))
+
     def test_missing_file_fails_closed(self):
         root = self.layout(Fixture())
         (root / module.PROBES).unlink()
@@ -767,6 +822,9 @@ class RenderTests(FilesCase):
 
     def test_table_cells_escape_pipes(self):
         self.assertEqual(module.table(("A",), [("x | y",)]), ["| A |", "|---|", "| x \\| y |"])
+
+    def test_table_cells_escape_backslashes_before_pipes(self):
+        self.assertEqual(module.cell("a \\| b"), "a \\\\\\| b")
 
     def test_displayed_ratio_never_overstates(self):
         # #777777 on white computes 4.478:1; rounding would display 4.48, truncation displays 4.47.
