@@ -735,8 +735,12 @@ def readiness(model, today):
 
 
 def cell(text):
-    """Table-safe text: content-guarded ASCII with pipes, angle brackets and ampersands neutralised."""
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("|", "\\|")
+    """Table-safe text: content-guarded ASCII with backslashes, ampersands, angle brackets, backticks, square
+    brackets and pipes neutralised, so free text can open no HTML, code span, link or image."""
+    text = text.replace("\\", "\\\\").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    for character in "`[]|":
+        text = text.replace(character, "\\" + character)
+    return text
 
 
 def sentence(text):

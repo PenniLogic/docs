@@ -995,6 +995,13 @@ class SummaryTextTests(CatalogueCase):
         self.assertIn("route. Minimum: `pending:PenniLogic/infra#27`.", summary)
         self.assertIn("- Stop criterion: Participant withdrawal or consent expiry.\n", summary)
 
+    def test_markdown_active_free_text_is_escaped(self):
+        # Self-review pass 2: links, images, code spans and escapes in free text rendered live.
+        statement = "See ![a](b) `c` d\\| e | f & <g>"
+        summary = self.render(mutate(self.document, lambda d: d["metrics"][0].update(statement=statement)))
+        self.assertIn("| See !\\[a\\](b) \\`c\\` d\\\\\\| e \\| f &amp; &lt;g&gt; |", summary)
+        self.assertNotIn("![a]", summary)
+
     def test_free_text_already_closed_is_not_doubled(self):
         summary = self.render(mutate(self.document, lambda d: d["collection"].update(rollback="Stop collection.")))
         self.assertIn("Rollback: Stop collection.\n", summary)
