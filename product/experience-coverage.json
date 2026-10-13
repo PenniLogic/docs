@@ -5044,10 +5044,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Application lock and privacy gate in front of all on-device financial data; it protects local access only and is not a substitute for server authentication. Basis: T-TRU-01 lock and screen-protection requirements; T-UXA-13 least-disclosing defaults.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5068,7 +5072,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5145,10 +5152,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Registers and signs in the account holder with passkeys and device-bound sessions; failures must not reveal whether an account exists or which factor failed. Basis: ADR-019 passkeys and sessions; T-AND-01 and T-UXA-02 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5169,7 +5180,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5194,8 +5208,8 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
+      "security_critical": true,
+      "security_reason": "Verifies a contact channel; channel re-verification is one of the two ADR-019 recovery routes and verifying a channel on an established account is a step-up operation. Basis: ADR-019 sections 9, 10 and 12; T-AND-01; T-UXA-02.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -5218,7 +5232,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -5243,10 +5258,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Starts account recovery with a recovery code or channel proof; it must reveal nothing about whether an account, channel or code exists. Basis: ADR-019 section 10 recovery; T-AUTH-02 and T-UXA-02 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5267,7 +5286,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5292,10 +5314,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Shows a pending recovery during its cooling-off window, while credential changes and new sessions are delayed and the recovery can still be cancelled. Basis: ADR-019 section 11 cooling-off periods; T-AUTH-02.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5316,7 +5342,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5341,10 +5370,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Re-enrols a passkey after recovery or device loss, a credential change governed by the ADR-019 step-up, recovery and young-credential rules. Basis: ADR-019 sections 9 to 11; T-AUTH-02 lost-device and re-enrolment journey.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5365,7 +5398,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5391,10 +5427,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Records or declines purpose consent before personal data is processed; no analytics event may fire before its purpose is consented and a refusal stays private. Basis: T-CMP-02 consent requirements; T-UXA-02 permission denial remains private.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5415,7 +5455,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5441,10 +5484,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Age gate deciding whether onboarding may continue to the processing of personal financial data; no screen may expose account existence. Basis: T-CMP-02 pre-onboarding consent and age gate; T-UXA-02 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5465,7 +5512,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5491,10 +5541,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Shows and changes every optional data-source permission; denial or revocation of one must not reduce unrelated functionality. Basis: T-CMP-02 permission dashboard; ADR-004 raw content stays on the device; T-UXA-02 permission denial remains private.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5515,7 +5571,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5540,10 +5599,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Explains and requests SMS read access for on-device parsing; raw message content never leaves the device and denial must not reduce unrelated functionality. Basis: ADR-004; T-UXA-02 permission denial remains private.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5564,7 +5629,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -5590,10 +5658,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Grants notification-listener access for on-device capture; raw notification text never leaves the device and denial or later revocation must not reduce unrelated functionality. Basis: ADR-004; T-UXA-02 permission denial remains private.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -5614,7 +5688,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -6383,10 +6460,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Shows each capture source's permission and health, including denied and revoked access, and where capture is stopped or granted again. Basis: ADR-004; T-UXA-06 source permission scope and revocation are explicit.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -6411,7 +6494,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -6596,10 +6682,16 @@
         "success"
       ],
       "critical": false,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Connects or revokes mailbox access for on-device statement parsing; mailbox consent is a distinct, independently revocable purpose and raw email never leaves the device. Basis: T-ING-01 security requirements; ADR-004; T-UXA-06.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -6620,7 +6712,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -6647,10 +6742,14 @@
         "success"
       ],
       "critical": false,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Requests camera access for receipt capture in context; its purpose is recorded in the consent ledger and images stay in private storage outside device backup. Basis: T-ING-02 security requirements; T-UXA-06 source permission scope is explicit.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -6671,7 +6770,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7332,10 +7434,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Creates, changes and revokes per-member, per-category household grants; access is default-deny, revocation is immediate and cached shared data is evicted. Basis: ADR-005; ADR-019 section 9 step-up for grant changes; T-FAM-03 and T-UXA-10.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -7356,7 +7464,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7386,10 +7497,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Shows other members' shared data under active grants, a detail-level cross-user read that is logged, visible to the data subject and evicted on revocation. Basis: ADR-005; ADR-019 section 11 window-restricted reads; T-FAM-06 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -7410,7 +7525,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7439,10 +7557,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Subject-scoped log of who accessed the user's shared data, with revocation through the single server revocation path. Basis: ADR-005 detail access is logged and visible to the subject; T-TRU-04 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -7463,7 +7585,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7491,10 +7616,17 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Discreet safe exit and rapid concealment for coercive situations; exit leaves no residual grant and a duress unlock cannot be told apart from an ordinary one. Basis: ADR-005 unilateral revocation; T-TRU-05 and T-FAM-03 security requirements.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked",
+        "destructive"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -7519,7 +7651,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7656,10 +7791,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Manages assistant history and the AI provider key or custom endpoint that decides where prompts are sent; adding or replacing either is a step-up operation. Basis: ADR-022 AI egress and custom endpoints; ADR-019 section 9; T-UXA-11 backend-only provider routing.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -7680,7 +7819,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7870,10 +8012,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Trust and consent centre where purposes are reviewed and withdrawn and protections are disclosed; it must never claim a protection the evidence does not support. Basis: T-TRU-02 and T-TRU-01 security requirements; T-UXA-13 least-disclosing defaults.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -7898,7 +8044,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -7927,9 +8076,11 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
+      "security_critical": true,
+      "security_reason": "Data export and account deletion, both ADR-019 step-up operations; deletion is crypto-shredding and shared data follows the multi-subject erasure rules. Basis: ADR-019 section 9; ADR-006; ADR-021; T-TRU-02 export and deletion require step-up and rate limits.",
+      "privacy_states": [
+        "destructive"
+      ],
       "authorization_states": [],
       "d6_dependency": null,
       "handoff_ref": null,
@@ -7951,7 +8102,9 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states"
         ]
       }
     },
@@ -8083,10 +8236,14 @@
         "success"
       ],
       "critical": false,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Home-screen widget that shows debt progress outside the application lock; it must be opt-in, least-disclosing and immediately removable. Basis: T-AND-08 and T-UXA-15 widget privacy requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -8106,7 +8263,10 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -8134,10 +8294,14 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Accepts a split-group invitation link that grants membership and visibility of group expenses; links expire and cannot be used to enumerate users. Basis: ADR-005 split groups; ADR-019 section 9 step-up for acceptances; T-SPL-02.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -8157,7 +8321,10 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -8186,10 +8353,16 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Reviews and accepts a household invitation that grants cross-user data access; grants are explicit, never implicit or whole-household. Basis: ADR-005; ADR-019 section 9 step-up for acceptances; T-FAM-03; T-UXA-10.",
+      "privacy_states": [
+        "revoked",
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "revoked",
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -8209,7 +8382,10 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -8295,10 +8471,14 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Account security settings for credentials, channels, recovery codes, devices and active sessions, whose changes are ADR-019 step-up operations. Basis: ADR-019 sections 8 to 11; T-AND-01; T-AUTH-02.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -8323,7 +8503,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -8401,10 +8584,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web registration and sign-in with passkeys and bound sessions; responses and timing must not reveal whether an account exists. Basis: ADR-019; T-UXW-01 and T-WEB-01 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -8425,7 +8612,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -8452,10 +8642,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web channel verification and account recovery; nothing may reveal whether an account, channel or code exists and recovery follows the cooling-off rules. Basis: ADR-019 sections 10 and 11; T-UXW-01 security requirements.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -8476,7 +8670,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -8820,9 +9017,11 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
+      "security_critical": true,
+      "security_reason": "Full data export and deletion, the highest-value target for a stolen session; both are step-up operations with rate limits and expiring export delivery. Basis: ADR-019 section 9; ADR-006; ADR-021; T-WEB-02 security requirements.",
+      "privacy_states": [
+        "destructive"
+      ],
       "authorization_states": [],
       "d6_dependency": null,
       "handoff_ref": null,
@@ -8844,7 +9043,9 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states"
         ]
       }
     },
@@ -9651,10 +9852,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web management of household grants: default-deny, per-category grants, instant revocation and cached-data eviction. Basis: ADR-005; ADR-019 section 9 step-up for grant changes; T-FAM-04 security requirements.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -9675,7 +9882,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -9704,10 +9914,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Shows other members' shared data under active grants, a detail-level cross-user read; revoked data is evicted across tabs and never persisted unencrypted. Basis: ADR-005; ADR-019 section 11 window-restricted reads; T-FAM-07.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -9728,7 +9942,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -9756,10 +9973,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web access review, revocation and safe exit for household sharing; revocation is immediate and clears cached shared data. Basis: ADR-005 unilateral revocation; T-FAM-04 security requirements; T-UXW-07.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -9780,7 +10003,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -9914,10 +10140,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Manages assistant history, bring-your-own keys and custom endpoints that decide where prompts are sent; key material stays in the encrypted gateway path. Basis: ADR-022; ADR-019 section 9 step-up; T-AIP-04 security requirements.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -9938,7 +10168,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10120,10 +10353,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web trust centre for consent, transparency, analytics opt-out and privacy mode; the transparency view is subject-scoped. Basis: T-TRU-03 security requirements; T-UXW-10 access events reveal no hidden resource.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10144,7 +10381,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10175,9 +10415,11 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
+      "security_critical": true,
+      "security_reason": "Web export, deletion and rights requests; export and deletion are step-up operations and erasure follows the crypto-shredding and multi-subject rules. Basis: ADR-019 section 9; ADR-006; ADR-021; T-TRU-03; T-UXW-10.",
+      "privacy_states": [
+        "destructive"
+      ],
       "authorization_states": [],
       "d6_dependency": null,
       "handoff_ref": null,
@@ -10199,7 +10441,9 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states"
         ]
       }
     },
@@ -10431,10 +10675,14 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Accepts a split-group invitation link that grants membership and group expense visibility; no design may grant implicit or group-wide access. Basis: ADR-005 split groups; ADR-019 section 9 step-up for acceptances; T-SPL-04; T-UXW-07.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10454,7 +10702,10 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10483,10 +10734,16 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Reviews and accepts a household invitation that grants cross-user data access; no design may grant implicit or group-wide access. Basis: ADR-005; ADR-019 section 9 step-up for acceptances; T-FAM-04; T-UXW-07.",
+      "privacy_states": [
+        "revoked",
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "revoked",
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10506,7 +10763,10 @@
       "proposal": {
         "proposed_by": "design_ops",
         "fields": [
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10534,10 +10794,16 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web purpose consent and age eligibility before processing; no dark pattern, bundled purpose or inferred consent, and refusal reveals no account existence. Basis: T-WEB-05 security requirements; T-UXW-01.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10558,7 +10824,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10643,10 +10912,14 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Web account security settings for credentials, channels, recovery codes, devices and active sessions, whose changes are ADR-019 step-up operations. Basis: ADR-019 sections 8 to 11; T-UXW-01; T-WEB-01.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10667,7 +10940,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10800,10 +11076,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Operator sign-in in the separate administrative identity domain; the console holds no credential beyond the operator session and never sees key material. Basis: ADR-020 administrative boundary; ADR-019; T-ADM-04 security requirements.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10824,7 +11106,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10903,10 +11188,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Role-aware, default-deny console navigation: an absent capability is neither rendered nor addressable and redaction is the default of every screen. Basis: ADR-020; product/08 section 8; T-ADM-04 and T-UXM-01 security requirements.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10927,7 +11218,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -10954,10 +11248,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Operator request for access to a customer case whose values are masked by default; unmasking follows the approved path and the subject sees the access. Basis: ADR-020 masked-by-default reads and unmask path; T-ADM-15; T-UXM-02 subject-visible events.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -10978,7 +11276,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11008,10 +11309,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Approves time-bound elevation and bulk export with requester and approver separation, subject notification and immutable audit. Basis: ADR-020 elevation and four-eyes controls; T-ADM-15 fails closed on audit or notification failure; T-UXM-02.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11032,7 +11339,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11060,10 +11370,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Break-glass emergency access to customer data with provenance, expiry, subject notification and immutable audit; it fails closed when audit or notification fails. Basis: ADR-020 break-glass governance; T-ADM-15; product/08 section 8.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11084,7 +11400,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11112,10 +11431,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Shows which operators hold which administrative roles, the basis of every operator access decision, with minimum operator data and no customer data. Basis: ADR-020 role model and administrator lifecycle; T-ADM-14; T-UXM-03.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11136,7 +11459,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11164,10 +11490,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Joins, moves and removes operators and their roles; an offboarded identity becomes absent rather than disabled with access. Basis: ADR-020 administrator lifecycle; T-UXM-03 and T-ADM-14 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11188,7 +11518,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11216,10 +11549,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Recertifies or revokes the operator qualifications that make an operator eligible for sensitive queues and actions. Basis: ADR-020 approver eligibility and recertification; T-UXM-03 and T-ADM-14 security requirements.",
+      "privacy_states": [
+        "revoked"
+      ],
+      "authorization_states": [
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11240,7 +11577,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11425,10 +11765,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Registry of the AI providers that may receive user prompts; provider keys are referenced by identifier only and are never displayed, exported or accepted. Basis: ADR-022 AI egress; T-ADM-08 and T-UXM-05 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11449,7 +11793,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11477,10 +11824,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Routes assistant traffic between providers, enforces spend caps and stops egress with a kill switch; expired evidence disables routing rather than warning. Basis: ADR-022 AI egress and kill switches; T-ADM-08; T-UXM-05.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11501,7 +11852,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11580,10 +11934,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Operator view and change of a customer's account status, including suspension; every lookup is recorded against the operator and ticket and redaction is the default. Basis: ADR-020; T-ADM-09 security requirements; T-UXM-06.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11604,7 +11962,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11736,10 +12097,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Operator fulfilment of a customer's rights request, such as export or erasure, under a separate default-deny role with no direct data-store access. Basis: ADR-020; ADR-006; ADR-021; T-ADM-13 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11760,7 +12125,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11788,10 +12156,15 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Records the completion or refusal of a rights request with its evidence; exports stay in the user-controlled delivery path and a missing statutory profile fails closed. Basis: ADR-020; ADR-021; T-ADM-13 and T-UXM-07 security requirements.",
+      "privacy_states": [
+        "permission-denied",
+        "destructive"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11812,7 +12185,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11840,8 +12216,8 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
+      "security_critical": true,
+      "security_reason": "Read-only review of the administrative audit chain that records operator reads and effects; records reference sensitive material by identifier only. Basis: ADR-020 audit streams; T-ADM-11 security requirements; T-UXM-08.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11864,7 +12240,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11892,8 +12269,8 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
+      "security_critical": true,
+      "security_reason": "Monitors operator access for anomalies across customers; suppression and rate-limit controls are visible and cannot be bypassed. Basis: ADR-020 audit streams and anomaly detection; T-ADM-11; T-UXM-08 security requirements.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -11916,7 +12293,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -11945,10 +12323,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Aggregate analytics with server-enforced cohort minimums; it never accepts a user identifier, so per-user analysis and differencing stay impossible. Basis: T-ADM-10 security requirements; T-UXM-08; ADR-020.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -11969,7 +12351,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -11996,8 +12381,8 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
+      "security_critical": true,
+      "security_reason": "Inventory of standing production access, which must hold no standing human access outside the governed broker. Basis: ADR-020 standing access and broker; T-ADM-16 and T-UXM-09 security requirements.",
       "privacy_states": [],
       "authorization_states": [],
       "d6_dependency": null,
@@ -12020,7 +12405,8 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason"
         ]
       }
     },
@@ -12048,10 +12434,16 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Approves brokered production-access sessions; no reusable credential or query result is displayed and subject notification and audit correlation are visible. Basis: ADR-020; T-ADM-16 and T-UXM-09 security requirements.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -12072,7 +12464,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -12100,10 +12495,14 @@
         "success"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Reviews restored data behind a scrub barrier before any access; only statement fingerprints and counts are shown. Basis: ADR-020; ADR-006 crypto-shredding holds for backups; T-ADM-16 and T-UXM-09 security requirements.",
+      "privacy_states": [
+        "permission-denied"
+      ],
+      "authorization_states": [
+        "permission-denied"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -12124,7 +12523,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     },
@@ -12313,10 +12715,16 @@
         "recovery"
       ],
       "critical": true,
-      "security_critical": false,
-      "security_reason": null,
-      "privacy_states": [],
-      "authorization_states": [],
+      "security_critical": true,
+      "security_reason": "Recovers an operator account in the separate administrative identity domain, a privileged authentication path. Basis: ADR-020 administrative boundary; ADR-019 recovery; T-ADM-04; T-UXM-01.",
+      "privacy_states": [
+        "permission-denied",
+        "revoked"
+      ],
+      "authorization_states": [
+        "permission-denied",
+        "revoked"
+      ],
       "d6_dependency": null,
       "handoff_ref": null,
       "design_ticket": {
@@ -12337,7 +12745,10 @@
         "proposed_by": "design_ops",
         "fields": [
           "surface_type",
-          "security_critical"
+          "security_critical",
+          "security_reason",
+          "privacy_states",
+          "authorization_states"
         ]
       }
     }

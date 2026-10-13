@@ -1327,5 +1327,148 @@ class CommandLineTests(unittest.TestCase):
                 self.assertEqual(caught.exception.code, 2)
 
 
+# The recorded state of the published registry (HC-B1): changing any count is a reviewed change to this file.
+PUBLISHED_GAPS = {
+    "readiness.d6_missing": 141, "readiness.route_missing": 141, "readiness.qa_unverified": 35,
+    "readiness.persona_outside_journey": 7, "readiness.screen_ticket_outside_flows": 1,
+    "readiness.security_states_missing": 7, "readiness.proposal_unconfirmed": 232, "readiness.ticket_unresolved": 0,
+    "readiness.post_snapshot_issue": 1,
+}
+PUBLISHED_STRUCTURE = re.escape(
+    "Experience coverage 1.0.0 structure valid: 12 personas, 12 journeys, 38 user stories, 38 flows (35 critical), "
+    "141 screens, 57 components, 21 diagrams, 319 ledger IDs checked against the "
+) + r"(?:frozen import|base registry)" + re.escape(
+    "; 108 client issues partitioned (74 frontend, 34 non-frontend); registry checksum "
+) + r"sha256:[0-9a-f]{64}"
+
+
+class Published:
+    """Fresh copies of this checkout's committed registry, partition and inputs; the frozen import is read from the
+    working tree (the validator still checks it against the pinned sha256), so no Git state is needed."""
+
+    def __init__(self):
+        load = module.support.load_json
+        self.registry, self.partition = load(ROOT / module.REGISTRY), load(ROOT / module.PARTITION)
+        self.inventory, self.taxonomy = load(ROOT / module.INVENTORY), load(ROOT / module.TAXONOMY)
+        self.blobs = {(self.registry["imported_from"]["commit"], module.IMPORT_PATH): (ROOT / module.IMPORT_PATH)
+                      .read_bytes()}
+        self.base = None
+
+    def check(self):
+        return module.check(self.registry, self.partition, SCHEMA, self.inventory, self.taxonomy,
+                            Sources(self.blobs, self.base))
+
+    def drop_screen(self, identifier):
+        """Remove a screen consistently: record, its ledger entry and its flow links."""
+        self.registry["screens"] = [item for item in self.registry["screens"] if item["id"] != identifier]
+        self.registry["id_ledger"] = [item for item in self.registry["id_ledger"] if item["id"] != identifier]
+        for item in self.registry["flows"]:
+            if identifier in item["screen_ids"]:
+                item["screen_ids"].remove(identifier)
+
+
+class PublishedDataTests(unittest.TestCase):
+    """The committed product/experience-coverage.* files of this checkout; read-only, nothing is written."""
+
+    def run_main(self, *argv):
+        self.assertEqual(module.ROOT, ROOT)
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = module.main(list(argv))
+        return code, out.getvalue(), err.getvalue()
+
+    def test_published_registry_structure_passes(self):
+        """Real files and the local Git object store: pinned import blob and the merge base with origin/main."""
+        model = module.load_and_check(ROOT)
+        self.assertIn(model.ledger_base, ("frozen import", "base registry"))
+        self.assertEqual({collection: len(model.registry[collection]) for collection, _ in module.COLLECTIONS}, {
+            "personas": 12, "journeys": 12, "user_stories": 38, "flows": 38, "screens": 141, "components": 57,
+            "diagrams": 21,
+        })
+        entries = model.partition["entries"]
+        self.assertEqual((len(entries), sum(entry["disposition"] == "frontend" for entry in entries)), (108, 74))
+        code, out, err = self.run_main("--structure")
+        self.assertEqual((code, err), (0, ""))
+        self.assertRegex(out, r"\A" + PUBLISHED_STRUCTURE + re.escape("; readiness not evaluated.\n") + r"\Z")
+        self.assertEqual(Published().check().ledger_base, "frozen import")  # hermetic fallback path
+
+    def test_published_registry_reports_exact_readiness_gaps(self):
+        model = Published().check()
+        gaps = module.readiness(model)
+        self.assertEqual({rule: len(subjects) for rule, subjects in gaps.items()}, PUBLISHED_GAPS)
+        screens, flows = list(model.screens), list(model.flows)
+        self.assertEqual(gaps["readiness.d6_missing"], screens)
+        self.assertEqual(gaps["readiness.route_missing"], screens)
+        self.assertEqual(gaps["readiness.qa_unverified"], [flow for flow in flows if model.flows[flow]["critical"]])
+        self.assertEqual(gaps["readiness.persona_outside_journey"], [
+            "US-AND-16 J05", "US-WEB-01 J01", "US-WEB-02 J03", "US-WEB-03 J01", "US-WEB-05 J03", "US-ADM-06 J10",
+            "US-ADM-07 J10",
+        ])
+        self.assertEqual(gaps["readiness.screen_ticket_outside_flows"], ["S-AND-041 PenniLogic/android#42"])
+        self.assertEqual(gaps["readiness.security_states_missing"], [
+            "S-AND-005", "S-AND-057", "S-WEB-009", "S-WEB-035", "S-ADM-021", "S-ADM-022", "S-ADM-024",
+        ])
+        self.assertEqual(gaps["readiness.post_snapshot_issue"], ["PenniLogic/android#69"])
+        proposals = gaps["readiness.proposal_unconfirmed"]
+        self.assertEqual([sum(subject.startswith(prefix) for subject in proposals)
+                          for prefix in ("S-", "C-", "PenniLogic/")], [141, 57, 34])
+        # The recorded DesignOps security proposal: 58 screens, each with a stated basis; only the screen's own
+        # denial, revocation and (for export, erasure and safe exit) destructive states are named, so filling a
+        # gap with any other state is a reviewed change to this test.
+        critical = [screen for screen in model.screens.values() if screen["security_critical"]]
+        self.assertEqual([sum(screen["platform"] == platform for screen in critical) for platform in module.PLATFORMS],
+                         [25, 13, 20])
+        for screen in critical:
+            with self.subTest(screen=screen["id"]):
+                self.assertIn(" Basis: ", screen["security_reason"])
+                self.assertLessEqual(set(screen["privacy_states"]) | set(screen["authorization_states"]),
+                                     {"permission-denied", "revoked", "destructive"})
+        code, out, err = self.run_main()
+        self.assertEqual((code, err), (1, ""), out)  # the complete check: a refusal would name its rule in err
+        lines = out.splitlines()
+        self.assertEqual(lines[0], module.NOT_GREEN)
+        self.assertRegex(lines[1], r"\A" + PUBLISHED_STRUCTURE + r"\Z")
+        self.assertEqual(lines[2:], [f"{rule}: {count}" for rule, count in PUBLISHED_GAPS.items()])
+
+    def test_published_summary_matches_registry(self):
+        model = Published().check()
+        summary = module.render_summary(model, module.readiness(model))
+        self.assertEqual((ROOT / module.SUMMARY).read_bytes(), summary.encode("utf-8"))
+        lines = summary.splitlines()
+        self.assertEqual(lines[0], module.NOT_GREEN)
+        self.assertIn("| Registry checksum | `" + module.registry_checksum(model.registry) + "` |", lines)
+        for rule, count in PUBLISHED_GAPS.items():
+            self.assertIn(f"| `{rule}` | {count} |", lines)
+        self.assertIn("- `readiness.security_states_missing` (7): S-AND-005, S-AND-057, S-WEB-009, S-WEB-035, "
+                      "S-ADM-021, S-ADM-022, S-ADM-024", lines)
+        self.assertEqual(self.run_main("--check-summary"), (
+            0, f"Experience coverage summary {module.SUMMARY} matches the registry ({module.NOT_GREEN}).\n", ""))
+
+    def test_published_ledger_record_and_entry_removed_together_fails(self):
+        """Against the published registry as base, and against the frozen import when no base registry exists."""
+        base = (ROOT / module.REGISTRY).read_bytes()
+        for committed, rule in ((base, "ledger.entry_removed"), (None, "ledger.import_discontinuity")):
+            with self.subTest(rule=rule):
+                fixture = Published()
+                fixture.base = committed
+                self.assertEqual(fixture.check().ledger_base, "base registry" if committed else "frozen import")
+                fixture.drop_screen("S-AND-041")
+                with self.assertRaises(module.Refused) as caught:
+                    fixture.check()
+                self.assertEqual((caught.exception.rule, caught.exception.subject), (rule, "S-AND-041"))
+
+    def test_published_release_gate_bypass_fails(self):
+        """An implementation issue closed as completed while its screens lack D6 is a bypass of the gate."""
+        fixture = Published()
+        fixture.check()
+        issue = next(item for item in fixture.inventory["issues"] if item["reference"] == "PenniLogic/admin#10")
+        self.assertEqual((issue["plan_id"], issue["state"]), ("T-ADM-13", "open"))
+        issue.update(state="closed", state_reason="completed")
+        with self.assertRaises(module.Refused) as caught:
+            fixture.check()
+        self.assertEqual((caught.exception.rule, caught.exception.subject),
+                         ("release_gate.bypass", "PenniLogic/admin#10 S-ADM-018"))
+
+
 if __name__ == "__main__":
     unittest.main()
