@@ -267,6 +267,7 @@ PARTITION = {
     "kind": "experience_coverage_partition", "schema_version": 1, "source_issue": "PenniLogic/docs#75",
     "description": "Synthetic partition of the synthetic client issues.",
     "repositories": ["PenniLogic/android", "PenniLogic/web", "PenniLogic/admin"], "post_snapshot_issues": [],
+    "scope_questions": [],
     "entries": [
         entry("PenniLogic/android#901", "T-SYN-AND-01"),
         entry("PenniLogic/android#902", "T-SYN-AND-02", "quality_or_test_infrastructure",
@@ -1240,6 +1241,17 @@ class ReadinessTests(CoverageCase):
         self.gap(lambda f: f.record("S-AND-002").update(design_ticket=ticket("T-SYN-NEW-01", None)),
                  "readiness.ticket_unresolved", "S-AND-002")
 
+    def test_partition_scope_question_is_a_readiness_gap(self):
+        """SC-3: an exclusion whose rationale names unmapped user-visible scope is an open owner question, counted
+        apart from the generic proposal gap; clearing proposed_by alone does not close it."""
+        self.gap(lambda f: f.partition.update(scope_questions=["PenniLogic/web#902"]),
+                 "readiness.partition_scope_question", "PenniLogic/web#902",
+                 prepare=lambda f: f.entry("PenniLogic/web#902").update(proposed_by=None))
+        self.refused(lambda f: f.partition.update(scope_questions=["PenniLogic/web#901"]),
+                     "partition.scope_question_invalid", "PenniLogic/web#901")
+        self.refused(lambda f: f.partition.update(scope_questions=["PenniLogic/web#950"]),
+                     "partition.scope_question_invalid", "PenniLogic/web#950")
+
     def test_post_snapshot_issue_is_a_readiness_gap(self):
         self.gap(lambda f: f.partition.update(post_snapshot_issues=["PenniLogic/android#905"]),
                  "readiness.post_snapshot_issue", "PenniLogic/android#905")
@@ -1619,7 +1631,7 @@ PUBLISHED_GAPS = {
     "readiness.d6_missing": 141, "readiness.route_missing": 141, "readiness.qa_unverified": 35,
     "readiness.persona_outside_journey": 3, "readiness.screen_ticket_outside_flows": 1,
     "readiness.security_states_missing": 7, "readiness.proposal_unconfirmed": 232, "readiness.ticket_unresolved": 0,
-    "readiness.post_snapshot_issue": 1,
+    "readiness.post_snapshot_issue": 1, "readiness.partition_scope_question": 5,
 }
 PUBLISHED_STRUCTURE = re.escape(
     "Experience coverage 1.0.0 structure valid: 12 personas, 12 journeys, 38 user stories, 38 flows (35 critical), "
@@ -1698,6 +1710,11 @@ class PublishedDataTests(unittest.TestCase):
             "S-AND-005", "S-AND-057", "S-WEB-009", "S-WEB-035", "S-ADM-021", "S-ADM-022", "S-ADM-024",
         ])
         self.assertEqual(gaps["readiness.post_snapshot_issue"], ["PenniLogic/android#69"])
+        # SC-3: the five DesignOps exclusions whose own rationale names unmapped user-visible scope.
+        self.assertEqual(gaps["readiness.partition_scope_question"], [
+            "PenniLogic/android#7", "PenniLogic/android#19", "PenniLogic/android#27", "PenniLogic/android#37",
+            "PenniLogic/android#57",
+        ])
         proposals = gaps["readiness.proposal_unconfirmed"]
         self.assertEqual([sum(subject.startswith(prefix) for subject in proposals)
                           for prefix in ("S-", "C-", "PenniLogic/")], [141, 57, 34])

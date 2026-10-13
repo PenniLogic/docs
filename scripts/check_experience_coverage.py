@@ -16,9 +16,9 @@ Structure failures raise `Refused` with a static rule identifier plus, at most, 
 the registry ID or `PenniLogic/<repo>#N` grammar; input text is never echoed. Readiness gaps (D6
 dependencies and handoffs, docs#74 route IDs, verified independent QA, owner confirmation of DesignOps
 proposals, imported persona and ticket contradictions, security states, unresolved and post-snapshot
-issues) are counted, never filled in, and keep the default mode NOT GREEN. Everything runs offline
-against local files and the local Git object store: no network, remote action, approval, appointment,
-gate closure or independent Design QA is made or implied.
+issues, partition scope questions) are counted, never filled in, and keep the default mode NOT GREEN.
+Everything runs offline against local files and the local Git object store: no network, remote action,
+approval, appointment, gate closure or independent Design QA is made or implied.
 """
 
 import argparse
@@ -171,14 +171,14 @@ STRUCTURE_RULES = (
     "partition.duplicate_issue", "partition.unknown_issue", "partition.plan_id_mismatch",
     "partition.rationale_missing", "partition.rationale_on_frontend", "partition.unclassified_issue",
     "partition.unmapped_implementation_ticket", "partition.frontend_without_mapping",
-    "partition.post_snapshot_invalid", "partition.base_invalid", "release_gate.relabeled", "release_gate.bypass",
-    "summary.drift",
+    "partition.post_snapshot_invalid", "partition.scope_question_invalid", "partition.base_invalid",
+    "release_gate.relabeled", "release_gate.bypass", "summary.drift",
 )
 READINESS_RULES = (
     "readiness.d6_missing", "readiness.route_missing", "readiness.qa_unverified",
     "readiness.persona_outside_journey", "readiness.screen_ticket_outside_flows",
     "readiness.security_states_missing", "readiness.proposal_unconfirmed", "readiness.ticket_unresolved",
-    "readiness.post_snapshot_issue",
+    "readiness.post_snapshot_issue", "readiness.partition_scope_question",
 )
 
 
@@ -870,6 +870,10 @@ def check_partition(model):
             require(entry["rationale_class"] is None and entry["rationale"] is None, "partition.rationale_on_frontend",
                     issue)
         entries[issue] = entry
+    # A non-frontend proposal whose own rationale names unmapped user-visible scope stays an open owner question.
+    for issue in model.partition["scope_questions"]:
+        require(issue in entries and entries[issue]["disposition"] == "non_frontend",
+                "partition.scope_question_invalid", issue)
     clients = sorted((key for key, item in index.items() if item["repository"] in CLIENT_REPOSITORIES), key=natural_key)
     for issue in clients:
         require(issue in entries, "partition.unclassified_issue", issue)
@@ -971,6 +975,7 @@ def readiness(model):
             gaps["readiness.proposal_unconfirmed"].add(entry["issue"])
     gaps["readiness.ticket_unresolved"].update(model.unresolved)
     gaps["readiness.post_snapshot_issue"].update(model.partition["post_snapshot_issues"])
+    gaps["readiness.partition_scope_question"].update(model.partition["scope_questions"])
     return {rule: sorted(subjects, key=natural_key) for rule, subjects in gaps.items()}
 
 

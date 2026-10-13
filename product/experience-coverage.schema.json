@@ -951,6 +951,7 @@
         "description",
         "repositories",
         "post_snapshot_issues",
+        "scope_questions",
         "entries"
       ],
       "properties": {
@@ -975,6 +976,14 @@
           ]
         },
         "post_snapshot_issues": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/client_issue"
+          }
+        },
+        "scope_questions": {
+          "description": "Non-frontend DesignOps proposals whose own rationale names user-visible scope no registry screen maps yet. Each stays a readiness gap (readiness.partition_scope_question) until the owning design owner confirms the exclusion or maps it; removing an issue here is that reviewed decision.",
           "type": "array",
           "uniqueItems": true,
           "items": {

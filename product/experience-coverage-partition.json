@@ -11,6 +11,13 @@
   "post_snapshot_issues": [
     "PenniLogic/android#69"
   ],
+  "scope_questions": [
+    "PenniLogic/android#7",
+    "PenniLogic/android#19",
+    "PenniLogic/android#27",
+    "PenniLogic/android#37",
+    "PenniLogic/android#57"
+  ],
   "entries": [
     {
       "issue": "PenniLogic/android#1",
