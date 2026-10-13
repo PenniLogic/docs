@@ -1,4 +1,4 @@
-"""T-UXR-05 navigation validator tests: synthetic in-test fixtures only.
+"""T-UXR-05 navigation validator tests: synthetic in-test fixtures, plus read-only checks of the published files.
 
 Every rule test builds a fresh deep copy of one synthetic route map, allocation and pinned registry, proves it passes
 (the control), applies exactly one mutation and asserts the exact static rule identifier and offending identifier.
@@ -7,7 +7,9 @@ and persona IDs belong to a synthetic registry served from memory, and roles use
 (command-line fixtures renumber them ROLE-NN only because published mode refuses that prefix).
 Readiness tests start from the synthetic baseline, whose only gaps are the held inputs, and use model-level controls
 to show that each gap clears for a resolved subject. Command-line and Git tests run against hermetic temporary
-repositories under the system temporary directory; nothing here writes inside this repository or uses the network.
+repositories under the system temporary directory. The published-data tests read this repository's committed route
+map, allocation and sitemaps (and the pinned registry through the local Git object store) without writing; nothing
+here writes inside this repository or uses the network.
 """
 
 import contextlib
@@ -1221,3 +1223,56 @@ class LiveRegistryTests(unittest.TestCase):
         checkout = self.checkout_with_canonical(b'{"screens": []}')
         self.assertEqual(checkout.run(), (1, "", refusal("registry.current_invalid")))
         self.assertEqual(checkout.run("--structure")[0], 0)
+
+
+PUBLISHED_STRUCTURE = (
+    "Navigation map 0.1.0 structure valid: 122 routes (46 Android, 45 web, 31 admin; 5 Android primary "
+    "destinations), 0 orphan routes, 141 registry screens placed exactly once (134 hosted, 7 external), 134 deep-link "
+    "patterns, 0 redirects, 0 retired route IDs checked against {base}; 16 capabilities (16 with a divergence) "
+    "allocating 38 registry flows; registry pinned at planning/source/evidence/experience-coverage.json"
+)
+# The recorded readiness gaps of the published route map and allocation against their pinned registry.
+PUBLISHED_GAP_COUNTS = {
+    "readiness.tree_test_not_run": 3, "readiness.card_sort_not_run": 3, "readiness.decision_pending": 3,
+    "readiness.cdo_approval_pending": 16, "readiness.assumption_provisional": 16, "readiness.label_provisional": 122,
+    "readiness.role_provisional": 3, "readiness.registry_not_canonical": 1, "readiness.registry_id_added": 0,
+    "readiness.registry_id_retired": 0,
+}
+LIVE_REGISTRY_RULES = ("readiness.registry_id_added", "readiness.registry_id_retired")
+
+
+class PublishedDataTests(unittest.TestCase):
+    """The committed files of this repository, checked read-only exactly as published mode checks them: the pinned
+    registry and the compatibility base come from the local Git object store and nothing is written. The exact gaps
+    depend only on this ticket's files and the pinned blob; a later registry change only adds live-registry gaps
+    (TS-M8), so it can never fail these tests."""
+
+    def test_published_structure_passes(self):
+        model = module.load_and_check(ROOT)
+        base = "the published base" if model.base is not None else "no published base"
+        self.assertEqual(module.structure_line(model), PUBLISHED_STRUCTURE.format(base=base))
+        self.assertEqual(set(model.placements), set(model.registry.screens))
+
+    def test_published_readiness_reports_exact_gaps(self):
+        model = module.load_and_check(ROOT)
+        gaps = module.readiness(model)
+        self.assertEqual({rule: len(subjects) for rule, subjects in gaps.items()}, PUBLISHED_GAP_COUNTS)
+        capabilities = [f"CAP-{number:03d}" for number in range(1, 17)]
+        self.assertEqual(gaps, {
+            "readiness.tree_test_not_run": ["android", "web", "admin"],
+            "readiness.card_sort_not_run": ["android", "web", "admin"],
+            "readiness.decision_pending": ["accessibility", "information_architecture", "security"],
+            "readiness.cdo_approval_pending": capabilities, "readiness.assumption_provisional": capabilities,
+            "readiness.label_provisional": list(model.routes),
+            "readiness.role_provisional": ["ROLE-01", "ROLE-02", "ROLE-03"],
+            "readiness.registry_not_canonical": ["PenniLogic/docs#75"],
+            "readiness.registry_id_added": [], "readiness.registry_id_retired": [],
+        })
+        self.assertEqual(module.status_line(gaps), module.NOT_GREEN)
+        live = module.readiness(model, module.read_current(ROOT))
+        self.assertEqual({rule: subjects for rule, subjects in live.items() if rule not in LIVE_REGISTRY_RULES},
+                         {rule: subjects for rule, subjects in gaps.items() if rule not in LIVE_REGISTRY_RULES})
+
+    def test_published_sitemaps_match(self):
+        rendered = module.render_sitemaps(module.load_and_check(ROOT))
+        self.assertEqual((ROOT / module.SITEMAPS).read_bytes(), rendered.encode("utf-8"))

@@ -1,0 +1,521 @@
+{
+  "schema_version": 1,
+  "status": "provisional",
+  "source_issue": "PenniLogic/docs#74",
+  "plan_id": "T-UXR-05",
+  "diagram_id": "D19",
+  "registry_ref": {
+    "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+    "path": "planning/source/evidence/experience-coverage.json",
+    "sha256": "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
+  },
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "name": "Sign-in, recovery and app shell",
+      "journey_ids": [
+        "J01",
+        "J02",
+        "J11"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-01",
+            "F-AND-02"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-01"
+          ]
+        },
+        "admin": {
+          "status": "divergent",
+          "flow_ids": [
+            "F-ADM-01"
+          ]
+        }
+      },
+      "rationale": "Customers sign in, recover access and reach the app shell on Android and web; operators use a separate administrative identity domain with hardware-factor sessions and their own recovery, so the admin entry diverges by design (ADR-020 section 7).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-002",
+      "name": "Consent, eligibility and device permissions",
+      "journey_ids": [
+        "J01",
+        "J02",
+        "J03"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-03"
+          ]
+        },
+        "web": {
+          "status": "divergent",
+          "flow_ids": [
+            "F-WEB-01"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Purpose consent and age eligibility apply on both customer platforms; SMS and notification-access permissions exist only on Android, whose capture depends on them (product/01 section 3.8). Consent is the customer's own decision, so the operator console has no consent destination.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-003",
+      "name": "Debt status, strategies and scenarios",
+      "journey_ids": [
+        "J01",
+        "J04"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-04",
+            "F-AND-05"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-03",
+            "F-WEB-04"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Debt tracking and strategy decisions are the customer's own job on Android and web, where web adds dense side-by-side comparison (product/08 section 8.2); the admin console is powerful over the system, not over user financial data (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-004",
+      "name": "Transactions, accounts, import and export",
+      "journey_ids": [
+        "J03"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-06"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-02"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Account, category and manual transaction management are explicit web work alongside Android (product/01 section 3.8); operators cannot read transaction descriptions or balances by default (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-005",
+      "name": "Capture health, clarification and rules",
+      "journey_ids": [
+        "J03"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-07"
+          ]
+        },
+        "web": {
+          "status": "divergent",
+          "flow_ids": [
+            "F-WEB-05"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Automatic capture depends on Android-only permissions and stays on Android (product/01 section 3.8), so web resolves clarifications and manages rules without a capture-health view; operators never read raw message content (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-006",
+      "name": "Email and receipt capture",
+      "journey_ids": [
+        "J03"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-08"
+          ]
+        },
+        "web": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Android is capture-first and web analysis-heavy (PenniLogic/docs#74 context); the pinned registry has no web or admin flow for mailbox or receipt capture, and raw message content never reaches operators (product/01 section 2.2). Whether web needs receipt upload is open for the IA review.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-007",
+      "name": "Income, budgets, goals and net worth",
+      "journey_ids": [
+        "J05"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-09",
+            "F-AND-10"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-06"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Web covers income and budgeting, goals and net worth for parity with Android (product/01 section 3.8); this is the customer's own planning data, which operators cannot browse (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-008",
+      "name": "Multi-currency reporting",
+      "journey_ids": [
+        "J05"
+      ],
+      "platforms": {
+        "android": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-12"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Per-currency overviews and reporting-currency changes serve the power user who compares accounts and currencies on a large screen (product/08 section 7, P05); the pinned registry has no Android or admin flow for them, which the IA review should confirm.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-009",
+      "name": "Adaptive failures and debt widget",
+      "journey_ids": [
+        "J01",
+        "J05"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-16"
+          ]
+        },
+        "web": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "The home-screen widget and constrained-device recovery are Android platform jobs; narrow web remains a complete management fallback instead of a widget (product/08 section 8.2), and operators have no customer surface.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-010",
+      "name": "Split groups and settlement",
+      "journey_ids": [
+        "J06"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-11"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-07"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Splitting is explicit web work alongside Android (product/01 section 3.8); group expenses are user financial data that operators cannot browse (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-011",
+      "name": "Family, household and safe exit",
+      "journey_ids": [
+        "J07"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-12"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-08"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Family features are explicit web work alongside Android (product/01 section 3.8); household data is shared only between users, so no operator destination exists that could reveal it (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-012",
+      "name": "Assistant and provider settings",
+      "journey_ids": [
+        "J08"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-13"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-09"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "AI and bring-your-own-key settings are explicit web work alongside Android (product/01 section 3.8); operators configure providers, routing and spend for the system (CAP-016), never a user's assistant history (product/01 section 2.2).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-013",
+      "name": "Billing, notifications and retention",
+      "journey_ids": [
+        "J09"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-14"
+          ]
+        },
+        "web": {
+          "status": "divergent",
+          "flow_ids": [
+            "F-WEB-10"
+          ]
+        },
+        "admin": {
+          "status": "absent",
+          "flow_ids": []
+        }
+      },
+      "rationale": "Web covers billing, invoices and the cross-channel notification preference centre (product/01 section 3.8); retention milestones and digests have no web screen in the pinned registry. Operators change plans and refunds through their own capabilities, not the customer's billing pages.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-014",
+      "name": "Trust, rights and support",
+      "journey_ids": [
+        "J10",
+        "J11"
+      ],
+      "platforms": {
+        "android": {
+          "status": "parity",
+          "flow_ids": [
+            "F-AND-15"
+          ]
+        },
+        "web": {
+          "status": "parity",
+          "flow_ids": [
+            "F-WEB-11"
+          ]
+        },
+        "admin": {
+          "status": "divergent",
+          "flow_ids": [
+            "F-ADM-06",
+            "F-ADM-07"
+          ]
+        }
+      },
+      "rationale": "Customers raise rights and support requests on Android and web; operators fulfil them from redacted queues with independent approval and immutable audit, never by browsing records (product/08 sections 8.3 and 9.3).",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-015",
+      "name": "Operator access, lifecycle and production access",
+      "journey_ids": [
+        "J11"
+      ],
+      "platforms": {
+        "android": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "web": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "admin": {
+          "status": "parity",
+          "flow_ids": [
+            "F-ADM-02",
+            "F-ADM-03",
+            "F-ADM-09"
+          ]
+        }
+      },
+      "rationale": "Unmasking, elevation, operator lifecycle and production access are purpose-built operator flows in the separate admin console and identity domain (product/08 section 8.3, ADR-020 sections 3 and 7); customers have no operator destination.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    },
+    {
+      "id": "CAP-016",
+      "name": "Plans, AI operations, audit and release evidence",
+      "journey_ids": [
+        "J12"
+      ],
+      "platforms": {
+        "android": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "web": {
+          "status": "absent",
+          "flow_ids": []
+        },
+        "admin": {
+          "status": "parity",
+          "flow_ids": [
+            "F-ADM-04",
+            "F-ADM-05",
+            "F-ADM-08",
+            "F-ADM-10"
+          ]
+        }
+      },
+      "rationale": "Plans, feature flags, quotas, AI providers and spend caps, aggregate analytics and audit review are the system powers of the admin console (product/01 section 2.2); customers see only their own plan and assistant settings.",
+      "cdo_approval": {
+        "status": "pending",
+        "ref": null
+      },
+      "assumptions": "provisional"
+    }
+  ]
+}
