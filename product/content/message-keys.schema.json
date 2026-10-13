@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/product/content/message-keys.schema.json",
+  "title": "PenniLogic message-key catalogue (T-CNT-01, PenniLogic/docs#84)",
+  "description": "Shape only. Key grammar, reserved roots (state., nav., reg., common.), taxonomy derivation, term references, content ranges, placeholders and neutral safe-exit coverage are enforced by scripts/check_content.py.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "catalogue_version",
+    "source_issue",
+    "placeholders",
+    "keys"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "catalogue_version": {
+      "type": "string",
+      "minLength": 5
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#84"
+    },
+    "placeholders": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/placeholder"
+      }
+    },
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/key"
+      }
+    }
+  },
+  "definitions": {
+    "placeholder": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "surface_registration",
+            "client_platform",
+            "client_cache",
+            "service_response",
+            "component_copy"
+          ]
+        }
+      }
+    },
+    "key": {
+      "type": "object",
+      "required": [
+        "key",
+        "category",
+        "copy",
+        "status",
+        "term_refs",
+        "regulated_ref",
+        "range",
+        "owner",
+        "platforms",
+        "neutral_safe_exit"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 3
+        },
+        "category": {
+          "enum": [
+            "action",
+            "label",
+            "notification",
+            "denial",
+            "empty",
+            "loading",
+            "error",
+            "stale",
+            "destructive",
+            "success",
+            "recovery",
+            "disclosure"
+          ]
+        },
+        "copy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "provisional",
+            "approved"
+          ]
+        },
+        "term_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "regulated_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "range": {
+          "type": "object",
+          "required": [
+            "min",
+            "typical",
+            "max"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "integer"
+            },
+            "typical": {
+              "type": "integer"
+            },
+            "max": {
+              "type": "integer"
+            }
+          }
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "android",
+              "web",
+              "admin"
+            ]
+          }
+        },
+        "neutral_safe_exit": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
