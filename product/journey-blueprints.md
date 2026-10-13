@@ -507,7 +507,7 @@ flowchart LR
 | J04.C.02 | customer | android | android-app | Customer (provisional persona) | Compares strategies and simulates an extra payment | F-AND-05 | S-AND-018, S-AND-019 | confidential | Signed-in owner on a device-bound session | none | none | abandonment |
 | J04.T.01 | team | service | api-debt-engine | Debt engine in the core API | Computes the comparison and simulation in integer minor units | none | none | confidential | Signed-in owner; default deny outside the caller tenancy | pending:PenniLogic/contracts#5 | ADR-001, ADR-015, ADR-017 | none |
 | J04.C.03 | customer | android | android-app | Customer (provisional persona) | Explores advanced scenarios and chooses a strategy | F-AND-05 | S-AND-020 | confidential | Signed-in owner on a device-bound session | none | none | none |
-| J04.T.02 | team | service | api-debt-engine | Debt engine in the core API | Saves the chosen strategy as a new plan version and re-derives the schedule | none | none | confidential | Signed-in owner of every debt in the plan | pending:PenniLogic/contracts#5 | ADR-002, ADR-015 | none |
+| J04.T.02 | team | service | api-debt-engine | Debt engine in the core API | Saves the chosen strategy as a new plan version and re-derives the schedule | none | none | confidential | Signed-in owner of every debt in the plan | pending:PenniLogic/contracts#5 | ADR-015 | none |
 | J04.C.04 | customer | android | android-app | Customer (provisional persona) | Sees the updated debt-free date on the home screen | F-AND-04 | S-AND-014 | confidential | Signed-in owner on a device-bound session | none | none | completion |
 | J04.C.05 | customer | web | web-app | Customer (provisional persona) | Reviews the strategy and its derivation on web | F-WEB-03 | S-WEB-010, S-WEB-011, S-WEB-012 | confidential | Signed-in owner on a device-bound session | none | none | none |
 | J04.C.06 | customer | web | web-app | Customer (provisional persona) | Edits debt terms and runs advanced scenarios on web | F-WEB-04 | S-WEB-013, S-WEB-014 | confidential | Signed-in owner on a device-bound session | none | none | correction |
@@ -1023,7 +1023,7 @@ flowchart LR
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | J10.C.01 | customer | android | android-app | Customer (provisional persona) | Reviews the trust centre and preferences and can open a support request | F-AND-15 | S-AND-056, S-AND-058, S-AND-063 | confidential | Signed-in owner on a device-bound session | none | none | none |
 | J10.C.02 | customer | android | android-app | Customer (provisional persona) | Requests an export or deletion of own data | F-AND-15 | S-AND-057 | confidential | Signed-in owner on a device-bound session | none | ADR-006 | abandonment |
-| J10.T.01 | team | service | api-rights | Rights service in the core API | Validates identity, scope and the request clock | none | none | restricted | Signed-in data principal; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006, ADR-020 | none |
+| J10.T.01 | team | service | api-rights | Rights service in the core API | Validates identity, scope and the request clock | none | none | restricted | Signed-in data principal; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006 | none |
 | J10.T.02 | team | admin | admin-console | Support and privacy operator (provisional persona) | Picks the request from the redacted rights queue | F-ADM-07 | S-ADM-018 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.03 | team | admin | admin-console | Support and privacy operator (provisional persona) | Performs the bounded action, with independent approval when access is required | F-ADM-07 | S-ADM-019 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.04 | team | service | api-rights | Rights service in the core API | Executes the export or the crypto-shredding erasure and records evidence | none | none | restricted | Approved rights action | pending:PenniLogic/contracts#14 | ADR-006, ADR-021 | none |
@@ -1145,8 +1145,8 @@ flowchart LR
 
 | Step | Clock | Audit | Notification | Reversal |
 |---|---|---|---|---|
-| J11.T.04 | Elevation expiry and approval timeouts are pending policy values | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation expires or is revoked at once; access already used is reported, never hidden |
-| J11.T.05 | Elevation expiry and approval timeouts are pending policy values | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation expires or is revoked at once; access already used is reported, never hidden |
+| J11.T.04 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation expires or is revoked at once; access already used is reported, never hidden |
+| J11.T.05 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation expires or is revoked at once; access already used is reported, never hidden |
 | J11.T.06 | The statutory response clock starts at validation; its value is owned by the compliance floor pack and pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
@@ -1291,7 +1291,7 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | event | pending:PenniLogic/contracts#8 | BP-J06, BP-J07 |
 | event | pending:PenniLogic/contracts#9 | BP-J05 |
 | policy | ADR-001 | BP-J01, BP-J03, BP-J04, BP-J05, BP-J06 |
-| policy | ADR-002 | BP-J03, BP-J04, BP-J06, BP-J08 |
+| policy | ADR-002 | BP-J03, BP-J06, BP-J08 |
 | policy | ADR-003 | BP-J03 |
 | policy | ADR-004 | BP-J01, BP-J03 |
 | policy | ADR-005 | BP-J06, BP-J07 |
@@ -1325,6 +1325,6 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | GAP-J07-03 | J07 | none | research | PenniLogic/docs#66 | none | open | Safe-exit and coercive-control assumptions are unvalidated; research must not recruit both household members into one session. |
 | GAP-J09-01 | J09 | J09.T.03 | registry_content | PenniLogic/docs#75 | none | open | J09 lists no operator refund flow; refund operations F-ADM-06 belong to J10 only, so billing reversal relies on the J10 operator step. |
 | GAP-J10-01 | J10 | J10.T.01 | policy | PenniLogic/docs#44 | none | open | Statutory response clock values for export, deletion and grievance requests are not published in an accepted source; controls state them as pending. |
-| GAP-J11-01 | J11 | J11.T.04 | policy | PenniLogic/api#47 | none | open | Elevation expiry and approval timeout values are not published in an accepted source; the J11 access controls state them as pending. |
+| GAP-J11-01 | J11 | J11.T.04 | policy | PenniLogic/api#47 | none | open | ADR-020 section 16 sets elevation, unmask and break-glass limits but no expiry for an unapproved access request; J11 states it as pending. |
 | GAP-J11-02 | J11 | none | registry_content | PenniLogic/docs#75 | none | open | The docs#67 scope names operator blueprints for refunds, provider change and incidents, but the registry assigns those flows to J10 and J12, not J11. |
 | GAP-J12-01 | J12 | J12.T.07 | policy | PenniLogic/docs#44 | none | open | Regulator and customer notice deadlines for incidents are not published in an accepted source; the incident clock step cannot state them. |

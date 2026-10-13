@@ -1948,7 +1948,6 @@
             "pending:PenniLogic/contracts#5"
           ],
           "policy_refs": [
-            "ADR-002",
             "ADR-015"
           ],
           "telemetry": null,
@@ -4670,8 +4669,7 @@
             "pending:PenniLogic/contracts#14"
           ],
           "policy_refs": [
-            "ADR-006",
-            "ADR-020"
+            "ADR-006"
           ],
           "telemetry": null,
           "handoff": null,
@@ -5307,7 +5305,7 @@
           "telemetry": null,
           "handoff": null,
           "controls": {
-            "clock": "Elevation expiry and approval timeouts are pending policy values",
+            "clock": "Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending",
             "audit": "One transactional audit write per action before any data leaves the database",
             "notification": "Requester and approver are notified of each decision",
             "reversal": "Elevation expires or is revoked at once; access already used is reported, never hidden"
@@ -5363,7 +5361,7 @@
             "may_show": "Purpose, scope, requester and expiry; no customer data before approval"
           },
           "controls": {
-            "clock": "Elevation expiry and approval timeouts are pending policy values",
+            "clock": "Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending",
             "audit": "One transactional audit write per action before any data leaves the database",
             "notification": "Requester and approver are notified of each decision",
             "reversal": "Elevation expires or is revoked at once; access already used is reported, never hidden"

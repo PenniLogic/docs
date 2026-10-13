@@ -119,7 +119,7 @@
       "step_id": "J11.T.04",
       "category": "policy",
       "owner_issue": "PenniLogic/api#47",
-      "summary": "Elevation expiry and approval timeout values are not published in an accepted source; the J11 access controls state them as pending.",
+      "summary": "ADR-020 section 16 sets elevation, unmask and break-glass limits but no expiry for an unapproved access request; J11 states it as pending.",
       "backlog_item": null,
       "status": "open"
     },
