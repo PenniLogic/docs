@@ -148,17 +148,19 @@ STRUCTURE_RULES = (
     "role.unknown", "permission.feature_squad_publish", "permission.publish_not_maintainer",
     "permission.candidate_publish", "access.public_links", "access.external_sharing", "access.asset_export",
     "access.offboarding_not_revoking",
-    "held.direction_ref", "held.token_refs", "held.publication", "held.cdo_recorded",
+    "held.direction_ref", "held.token_refs", "held.publication", "held.cdo_recorded", "held.migration_plan_ref",
     "id.duplicate", "id.synthetic_reserved",
     "release.duplicate", "release.candidate_library", "release.previous_unknown", "release.version_not_increasing",
     "release.chain_invalid", "release.previous_unpublished",
     "release.breaking_not_major", "release.class_mismatch", "release.migration_plan_missing",
-    "release.cdo_approval_missing", "release.cdo_pending_published", "release.migration_plan_pending_published",
+    "release.cdo_approval_missing", "release.cdo_scope_invalid",
+    "release.cdo_pending_published", "release.migration_plan_pending_published",
     "release.rollback_target", "approval.source_mismatch",
     "reference.invalid",
     "component.library_invalid", "component.candidate_published", "component.platform_mismatch",
     "component.registry_platform_mismatch", "component.registry_name_mismatch",
-    "component.variant_invalid", "component.variant_parent_unpublished", "component.owner_not_maintainer",
+    "component.variant_invalid", "component.variant_parent_unpublished",
+    "component.variant_parent_deprecated", "component.owner_not_maintainer",
     "component.property_contract",
     "published.owner_missing", "published.name_missing", "published.description_missing",
     "published.properties_missing", "published.accessibility_missing", "published.platforms_missing",
@@ -169,13 +171,14 @@ STRUCTURE_RULES = (
     "duplicate.semantic_component",
     "contribution.branch_grammar", "contribution.branch_outside_candidates", "contribution.squad_mismatch",
     "contribution.branch_duplicate", "contribution.candidate_library",
-    "contribution.candidate_incomplete",
+    "contribution.candidate_incomplete", "contribution.owner_not_squad",
     "tabletop.duplicate", "tabletop.live_claim", "tabletop.outcome_mismatch", "tabletop.coverage_missing",
     "approval.roles_mismatch",
 )
 READINESS_RULES = (
     "readiness.direction_missing", "readiness.tokens_unpublished", "readiness.approval_not_recorded",
     "readiness.cdo_decision_pending", "readiness.cdo_decision_unverified", "readiness.migration_plan_pending",
+    "readiness.migration_plan_unverified",
     "readiness.live_verification_missing", "readiness.continuity_unchecked",
     "readiness.component_not_in_registry", "readiness.registry_component_ungoverned",
 )
@@ -455,10 +458,16 @@ def check_releases(document, schema, fixture):
         require(change_class(version(current), None if previous is None else version(previous))
                 == release["change_class"], "release.class_mismatch", name)
         check_reference(release["migration_plan_ref"], name)
+        # Global rule 8: no session in this change verifies a migration plan, so real data writes null or `pending:`
+        # only; like a recorded CDO decision, a resolved reference stays an unverified gap even in fixture mode.
+        require(fixture or (release["migration_plan_ref"] or "pending:").startswith("pending:"),
+                "held.migration_plan_ref", name)
         require(not release["breaking"] or release["migration_plan_ref"] is not None,
                 "release.migration_plan_missing", name)
         approval = release["cdo_approval"]
         require(release["change_class"] != "major" or approval is not None, "release.cdo_approval_missing", name)
+        # The coordinator decides shared-system majors only (design-operations.md section 6), not minors or patches.
+        require(release["change_class"] == "major" or approval is None, "release.cdo_scope_invalid", name)
         if approval is not None:
             shape(approval, schema, "cdo_approval", name)
             # HC-m13: no session here records a decision_coordinator decision; published data keeps `pending`.
@@ -536,6 +545,9 @@ def check_component(component, schema, policy, releases, fixture):
         require(owner in policy.roles, "role.unknown", identifier)
         require(library == "LIB-CANDIDATE" or owner in policy.library_maintainers(library),
                 "component.owner_not_maintainer", identifier)
+    # Section 4: a feature squad proposes and owns a candidate; only feature squads (and maintainers) may edit
+    # LIB-CANDIDATE under the permission model (decide), so no other role can own one.
+    require(not candidate or owner in policy.feature_squads, "contribution.owner_not_squad", identifier)
     check_properties(component)
     if component["accessibility"] is not None:
         shape(component["accessibility"], schema, "accessibility", identifier)
@@ -655,6 +667,10 @@ def check_component_graph(components, releases):
             # A published variant never carries a semantic its parent has not published.
             require(component["status"] not in PUBLISHED or target["status"] in PUBLISHED,
                     "component.variant_parent_unpublished", identifier)
+            # A deprecated parent's variants are deprecated with it (each in its own library, with its own
+            # replacement and removal version), so none is removed without criterion 4's migration period.
+            require(component["status"] != "published" or target["status"] != "deprecated",
+                    "component.variant_parent_deprecated", identifier)
         else:
             require(variant is None, "component.variant_invalid", identifier)
         deprecation = component["deprecation"]
@@ -663,8 +679,12 @@ def check_component_graph(components, releases):
         replacement = deprecation["replacement"]
         require(replacement is not None, "deprecation.replacement_missing", identifier)
         target = components.get(replacement)
+        # The replacement is a published record of the same library that supports every platform of the deprecated
+        # one, so each consumer has something to migrate to before removal (design-operations.md section 6).
         require(replacement != identifier and target is not None and target["status"] == "published"
-                and target["library"] == component["library"], "deprecation.replacement_invalid", identifier)
+                and target["library"] == component["library"]
+                and set(component["platforms"]) <= set(target["platforms"]), "deprecation.replacement_invalid",
+                identifier)
         removal = deprecation["removal_version"]
         require(removal is not None, "deprecation.removal_version_missing", identifier)
         majors = [version(key[1])[0] for key, release in releases.items()
@@ -695,7 +715,8 @@ def decide(scenario, policy, libraries):
     if scenario["offboarded"] or role not in policy.roles:
         return "refused"  # offboarding revokes every grant and session (design-operations.md section 7)
     if action in ("public_link", "external_share", "export"):
-        return "refused"  # E34-F06 (public links, external sharing) and the ticket (asset export) disable these
+        # E34-F06 (public links), design-operations.md section 7 (external sharing) and the ticket (asset export).
+        return "refused"
     if action == "publish":
         return "model_permitted" if role in libraries[library]["publish_roles"] else "refused"
     if action == "edit":
@@ -802,9 +823,13 @@ def readiness(model):
             rule = "readiness.cdo_decision_pending" if approval["status"] == "pending" else \
                 "readiness.cdo_decision_unverified"
             gaps[rule].add(f"{library}@{current}")
-        if (release["migration_plan_ref"] or "").startswith("pending:"):
-            # Global rule 8: a `pending:` reference is a visible gap until the plan exists.
-            gaps["readiness.migration_plan_pending"].add(f"{library}@{current}")
+        plan = release["migration_plan_ref"]
+        if plan is not None:
+            # Global rule 8: a `pending:` reference is a visible gap until the plan exists; a resolved one cannot be
+            # verified offline yet, so it stays a gap rather than a pass.
+            rule = "readiness.migration_plan_pending" if plan.startswith("pending:") else \
+                "readiness.migration_plan_unverified"
+            gaps[rule].add(f"{library}@{current}")
     for library in SHARED:
         # Live evidence per governed shared library (feature-squad publish denial, maintainer offboarding revocation,
         # link/export/external-access audit); the synthetic tabletop never closes it (`tabletop.live_claim`).

@@ -262,6 +262,7 @@ class BaselineTests(unittest.TestCase):
             "readiness.cdo_decision_pending": ["LIB-COMPONENTS@2.0.0"],
             "readiness.cdo_decision_unverified": ["LIB-ANDROID@1.0.0", "LIB-COMPONENTS@1.0.0"],
             "readiness.migration_plan_pending": ["LIB-COMPONENTS@2.0.0"],
+            "readiness.migration_plan_unverified": [],
             "readiness.live_verification_missing": sorted(module.SHARED),
             "readiness.continuity_unchecked": sorted(module.SHARED),
             "readiness.component_not_in_registry": ["C-SYN-BUTTON-AND", "C-SYN-LOCAL"],
@@ -834,6 +835,39 @@ class ReleaseTests(RuleCase):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0")["cdo_approval"].update(
             role="systems"), "schema.invalid", "LIB-COMPONENTS@2.0.0")
 
+    def test_resolved_migration_plan_is_held_in_real_data(self):
+        """R3-AV-6: global rule 8 writes null or `pending:` here; a resolved reference is held, like a recorded CDO
+        decision."""
+        def base():
+            document = real()
+            append_release(document, "LIB-COMPONENTS@1.1.1", "1.1.0", "patch", "draft",
+                           migration="pending:PenniLogic/docs#79")
+            return document
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.1.1").update(
+            migration_plan_ref="PenniLogic/docs#79"), "held.migration_plan_ref", "LIB-COMPONENTS@1.1.1",
+            fixture_mode=False, base=base)
+
+    def test_resolved_migration_plan_is_an_unverified_gap(self):
+        """R3-AV-6: in fixture mode a resolved reference is admitted but never closes its gap."""
+        document = fixture()
+        find_release(document, "LIB-COMPONENTS@2.0.0")["migration_plan_ref"] = "PenniLogic/docs#79"
+        gaps = module.readiness(run_check(document))
+        self.assertEqual((gaps["readiness.migration_plan_pending"], gaps["readiness.migration_plan_unverified"]),
+                         ([], ["LIB-COMPONENTS@2.0.0"]))
+
+    def test_cdo_records_only_major_releases(self):
+        """DF-R3-01: a minor or patch release carries no coordinator record (each control release has none)."""
+        pending = {"role": "decision_coordinator", "scope": "shared_system_major", "status": "pending",
+                   "decision_source": None}
+        for name, change in (("LIB-ANDROID@1.1.0", "minor"), ("LIB-ANDROID@1.0.1", "patch")):
+            with self.subTest(change=change):
+                def base(name=name, change=change):
+                    document = fixture()
+                    append_release(document, name, "1.0.0", change, "draft")
+                    return document
+                self.assertRefused(lambda d: find_release(d, name).update(cdo_approval=copy.deepcopy(pending)),
+                                   "release.cdo_scope_invalid", name, base=base)
+
     def test_recorded_approval_names_its_decision_source(self):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0")["cdo_approval"].update(
             decision_source=None), "approval.source_mismatch", "LIB-COMPONENTS@1.0.0")
@@ -979,6 +1013,23 @@ class ComponentTests(RuleCase):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON-AND").update(variant_of="C-SYN-LOCAL"),
                            "component.variant_invalid", "C-SYN-BUTTON-AND")
 
+    def test_variant_of_a_deprecated_parent_is_deprecated(self):
+        """R3-AV-5: a published variant never hangs on a deprecated parent; the control's variant of the deprecated
+        C-SYN-CHIP is deprecated in its own library (replacement there, removal a later LIB-ANDROID major)."""
+        def deprecated_variant():
+            document = fixture()
+            variant = component("C-SYN-CHIP-AND", "Android chip", library_id="LIB-ANDROID", status="deprecated",
+                                role="filter toggle", platforms=["android"], variant_of="C-SYN-CHIP", properties=[
+                                    {"name": "selected", "type": "boolean", "values": [], "default": "false",
+                                     "required": False}])
+            variant["deprecation"] = {"replacement": "C-SYN-BUTTON-AND", "removal_version": "2.0.0",
+                                      "available_until_removal": True}
+            document["components"].append(variant)
+            return document
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-CHIP-AND").update(status="published",
+                                                                                   deprecation=None),
+                           "component.variant_parent_deprecated", "C-SYN-CHIP-AND", base=deprecated_variant)
+
     def test_only_platform_libraries_hold_variants(self):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(variant_of="C-SYN-BUTTON"),
                            "component.variant_invalid", "C-SYN-DRAFT")
@@ -1039,6 +1090,24 @@ class DeprecationTests(RuleCase):
             with self.subTest(replacement=replacement):
                 self.assertRefused(lambda d: chip_deprecation(d).update(replacement=replacement),
                                    "deprecation.replacement_invalid", "C-SYN-CHIP")
+
+    def test_replacement_supports_every_deprecated_platform(self):
+        """SC3-02/R3-AV-4: consumers on each platform of the deprecated record can migrate to its replacement (the
+        control's replacement supports more platforms than the deprecated record)."""
+        def android_deprecation():
+            document = fixture()
+            document["components"].append(component("C-SYN-PILL", "Pill", role="mode selector", properties=[
+                {"name": "label", "type": "text", "values": [], "default": None, "required": True}]))
+            old = component("C-SYN-OLD", "Legacy toggle", status="deprecated", role="legacy setting",
+                            platforms=["android"], properties=[
+                                {"name": "pressed", "type": "boolean", "values": [], "default": "false",
+                                 "required": False}])
+            old["deprecation"] = {"replacement": "C-SYN-PILL", "removal_version": "2.0.0",
+                                  "available_until_removal": True}
+            document["components"].append(old)
+            return document
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-PILL").update(platforms=["web"]),
+                           "deprecation.replacement_invalid", "C-SYN-OLD", base=android_deprecation)
 
     def test_recorded_removal_release_is_breaking(self):
         """AV2-3: the removal release a deprecation names, when recorded here, is declared breaking."""
@@ -1292,6 +1361,21 @@ class ContributionTests(RuleCase):
         self.assertRefused(lambda d: local(d).update(owner_role="web_design"), "contribution.squad_mismatch",
                            "C-SYN-LOCAL")
 
+    def test_candidate_owner_is_a_feature_squad(self):
+        # Each role keeps its own squad's branch, so only the owner rule can refuse it; decide() refuses it the edit.
+        for role, squad in (("research", "research"), ("service_design", "service"), ("content", "content"),
+                            ("design_qa", "qa"), ("design_ops", "design-ops"), ("systems", "systems")):
+            with self.subTest(role=role):
+                self.assertRefused(lambda d: local(d).update(
+                    owner_role=role, proposal_branch=f"T-DSY-02__{squad}__local-card"),
+                    "contribution.owner_not_squad", "C-SYN-LOCAL")
+        for role in ("android_design", "web_design", "admin_design"):
+            with self.subTest(role=role):
+                document = fixture()
+                squad = role.removesuffix("_design")
+                local(document).update(owner_role=role, proposal_branch=f"T-DSY-02__{squad}__local-card")
+                run_check(document)
+
     def test_proposal_branch_is_not_reused(self):
         def reuse(document):
             other = copy.deepcopy(local(document))
@@ -1336,7 +1420,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(lines[2:], [
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1", "readiness.approval_not_recorded: 5",
             "readiness.cdo_decision_pending: 1", "readiness.cdo_decision_unverified: 0",
-            "readiness.migration_plan_pending: 0",
+            "readiness.migration_plan_pending: 0", "readiness.migration_plan_unverified: 0",
             "readiness.live_verification_missing: 5", "readiness.continuity_unchecked: 5",
             "readiness.component_not_in_registry: 0",
             "readiness.registry_component_ungoverned: 0",
@@ -1425,6 +1509,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.cdo_decision_pending": sorted(f"{name}@1.0.0" for name in module.SHARED),
             "readiness.cdo_decision_unverified": [],
             "readiness.migration_plan_pending": [],
+            "readiness.migration_plan_unverified": [],
             "readiness.live_verification_missing": sorted(module.SHARED),
             "readiness.continuity_unchecked": sorted(module.SHARED),
             "readiness.component_not_in_registry": [],
@@ -1451,6 +1536,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1",
             "readiness.approval_not_recorded: 5", "readiness.cdo_decision_pending: 5",
             "readiness.cdo_decision_unverified: 0", "readiness.migration_plan_pending: 0",
+            "readiness.migration_plan_unverified: 0",
             "readiness.live_verification_missing: 5", "readiness.continuity_unchecked: 5",
             "readiness.component_not_in_registry: 0", "readiness.registry_component_ungoverned: 0",
         ])

@@ -87,7 +87,8 @@ no visual direction is selected.
 
 1. **Request.** A feature squad (`android_design`, `web_design`, `admin_design`: the owners of the
    platform product files) proposes a component as a `candidate` in `LIB-CANDIDATE`, owned by the
-   proposing role (`owner_role`), with a worded name and semantic role (a placeholder such as `-` is
+   proposing feature squad (`owner_role`; any other role is refused, `contribution.owner_not_squad`, because
+   the permission model of section 8 lets no other non-maintainer role edit `LIB-CANDIDATE`), with a worded name and semantic role (a placeholder such as `-` is
    missing) and a non-empty property contract so the duplicate lint can judge it
    (`contribution.candidate_incomplete`), on a proposal branch or proposal file named by the
    [`design-operations.md`](design-operations.md) section 6 grammar
@@ -129,7 +130,8 @@ no visual direction is selected.
 ## 5. Versioning, release notes and dependency updates
 
 Releases are keyed by (library, SemVer) and form one linear chain per library through `previous`: the
-previous version exists and is lower, each library has exactly one root release and each release has at
+previous version exists and is lower, each library has at most one root release (a library with
+releases has exactly one; no rule requires a library to carry a release) and each release has at
 most one successor (`release.previous_unknown`, `release.version_not_increasing`, `release.chain_invalid`).
 [`design-operations.md`](design-operations.md) section 6 defines the classes by content (patch fixes
 without contract change, minor additive components/tokens, major breaking changes; coordinator approval
@@ -154,13 +156,18 @@ is not detected; that comparison is held until publication is enabled (`readines
 section 10). Today no real record or release is published (`held.publication`), so there is nothing to
 change in place. Declared breaking changes (criterion 3) must be major (`release.breaking_not_major`), carry a migration plan
 reference (`release.migration_plan_missing`) and a CDO approval record (`release.cdo_approval_missing`).
-References are `PenniLogic/<repo>#N` or `pending:PenniLogic/<repo>#N`; free text is refused
-(`reference.invalid`). A CDO record is `pending` with no decision source, or `recorded` with a
+Only a major release carries a CDO record: the coordinator decides shared-system majors, not minors or
+patches (`release.cdo_scope_invalid`). References are `PenniLogic/<repo>#N` or
+`pending:PenniLogic/<repo>#N`; free text fails the schema (`schema.invalid`) and a repository outside the
+public list is refused (`reference.invalid`). A CDO record is `pending` with no decision source, or `recorded` with a
 `{commit, path, sha256}` decision source (`approval.source_mismatch`). A pending CDO approval or a pending
 migration plan blocks publishing (`release.cdo_pending_published`,
 `release.migration_plan_pending_published`), and a published release must sit on a published previous
 release (`release.previous_unpublished`), so nothing pending lies below a published version. Every
-`pending:` migration plan is a visible gap (`readiness.migration_plan_pending`). No session in this change records a CDO decision
+`pending:` migration plan is a visible gap (`readiness.migration_plan_pending`). No session in this change
+verifies a migration plan, so real data writes only null or `pending:` references (global rule 8,
+`held.migration_plan_ref`); a resolved reference is reported as `readiness.migration_plan_unverified`
+until it can be verified, never as a pass. No session in this change records a CDO decision
 (`held.cdo_recorded`); a recorded decision is reported as `readiness.cdo_decision_unverified` until it
 can be verified, never as a pass.
 
@@ -175,7 +182,8 @@ release. That is a process obligation in this version: deleting or reverting a d
 record is not detected across revisions (`readiness.continuity_unchecked`, section 10), and continued
 availability is the declared `available_until_removal` flag. The deprecation record names:
 
-- a replacement: another published component of the same library (`deprecation.replacement_missing`,
+- a replacement: another published component of the same library that supports every platform of the
+  deprecated one, so each consumer has something to migrate to (`deprecation.replacement_missing`,
   `deprecation.replacement_invalid`);
 - a removal version: a major `N.0.0` above the library's current published major, because removal is a
   breaking change (`deprecation.removal_version_missing`, `deprecation.removal_version_invalid`);
@@ -185,6 +193,9 @@ A deprecation record on a non-deprecated component, or a deprecated component wi
 (`deprecation.unexpected`, `deprecation.missing`). The removal itself is a breaking major release under
 section 5 (migration plan and CDO approval): when the document records the removal release, it must be
 declared `breaking` (`deprecation.removal_not_breaking`), so those section 5 rules apply to it.
+A deprecated parent's platform variants are deprecated with it, each in its own library with its own
+replacement and removal version: a published variant of a deprecated parent, including a new one, is
+refused (`component.variant_parent_deprecated`).
 
 ## 7. Rollback and restoration
 
@@ -213,9 +224,9 @@ is not detected across revisions; section 10).
 | publish to a shared library by a feature squad | never | `permission.feature_squad_publish` |
 | publish to `LIB-CANDIDATE` | never; candidates have no publish roles | `permission.candidate_publish` |
 | edit a shared library | its maintainers only; squads contribute through proposal branches | tabletop |
-| edit `LIB-CANDIDATE` | every feature squad and the maintainers, at library level: requests name a library, not a candidate, so the model cannot express "only their own candidates". Candidate ownership is bound on the record only (`owner_role`, `proposal_branch`, `contribution.squad_mismatch`); per-candidate edit rights (cross-squad library edits fail under section 7 of `design-operations.md`) are not modelled and held (section 10) | tabletop |
+| edit `LIB-CANDIDATE` | every feature squad and the maintainers, at library level: requests name a library, not a candidate, so the model cannot express "only their own candidates". Candidate ownership is bound on the record only (`owner_role` a feature squad, `contribution.owner_not_squad`; `proposal_branch`, `contribution.squad_mismatch`); per-candidate edit rights (cross-squad library edits fail under section 7 of `design-operations.md`) are not modelled and held (section 10) | tabletop |
 | view, comment | any known role that is not offboarded; real access still needs a default-deny grant under section 7 of `design-operations.md` | tabletop |
-| public link, external sharing, asset export | nobody: public links and external sharing (E34-F06); asset export (the ticket's security requirement and the coordinator appendix) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
+| public link, external sharing, asset export | nobody: public links (E34-F06); external sharing ([`design-operations.md`](design-operations.md) section 7 and the `design-gates.json` access flags); asset export (the ticket's security requirement and the coordinator appendix) | `access.public_links`, `access.external_sharing`, `access.asset_export` |
 | any action after offboarding | nobody; offboarding revokes every grant and session | `access.offboarding_not_revoking` |
 
 `model_permitted` means only that this role model would allow the request once real access is verified
@@ -233,9 +244,9 @@ publish denial, maintainer offboarding revocation and the link, export and exter
 missing (`readiness.live_verification_missing`, one gap per shared library however many tabletop rows
 exist; no row can close it because `live_verified` stays false).
 
-Threat finding E34-F06 (`governance/threat-model/records/E34.json`, handed off to docs#78) maps as
-follows: no public-link sharing -> `access.public_links` and the `public_link` tabletop case; external
-sharing -> `access.external_sharing` and the `external_share` case; library changes through a branch, a
+Threat finding E34-F06 (`governance/threat-model/records/E34.json`, handed off to docs#78) has four parts
+and maps as follows: no public-link sharing -> `access.public_links` and the `public_link` tabletop case;
+library changes through a branch, a
 review and a versioned publish -> **partial**: the versioned publish is section 5 (`release.*`); the branch
 and the review are modelled only for squad candidates (section 4, `contribution.*`) and for majors (the CDO
 record). For maintainer changes and minor or patch releases the branch and the review are process
@@ -243,6 +254,9 @@ obligations (the Git pull request and the section 6 promotion of `design-operati
 held with the per-release Design Systems Lead decision record (section 10); publish rights
 limited to named maintainers -> `permission.*`; contributor access reviewed -> **not modelled**: no rule
 or record covers the periodic contributor access review, which stays a held process item (section 10).
+External sharing is not part of E34-F06: it is disabled by [`design-operations.md`](design-operations.md)
+section 7 and the `design-gates.json` access flags, and enforced here by `access.external_sharing` and the
+`external_share` case.
 
 ## 9. Observability (definitions only)
 
@@ -264,15 +278,15 @@ gap (section 11 lists the current counts) and stays `NOT GREEN` while any exists
 unreachable in this version by design: five gaps cannot close without a later checker or schema change.
 `readiness.direction_missing` and `readiness.approval_not_recorded` close only when the direction or an
 approval is recorded, and recording either is refused today (`held.direction_ref`; the schema admits
-only `not_recorded` approvals); `readiness.tokens_unpublished`, `readiness.live_verification_missing`
+only `not_recorded` or `pending` approvals and the readiness rule counts every approval record); `readiness.tokens_unpublished`, `readiness.live_verification_missing`
 and `readiness.continuity_unchecked` close only when a later change integrates the held inputs below.
 
 | Item | Status in this change |
 | --- | --- |
 | Criterion 1: published-component contract | Rules and synthetic published fixtures; no real component is published |
-| Criterion 2: duplicate rejected by review and lint | Registry lint and fixtures; review by Design Systems is process, not yet exercised |
+| Criterion 2: duplicate rejected by review and lint | Registry lint and fixtures; review by Design Systems is process, not yet exercised. The committed data holds no published record, so the lint compares nothing until imported drafts are published; candidates are not linted against drafts |
 | Criterion 3: breaking change needs major, migration plan, CDO | Partial. Rules and fixtures for releases declared `breaking`; a published release must sit on published releases. Detecting an undeclared breaking change (in-place contract change against the base revision) is held (`readiness.continuity_unchecked`); every real CDO approval is `pending` |
-| Criterion 4: deprecation replacement, removal version, availability | Partial. Rules and fixtures for the deprecation record; availability is the declared `available_until_removal` flag. Detecting removal or reversion of a deprecated or published record across revisions is held (`readiness.continuity_unchecked`) |
+| Criterion 4: deprecation replacement, removal version, availability | Partial. Rules and fixtures for the deprecation record (a replacement covers the deprecated platforms; variants are deprecated with their parent); availability is the declared `available_until_removal` flag. Detecting removal or reversion of a deprecated or published record across revisions is held (`readiness.continuity_unchecked`) |
 | Criterion 5: feature squads cannot publish to shared libraries | Permission model and synthetic tabletop only; live Figma enforcement unverified |
 | DoD 1: topology and contribution contract operational | Authored as a draft; not operational until live access, publishing and the decisions below exist |
 | DoD 2: Design Systems, DesignOps, Accessibility, UX Engineering, CDO approvals | `not_recorded` (section 11) |
@@ -459,6 +473,7 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | readiness.cdo_decision_pending | 5 |
 | readiness.cdo_decision_unverified | 0 |
 | readiness.migration_plan_pending | 0 |
+| readiness.migration_plan_unverified | 0 |
 | readiness.live_verification_missing | 5 |
 | readiness.continuity_unchecked | 5 |
 | readiness.component_not_in_registry | 0 |
