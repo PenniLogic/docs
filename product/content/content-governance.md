@@ -84,6 +84,9 @@ amounts or identity.
 - Qualified legal/compliance approval of every regulated record; the approver role is unassigned.
 - Content, Compliance, Accessibility and CDO approvals; independent Core, QA, Compliance and Accessibility review.
 - `nav.` labels from PenniLogic/docs#74; infra#22 conformance; current-head CI on the pull request.
+- Criterion 2 (every pattern states source, status, consequence, safe remainder and next action): slots the
+  taxonomy copy does not state are counted as `readiness.pattern_slot_unstated` and routed to the taxonomy owner
+  (PenniLogic/docs#1), never filled in here; whether the mapped copy meets the criterion needs human Content review.
 
 `python scripts/check_content.py` reports `NOT GREEN: readiness incomplete` with exact gap counts until these
 exist; `--structure` checks structure only.

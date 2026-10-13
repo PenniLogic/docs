@@ -178,10 +178,10 @@
       "taxonomy_state": "empty",
       "slots": {
         "source": null,
-        "status": null,
+        "status": "state.empty.headline",
         "consequence": null,
         "safe_remainder": null,
-        "next_action": null
+        "next_action": "state.empty.action"
       }
     },
     {
@@ -189,10 +189,10 @@
       "taxonomy_state": "loading",
       "slots": {
         "source": null,
-        "status": null,
+        "status": "state.loading.headline",
         "consequence": null,
         "safe_remainder": null,
-        "next_action": null
+        "next_action": "state.loading.action"
       }
     },
     {
@@ -200,21 +200,21 @@
       "taxonomy_state": "error",
       "slots": {
         "source": null,
-        "status": null,
+        "status": "state.error.headline",
         "consequence": null,
         "safe_remainder": null,
-        "next_action": null
+        "next_action": "state.error.action"
       }
     },
     {
       "id": "stale",
       "taxonomy_state": "stale",
       "slots": {
-        "source": null,
-        "status": null,
+        "source": "state.stale.body",
+        "status": "state.stale.headline",
         "consequence": null,
         "safe_remainder": null,
-        "next_action": null
+        "next_action": "state.stale.action"
       }
     },
     {
@@ -222,10 +222,10 @@
       "taxonomy_state": "permission_denied",
       "slots": {
         "source": null,
-        "status": null,
+        "status": "state.permission_denied.headline",
         "consequence": null,
-        "safe_remainder": null,
-        "next_action": null
+        "safe_remainder": "state.permission_denied.body",
+        "next_action": "state.permission_denied.action"
       }
     },
     {

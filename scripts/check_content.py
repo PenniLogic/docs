@@ -133,7 +133,7 @@ STRUCTURE_RULES = (
     "taxonomy.unknown_copy_rule", "taxonomy.copy_rule_missing", "taxonomy.forked_forbidden_term",
     "voice.duplicate_pattern", "voice.banned_category_missing", "voice.forbidden_term",
     "pattern.duplicate", "pattern.missing", "pattern.state_mismatch", "pattern.state_copy_forked",
-    "pattern.slot_missing", "pattern.unknown_key",
+    "pattern.slot_missing", "pattern.unknown_key", "pattern.slot_category", "pattern.slot_reused",
     "placeholder.grammar", "placeholder.duplicate", "placeholder.shadows_taxonomy", "placeholder.prohibited",
     "key.term_surface_missing", "key.grammar", "key.duplicate", "key.prefix_conflict", "key.foreign_root",
     "key.state_not_in_taxonomy",
@@ -164,10 +164,12 @@ STRUCTURE_RULES = (
 READINESS_RULES = (
     "readiness.comprehension_evidence", "readiness.reading_level_provisional", "readiness.term_unapproved",
     "readiness.key_unapproved", "readiness.regulated_unapproved", "readiness.approver_unassigned",
-    "readiness.nav_labels_held",
+    "readiness.nav_labels_held", "readiness.pattern_slot_unstated",
 )
 # nav. keys carry docs#74 navigation labels; until docs#74 publishes them every nav. key is refused (held.nav_key).
 NAV_SOURCE = "PenniLogic/docs#74"
+# The client-state taxonomy owner: slots its state copy does not state are routed there, never filled in here.
+STATE_SOURCE = "PenniLogic/docs#1"
 
 
 def printable(value):
@@ -517,7 +519,12 @@ def check_keys(catalogue, facts, terms, context, roles, regulated_ids):
 
 
 def check_patterns(voice, keys):
-    """The eight scope patterns: taxonomy patterns reuse their state's copy; the others fill every slot with a key."""
+    """The eight scope patterns (criterion 2: source, status, consequence, safe remainder, next action).
+
+    A taxonomy pattern maps each slot to one of its own state's derived keys (headline, body or action) or leaves it
+    null: the taxonomy does not state that slot, which readiness counts as a gap for the taxonomy owner. The other
+    patterns fill every slot with a distinct key of the pattern's own category that carries copy.
+    """
     seen = set()
     for pattern in voice["patterns"]:
         identifier = pattern["id"]
@@ -525,14 +532,19 @@ def check_patterns(voice, keys):
         seen.add(identifier)
         state = PATTERN_STATES[identifier]
         require(pattern["taxonomy_state"] == state, "pattern.state_mismatch", identifier)
-        for slot in SLOTS:
-            value = pattern["slots"][slot]
+        values = [pattern["slots"][slot] for slot in SLOTS]
+        for value in values:
             if state is not None:
-                require(value is None, "pattern.state_copy_forked", identifier)
+                own = {f"state.{state}.{field}" for field in ("headline", "body", "action")}
+                require(value is None or value in own, "pattern.state_copy_forked", identifier)
+                require(value is None or value in keys, "pattern.unknown_key", identifier)
                 continue
             require(value is not None, "pattern.slot_missing", identifier)
             require(value in keys, "pattern.unknown_key", identifier)
             require(keys[value]["copy"] is not None, "pattern.unknown_key", identifier)
+            require(keys[value]["category"] == identifier, "pattern.slot_category", identifier)
+        if state is None:
+            require(len(set(values)) == len(SLOTS), "pattern.slot_reused", identifier)
     require(seen == set(PATTERN_STATES), "pattern.missing")
 
 
@@ -917,6 +929,10 @@ def readiness(model):
     if model.owner is None:
         gaps["readiness.approver_unassigned"].append("approver_role")
     gaps["readiness.nav_labels_held"].append(NAV_SOURCE)
+    gaps["readiness.pattern_slot_unstated"] = [
+        f"pattern.{pattern['id']}.{slot}" for pattern in documents["voice"]["patterns"] for slot in SLOTS
+        if pattern["slots"][slot] is None
+    ]
     return {rule: sorted(subjects) for rule, subjects in gaps.items()}
 
 
@@ -1011,11 +1027,15 @@ def render_voice(voice):
     lines += ["", "## Conventions", ""]
     lines += [f"- {code(item['id'])}: {cell(item['rule'])}" for item in voice["conventions"]]
     lines += ["", "## Content patterns", "",
-              "Taxonomy patterns reuse their state's copy; the others name one message key per slot.", ""]
+              "Each pattern must state source, status, consequence, safe remainder and next action. Taxonomy "
+              "patterns map a slot to their state's own copy; a slot the taxonomy does not state is a readiness gap "
+              "for its owner and stays unfilled here. The others name one distinct key of the pattern's category per "
+              "slot. Whether the copy meets the criterion is held for human review.", ""]
     rows = []
     for pattern in voice["patterns"]:
         state = pattern["taxonomy_state"]
-        slots = ["taxonomy" if state else code(pattern["slots"][slot]) for slot in SLOTS]
+        slots = [code(pattern["slots"][slot]) if pattern["slots"][slot] else f"not stated (held: {STATE_SOURCE})"
+                 for slot in SLOTS]
         rows.append([pattern["id"], code(f"state.{state}") if state else "none", *slots])
     lines += table(["Pattern", "Taxonomy state", *SLOTS], rows)
     return lines

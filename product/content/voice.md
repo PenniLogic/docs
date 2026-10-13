@@ -58,15 +58,15 @@ Applied by reference from `product/client-state-taxonomy.json` (never restated h
 
 ## Content patterns
 
-Taxonomy patterns reuse their state's copy; the others name one message key per slot.
+Each pattern must state source, status, consequence, safe remainder and next action. Taxonomy patterns map a slot to their state's own copy; a slot the taxonomy does not state is a readiness gap for its owner and stays unfilled here. The others name one distinct key of the pattern's category per slot. Whether the copy meets the criterion is held for human review.
 
 | Pattern | Taxonomy state | source | status | consequence | safe_remainder | next_action |
 |---|---|---|---|---|---|---|
-| empty | `state.empty` | taxonomy | taxonomy | taxonomy | taxonomy | taxonomy |
-| loading | `state.loading` | taxonomy | taxonomy | taxonomy | taxonomy | taxonomy |
-| error | `state.error` | taxonomy | taxonomy | taxonomy | taxonomy | taxonomy |
-| stale | `state.stale` | taxonomy | taxonomy | taxonomy | taxonomy | taxonomy |
-| denied | `state.permission_denied` | taxonomy | taxonomy | taxonomy | taxonomy | taxonomy |
+| empty | `state.empty` | not stated (held: PenniLogic/docs#1) | `state.empty.headline` | not stated (held: PenniLogic/docs#1) | not stated (held: PenniLogic/docs#1) | `state.empty.action` |
+| loading | `state.loading` | not stated (held: PenniLogic/docs#1) | `state.loading.headline` | not stated (held: PenniLogic/docs#1) | not stated (held: PenniLogic/docs#1) | `state.loading.action` |
+| error | `state.error` | not stated (held: PenniLogic/docs#1) | `state.error.headline` | not stated (held: PenniLogic/docs#1) | not stated (held: PenniLogic/docs#1) | `state.error.action` |
+| stale | `state.stale` | `state.stale.body` | `state.stale.headline` | not stated (held: PenniLogic/docs#1) | not stated (held: PenniLogic/docs#1) | `state.stale.action` |
+| denied | `state.permission_denied` | not stated (held: PenniLogic/docs#1) | `state.permission_denied.headline` | not stated (held: PenniLogic/docs#1) | `state.permission_denied.body` | `state.permission_denied.action` |
 | destructive | none | `pattern.destructive.source` | `pattern.destructive.status` | `pattern.destructive.consequence` | `pattern.destructive.safe_remainder` | `pattern.destructive.next_action` |
 | success | none | `pattern.success.source` | `pattern.success.status` | `pattern.success.consequence` | `pattern.success.safe_remainder` | `pattern.success.next_action` |
 | recovery | none | `pattern.recovery.source` | `pattern.recovery.status` | `pattern.recovery.consequence` | `pattern.recovery.safe_remainder` | `pattern.recovery.next_action` |

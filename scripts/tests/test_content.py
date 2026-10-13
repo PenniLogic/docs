@@ -81,12 +81,18 @@ SLOT_KEYS = {
     "source": "debt.delete.source", "status": "debt.delete.status", "consequence": "debt.delete.consequence",
     "safe_remainder": "debt.delete.remainder", "next_action": "debt.delete.next",
 }
+# Each non-taxonomy pattern fills its slots with distinct keys of its own category (review round 1 F-04).
+PATTERN_KEYS = {
+    "destructive": SLOT_KEYS,
+    "success": {slot: f"debt.saved.{slot}" for slot in content.SLOTS},
+    "recovery": {slot: f"debt.restored.{slot}" for slot in content.SLOTS},
+}
 
 
 def voice():
     patterns = []
     for identifier, state in content.PATTERN_STATES.items():
-        slots = {slot: (None if state else SLOT_KEYS[slot]) for slot in content.SLOTS}
+        slots = {slot: (None if state else PATTERN_KEYS[identifier][slot]) for slot in content.SLOTS}
         patterns.append({"id": identifier, "taxonomy_state": state, "slots": slots})
     return {
         "schema_version": 1, "voice_version": "0.1.0", "source_issue": "PenniLogic/docs#84",
@@ -123,6 +129,16 @@ def catalogue():
         key("debt.delete.consequence", "It no longer counts in totals", "destructive"),
         key("debt.delete.remainder", "Your other records stay as they are", "destructive"),
         key("debt.delete.next", "Review {item}", "destructive"),
+        key("debt.saved.source", "From your debts list", "success"),
+        key("debt.saved.status", "This debt is saved", "success"),
+        key("debt.saved.consequence", "Totals now include it", "success"),
+        key("debt.saved.safe_remainder", "Nothing else was changed", "success"),
+        key("debt.saved.next_action", "Done", "success"),
+        key("debt.restored.source", "From your last saved copy", "recovery"),
+        key("debt.restored.status", "Your list is back", "recovery"),
+        key("debt.restored.consequence", "Totals match the saved copy", "recovery"),
+        key("debt.restored.safe_remainder", "Other records stay as they are", "recovery"),
+        key("debt.restored.next_action", "Review {item}", "recovery"),
         key("state.empty.headline", None, "empty"),
         key("common.safe_exit.notification", "You have an update", "notification", neutral_safe_exit=True),
         key("common.safe_exit.denial", "This is not available here", "denial", neutral_safe_exit=True),
@@ -229,18 +245,21 @@ class ControlTests(Harness):
     def test_synthetic_content_set_passes_structure(self):
         model = self.assertControlPasses()
         self.assertEqual(len(model.terms), 8)
-        self.assertEqual(len(model.keys), 17)
+        self.assertEqual(len(model.keys), 27)
 
     def test_synthetic_content_set_reports_exact_readiness_gaps(self):
         gaps = content.readiness(self.assertControlPasses())
         self.assertEqual(tuple(gaps), content.READINESS_RULES)
         self.assertEqual(gaps["readiness.comprehension_evidence"], sorted(f"term.{slug}" for slug in COMPREHENSION))
         self.assertEqual(len(gaps["readiness.term_unapproved"]), 8)
-        self.assertEqual(len(gaps["readiness.key_unapproved"]), 17)
+        self.assertEqual(len(gaps["readiness.key_unapproved"]), 27)
         self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 10)])
         self.assertEqual(gaps["readiness.reading_level_provisional"], ["voice.reading_level"])
         self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
         self.assertEqual(gaps["readiness.nav_labels_held"], ["PenniLogic/docs#74"])
+        self.assertEqual(gaps["readiness.pattern_slot_unstated"], sorted(
+            f"pattern.{identifier}.{slot}" for identifier in ("empty", "loading", "error", "stale", "denied")
+            for slot in content.SLOTS))
 
     def test_rule_identifiers_are_unique_and_each_is_raised_somewhere(self):
         rules = content.STRUCTURE_RULES + content.READINESS_RULES
@@ -426,6 +445,30 @@ class PatternTests(Harness):
     def test_pattern_slot_references_a_key_with_copy(self):
         self.assertRefused(lambda d: pattern(d, "recovery")["slots"].update(next_action="state.empty.headline"),
                            "pattern.unknown_key", "recovery")
+
+    # Review round 1 F-04: criterion 2 slots are mapped, counted when unstated, and never filled by one key.
+    def test_taxonomy_slot_maps_its_own_state_copy_and_leaves_the_gap_count(self):
+        docs = documents()
+        pattern(docs, "empty")["slots"].update(status="state.empty.headline")
+        gaps = content.readiness(self.run_check(docs))
+        self.assertNotIn("pattern.empty.status", gaps["readiness.pattern_slot_unstated"])
+        self.assertEqual(len(gaps["readiness.pattern_slot_unstated"]), 24)
+
+    def test_taxonomy_slot_may_not_name_another_states_copy(self):
+        self.assertRefused(lambda d: pattern(d, "loading")["slots"].update(status="state.empty.headline"),
+                           "pattern.state_copy_forked", "loading")
+
+    def test_taxonomy_slot_names_an_existing_state_key(self):
+        self.assertRefused(lambda d: pattern(d, "empty")["slots"].update(status="state.empty.body"),
+                           "pattern.unknown_key", "empty")
+
+    def test_non_taxonomy_slot_key_has_the_patterns_category(self):
+        self.assertRefused(lambda d: pattern(d, "destructive")["slots"].update(status="debt.saved.status"),
+                           "pattern.slot_category", "destructive")
+
+    def test_non_taxonomy_pattern_uses_five_distinct_keys(self):
+        self.assertRefused(lambda d: pattern(d, "success")["slots"].update(safe_remainder="debt.saved.consequence"),
+                           "pattern.slot_reused", "success")
 
 
 def add_key(docs, entry):
@@ -1345,15 +1388,15 @@ class CommandLineTests(unittest.TestCase):
         self.assertTrue(lines[1].startswith("Content glossary 0.1.0 structure valid: 8 terms (7 need comprehension"))
         self.assertEqual(lines[2:], [
             "readiness.comprehension_evidence: 7", "readiness.reading_level_provisional: 1",
-            "readiness.term_unapproved: 8", "readiness.key_unapproved: 17", "readiness.regulated_unapproved: 9",
-            "readiness.approver_unassigned: 1", "readiness.nav_labels_held: 1",
+            "readiness.term_unapproved: 8", "readiness.key_unapproved: 27", "readiness.regulated_unapproved: 9",
+            "readiness.approver_unassigned: 1", "readiness.nav_labels_held: 1", "readiness.pattern_slot_unstated: 25",
         ])
 
     def test_structure_mode_passes_without_readiness(self):
         code, out, err = self.main("--structure")
         self.assertEqual((code, err), (0, ""))
         self.assertTrue(out.rstrip().endswith("0 approved; readiness not evaluated."))
-        self.assertIn("17 keys (1 state., 0 nav., 9 reg., 2 common.)", out)
+        self.assertIn("27 keys (1 state., 0 nav., 9 reg., 2 common.)", out)
 
     def test_invalid_now_is_refused(self):
         self.assertEqual(self.main("--structure", "--now", "tomorrow"),
@@ -1365,13 +1408,10 @@ class CommandLineTests(unittest.TestCase):
     def test_removed_key_against_the_committed_base(self):
         docs = documents()
         docs["message-keys"]["keys"] = [entry for entry in docs["message-keys"]["keys"]
-                                        if entry["key"] != "debt.delete.remainder"]
-        for item in docs["voice"]["patterns"]:
-            if item["slots"]["safe_remainder"] == "debt.delete.remainder":
-                item["slots"]["safe_remainder"] = "debt.delete.consequence"
+                                        if entry["key"] != "state.empty.headline"]
         self.repository.write(docs)
         self.assertEqual(self.main("--structure"),
-                         (1, "", "Content check refused: catalogue.key_removed_without_major debt.delete.remainder\n"))
+                         (1, "", "Content check refused: catalogue.key_removed_without_major state.empty.headline\n"))
 
     def test_explicit_base_revision(self):
         self.assertEqual(self.main("--structure", "--base", "main")[0], 0)
@@ -1506,6 +1546,11 @@ class PublishedContentTests(unittest.TestCase):
         self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 12)])
         self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
         self.assertEqual(gaps["readiness.nav_labels_held"], ["PenniLogic/docs#74"])
+        self.assertEqual(gaps["readiness.pattern_slot_unstated"], sorted(
+            [f"pattern.{identifier}.{slot}" for identifier in ("empty", "loading", "error")
+             for slot in ("source", "consequence", "safe_remainder")]
+            + ["pattern.stale.consequence", "pattern.stale.safe_remainder", "pattern.denied.source",
+               "pattern.denied.consequence"]))
 
     def test_every_published_judgment_is_proposed_and_nothing_is_approved(self):
         self.assertEqual(self.docs["glossary"]["status"], "provisional")
