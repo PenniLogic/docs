@@ -1,0 +1,881 @@
+"""T-DSY-02 validator tests: synthetic library, component, release and tabletop fixtures.
+
+Every rule test builds a fresh deep copy of one synthetic document, proves it passes (the control), applies exactly
+one mutation and asserts the exact static rule identifier and offending identifier. Fixture-mode documents use only
+the reserved C-SYN-* component prefix and a synthetic registry pin served from memory; they may publish so that the
+published-component, breaking-change and deprecation rules are exercised. Real-mode documents (the mode the command
+line uses) hold no components and only draft releases, proving the held rules: no publication, no recorded CDO
+decision, no direction or token reference. No fixture is an approval, a Figma permission, a live verification or a
+real component. Command-line tests run against temporary directories outside this repository; one test reads the
+real pinned registry from this checkout's local Git object store. Nothing here touches the network or writes inside
+the repository.
+"""
+
+import contextlib
+import copy
+import hashlib
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path
+import shutil
+import tempfile
+import unittest
+from unittest import mock
+
+
+ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location("check_figma_libraries", ROOT / "scripts/check_figma_libraries.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+SCHEMA = module.support.load_json(ROOT / module.SCHEMA)
+POLICY = module.support.load_json(ROOT / module.GATES)
+POLICY_SCHEMA = module.support.load_json(ROOT / module.gates.SCHEMA)
+REGISTRY_PATH = "planning/source/evidence/experience-coverage.json"
+SYNTHETIC_COMMIT = "1" * 40
+DECISION = {"commit": "2" * 40, "path": "governance/synthetic-decision.json", "sha256": "sha256:" + "a" * 64}
+
+
+def encode(value):
+    return (json.dumps(value, indent=2, ensure_ascii=True) + "\n").encode("utf-8")
+
+
+def pinned(components):
+    """A synthetic registry blob and its {commit, path, sha256} pin."""
+    blob = encode({"components": [{"id": key, "platforms": value} for key, value in components]})
+    return blob, {"commit": SYNTHETIC_COMMIT, "path": REGISTRY_PATH,
+                  "sha256": "sha256:" + hashlib.sha256(blob).hexdigest()}
+
+
+FIXTURE_BLOB, FIXTURE_PIN = pinned([
+    ("C-SYN-BUTTON", ["android", "web", "admin"]), ("C-SYN-CHIP", ["android", "web", "admin"]),
+    ("C-SYN-DRAFT", ["web"]), ("C-SYN-PINNED", ["admin"]),
+])
+REAL_BLOB, REAL_PIN = pinned([])
+
+
+class Sources:
+    """In-memory stand-in for GitSources."""
+
+    def __init__(self, blobs):
+        self.blobs = blobs
+
+    def blob(self, commit, path):
+        try:
+            return self.blobs[(commit, path)]
+        except KeyError:
+            raise LookupError(path) from None
+
+
+SOURCES = Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): FIXTURE_BLOB})
+REAL_SOURCES = Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): REAL_BLOB})
+
+
+def library(identifier, kind, figma_file, page, publish, consumes):
+    return {"id": identifier, "kind": kind, "figma_file": figma_file, "figma_page": page, "owner_role": "systems",
+            "publish_roles": publish, "consumes": consumes, "status": "shell"}
+
+
+def release(name, previous, change, status, breaking=False, migration=None, approval="recorded"):
+    library_id, version = name.split("@")
+    cdo = None
+    if change == "major":
+        cdo = {"role": "decision_coordinator", "scope": "shared_system_major", "status": approval,
+               "decision_source": copy.deepcopy(DECISION) if approval == "recorded" else None}
+    return {"library": library_id, "version": version, "previous": previous, "change_class": change,
+            "breaking": breaking, "status": status, "migration_plan_ref": migration, "cdo_approval": cdo,
+            "rollback_to": None}
+
+
+def component(identifier, name, library_id="LIB-COMPONENTS", status="published", role=None, platforms=None,
+              properties=None, variant_of=None, since="1.0.0"):
+    return {
+        "id": identifier, "name": name, "library": library_id, "status": status,
+        "semantic_role": role or name.lower(), "owner_role": "systems",
+        "description": f"Synthetic {name.lower()} fixture; not a real component.",
+        "platforms": platforms or ["android", "web", "admin"],
+        "properties": properties if properties is not None else [
+            {"name": "emphasis", "type": "enum", "values": ["primary", "secondary"], "default": "primary",
+             "required": True},
+        ],
+        "accessibility": {"role": "button", "accessible_name": "Visible label", "focus": "Focusable in reading order",
+                          "announcements": "Announces state changes"},
+        "variant_of": variant_of, "since_version": since, "deprecation": None, "proposal_branch": None,
+        "token_refs": [],
+    }
+
+
+def libraries():
+    return [
+        library("LIB-FOUNDATION", "foundation", "02 - Foundations library", "Foundations", ["systems"], []),
+        library("LIB-COMPONENTS", "shared_semantic", "03 - Components library", "Components", ["systems"],
+                ["LIB-FOUNDATION"]),
+        library("LIB-ANDROID", "platform_variant", "03 - Components library", "Android variants", ["systems"],
+                ["LIB-FOUNDATION", "LIB-COMPONENTS"]),
+        library("LIB-WEB", "platform_variant", "03 - Components library", "Web variants", ["systems"],
+                ["LIB-FOUNDATION", "LIB-COMPONENTS"]),
+        library("LIB-ADMIN", "platform_variant", "03 - Components library", "Admin variants", ["systems"],
+                ["LIB-FOUNDATION", "LIB-COMPONENTS"]),
+        library("LIB-CANDIDATE", "candidate", None, None, [], ["LIB-FOUNDATION", "LIB-COMPONENTS"]),
+    ]
+
+
+def tabletop():
+    rows = []
+    for name in module.SHARED:
+        rows.append(("publish", "android_design", name, False, "refused"))
+        rows.append(("publish", "systems", name, True, "refused"))
+    rows += [
+        ("publish", "systems", "LIB-COMPONENTS", False, "model_permitted"),
+        ("edit", "web_design", "LIB-COMPONENTS", False, "refused"),
+        ("comment", "admin_design", "LIB-COMPONENTS", False, "model_permitted"),
+        ("public_link", "systems", "LIB-COMPONENTS", False, "refused"),
+        ("export", "systems", "LIB-FOUNDATION", False, "refused"),
+    ]
+    return [{"id": f"TT-{index:02d}", "action": action, "role": role, "library": name, "offboarded": offboarded,
+             "expected": expected, "evidence_class": "tabletop", "live_verified": False}
+            for index, (action, role, name, offboarded, expected) in enumerate(rows, start=1)]
+
+
+def fixture():
+    """Fixture mode: synthetic published components, a recorded synthetic CDO decision and a pending breaking major."""
+    chip = component("C-SYN-CHIP", "Chip", status="deprecated", role="filter toggle", properties=[
+        {"name": "selected", "type": "boolean", "values": [], "default": "false", "required": False},
+    ])
+    chip["deprecation"] = {"replacement": "C-SYN-BUTTON", "removal_version": "2.0.0", "available_until_removal": True}
+    draft = component("C-SYN-DRAFT", "Draft banner", status="draft", since=None)
+    draft.update(semantic_role=None, owner_role=None, description=None, properties=[], accessibility=None)
+    local = component("C-SYN-LOCAL", "Local card", library_id="LIB-CANDIDATE", status="candidate",
+                      role="summary card", since=None, properties=[
+                          {"name": "body", "type": "slot", "values": [], "default": None, "required": True},
+                      ])
+    local.update(owner_role="android_design", platforms=["android"], proposal_branch="T-DSY-02__android__local-card")
+    return {
+        "schema_version": 1, "contract_version": "1.0.0", "source_issue": "PenniLogic/docs#78", "plan_id": "T-DSY-02",
+        "registry_ref": copy.deepcopy(FIXTURE_PIN), "direction_ref": None,
+        "access": {"public_links_enabled": False, "external_sharing_enabled": False, "asset_export_enabled": False,
+                   "offboarding_revokes": True},
+        "libraries": [dict(item, status="active") if item["id"] in ("LIB-COMPONENTS", "LIB-ANDROID") else item
+                      for item in libraries()],
+        "releases": [
+            release("LIB-COMPONENTS@1.0.0", None, "major", "published"),
+            release("LIB-COMPONENTS@2.0.0", "1.0.0", "major", "draft", breaking=True,
+                    migration="pending:PenniLogic/docs#78", approval="pending"),
+            release("LIB-ANDROID@1.0.0", None, "major", "published"),
+        ],
+        "components": [
+            component("C-SYN-BUTTON", "Button", role="primary action"), chip, draft,
+            component("C-SYN-BUTTON-AND", "Android button", library_id="LIB-ANDROID", platforms=["android"],
+                      variant_of="C-SYN-BUTTON", role="primary action"),
+            local,
+        ],
+        "tabletop": tabletop(),
+        "approvals": [{"role": role, "status": "not_recorded"} for role in module.APPROVAL_ROLES],
+    }
+
+
+def real():
+    """Real mode (the command line's): no components, draft releases, pending CDO approvals only."""
+    document = fixture()
+    document["registry_ref"] = copy.deepcopy(REAL_PIN)
+    document["libraries"] = libraries()
+    document["components"] = []
+    document["releases"] = [
+        release("LIB-COMPONENTS@1.0.0", None, "major", "draft", approval="pending"),
+        release("LIB-COMPONENTS@1.1.0", "1.0.0", "minor", "draft"),
+    ]
+    return document
+
+
+def run_check(document, fixture_mode=True):
+    if fixture_mode:
+        return module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, SOURCES, pin=FIXTURE_PIN, fixture=True)
+    return module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, REAL_SOURCES, pin=REAL_PIN)
+
+
+def planted_token():
+    """A key-shaped value built at run time so no secret-shaped literal is committed."""
+    return "".join(chr(ord("A") + index % 26) + str(index % 10) for index in range(20))
+
+
+class RuleCase(unittest.TestCase):
+    def assertRefused(self, mutate, rule, *subjects, fixture_mode=True):
+        """Control passes, exactly one mutation, then the exact rule and offending IDs (and no echoed input)."""
+        document = fixture() if fixture_mode else real()
+        run_check(copy.deepcopy(document), fixture_mode)
+        mutate(document)
+        with self.assertRaises(module.Refused) as caught:
+            run_check(document, fixture_mode)
+        self.assertEqual(caught.exception.rule, rule)
+        self.assertEqual(caught.exception.subject, " ".join(subjects) if subjects else None)
+        self.assertEqual(str(caught.exception), " ".join((rule, *subjects)))
+        return caught.exception
+
+
+def find(document, collection, identifier):
+    return next(item for item in document[collection] if item.get("id") == identifier)
+
+
+def find_release(document, name):
+    library_id, version = name.split("@")
+    return next(item for item in document["releases"] if (item["library"], item["version"]) == (library_id, version))
+
+
+class BaselineTests(unittest.TestCase):
+    def test_fixture_and_real_documents_pass_structure(self):
+        model = run_check(fixture())
+        self.assertEqual(len(model.components), 5)
+        self.assertEqual(len(run_check(real(), False).releases), 2)
+
+    def test_rule_identifiers_are_static_and_unique(self):
+        rules = module.STRUCTURE_RULES + module.READINESS_RULES
+        self.assertEqual(len(rules), len(set(rules)))
+        source = (ROOT / "scripts/check_figma_libraries.py").read_text(encoding="utf-8")
+        for rule in rules:
+            self.assertIn(f'"{rule}"', source)
+
+    def test_fixture_readiness_gaps_are_exact(self):
+        gaps = module.readiness(run_check(fixture()))
+        self.assertEqual(gaps, {
+            "readiness.direction_missing": ["PenniLogic/docs#76"],
+            "readiness.tokens_unpublished": ["PenniLogic/docs#55"],
+            "readiness.approval_not_recorded": sorted(module.APPROVAL_ROLES),
+            "readiness.cdo_decision_pending": ["LIB-COMPONENTS@2.0.0"],
+            "readiness.cdo_decision_unverified": ["LIB-ANDROID@1.0.0", "LIB-COMPONENTS@1.0.0"],
+            "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 16)],
+            "readiness.component_not_in_registry": ["C-SYN-BUTTON-AND", "C-SYN-LOCAL"],
+            "readiness.registry_component_ungoverned": ["C-SYN-PINNED"],
+        })
+
+    def test_refused_never_prints_unvalidated_subjects(self):
+        self.assertEqual(str(module.Refused("schema.invalid", "free text")), "schema.invalid")
+        self.assertEqual(str(module.Refused("schema.invalid", "C-SYN-BUTTON", "x")), "schema.invalid")
+        self.assertEqual(str(module.Refused("id.duplicate", "C-SYN-BUTTON")), "id.duplicate C-SYN-BUTTON")
+        self.assertFalse(module.printable("LIB-OTHER@1.0.0"))
+        self.assertTrue(module.printable("LIB-WEB@1.0.0"))
+        self.assertFalse(module.printable("not_a_role"))
+
+
+class StructureTests(RuleCase):
+    def test_unknown_field_is_schema_invalid(self):
+        self.assertRefused(lambda d: d.update(extra=True), "schema.invalid")
+
+    def test_nullable_object_shape_is_checked_in_code(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON")["accessibility"].pop("focus"),
+                           "schema.invalid", "C-SYN-BUTTON")
+
+    def test_secret_shape_is_refused_without_echo(self):
+        token = planted_token()
+        error = self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON").update(description=token),
+                                   "content.secret_shape", "C-SYN-BUTTON")
+        self.assertNotIn(token, str(error))
+
+    def test_public_link_shape_is_refused(self):
+        link = "https" + "://" + "example" + ".com/file/abc"
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON").update(description=link),
+                           "content.url_shape", "C-SYN-BUTTON")
+
+    def test_email_shape_is_refused(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="owner" + "@" + "team"),
+                           "content.email_shape", "C-SYN-DRAFT")
+
+    def test_padded_text_is_refused(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name=" Draft banner"),
+                           "content.blank_or_padded", "C-SYN-DRAFT")
+
+    def test_unprintable_character_is_refused(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Draft\u00a0banner"),
+                           "content.unprintable_character", "C-SYN-DRAFT")
+
+    def test_text_length_is_bounded(self):
+        document = fixture()
+        find(document, "components", "C-SYN-DRAFT")["name"] = "Draft " * 66 + "x"  # 397 characters pass
+        run_check(document)
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Draft " * 67),
+                           "content.too_long", "C-SYN-DRAFT")
+
+    def test_phone_shape_is_refused(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Call 98 7654 3210"),
+                           "content.phone_shape", "C-SYN-DRAFT")
+
+    def test_numbers_only_at_the_schema_version(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-WEB")["publish_roles"].append(7), "schema.invalid")
+        self.assertRefused(lambda d: d.update(schema_version=1.0), "schema.invalid")
+
+    def test_registry_digest_hex_is_exempt_only_at_its_path(self):
+        digest = FIXTURE_PIN["sha256"]
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name=digest),
+                           "content.secret_shape", "C-SYN-DRAFT")
+
+    def test_policy_must_be_the_accepted_design_gates_vocabulary(self):
+        document = fixture()
+        run_check(copy.deepcopy(document))
+        policy = copy.deepcopy(POLICY)
+        policy["cdo_equivalent_scopes"].remove("shared_system_major")
+        with self.assertRaises(module.Refused) as caught:
+            module.check(document, SCHEMA, policy, POLICY_SCHEMA, SOURCES, pin=FIXTURE_PIN, fixture=True)
+        self.assertEqual(str(caught.exception), "policy.invalid")
+
+
+class RegistryTests(RuleCase):
+    def test_registry_ref_must_equal_the_pin(self):
+        self.assertRefused(lambda d: d["registry_ref"].update(path="product/experience-coverage.json"),
+                           "registry.ref_mismatch")
+
+    def test_unavailable_pinned_blob_is_refused(self):
+        document = fixture()
+        run_check(copy.deepcopy(document))
+        with self.assertRaises(module.Refused) as caught:
+            module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, Sources({}), pin=FIXTURE_PIN, fixture=True)
+        self.assertEqual(str(caught.exception), "registry.unavailable")
+
+    def test_digest_mismatch_is_refused(self):
+        document = fixture()
+        run_check(copy.deepcopy(document))
+        forged = Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): FIXTURE_BLOB + b" "})
+        with self.assertRaises(module.Refused) as caught:
+            module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, forged, pin=FIXTURE_PIN, fixture=True)
+        self.assertEqual(str(caught.exception), "registry.digest_mismatch")
+
+    def test_synthetic_ids_in_a_real_registry_are_invalid(self):
+        blob, pin = pinned([("C-SYN-BUTTON", ["web"])])
+        document = real()
+        run_check(copy.deepcopy(document), False)
+        document["registry_ref"] = pin
+        with self.assertRaises(module.Refused) as caught:
+            module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}),
+                         pin=pin)
+        self.assertEqual(str(caught.exception), "registry.invalid")
+
+    def test_ids_outside_the_pin_are_readiness_gaps_not_failures(self):
+        document = fixture()
+        find(document, "components", "C-SYN-DRAFT")["id"] = "C-SYN-NEW"
+        gaps = module.readiness(run_check(document))
+        self.assertEqual(gaps["readiness.component_not_in_registry"], ["C-SYN-BUTTON-AND", "C-SYN-LOCAL", "C-SYN-NEW"])
+        self.assertEqual(gaps["readiness.registry_component_ungoverned"], ["C-SYN-DRAFT", "C-SYN-PINNED"])
+
+
+class RealRegistryTests(unittest.TestCase):
+    def test_pinned_registry_is_read_from_the_local_object_store(self):
+        document = {"registry_ref": copy.deepcopy(module.REGISTRY_PIN)}
+        components = module.read_registry(document, module.GitSources(ROOT), module.REGISTRY_PIN, False)
+        self.assertEqual(len(components), 57)
+        self.assertFalse(any(key.startswith(module.SYNTHETIC_PREFIX) for key in components))
+
+    def test_git_is_resolved_outside_the_repository(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        root = Path(folder.name) / "candidate"
+        planted = root / "tools"
+        planted.mkdir(parents=True)
+        name = "git.exe" if os.name == "nt" else "git"
+        (planted / name).write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (planted / name).chmod(0o755)
+        real_git = Path(shutil.which("git")).parent
+        for path in ([str(real_git)], [str(planted), str(real_git)], ["", ".", "tools", str(real_git)],
+                     [str(root), str(real_git)]):
+            with self.subTest(path=path), mock.patch.dict(os.environ, {"PATH": os.pathsep.join(path)}):
+                self.assertEqual(Path(module.trusted_git(root)).parent, real_git)
+        with mock.patch.dict(os.environ, {"PATH": os.pathsep.join([str(planted), "."])}):
+            with self.assertRaises(LookupError):
+                module.trusted_git(root)
+            with self.assertRaises(module.Refused) as caught:
+                module.read_registry({"registry_ref": module.REGISTRY_PIN}, module.GitSources(root),
+                                     module.REGISTRY_PIN, False)
+            self.assertEqual(str(caught.exception), "registry.unavailable")
+
+
+class LibraryTests(RuleCase):
+    def test_library_set_is_exact(self):
+        self.assertRefused(lambda d: d["libraries"].pop(), "library.set_mismatch")
+
+    def test_duplicate_library_is_refused(self):
+        self.assertRefused(lambda d: d["libraries"].append(copy.deepcopy(d["libraries"][0])), "library.set_mismatch",
+                           "LIB-FOUNDATION")
+
+    def test_kind_follows_the_identifier(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-WEB").update(kind="shared_semantic"),
+                           "library.kind_mismatch", "LIB-WEB")
+
+    def test_location_is_the_reserved_file_and_page(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-ADMIN").update(figma_page="Web variants"),
+                           "library.location_mismatch", "LIB-ADMIN")
+
+    def test_candidates_have_no_shared_file(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-CANDIDATE").update(
+            figma_file="03 - Components library", figma_page="Components"), "library.location_mismatch",
+            "LIB-CANDIDATE")
+
+    def test_owner_is_the_artifact_class_accountable_role(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-COMPONENTS").update(owner_role="design_ops"),
+                           "library.owner_mismatch", "LIB-COMPONENTS")
+
+    def test_consumption_only_of_lower_layers(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-COMPONENTS")["consumes"].append("LIB-WEB"),
+                           "topology.invalid_consumption", "LIB-COMPONENTS", "LIB-WEB")
+
+    def test_platform_libraries_cannot_consume_each_other(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-WEB")["consumes"].append("LIB-ANDROID"),
+                           "topology.invalid_consumption", "LIB-WEB", "LIB-ANDROID")
+
+    def test_shared_libraries_never_consume_candidates(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-ADMIN")["consumes"].append("LIB-CANDIDATE"),
+                           "topology.invalid_consumption", "LIB-ADMIN", "LIB-CANDIDATE")
+
+    def test_shell_library_has_no_published_release(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-ANDROID").update(status="shell"),
+                           "library.status_mismatch", "LIB-ANDROID")
+
+    def test_active_library_has_a_published_release(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-WEB").update(status="active"),
+                           "library.status_mismatch", "LIB-WEB")
+
+    def test_frozen_library_keeps_its_releases(self):
+        document = fixture()
+        find(document, "libraries", "LIB-ANDROID")["status"] = "frozen"
+        run_check(document)
+
+    def test_platform_library_must_consume_the_semantic_library(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-ANDROID")["consumes"].remove("LIB-COMPONENTS"),
+                           "topology.missing_dependency", "LIB-ANDROID", "LIB-COMPONENTS")
+
+
+class PermissionTests(RuleCase):
+    def test_feature_squad_can_never_publish_to_a_shared_library(self):
+        for name in module.SHARED:
+            with self.subTest(library=name):
+                self.assertRefused(lambda d: find(d, "libraries", name)["publish_roles"].append("web_design"),
+                                   "permission.feature_squad_publish", name, "web_design")
+
+    def test_only_named_maintainer_roles_publish(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-COMPONENTS")["publish_roles"].append("design_ops"),
+                           "permission.publish_not_maintainer", "LIB-COMPONENTS", "design_ops")
+
+    def test_unknown_publish_role_is_refused(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-COMPONENTS")["publish_roles"].append("cdo"),
+                           "role.unknown", "LIB-COMPONENTS")
+
+    def test_candidate_library_has_no_publishers(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-CANDIDATE")["publish_roles"].append("systems"),
+                           "permission.candidate_publish", "LIB-CANDIDATE", "systems")
+
+    def test_public_links_are_disabled(self):
+        self.assertRefused(lambda d: d["access"].update(public_links_enabled=True), "access.public_links")
+
+    def test_external_sharing_is_disabled(self):
+        self.assertRefused(lambda d: d["access"].update(external_sharing_enabled=True), "access.external_sharing")
+
+    def test_asset_export_is_disabled(self):
+        self.assertRefused(lambda d: d["access"].update(asset_export_enabled=True), "access.asset_export")
+
+    def test_offboarding_revokes(self):
+        self.assertRefused(lambda d: d["access"].update(offboarding_revokes=False), "access.offboarding_not_revoking")
+
+
+class TabletopTests(RuleCase):
+    def test_tabletop_never_claims_live_verification(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-11").update(live_verified=True), "tabletop.live_claim",
+                           "TT-11")
+
+    def test_feature_squad_publish_outcome_is_refused(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-01").update(expected="model_permitted"),
+                           "tabletop.outcome_mismatch", "TT-01")
+
+    def test_offboarded_maintainer_is_refused(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-04").update(expected="model_permitted"),
+                           "tabletop.outcome_mismatch", "TT-04")
+
+    def test_offboarding_revokes_a_permitted_request(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-11").update(offboarded=True),
+                           "tabletop.outcome_mismatch", "TT-11")
+
+    def test_feature_squad_cannot_edit_a_shared_library(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-12").update(expected="model_permitted"),
+                           "tabletop.outcome_mismatch", "TT-12")
+
+    def test_public_link_request_is_refused_even_for_maintainers(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-14").update(expected="model_permitted"),
+                           "tabletop.outcome_mismatch", "TT-14")
+
+    def test_unknown_role_is_refused(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-13").update(role="cdo"), "role.unknown", "TT-13")
+
+    def test_duplicate_scenario_is_refused(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-02").update(id="TT-01"), "tabletop.duplicate", "TT-01")
+
+    def test_every_shared_library_has_a_feature_squad_publish_case(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-03").update(role="design_ops"),
+                           "tabletop.coverage_missing", "LIB-COMPONENTS")
+
+    def test_every_shared_library_has_an_offboarding_case(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-10").update(offboarded=False, expected="model_permitted"),
+                           "tabletop.coverage_missing", "LIB-ADMIN")
+
+    def test_export_case_is_required(self):
+        self.assertRefused(lambda d: find(d, "tabletop", "TT-15").update(action="public_link"),
+                           "tabletop.coverage_missing")
+
+
+class HeldTests(RuleCase):
+    def test_direction_reference_is_held_until_docs_76(self):
+        self.assertRefused(lambda d: d.update(direction_ref="synthetic direction"), "held.direction_ref",
+                           fixture_mode=False)
+
+    def test_token_references_are_held_until_docs_55(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT")["token_refs"].append("color.action"),
+                           "held.token_refs", "C-SYN-DRAFT")
+
+    def test_real_data_never_publishes_a_release(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0").update(status="published"),
+                           "held.publication", "LIB-COMPONENTS@1.0.0", fixture_mode=False)
+
+    def test_real_data_never_records_a_cdo_decision(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0")["cdo_approval"].update(status="recorded"),
+                           "held.cdo_recorded", "LIB-COMPONENTS@1.0.0", fixture_mode=False)
+
+    def test_real_data_refuses_synthetic_component_ids(self):
+        draft = fixture()["components"][2]
+        self.assertRefused(lambda d: d["components"].append(draft), "id.synthetic_reserved", "C-SYN-DRAFT",
+                           fixture_mode=False)
+
+    def test_approval_records_are_exactly_the_required_roles(self):
+        self.assertRefused(lambda d: d["approvals"].pop(), "approval.roles_mismatch")
+
+    def test_approvals_are_never_recorded_here(self):
+        self.assertRefused(lambda d: d["approvals"][0].update(status="approved"), "schema.invalid")
+
+
+def append_release(document, name, previous, change, status, **options):
+    document["releases"].append(release(name, previous, change, status, **options))
+
+
+class ReleaseTests(RuleCase):
+    def test_release_key_is_library_and_version(self):
+        self.assertRefused(lambda d: d["releases"].append(copy.deepcopy(find_release(d, "LIB-ANDROID@1.0.0"))),
+                           "release.duplicate", "LIB-ANDROID@1.0.0")
+
+    def test_candidate_library_never_releases(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-CANDIDATE@1.0.0", None, "major", "draft"),
+                           "release.candidate_library", "LIB-CANDIDATE@1.0.0")
+
+    def test_previous_version_must_exist(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(previous="1.5.0"),
+                           "release.previous_unknown", "LIB-COMPONENTS@2.0.0")
+
+    def test_version_must_increase(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@0.5.0", "1.0.0", "minor", "draft"),
+                           "release.version_not_increasing", "LIB-COMPONENTS@0.5.0")
+
+    def test_breaking_change_requires_a_major_version(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(change_class="minor"),
+                           "release.breaking_not_major", "LIB-COMPONENTS@2.0.0")
+
+    def test_change_class_follows_the_version_step(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@1.1.0", "1.0.0", "patch", "draft"),
+                           "release.class_mismatch", "LIB-COMPONENTS@1.1.0")
+
+    def test_minor_and_patch_steps_pass(self):
+        document = fixture()
+        append_release(document, "LIB-COMPONENTS@1.1.0", "1.0.0", "minor", "draft")
+        append_release(document, "LIB-COMPONENTS@1.1.1", "1.1.0", "patch", "draft")
+        self.assertEqual(len(run_check(document).releases), 5)
+
+    def test_first_release_is_a_major_at_one_or_later(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-WEB@0.1.0", None, "major", "draft"),
+                           "release.class_mismatch", "LIB-WEB@0.1.0")
+
+    def test_breaking_change_requires_a_migration_plan(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(migration_plan_ref=None),
+                           "release.migration_plan_missing", "LIB-COMPONENTS@2.0.0")
+
+    def test_migration_plan_reference_grammar(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(migration_plan_ref="see plan"),
+                           "schema.invalid")
+
+    def test_migration_plan_reference_names_a_public_repository(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(
+            migration_plan_ref="pending:PenniLogic/figma#5"), "reference.invalid", "LIB-COMPONENTS@2.0.0")
+
+    def test_major_requires_a_cdo_approval_reference(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(cdo_approval=None),
+                           "release.cdo_approval_missing", "LIB-COMPONENTS@2.0.0")
+
+    def test_cdo_is_decision_coordinator_within_shared_system_major(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0")["cdo_approval"].update(
+            role="systems"), "schema.invalid", "LIB-COMPONENTS@2.0.0")
+
+    def test_recorded_approval_names_its_decision_source(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0")["cdo_approval"].update(
+            decision_source=None), "approval.source_mismatch", "LIB-COMPONENTS@1.0.0")
+
+    def test_pending_cdo_approval_blocks_publishing(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(status="published"),
+                           "release.cdo_pending_published", "LIB-COMPONENTS@2.0.0")
+
+    def test_pending_migration_plan_blocks_publishing(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@1.1.0", "1.0.0", "minor", "published",
+                                                    migration="pending:PenniLogic/docs#78"),
+                           "release.migration_plan_pending_published", "LIB-COMPONENTS@1.1.0")
+
+    def test_rollback_restores_the_prior_published_version(self):
+        document = fixture()
+        find_release(document, "LIB-COMPONENTS@2.0.0").update(status="rolled_back", rollback_to="1.0.0")
+        model = run_check(document)
+        self.assertEqual(len(model.components), 5)  # dependent component records stay listed
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(status="rolled_back"),
+                           "release.rollback_target", "LIB-COMPONENTS@2.0.0")
+
+    def test_rollback_target_only_on_rolled_back_releases(self):
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(rollback_to="1.0.0"),
+                           "release.rollback_target", "LIB-COMPONENTS@2.0.0")
+
+
+def button(document):
+    return find(document, "components", "C-SYN-BUTTON")
+
+
+def chip_deprecation(document):
+    return find(document, "components", "C-SYN-CHIP")["deprecation"]
+
+
+def first_property(document):
+    return button(document)["properties"][0]
+
+
+class ComponentTests(RuleCase):
+    def test_duplicate_component_id_is_refused(self):
+        self.assertRefused(lambda d: d["components"].append(copy.deepcopy(find(d, "components", "C-SYN-DRAFT"))),
+                           "id.duplicate", "C-SYN-DRAFT")
+
+    def test_foundation_library_holds_no_components(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(library="LIB-FOUNDATION"),
+                           "component.library_invalid", "C-SYN-DRAFT")
+
+    def test_candidates_stay_unpublished(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-LOCAL").update(status="published"),
+                           "component.candidate_published", "C-SYN-LOCAL")
+
+    def test_platform_variant_supports_only_its_platform(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON-AND").update(platforms=["web"]),
+                           "component.platform_mismatch", "C-SYN-BUTTON-AND")
+
+    def test_unknown_owner_role_is_refused(self):
+        self.assertRefused(lambda d: button(d).update(owner_role="cdo"), "role.unknown", "C-SYN-BUTTON")
+
+    def test_shared_component_owner_is_a_maintainer(self):
+        self.assertRefused(lambda d: button(d).update(owner_role="android_design"),
+                           "component.owner_not_maintainer", "C-SYN-BUTTON")
+
+    def test_property_contract(self):
+        mutations = (
+            lambda d: first_property(d).update(values=["primary"], default=None),
+            lambda d: first_property(d).update(default="tertiary"),
+            lambda d: first_property(d).update(type="boolean", default=None),
+            lambda d: first_property(d).update(type="slot", values=[], default="primary"),
+            lambda d: button(d)["properties"].append(copy.deepcopy(first_property(d))),
+        )
+        for index, mutate in enumerate(mutations):
+            with self.subTest(mutation=index):
+                self.assertRefused(mutate, "component.property_contract", "C-SYN-BUTTON")
+
+    def test_variant_names_a_shared_semantic_component(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON-AND").update(variant_of=None),
+                           "component.variant_invalid", "C-SYN-BUTTON-AND")
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-BUTTON-AND").update(variant_of="C-SYN-LOCAL"),
+                           "component.variant_invalid", "C-SYN-BUTTON-AND")
+
+    def test_only_platform_libraries_hold_variants(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(variant_of="C-SYN-BUTTON"),
+                           "component.variant_invalid", "C-SYN-DRAFT")
+
+
+class PublishedComponentTests(RuleCase):
+    """Criterion 1: owner, description, property contract, accessibility behaviour and supported platforms."""
+
+    def test_published_component_completeness(self):
+        cases = (
+            ("owner_role", None, "published.owner_missing"),
+            ("description", None, "published.description_missing"),
+            ("semantic_role", None, "published.semantic_role_missing"),
+            ("properties", [], "published.properties_missing"),
+            ("accessibility", None, "published.accessibility_missing"),
+            ("platforms", [], "published.platforms_missing"),
+            ("since_version", None, "published.release_missing"),
+            ("since_version", "2.0.0", "published.release_missing"),
+        )
+        for field, value, rule in cases:
+            with self.subTest(field=field, value=value):
+                self.assertRefused(lambda d: button(d).update({field: value}), rule, "C-SYN-BUTTON")
+
+    def test_drafts_may_be_incomplete(self):
+        draft = find(run_check(fixture()).document, "components", "C-SYN-DRAFT")
+        self.assertIsNone(draft["owner_role"])
+        self.assertEqual(draft["properties"], [])
+
+
+class DeprecationTests(RuleCase):
+    """Criterion 4: a replacement, a removal version and continued availability through migration."""
+
+    def test_deprecation_only_on_deprecated_components(self):
+        self.assertRefused(lambda d: button(d).update(deprecation=copy.deepcopy(chip_deprecation(d))),
+                           "deprecation.unexpected", "C-SYN-BUTTON")
+
+    def test_deprecated_component_records_its_deprecation(self):
+        self.assertRefused(lambda d: button(d).update(status="deprecated"), "deprecation.missing", "C-SYN-BUTTON")
+
+    def test_replacement_is_required(self):
+        self.assertRefused(lambda d: chip_deprecation(d).update(replacement=None), "deprecation.replacement_missing",
+                           "C-SYN-CHIP")
+
+    def test_replacement_is_another_published_component_of_the_library(self):
+        for replacement in ("C-SYN-CHIP", "C-SYN-DRAFT", "C-SYN-ABSENT", "C-SYN-BUTTON-AND"):
+            with self.subTest(replacement=replacement):
+                self.assertRefused(lambda d: chip_deprecation(d).update(replacement=replacement),
+                                   "deprecation.replacement_invalid", "C-SYN-CHIP")
+
+    def test_removal_version_is_required(self):
+        self.assertRefused(lambda d: chip_deprecation(d).update(removal_version=None),
+                           "deprecation.removal_version_missing", "C-SYN-CHIP")
+
+    def test_removal_version_is_a_later_major(self):
+        for removal in ("1.0.0", "2.1.0", "0.9.0"):
+            with self.subTest(removal=removal):
+                self.assertRefused(lambda d: chip_deprecation(d).update(removal_version=removal),
+                                   "deprecation.removal_version_invalid", "C-SYN-CHIP")
+        document = fixture()
+        chip_deprecation(document).update(removal_version="3.0.0")
+        run_check(document)
+
+    def test_deprecated_component_stays_available_until_removal(self):
+        self.assertRefused(lambda d: chip_deprecation(d).update(available_until_removal=False),
+                           "deprecation.unavailable", "C-SYN-CHIP")
+
+
+def local(document):
+    return find(document, "components", "C-SYN-LOCAL")
+
+
+class DuplicateTests(RuleCase):
+    """Criterion 2: a local duplicate of a published semantic component is rejected by the registry lint."""
+
+    def test_same_semantic_role_is_a_duplicate(self):
+        self.assertRefused(lambda d: local(d).update(semantic_role="Primary  Action"), "duplicate.semantic_component",
+                           "C-SYN-LOCAL", "C-SYN-BUTTON")
+
+    def test_same_normalized_name_is_a_duplicate(self):
+        self.assertRefused(lambda d: local(d).update(name="BUTTON"), "duplicate.semantic_component", "C-SYN-LOCAL",
+                           "C-SYN-BUTTON")
+
+    def test_same_property_signature_is_a_duplicate(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(
+            properties=copy.deepcopy(button(d)["properties"])),
+            "duplicate.semantic_component", "C-SYN-DRAFT", "C-SYN-BUTTON")
+
+    def test_duplicate_of_a_deprecated_published_component(self):
+        self.assertRefused(lambda d: local(d).update(semantic_role="filter toggle"), "duplicate.semantic_component",
+                           "C-SYN-LOCAL", "C-SYN-CHIP")
+
+    def test_platform_library_duplicate_without_variant_link(self):
+        self.assertRefused(lambda d: d["components"].append(component(
+            "C-SYN-WEB-ACTION", "Web action", library_id="LIB-WEB", status="draft", role="primary action",
+            platforms=["web"], variant_of="C-SYN-CHIP", since=None)), "duplicate.semantic_component",
+            "C-SYN-WEB-ACTION", "C-SYN-BUTTON")
+
+    def test_variants_and_replacements_are_not_duplicates(self):
+        model = run_check(fixture())
+        self.assertEqual(model.components["C-SYN-BUTTON-AND"]["semantic_role"],
+                         model.components["C-SYN-BUTTON"]["semantic_role"])
+        self.assertEqual(model.components["C-SYN-CHIP"]["deprecation"]["replacement"], "C-SYN-BUTTON")
+
+    def test_semantic_duplicates_within_the_shared_library(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(semantic_role="primary action"),
+                           "duplicate.semantic_component", "C-SYN-DRAFT", "C-SYN-BUTTON")
+
+
+class ContributionTests(RuleCase):
+    def test_proposal_branches_belong_to_candidates(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(
+            proposal_branch="T-DSY-02__systems__draft-banner"), "contribution.branch_outside_candidates",
+            "C-SYN-DRAFT")
+
+    def test_branch_follows_the_design_operations_grammar(self):
+        for branch in ("feature/local-card", "T-DSY-02__marketing__local-card", "T-DSY-02__android__Local"):
+            with self.subTest(branch=branch):
+                self.assertRefused(lambda d: local(d).update(proposal_branch=branch), "contribution.branch_grammar",
+                                   "C-SYN-LOCAL")
+
+
+class CommandLineTests(unittest.TestCase):
+    """main() in process against a temporary root outside the repository; the registry comes from memory."""
+
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.root = Path(folder.name)
+        (self.root / "governance").mkdir()
+        for name in (module.SCHEMA, module.GATES, module.gates.SCHEMA):
+            (self.root / name).write_bytes((ROOT / name).read_bytes())
+        self.write(real())
+        for patcher in (mock.patch.object(module, "ROOT", self.root),
+                        mock.patch.object(module, "REGISTRY_PIN", REAL_PIN),
+                        mock.patch.object(module, "GitSources", lambda root: REAL_SOURCES)):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def write(self, document):
+        (self.root / module.DATA).write_bytes(encode(document))
+
+    def run_main(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = module.main(list(argv))
+        return code, out.getvalue(), err.getvalue()
+
+    def test_default_mode_is_not_green_with_exact_counts(self):
+        code, out, err = self.run_main()
+        self.assertEqual((code, err), (1, ""))
+        lines = out.splitlines()
+        self.assertEqual(lines[0], module.NOT_GREEN)
+        self.assertEqual(lines[1], module.structure_line(run_check(real(), False)))
+        self.assertEqual(lines[2:], [
+            "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1", "readiness.approval_not_recorded: 5",
+            "readiness.cdo_decision_pending: 1", "readiness.cdo_decision_unverified: 0",
+            "readiness.live_verification_missing: 15", "readiness.component_not_in_registry: 0",
+            "readiness.registry_component_ungoverned: 0",
+        ])
+
+    def test_structure_mode_passes_without_readiness(self):
+        code, out, err = self.run_main("--structure")
+        self.assertEqual((code, err), (0, ""))
+        self.assertTrue(out.endswith("; readiness not evaluated.\n"))
+
+    def test_refusal_prints_only_the_rule(self):
+        document = real()
+        document["access"]["public_links_enabled"] = True
+        self.write(document)
+        self.assertEqual(self.run_main("--structure"), (1, "", "Figma library check refused: access.public_links\n"))
+
+    def test_real_mode_refuses_synthetic_components(self):
+        document = real()
+        document["components"].append(fixture()["components"][2])
+        self.write(document)
+        self.assertEqual(self.run_main(), (1, "", "Figma library check refused: id.synthetic_reserved C-SYN-DRAFT\n"))
+
+    def test_missing_or_duplicate_key_input_fails_closed(self):
+        (self.root / module.DATA).write_bytes(b'{"schema_version": 1, "schema_version": 1}\n')
+        self.assertEqual(self.run_main(), (1, "", "Figma library check refused: input.unreadable_or_invalid\n"))
+        (self.root / module.DATA).unlink()
+        self.assertEqual(self.run_main(), (1, "", "Figma library check refused: input.unreadable_or_invalid\n"))
+
+    def test_unexpected_errors_fail_closed_without_echo(self):
+        token = planted_token()
+        for error in (KeyError(token), TypeError(token), AttributeError(token), IndexError(token)):
+            with self.subTest(error=type(error).__name__), mock.patch.object(module, "load_and_check",
+                                                                              side_effect=error):
+                self.assertEqual(self.run_main(),
+                                 (1, "", "Figma library check refused: input.unreadable_or_invalid\n"))
+
+
+if __name__ == "__main__":
+    unittest.main()
