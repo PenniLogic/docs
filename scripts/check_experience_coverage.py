@@ -15,10 +15,10 @@ GREEN until a later version resolves the owning interface's pinned records.
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match
 the registry ID or `PenniLogic/<repo>#N` grammar; input text is never echoed. The content guard scans every string
 value and key of both files for secret, URL, email, phone, amount and personal-ID shapes, whatever the schema
-says; only digests at their own registry paths and a screen's grammar-checked route hint are exempt, and the only
-numbers are the schema versions and ID-range bounds. Readiness gaps (D6
-dependencies and handoffs, docs#74 route IDs, verified independent QA, owner confirmation of DesignOps
-proposals, imported persona and ticket contradictions, security states, unresolved and post-snapshot
+says; only digests, commit IDs and handoff references at their own registry paths (with exactly that grammar) and a
+screen's grammar-checked route hint are exempt, and the only numbers are the schema versions and ID-range bounds.
+Readiness gaps (D6 dependencies and handoffs, docs#74 route IDs, verified independent QA, owner confirmation of
+DesignOps proposals, imported persona and ticket contradictions, security states, unresolved and post-snapshot
 issues, partition scope questions) are counted, never filled in, and keep the default mode NOT GREEN.
 Everything runs offline against local files and the local Git object store: no network, remote action,
 approval, appointment, gate closure or independent Design QA is made or implied. The release-gate bypass rule
@@ -48,7 +48,7 @@ IMPORT_PATH = "planning/source/evidence/experience-coverage.json"
 IMPORT_SHA256 = "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
 # The full remote-tracking ref: a local branch named origin/main must not shadow it.
 BASE_REF = "refs/remotes/origin/main"
-# The registry author (DesignOps, PenniLogic/docs#75) is never a flow's independent QA owner.
+# The registry author (DesignOps, PenniLogic/docs#75) is never the independent QA owner of a critical record.
 AUTHOR_ISSUE, AUTHOR_PLAN_ID = "PenniLogic/docs#75", "T-UXR-06"
 # The lead of the security_reason of a screen that is not security-critical, and of no other.
 NOT_SECURITY_CRITICAL = "Not security-critical"
@@ -295,7 +295,8 @@ def shape(value, schema, definition=None):
 
 def _secret_token(text):
     """A key-shaped run, also with separators removed, so a key split by hyphens, slashes or underscores (a UUID, a
-    grouped base32 seed) is still one token; slash-joined registry IDs keep the digit 0 and never form one."""
+    grouped base32 seed) is still one token. No published text forms one; a long slash-joined list of IDs without
+    the digits 0, 1, 8 and 9 could, and is then refused (fail closed: such lists are written with commas)."""
     for candidate in (text, re.sub(r"[-/_]", "", text)):
         if HEX_RUN.search(candidate):
             return True
@@ -799,7 +800,7 @@ def check_screens(model):
                 "security.reason_mismatch", identifier)
         require(set(screen["privacy_states"]) <= states and set(screen["authorization_states"]) <= states,
                 "security.state_not_on_screen", identifier)
-        # A proposal awaits confirmation of authored values, so it never names a null reason or an empty list.
+        # A proposal awaits confirmation of authored values, so it never names an empty state list.
         for field in screen["proposal"]["fields"] if screen["proposal"] is not None else ():
             require(screen[field] is not None and screen[field] != [], "proposal.field_without_value", identifier)
         dependency = screen["d6_dependency"]
