@@ -499,6 +499,10 @@ class InputAndSchemaRuleTests(CoverageCase):
             fixture.record("S-AND-002")["name"] = ""
         self.refused(mutate, "schema.invalid", "S-AND-002")
 
+    def test_malformed_schema_pattern_is_a_static_rule(self):
+        """R2-AV-05: re.error derives from Exception, not ValueError, so it must be mapped like any schema error."""
+        self.refused(lambda f: f.schema["definitions"]["state"].update(pattern="^([a-z]+"), "schema.invalid")
+
     def test_bare_legacy_reference_rejected(self):
         def mutate(fixture):
             fixture.record("S-AND-003")["implementation_tickets"] = [ticket(None, "android#902")]
@@ -1080,6 +1084,11 @@ class PartitionAndReleaseGateTests(CoverageCase):
         self.refused(lambda f: f.partition["entries"].remove(f.entry("PenniLogic/android#902")),
                      "partition.unclassified_issue", "PenniLogic/android#902")
 
+        def two_new_issues(fixture):
+            """TS-M7: a refresh that adds client issues learns every reference it must partition in one run."""
+            fixture.inventory = build_inventory(fixture.inventory["issues"] + [issue("web", 905), issue("android", 905)])
+        self.refused(two_new_issues, "partition.unclassified_issue", "PenniLogic/android#905 PenniLogic/web#905")
+
     def test_partition_count_mismatch_vs_inventory_fails(self):
         self.refused(lambda f: setattr(f, "inventory", build_inventory(f.inventory["issues"] + [issue("admin", 905)])),
                      "partition.unclassified_issue", "PenniLogic/admin#905")
@@ -1585,7 +1594,7 @@ class CommandLineTests(unittest.TestCase):
         checkout = Checkout(self, Fixture())
         self.assertEqual(checkout.run("--structure")[0], 0)
         token = planted_token()
-        for error in (KeyError(token), TypeError(token), AttributeError(token), IndexError(token)):
+        for error in (KeyError(token), TypeError(token), AttributeError(token), IndexError(token), re.error(token)):
             with self.subTest(error=type(error).__name__), mock.patch.object(module, "load_and_check",
                                                                               side_effect=error):
                 self.assertRun(checkout.run("--structure"), 1, "",

@@ -265,7 +265,7 @@ def shape(value, schema, definition=None):
     try:
         selected = schema if definition is None else schema["definitions"][definition]
         support.validate_schema(value, selected, schema)
-    except (ValueError, KeyError, TypeError, RecursionError) as error:
+    except (ValueError, KeyError, TypeError, RecursionError, re.error) as error:  # re.error: a malformed pattern
         raise Refused("schema.invalid", *_schema_subject(error, value)) from None
 
 
@@ -875,8 +875,9 @@ def check_partition(model):
         require(issue in entries and entries[issue]["disposition"] == "non_frontend",
                 "partition.scope_question_invalid", issue)
     clients = sorted((key for key, item in index.items() if item["repository"] in CLIENT_REPOSITORIES), key=natural_key)
-    for issue in clients:
-        require(issue in entries, "partition.unclassified_issue", issue)
+    # TS-M7: name every unpartitioned issue at once, so a refresh that adds client issues learns all it must partition.
+    missing = [issue for issue in clients if issue not in entries]
+    require(not missing, "partition.unclassified_issue", *missing)
     frontend = model.frontend_issues()
     for issue in sorted(frontend, key=natural_key):
         require(entries[issue]["disposition"] == "frontend", "partition.unmapped_implementation_ticket", issue)
@@ -1163,7 +1164,7 @@ def main(argv=None):
     except Refused as error:
         print(f"Experience coverage check refused: {error}", file=sys.stderr)
         return 1
-    except (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError, RecursionError):
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError, RecursionError, re.error):
         # Fail closed without a traceback, whose message could echo input content.
         print("Experience coverage check refused: input.unreadable_or_invalid", file=sys.stderr)
         return 1
