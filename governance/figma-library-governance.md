@@ -16,7 +16,7 @@ test fails when it drifts; the other sections are the contract text.
 | Input | Used for | Owner |
 | --- | --- | --- |
 | [`design-gates.json`](design-gates.json) | Role IDs, the `components` and `foundations_tokens` artifact classes (accountable and responsible roles), reserved Figma files and pages, the proposal-branch pattern, the `shared_system_major` CDO-equivalent scope | docs#64 (accepted, byte-pinned; read only) |
-| [`design-operations.md`](design-operations.md) section 6 | Figma topology, branch grammar, SemVer classes, promotion, archive, restoration and rollback freeze | docs#64 (read only; restated here only by reference) |
+| [`design-operations.md`](design-operations.md) section 6 | Figma topology, branch grammar, SemVer classes, promotion, archive, restoration and rollback freeze | docs#64 (read only; section 5 below adds H07's labelled proposals on top of it) |
 | [`design-operations.md`](design-operations.md) section 7 | Default-deny grants, no public links or external sharing, offboarding revocation | docs#64 (read only) |
 | Imported registry `planning/source/evidence/experience-coverage.json` at `1722fc79` | Component IDs (`C-*`) and their platforms, pinned by commit, path and sha256 (`registry_ref`) | docs#75 (moves to `product/experience-coverage.json` when docs#75 integrates; a one-field re-pin) |
 | docs#76 visual direction (D2) | `direction_ref`; stays `null` until the decision exists | docs#76 (held) |
@@ -99,16 +99,25 @@ no visual direction is selected.
 
 ## 5. Versioning, release notes and dependency updates
 
-Releases are keyed by (library, SemVer) and form a chain through `previous`
-(`release.previous_unknown`, `release.version_not_increasing`). The change class follows
-[`design-operations.md`](design-operations.md) section 6 exactly and must match the version step
+Releases are keyed by (library, SemVer) and form one linear chain per library through `previous`: the
+previous version exists and is lower, each library has exactly one root release and each release has at
+most one successor (`release.previous_unknown`, `release.version_not_increasing`, `release.chain_invalid`).
+[`design-operations.md`](design-operations.md) section 6 defines the classes by content (patch fixes
+without contract change, minor additive components/tokens, major breaking changes; coordinator approval
+only for a shared-system major). The table cites those classes; the exact version arithmetic, additive
+properties as minor content and the first-release row are **H07 proposals awaiting Design Systems,
+DesignOps and CDO confirmation**, not section 6 text. The class must match the version step exactly
 (`release.class_mismatch`):
 
 | Class | Version step | Content | Decision right |
 | --- | --- | --- | --- |
 | patch | `x.y.z` -> `x.y.(z+1)` | Fixes without a contract change | Design Systems (`systems`) |
 | minor | `x.y.z` -> `x.(y+1).0` | Additive components, properties or tokens | Design Systems Lead (`systems`, accountable) |
-| major | `x.y.z` -> `(x+1).0.0`, or a first `x.0.0` | Breaking component or token changes; first releases | CDO (`decision_coordinator` within `shared_system_major`) |
+| major | `x.y.z` -> `(x+1).0.0`, or a first `x.0.0` (proposal) | Breaking component or token changes; first releases (proposal) | CDO (`decision_coordinator` within `shared_system_major`) |
+
+Proposal: a library's first release is classified major and therefore carries a CDO record, so each
+empty shell's `1.0.0` is behind a `pending` CDO decision (section 11). If section 6 is confirmed to
+cover breaking changes only, the first-release row is dropped and those five gaps go with it.
 
 Breaking changes (criterion 3) must be major (`release.breaking_not_major`), carry a migration plan
 reference (`release.migration_plan_missing`) and a CDO approval record (`release.cdo_approval_missing`).
@@ -116,7 +125,9 @@ References are `PenniLogic/<repo>#N` or `pending:PenniLogic/<repo>#N`; free text
 (`reference.invalid`). A CDO record is `pending` with no decision source, or `recorded` with a
 `{commit, path, sha256}` decision source (`approval.source_mismatch`). A pending CDO approval or a pending
 migration plan blocks publishing (`release.cdo_pending_published`,
-`release.migration_plan_pending_published`). No session in this change records a CDO decision
+`release.migration_plan_pending_published`), and a published release must sit on a published previous
+release (`release.previous_unpublished`), so nothing pending lies below a published version. Every
+`pending:` migration plan is a visible gap (`readiness.migration_plan_pending`). No session in this change records a CDO decision
 (`held.cdo_recorded`); a recorded decision is reported as `readiness.cdo_decision_unverified` until it
 can be verified, never as a pass.
 
@@ -144,12 +155,16 @@ section 5 (migration plan and CDO approval).
 Rollback unpublishes a bad version and restores the prior library without deleting dependent
 instances. A `rolled_back` release names `rollback_to`, which must be its own `previous` version and a
 published release of the same library; any other release keeps `rollback_to` empty
-(`release.rollback_target`). Component records are never removed by a rollback, so dependent instances
-keep resolving. Under [`design-operations.md`](design-operations.md) section 6 the rollback also appends
-a publishing-freeze decision, preserves every proposal, decision and version, keeps the last verified
-library available read-only (library `status: frozen`) and stops promotion. Restoration copies a known
-snapshot into a new higher version, does not clear the freeze and does not inherit the old approval.
-This source has no enable-publishing action.
+(`release.rollback_target`). Under [`design-operations.md`](design-operations.md) section 6 the rollback
+also appends a publishing-freeze decision, preserves every proposal, decision and version, keeps the last
+verified library available read-only and stops promotion. The validator enforces the freeze on the
+records: a library is `frozen` exactly when it has a `rolled_back` release (`library.freeze_mismatch`),
+and because a published release needs a published previous release on a linear chain, nothing above the
+rolled-back version can be published (`release.previous_unpublished`). Restoration copies a known
+snapshot into a new higher version (a draft), does not clear the freeze and does not inherit the old
+approval. This source has no enable-publishing action. Process obligation, not checked by the validator:
+component records are not removed by a rollback, so dependent instances keep resolving (record removal
+is not detected across revisions; section 10).
 
 ## 8. Permission model and offboarding (criterion 5)
 
@@ -363,6 +378,7 @@ Contract version 0.1.0; registry pin 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4 pl
 | readiness.approval_not_recorded | 5 |
 | readiness.cdo_decision_pending | 5 |
 | readiness.cdo_decision_unverified | 0 |
+| readiness.migration_plan_pending | 0 |
 | readiness.live_verification_missing | 27 |
 | readiness.component_not_in_registry | 0 |
 | readiness.registry_component_ungoverned | 0 |

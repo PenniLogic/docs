@@ -126,7 +126,7 @@ STRUCTURE_RULES = (
     "content.url_shape", "content.email_shape", "content.phone_shape",
     "registry.ref_mismatch", "registry.unavailable", "registry.digest_mismatch", "registry.invalid",
     "library.set_mismatch", "library.kind_mismatch", "library.location_mismatch", "library.owner_mismatch",
-    "library.status_mismatch",
+    "library.status_mismatch", "library.freeze_mismatch",
     "topology.invalid_consumption", "topology.missing_dependency",
     "role.unknown", "permission.feature_squad_publish", "permission.publish_not_maintainer",
     "permission.candidate_publish", "access.public_links", "access.external_sharing", "access.asset_export",
@@ -134,6 +134,7 @@ STRUCTURE_RULES = (
     "held.direction_ref", "held.token_refs", "held.publication", "held.cdo_recorded",
     "id.duplicate", "id.synthetic_reserved",
     "release.duplicate", "release.candidate_library", "release.previous_unknown", "release.version_not_increasing",
+    "release.chain_invalid", "release.previous_unpublished",
     "release.breaking_not_major", "release.class_mismatch", "release.migration_plan_missing",
     "release.cdo_approval_missing", "release.cdo_pending_published", "release.migration_plan_pending_published",
     "release.rollback_target", "approval.source_mismatch",
@@ -155,7 +156,8 @@ STRUCTURE_RULES = (
 )
 READINESS_RULES = (
     "readiness.direction_missing", "readiness.tokens_unpublished", "readiness.approval_not_recorded",
-    "readiness.cdo_decision_pending", "readiness.cdo_decision_unverified", "readiness.live_verification_missing",
+    "readiness.cdo_decision_pending", "readiness.cdo_decision_unverified", "readiness.migration_plan_pending",
+    "readiness.live_verification_missing",
     "readiness.component_not_in_registry", "readiness.registry_component_ungoverned",
 )
 
@@ -394,16 +396,13 @@ def version(value):
 
 
 def change_class(current, previous):
-    """The SemVer class a version step is (design-operations.md section 6), or None for a non-canonical step."""
+    """The class of one canonical version step, or None for any other step. design-operations.md section 6 names
+    the classes by content; the arithmetic is H07's reading (a proposal): a first release is x.0.0 with x >= 1,
+    then major (x+1).0.0, minor x.(y+1).0 and patch x.y.(z+1) exactly."""
     if previous is None:
         return "major" if current[0] >= 1 and current[1:] == (0, 0) else None
-    if current[0] > previous[0] and current[1:] == (0, 0):
-        return "major"
-    if current[0] == previous[0] and current[1] > previous[1] and current[2] == 0:
-        return "minor"
-    if current[:2] == previous[:2] and current[2] > previous[2]:
-        return "patch"
-    return None
+    major, minor, patch = previous
+    return {(major + 1, 0, 0): "major", (major, minor + 1, 0): "minor", (major, minor, patch + 1): "patch"}.get(current)
 
 
 def check_reference(value, *subjects):
@@ -422,10 +421,15 @@ def check_releases(document, schema, fixture):
         releases[key] = release
         require(fixture or release["status"] == "draft", "held.publication", name)
         require(release["library"] != "LIB-CANDIDATE", "release.candidate_library", name)
+    roots, successors = set(), set()
     for (library, current), release in releases.items():
         name, previous = f"{library}@{current}", release["previous"]
         require(previous is None or (library, previous) in releases, "release.previous_unknown", name)
         require(previous is None or version(current) > version(previous), "release.version_not_increasing", name)
+        # One chain per library: a single root and at most one successor per release (no forks, no second root).
+        link = library if previous is None else (library, previous)
+        require(link not in (roots if previous is None else successors), "release.chain_invalid", name)
+        (roots if previous is None else successors).add(link)
         require(not release["breaking"] or release["change_class"] == "major", "release.breaking_not_major", name)
         require(change_class(version(current), None if previous is None else version(previous))
                 == release["change_class"], "release.class_mismatch", name)
@@ -445,6 +449,11 @@ def check_releases(document, schema, fixture):
         published = release["status"] == "published"
         require(not (published and approval is not None and approval["status"] == "pending"),
                 "release.cdo_pending_published", name)
+        # A published release never sits on an unpublished one: by induction its whole chain is published, so no
+        # pending CDO decision or migration plan lies below it (criterion 3) and, the chain being linear, nothing is
+        # published above a rolled-back version (the design-operations.md section 6 rollback freeze).
+        require(not published or previous is None or releases[(library, previous)]["status"] == "published",
+                "release.previous_unpublished", name)
         require(not (published and (release["migration_plan_ref"] or "").startswith("pending:")),
                 "release.migration_plan_pending_published", name)
         target = release["rollback_to"]
@@ -647,8 +656,10 @@ def check(document, schema, policy_data, policy_schema, sources, pin=None, fixtu
     for identifier, library in libraries.items():
         # Governed shells are published empty before component work; an active library has a published release.
         released = any(key[0] == identifier and item["status"] == "published" for key, item in releases.items())
-        require(library["status"] == "frozen" or released == (library["status"] == "active"),
-                "library.status_mismatch", identifier)
+        # A rollback freezes its library (read-only, promotion stopped); only a rollback freezes a library.
+        rolled = any(key[0] == identifier and item["status"] == "rolled_back" for key, item in releases.items())
+        require(rolled == (library["status"] == "frozen"), "library.freeze_mismatch", identifier)
+        require(rolled or released == (library["status"] == "active"), "library.status_mismatch", identifier)
     components, branches = {}, set()
     for component in document["components"]:
         require(component["id"] not in components, "id.duplicate", component["id"])
@@ -684,6 +695,9 @@ def readiness(model):
             rule = "readiness.cdo_decision_pending" if approval["status"] == "pending" else \
                 "readiness.cdo_decision_unverified"
             gaps[rule].add(f"{library}@{current}")
+        if (release["migration_plan_ref"] or "").startswith("pending:"):
+            # Global rule 8: a `pending:` reference is a visible gap until the plan exists.
+            gaps["readiness.migration_plan_pending"].add(f"{library}@{current}")
     for scenario in document["tabletop"]:
         gaps["readiness.live_verification_missing"].add(scenario["id"])
     gaps["readiness.component_not_in_registry"].update(set(model.components) - set(model.pinned))

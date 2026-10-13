@@ -230,6 +230,15 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(len(model.components), 5)
         self.assertEqual(len(run_check(real(), False).releases), 2)
 
+    def test_pending_migration_plan_is_a_visible_gap(self):
+        document = real()
+        self.assertEqual(module.readiness(run_check(copy.deepcopy(document), False))[
+            "readiness.migration_plan_pending"], [])
+        append_release(document, "LIB-COMPONENTS@1.1.1", "1.1.0", "patch", "draft",
+                       migration="pending:PenniLogic/docs#79")
+        self.assertEqual(module.readiness(run_check(document, False))["readiness.migration_plan_pending"],
+                         ["LIB-COMPONENTS@1.1.1"])
+
     def test_rule_identifiers_are_static_and_unique(self):
         rules = module.STRUCTURE_RULES + module.READINESS_RULES
         self.assertEqual(len(rules), len(set(rules)))
@@ -245,6 +254,7 @@ class BaselineTests(unittest.TestCase):
             "readiness.approval_not_recorded": sorted(module.APPROVAL_ROLES),
             "readiness.cdo_decision_pending": ["LIB-COMPONENTS@2.0.0"],
             "readiness.cdo_decision_unverified": ["LIB-ANDROID@1.0.0", "LIB-COMPONENTS@1.0.0"],
+            "readiness.migration_plan_pending": ["LIB-COMPONENTS@2.0.0"],
             "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 16)],
             "readiness.component_not_in_registry": ["C-SYN-BUTTON-AND", "C-SYN-LOCAL"],
             "readiness.registry_component_ungoverned": ["C-SYN-PINNED"],
@@ -434,9 +444,18 @@ class LibraryTests(RuleCase):
                            "library.status_mismatch", "LIB-WEB")
 
     def test_frozen_library_keeps_its_releases(self):
-        document = fixture()
-        find(document, "libraries", "LIB-ANDROID")["status"] = "frozen"
-        run_check(document)
+        run_check(rolled_back())
+
+    def test_rollback_freezes_its_library(self):
+        self.assertRefused(lambda d: roll_back(d, freeze=False), "library.freeze_mismatch", "LIB-COMPONENTS")
+
+    def test_only_a_rollback_freezes_a_library(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-ANDROID").update(status="frozen"),
+                           "library.freeze_mismatch", "LIB-ANDROID")
+
+    def test_real_library_is_never_frozen_without_a_rollback(self):
+        self.assertRefused(lambda d: find(d, "libraries", "LIB-WEB").update(status="frozen"),
+                           "library.freeze_mismatch", "LIB-WEB", fixture_mode=False)
 
     def test_platform_library_must_consume_the_semantic_library(self):
         self.assertRefused(lambda d: find(d, "libraries", "LIB-ANDROID")["consumes"].remove("LIB-COMPONENTS"),
@@ -552,6 +571,19 @@ def append_release(document, name, previous, change, status, **options):
     document["releases"].append(release(name, previous, change, status, **options))
 
 
+def roll_back(document, freeze=True):
+    """Roll back the fixture's draft LIB-COMPONENTS@2.0.0 to 1.0.0; the rollback freezes the library."""
+    find_release(document, "LIB-COMPONENTS@2.0.0").update(status="rolled_back", rollback_to="1.0.0")
+    if freeze:
+        find(document, "libraries", "LIB-COMPONENTS")["status"] = "frozen"
+
+
+def rolled_back():
+    document = fixture()
+    roll_back(document)
+    return document
+
+
 class ReleaseTests(RuleCase):
     def test_release_key_is_library_and_version(self):
         self.assertRefused(lambda d: d["releases"].append(copy.deepcopy(find_release(d, "LIB-ANDROID@1.0.0"))),
@@ -574,14 +606,49 @@ class ReleaseTests(RuleCase):
                            "release.breaking_not_major", "LIB-COMPONENTS@2.0.0")
 
     def test_change_class_follows_the_version_step(self):
-        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@1.1.0", "1.0.0", "patch", "draft"),
-                           "release.class_mismatch", "LIB-COMPONENTS@1.1.0")
+        self.assertRefused(lambda d: append_release(d, "LIB-ANDROID@1.1.0", "1.0.0", "patch", "draft"),
+                           "release.class_mismatch", "LIB-ANDROID@1.1.0")
+
+    def test_minor_step_is_exactly_one(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-ANDROID@1.7.0", "1.0.0", "minor", "draft"),
+                           "release.class_mismatch", "LIB-ANDROID@1.7.0")
+
+    def test_major_step_is_exactly_one(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-ANDROID@9.0.0", "1.0.0", "major", "draft"),
+                           "release.class_mismatch", "LIB-ANDROID@9.0.0")
+
+    def test_patch_step_is_exactly_one(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-ANDROID@1.0.2", "1.0.0", "patch", "draft"),
+                           "release.class_mismatch", "LIB-ANDROID@1.0.2")
 
     def test_minor_and_patch_steps_pass(self):
         document = fixture()
-        append_release(document, "LIB-COMPONENTS@1.1.0", "1.0.0", "minor", "draft")
-        append_release(document, "LIB-COMPONENTS@1.1.1", "1.1.0", "patch", "draft")
+        append_release(document, "LIB-ANDROID@1.1.0", "1.0.0", "minor", "draft")
+        append_release(document, "LIB-ANDROID@1.1.1", "1.1.0", "patch", "draft")
         self.assertEqual(len(run_check(document).releases), 5)
+
+    def test_a_library_has_one_root_release(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-ANDROID@2.0.0", None, "major", "draft"),
+                           "release.chain_invalid", "LIB-ANDROID@2.0.0")
+
+    def test_real_library_has_one_root_release(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@3.0.0", None, "major", "draft",
+                                                    approval="pending"),
+                           "release.chain_invalid", "LIB-COMPONENTS@3.0.0", fixture_mode=False)
+
+    def test_a_release_has_one_successor(self):
+        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@1.1.0", "1.0.0", "minor", "draft"),
+                           "release.chain_invalid", "LIB-COMPONENTS@1.1.0")
+
+    def test_published_release_never_sits_on_a_pending_major(self):
+        def publish_over_pending(document):
+            find(document, "components", "C-SYN-CHIP")["deprecation"]["removal_version"] = "3.0.0"
+            append_release(document, "LIB-COMPONENTS@2.1.0", "2.0.0", "minor", "published")
+        document = fixture()
+        find(document, "components", "C-SYN-CHIP")["deprecation"]["removal_version"] = "3.0.0"
+        append_release(document, "LIB-COMPONENTS@2.1.0", "2.0.0", "minor", "draft")
+        run_check(document)  # control: the same chain with the minor still a draft
+        self.assertRefused(publish_over_pending, "release.previous_unpublished", "LIB-COMPONENTS@2.1.0")
 
     def test_first_release_is_a_major_at_one_or_later(self):
         self.assertRefused(lambda d: append_release(d, "LIB-WEB@0.1.0", None, "major", "draft"),
@@ -616,17 +683,32 @@ class ReleaseTests(RuleCase):
                            "release.cdo_pending_published", "LIB-COMPONENTS@2.0.0")
 
     def test_pending_migration_plan_blocks_publishing(self):
-        self.assertRefused(lambda d: append_release(d, "LIB-COMPONENTS@1.1.0", "1.0.0", "minor", "published",
+        self.assertRefused(lambda d: append_release(d, "LIB-ANDROID@1.1.0", "1.0.0", "minor", "published",
                                                     migration="pending:PenniLogic/docs#78"),
-                           "release.migration_plan_pending_published", "LIB-COMPONENTS@1.1.0")
+                           "release.migration_plan_pending_published", "LIB-ANDROID@1.1.0")
 
     def test_rollback_restores_the_prior_published_version(self):
-        document = fixture()
-        find_release(document, "LIB-COMPONENTS@2.0.0").update(status="rolled_back", rollback_to="1.0.0")
-        model = run_check(document)
-        self.assertEqual(len(model.components), 5)  # dependent component records stay listed
+        model = run_check(rolled_back())
+        self.assertEqual(model.releases[("LIB-COMPONENTS", "1.0.0")]["status"], "published")
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(status="rolled_back"),
                            "release.rollback_target", "LIB-COMPONENTS@2.0.0")
+
+    def test_rollback_target_is_a_published_release(self):
+        def over_draft(document):
+            append_release(document, "LIB-ANDROID@1.1.0", "1.0.0", "minor", "draft")
+            append_release(document, "LIB-ANDROID@1.1.1", "1.1.0", "patch", "rolled_back")
+            find_release(document, "LIB-ANDROID@1.1.1")["rollback_to"] = "1.1.0"
+            find(document, "libraries", "LIB-ANDROID")["status"] = "frozen"
+        self.assertRefused(over_draft, "release.rollback_target", "LIB-ANDROID@1.1.1")
+
+    def test_nothing_is_published_after_a_rollback(self):
+        def publish_after(document):
+            roll_back(document)
+            append_release(document, "LIB-COMPONENTS@2.0.1", "2.0.0", "patch", "published")
+        document = rolled_back()
+        append_release(document, "LIB-COMPONENTS@2.0.1", "2.0.0", "patch", "draft")
+        run_check(document)  # control: a restoration draft above the rolled-back version
+        self.assertRefused(publish_after, "release.previous_unpublished", "LIB-COMPONENTS@2.0.1")
 
     def test_rollback_target_only_on_rolled_back_releases(self):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@2.0.0").update(rollback_to="1.0.0"),
@@ -863,6 +945,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(lines[2:], [
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1", "readiness.approval_not_recorded: 5",
             "readiness.cdo_decision_pending: 1", "readiness.cdo_decision_unverified: 0",
+            "readiness.migration_plan_pending: 0",
             "readiness.live_verification_missing: 15", "readiness.component_not_in_registry: 0",
             "readiness.registry_component_ungoverned: 0",
         ])
@@ -948,6 +1031,7 @@ class PublishedDataTests(unittest.TestCase):
             "readiness.approval_not_recorded": sorted(module.APPROVAL_ROLES),
             "readiness.cdo_decision_pending": sorted(f"{name}@1.0.0" for name in module.SHARED),
             "readiness.cdo_decision_unverified": [],
+            "readiness.migration_plan_pending": [],
             "readiness.live_verification_missing": [f"TT-{index:02d}" for index in range(1, 28)],
             "readiness.component_not_in_registry": [],
             "readiness.registry_component_ungoverned": [],
@@ -972,7 +1056,8 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(lines[2:], [
             "readiness.direction_missing: 1", "readiness.tokens_unpublished: 1",
             "readiness.approval_not_recorded: 5", "readiness.cdo_decision_pending: 5",
-            "readiness.cdo_decision_unverified: 0", "readiness.live_verification_missing: 27",
+            "readiness.cdo_decision_unverified: 0", "readiness.migration_plan_pending: 0",
+            "readiness.live_verification_missing: 27",
             "readiness.component_not_in_registry: 0", "readiness.registry_component_ungoverned: 0",
         ])
 
