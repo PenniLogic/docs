@@ -85,7 +85,7 @@ PATTERN_STATES = {
 }
 SLOTS = ("source", "status", "consequence", "safe_remainder", "next_action")
 REGULATED_CATEGORIES = (
-    "consent", "permission", "disclaimer", "plan_change", "refund", "deletion", "access", "incident",
+    "consent", "permission", "disclaimer", "plan_change", "refund", "deletion", "access", "incident", "ai_disclosure",
 )
 # The qualified legal/compliance owner: the design-gates `legal` role, explicitly unassigned there.
 APPROVER_ROLE = "legal"
@@ -133,7 +133,8 @@ STRUCTURE_RULES = (
     "key.term_surface_missing", "key.grammar", "key.duplicate", "key.prefix_conflict", "key.foreign_root",
     "key.state_not_in_taxonomy",
     "key.state_copy_forked", "held.nav_key", "key.regulated_outside_root", "key.regulated_root_without_record",
-    "key.regulated_copy_forked", "key.common_not_shared", "key.copy_missing", "key.range_order",
+    "key.regulated_copy_forked", "key.disclosure_outside_reg", "key.regulated_copy_restated", "key.common_not_shared",
+    "key.copy_missing", "key.range_order",
     "key.copy_out_of_range", "key.unknown_term", "key.term_label_missing", "key.forbidden_term",
     "key.forbidden_alias", "key.banned_pattern", "key.sentence_too_long", "key.placeholder_unknown",
     "key.safe_exit_placeholder", "key.neutral_safe_exit_missing", "held.key_approval",
@@ -442,6 +443,8 @@ def check_key_roots(entry, facts, regulated_ids):
         require(entry["copy"] is None, "key.regulated_copy_forked", key)
     else:
         require(entry["regulated_ref"] is None, "key.regulated_outside_root", key)
+        # Disclosure copy (AI disclosure, advice and projection boundaries) is regulated: it lives only under reg.
+        require(entry["category"] != "disclosure", "key.disclosure_outside_reg", key)
     if root == "common":
         require(set(entry["platforms"]) == set(CLIENTS), "key.common_not_shared", key)
     if root not in ("state", "reg"):
@@ -593,6 +596,12 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
                     identifier)
     for category in REGULATED_CATEGORIES:
         require(any(record["category"] == category for record in regulated["records"]), "regulated.category_missing")
+    # Regulated text is usable only through its record: no ordinary key may restate it, even inside longer copy.
+    texts = [" ".join(record["copy"].casefold().split()) for record in regulated["records"]]
+    for name, entry in keys.items():
+        if entry["copy"] is not None:
+            folded = " ".join(entry["copy"].casefold().split())
+            require(not any(text in folded for text in texts), "key.regulated_copy_restated", name)
 
 
 def regulated_ids(regulated):

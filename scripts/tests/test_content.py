@@ -29,7 +29,8 @@ NOW = datetime(2026, 10, 13, 12, 0, 0, tzinfo=timezone.utc)
 OWNER = {"role": "legal"}  # a synthetic assignment; the published loader never supplies one
 CLIENTS = ["android", "web", "admin"]
 COMPREHENSION = ["payoff", "projected", "available", "pending", "reversed", "aggregate", "revoked"]
-CATEGORIES = ["consent", "permission", "disclaimer", "plan_change", "refund", "deletion", "access", "incident"]
+CATEGORIES = ["consent", "permission", "disclaimer", "plan_change", "refund", "deletion", "access", "incident",
+              "ai_disclosure"]
 
 
 def taxonomy():
@@ -223,15 +224,15 @@ class ControlTests(Harness):
     def test_synthetic_content_set_passes_structure(self):
         model = self.assertControlPasses()
         self.assertEqual(len(model.terms), 8)
-        self.assertEqual(len(model.keys), 16)
+        self.assertEqual(len(model.keys), 17)
 
     def test_synthetic_content_set_reports_exact_readiness_gaps(self):
         gaps = content.readiness(self.assertControlPasses())
         self.assertEqual(tuple(gaps), content.READINESS_RULES)
         self.assertEqual(gaps["readiness.comprehension_evidence"], sorted(f"term.{slug}" for slug in COMPREHENSION))
         self.assertEqual(len(gaps["readiness.term_unapproved"]), 8)
-        self.assertEqual(len(gaps["readiness.key_unapproved"]), 16)
-        self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 9)])
+        self.assertEqual(len(gaps["readiness.key_unapproved"]), 17)
+        self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 10)])
         self.assertEqual(gaps["readiness.reading_level_provisional"], ["voice.reading_level"])
         self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
         self.assertEqual(gaps["readiness.nav_labels_held"], ["PenniLogic/docs#74"])
@@ -466,6 +467,19 @@ class MessageKeyTests(Harness):
     def test_state_key_may_not_restate_taxonomy_copy(self):
         self.assertRefused(lambda d: keys_of(d)["state.empty.headline"].update(copy="Nothing here yet"),
                            "key.state_copy_forked", "state.empty.headline")
+
+    def test_disclosure_copy_outside_reg_is_refused(self):
+        # Review round 1 F-01: an AI disclosure or advice boundary as an ordinary key would be usable unapproved.
+        self.assertRefused(lambda d: add_key(d, key("common.disclosure.ai", "AI insight from your data", "disclosure")),
+                           "key.disclosure_outside_reg", "common.disclosure.ai")
+
+    def test_regulated_text_restated_inside_an_ordinary_key_is_refused(self):
+        self.assertRefused(lambda d: add_key(d, key("debt.delete.help", "Read this. Synthetic draft text for review.")),
+                           "key.regulated_copy_restated", "debt.delete.help")
+
+    def test_regulated_text_restated_with_other_case_and_spacing_is_refused(self):
+        self.assertRefused(lambda d: add_key(d, key("debt.delete.help", "SYNTHETIC draft  text for review.")),
+                           "key.regulated_copy_restated", "debt.delete.help")
 
     def test_reg_key_without_record(self):
         self.assertRefused(lambda d: keys_of(d)["reg.refund.text"].update(regulated_ref=None),
@@ -971,12 +985,12 @@ class BaseVersioningTests(Harness):
 
     def test_regulated_records_are_never_removed(self):
         base = documents()
-        base["regulated-copy"]["records"].append(record(9, "consent") | {"key": "reg.consent.text"})
+        base["regulated-copy"]["records"].append(record(10, "consent") | {"key": "reg.consent.text"})
         docs = documents()
         docs["regulated-copy"]["regulated_version"] = "1.0.0"
         with self.assertRaises(content.Refused) as caught:
             self.run_check(docs, sources=FakeSources(base))
-        self.assertEqual((caught.exception.rule, caught.exception.subject), ("regulated.record_removed", "RC-009"))
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("regulated.record_removed", "RC-010"))
 
     def test_regulated_copy_never_changes_without_a_version(self):
         base = documents()
@@ -1101,7 +1115,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertTrue(lines[1].startswith("Content glossary 0.1.0 structure valid: 8 terms (7 need comprehension"))
         self.assertEqual(lines[2:], [
             "readiness.comprehension_evidence: 7", "readiness.reading_level_provisional: 1",
-            "readiness.term_unapproved: 8", "readiness.key_unapproved: 16", "readiness.regulated_unapproved: 8",
+            "readiness.term_unapproved: 8", "readiness.key_unapproved: 17", "readiness.regulated_unapproved: 9",
             "readiness.approver_unassigned: 1", "readiness.nav_labels_held: 1",
         ])
 
@@ -1109,7 +1123,7 @@ class CommandLineTests(unittest.TestCase):
         code, out, err = self.main("--structure")
         self.assertEqual((code, err), (0, ""))
         self.assertTrue(out.rstrip().endswith("0 approved; readiness not evaluated."))
-        self.assertIn("16 keys (1 state., 0 nav., 8 reg., 2 common.)", out)
+        self.assertIn("17 keys (1 state., 0 nav., 9 reg., 2 common.)", out)
 
     def test_invalid_now_is_refused(self):
         self.assertEqual(self.main("--structure", "--now", "tomorrow"),
@@ -1248,7 +1262,7 @@ class PublishedContentTests(unittest.TestCase):
         self.assertEqual(content.structure_line(self.model), (
             "Content glossary 0.1.0 structure valid: 30 terms (7 need comprehension evidence); voice 0.1.0: 15 "
             "banned patterns, 8 content patterns, taxonomy copy rules imported by reference; message keys 0.1.0: "
-            "81 keys (43 state., 0 nav., 8 reg., 15 common.); regulated copy 0.1.0: 8 records, 0 approved"
+            "81 keys (43 state., 0 nav., 11 reg., 12 common.); regulated copy 0.1.0: 11 records, 0 approved"
         ))
 
     def test_published_readiness_gaps_are_exact(self):
@@ -1259,7 +1273,7 @@ class PublishedContentTests(unittest.TestCase):
         self.assertEqual(gaps["readiness.term_unapproved"], sorted(terms_of(self.docs)))
         self.assertEqual(len(gaps["readiness.key_unapproved"]), 81)
         self.assertEqual(gaps["readiness.key_unapproved"], sorted(keys_of(self.docs)))
-        self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 9)])
+        self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 12)])
         self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
         self.assertEqual(gaps["readiness.nav_labels_held"], ["PenniLogic/docs#74"])
 
@@ -1291,7 +1305,10 @@ class PublishedContentTests(unittest.TestCase):
     def test_each_regulated_key_binds_its_record_and_falls_back_to_neutral_copy(self):
         keys = keys_of(self.docs)
         records = self.docs["regulated-copy"]["records"]
-        self.assertEqual(sorted(record["category"] for record in records), sorted(CATEGORIES))
+        self.assertEqual({record["category"] for record in records}, set(CATEGORIES))
+        # AI disclosure and advice/projection boundaries are regulated (product/08 s12): no disclosure key outside reg.
+        self.assertEqual([entry["key"] for entry in keys.values()
+                          if entry["category"] == "disclosure" and not entry["key"].startswith("reg.")], [])
         for record in records:
             with self.subTest(record=record["id"]):
                 self.assertEqual(keys[record["key"]]["regulated_ref"], record["id"])

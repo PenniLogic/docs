@@ -65,72 +65,6 @@
       "neutral_safe_exit": false
     },
     {
-      "key": "common.disclosure.ai_insight",
-      "category": "disclosure",
-      "copy": "AI insight. Figures come from your data, not the model.",
-      "status": "provisional",
-      "term_refs": [
-        "term.ai_insight"
-      ],
-      "regulated_ref": null,
-      "range": {
-        "min": 27,
-        "typical": 55,
-        "max": 110
-      },
-      "owner": "content",
-      "platforms": [
-        "android",
-        "web",
-        "admin"
-      ],
-      "neutral_safe_exit": false
-    },
-    {
-      "key": "common.disclosure.projection",
-      "category": "disclosure",
-      "copy": "Projected from your own data. It can change.",
-      "status": "provisional",
-      "term_refs": [
-        "term.projected"
-      ],
-      "regulated_ref": null,
-      "range": {
-        "min": 22,
-        "typical": 44,
-        "max": 88
-      },
-      "owner": "content",
-      "platforms": [
-        "android",
-        "web",
-        "admin"
-      ],
-      "neutral_safe_exit": false
-    },
-    {
-      "key": "common.disclosure.scenario",
-      "category": "disclosure",
-      "copy": "This scenario is information, not advice",
-      "status": "provisional",
-      "term_refs": [
-        "term.scenario"
-      ],
-      "regulated_ref": null,
-      "range": {
-        "min": 20,
-        "typical": 40,
-        "max": 80
-      },
-      "owner": "content",
-      "platforms": [
-        "android",
-        "web",
-        "admin"
-      ],
-      "neutral_safe_exit": false
-    },
-    {
       "key": "common.label.aggregate",
       "category": "label",
       "copy": "Aggregate total",
@@ -647,6 +581,28 @@
       "neutral_safe_exit": false
     },
     {
+      "key": "reg.ai_disclosure.insight",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.ai_insight"
+      ],
+      "regulated_ref": "RC-009",
+      "range": {
+        "min": 27,
+        "typical": 55,
+        "max": 110
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
       "key": "reg.consent.message_capture",
       "category": "disclosure",
       "copy": null,
@@ -701,6 +657,50 @@
         "min": 41,
         "typical": 83,
         "max": 166
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.disclaimer.projection",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.projected"
+      ],
+      "regulated_ref": "RC-011",
+      "range": {
+        "min": 22,
+        "typical": 44,
+        "max": 88
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.disclaimer.scenario_not_advice",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.scenario"
+      ],
+      "regulated_ref": "RC-010",
+      "range": {
+        "min": 20,
+        "typical": 40,
+        "max": 80
       },
       "owner": "content",
       "platforms": [

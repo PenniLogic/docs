@@ -15,9 +15,6 @@ None.
 | `common.action.cancel` | action | Cancel | 3/6/16 | none | no | android, web, admin | provisional | content |
 | `common.action.close` | action | Close | 2/5/15 | none | no | android, web, admin | provisional | content |
 | `common.action.continue` | action | Continue | 4/8/18 | none | no | android, web, admin | provisional | content |
-| `common.disclosure.ai_insight` | disclosure | AI insight. Figures come from your data, not the model. | 27/55/110 | `term.ai_insight` | no | android, web, admin | provisional | content |
-| `common.disclosure.projection` | disclosure | Projected from your own data. It can change. | 22/44/88 | `term.projected` | no | android, web, admin | provisional | content |
-| `common.disclosure.scenario` | disclosure | This scenario is information, not advice | 20/40/80 | `term.scenario` | no | android, web, admin | provisional | content |
 | `common.label.aggregate` | label | Aggregate total | 7/15/30 | `term.aggregate` | no | android, web, admin | provisional | content |
 | `common.label.available` | label | Available | 4/9/19 | `term.available` | no | android, web, admin | provisional | content |
 | `common.label.payoff_date` | label | Payoff date | 5/11/22 | `term.payoff` | no | android, web, admin | provisional | content |
@@ -43,9 +40,12 @@ None.
 | `pattern.success.source` | success | From {item} | 5/11/22 | none | no | android, web, admin | provisional | content |
 | `pattern.success.status` | success | {item} is saved | 7/15/30 | none | no | android, web, admin | provisional | content |
 | `reg.access.support_request` | disclosure | RC-007 (draft) | 68/136/272 | `term.support_access` | no | android, web, admin | provisional | content |
+| `reg.ai_disclosure.insight` | disclosure | RC-009 (draft) | 27/55/110 | `term.ai_insight` | no | android, web, admin | provisional | content |
 | `reg.consent.message_capture` | disclosure | RC-001 (draft) | 88/176/352 | `term.consent` | no | android, web, admin | provisional | content |
 | `reg.deletion.confirm` | disclosure | RC-006 (draft) | 72/145/290 | `term.account_deletion` | no | android, web, admin | provisional | content |
 | `reg.disclaimer.not_investment_advice` | disclosure | RC-003 (draft) | 41/83/166 | none | no | android, web, admin | provisional | content |
+| `reg.disclaimer.projection` | disclosure | RC-011 (draft) | 22/44/88 | `term.projected` | no | android, web, admin | provisional | content |
+| `reg.disclaimer.scenario_not_advice` | disclosure | RC-010 (draft) | 20/40/80 | `term.scenario` | no | android, web, admin | provisional | content |
 | `reg.incident.notice` | disclosure | RC-008 (draft) | 69/139/278 | none | no | android, web, admin | provisional | content |
 | `reg.permission.message_access` | disclosure | RC-002 (draft) | 60/120/240 | `term.permission` | no | android | provisional | content |
 | `reg.plan_change.effective` | disclosure | RC-004 (draft) | 61/123/246 | `term.plan` | no | android, web, admin | provisional | content |

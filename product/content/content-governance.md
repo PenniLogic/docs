@@ -29,6 +29,10 @@ state identifiers and carry no copy, and a forbidden term restated here is refus
 | `common.` | Shared by Android, web and admin, including the neutral safe-exit keys. |
 | other | Product copy such as `pattern.` slot keys; may not use the `term`, `voice`, `banned` or `convention` roots. |
 
+AI disclosure, advice boundaries and projection disclosures are regulated copy (product/08 section 12): every
+`disclosure`-category key lives under `reg.` and binds a record (`ai_disclosure` or `disclaimer`), and no ordinary key
+may restate a record's text, even inside longer copy.
+
 Removing or renaming a term or key needs a major version bump; additions are minor.
 
 ## Regulated-copy workflow
