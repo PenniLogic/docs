@@ -735,6 +735,12 @@ def cell(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("|", "\\|")
 
 
+def sentence(text):
+    """Table-safe free text closed with a full stop, so the generated prose that follows it stays separated."""
+    escaped = cell(text)
+    return escaped if escaped.endswith((".", "!", "?")) else escaped + "."
+
+
 def table(header, rows):
     lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
     lines += ["| " + " | ".join(row) + " |" for row in rows]
@@ -771,9 +777,9 @@ def render_summary(model, gaps):
         *table(("Readiness rule", "Count"), [(f"`{rule}`", str(len(gaps[rule]))) for rule in held]), "",
         "## Privacy and collection", "",
         f"- Collection: {'enabled' if collection['enabled'] else 'disabled'}; enabling requires "
-        f"{codes(sorted(collection['enable_requires']))}. Rollback: {cell(collection['rollback'])}",
+        f"{codes(sorted(collection['enable_requires']))}. Rollback: {sentence(collection['rollback'])}",
         f"- Payload allowlist (referenced, not restated; E33-F04): {codes(privacy['payload_allowlist_refs'])}.",
-        f"- Consent: `{privacy['consent_ref']}`. Opt-out honoured: {cell(privacy['opt_out']['rule'])}",
+        f"- Consent: `{privacy['consent_ref']}`. Opt-out honoured: {sentence(privacy['opt_out']['rule'])}",
         f"- Cohort minimum, retention, aggregation and access: `{privacy['cohort_minimum_ref']}`, "
         f"`{privacy['retention_ref']}`, `{privacy['aggregation_ref']}`, `{privacy['access_ref']}`.",
         f"- Session recording of financial or operator-sensitive content: `{privacy['session_recording']}`.",
@@ -832,10 +838,10 @@ def render_tail(model):
              f"{benchmark['entry_criteria']} (`{benchmark['moderated_defects_ref']}`)")
             for identifier, benchmark in sorted(indexed["benchmarks"].items())]), "",
         "## Post-beta longitudinal plan", "",
-        f"- Status: `{plan['status']}`. Cohort: {cell(plan['cohort'])} Minimum: `{plan['cohort_minimum_ref']}`.",
+        f"- Status: `{plan['status']}`. Cohort: {sentence(plan['cohort'])} Minimum: `{plan['cohort_minimum_ref']}`.",
         f"- Cadence: {plan['cadence']}. Retention: `{plan['retention_ref']}`. Privacy review: "
         f"`{plan['privacy_review_ref']}`.",
-        *[f"- Stop criterion: {cell(item)}" for item in plan["stop_criteria"]],
+        *[f"- Stop criterion: {sentence(item)}" for item in plan["stop_criteria"]],
         f"- Decisions it may change: {codes(plan['decisions_it_may_change'])}.", "",
         "## Design-debt register", "",
         "Open critical or high debt blocks D8 unless the CDO-equivalent (`decision_coordinator`) records a dated, "

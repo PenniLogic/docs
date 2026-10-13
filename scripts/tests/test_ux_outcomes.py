@@ -969,6 +969,22 @@ class ContentGuardTests(CatalogueCase):
             self.document, lambda d: d["guardrails"][0].update(signal="Pay " + chr(0x20B9) + "5")))
 
 
+class SummaryTextTests(CatalogueCase):
+    def render(self, document):
+        model = self.run_check(document)
+        return module.render_summary(model, module.readiness(model, date(2026, 10, 13)))
+
+    def test_free_text_is_closed_before_generated_prose(self):
+        summary = self.render(self.document)
+        self.assertIn("Rollback: Stop collection and keep only approved aggregate history.\n", summary)
+        self.assertIn("route. Minimum: `pending:PenniLogic/infra#27`.", summary)
+        self.assertIn("- Stop criterion: Participant withdrawal or consent expiry.\n", summary)
+
+    def test_free_text_already_closed_is_not_doubled(self):
+        summary = self.render(mutate(self.document, lambda d: d["collection"].update(rollback="Stop collection.")))
+        self.assertIn("Rollback: Stop collection.\n", summary)
+
+
 JOURNEYS = [f"J{number:02d}" for number in range(1, 13)]
 INCENTIVE_JOURNEYS = ("J01", "J06", "J08", "J09")
 

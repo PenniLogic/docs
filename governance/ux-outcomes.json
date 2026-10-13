@@ -30,7 +30,7 @@
     "aggregation_ref": "pending:PenniLogic/infra#27",
     "access_ref": "pending:PenniLogic/infra#27",
     "session_recording": "prohibited",
-    "privacy_budget": {"max_fields_per_event": 4, "max_values_per_field": 12}
+    "privacy_budget": {"max_fields_per_event": 5, "max_values_per_field": 12}
   },
   "events": [
     {
@@ -61,6 +61,7 @@
           "kind": "enum",
           "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
         },
+        {"name": "stage", "kind": "enum", "values": ["entry", "core", "confirmation"]},
         {"name": "step_outcome", "kind": "enum", "values": ["completed", "abandoned"]},
         {"name": "elapsed", "kind": "duration_bucket", "values": ["under_minute", "few_minutes", "longer"]},
         {"name": "assistive_mode", "kind": "boolean", "values": []}
@@ -305,8 +306,11 @@
       "journey_id": "J01",
       "role": "primary",
       "kind": "sustained_progress",
-      "statement": "Share of opted-in first-run sessions that later reach a first progress milestone",
-      "numerator": {"event_ids": ["EV-009"], "definition": "Milestones of kind first_month_on_plan"},
+      "statement": "First progress milestones reached per opted-in first run, as an aggregate ratio",
+      "numerator": {
+        "event_ids": ["EV-009"],
+        "definition": "Milestones of kind first_month_on_plan; no per-person linkage"
+      },
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown the first-run entry step; opted-out sessions excluded",
@@ -327,14 +331,14 @@
       "journey_id": "J01",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j01 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -396,8 +400,11 @@
       "journey_id": "J01",
       "role": "secondary",
       "kind": "trust",
-      "statement": "Share of permission requests declined or deferred while the first run still continues",
-      "numerator": {"event_ids": ["EV-010"], "definition": "Answers declined or deferred"},
+      "statement": "Share of permission requests declined or deferred that are not asked again",
+      "numerator": {
+        "event_ids": ["EV-010"],
+        "definition": "Answers declined or deferred with times_shown once"
+      },
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown the J01 offer step; opted-out sessions excluded",
@@ -440,14 +447,14 @@
       "journey_id": "J02",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j02 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -531,14 +538,14 @@
       "journey_id": "J03",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j03 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -622,14 +629,14 @@
       "journey_id": "J04",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j04 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -713,14 +720,14 @@
       "journey_id": "J05",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j05 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -804,14 +811,14 @@
       "journey_id": "J06",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j06 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -917,14 +924,14 @@
       "journey_id": "J07",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j07 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1008,14 +1015,14 @@
       "journey_id": "J08",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j08 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1121,14 +1128,14 @@
       "journey_id": "J09",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j09 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1234,14 +1241,14 @@
       "journey_id": "J10",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j10 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1325,14 +1332,14 @@
       "journey_id": "J11",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j11 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1394,7 +1401,7 @@
       "journey_id": "J12",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of configuration and release tasks finished without reversal",
+      "statement": "Share of configuration and release tasks finished",
       "numerator": {"event_ids": ["EV-002"], "definition": "J12 steps ending completed"},
       "denominator": {
         "event_ids": ["EV-001"],
@@ -1416,14 +1423,14 @@
       "journey_id": "J12",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
       "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j12 and elapsed longer"},
       "denominator": {
         "event_ids": ["EV-001"],
         "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "duration_bucket_share",
+      "unit": "rate_per_eligible",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
