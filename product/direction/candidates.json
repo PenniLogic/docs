@@ -1,0 +1,868 @@
+{
+  "schema_version": 1,
+  "kind": "direction_candidates",
+  "source_issue": "PenniLogic/docs#76",
+  "plan_id": "T-UXR-07",
+  "status": "proposal",
+  "candidates": [
+    {
+      "id": "DIR-01",
+      "name": "Ledger and Margin",
+      "material_tradition": "ruled_ledger_paper",
+      "graphic_tradition": "double_entry_bookkeeping",
+      "category_default": false,
+      "rationale": "Debt is a running balance with a known end state (product spec section 1). A ruled household ledger makes every figure traceable to its entry, so provenance and the payoff date read as the closing line of an account the person keeps, not as a score the product awards.",
+      "intended_feel": "Calm, orderly and accountable: a well-kept account book on a kitchen table, where nothing is hidden and every correction stays visible.",
+      "form_language": "Horizontal rules and a narrow margin column carry structure; figures sit in tabular columns; a red margin rule marks focus and corrections; surfaces are flat paper with no depth effects.",
+      "signature_interaction": "Struck-through correction: when a transaction is clarified, the old reading stays visible with a strike and a margin note naming its source, so the change is auditable rather than silently replaced.",
+      "content_behavior": "Plain declarative entries in the margin column (source, date, who changed it); the payoff date is written as the closing line of the debt account; no exclamations.",
+      "risks": [
+        "May read as old-fashioned or administrative to younger households (unvalidated).",
+        "Dense ruled columns can become cramped on narrow phone screens.",
+        "Illustrative control boundary fails the non-text contrast minimum against the paper surface; a darker rule is needed."
+      ],
+      "accessibility_notes": [
+        "Tabular figures need programmatic row and column headers so screen readers announce each balance with its account.",
+        "The red margin focus rule must be paired with a non-color cue such as a thickened rule for color-vision deficiencies.",
+        "Strike-through corrections need a text equivalent, not only a visual strike."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "Households that already keep paper or spreadsheet records will recognise the ledger metaphor.",
+          "validated": false
+        },
+        {
+          "text": "Seeing a correction history increases trust in categorised transactions rather than causing worry.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#F7F3E8"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#1F2A44"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#5B6475"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#8A8F99"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#B03A2E"
+          },
+          {
+            "role": "progress",
+            "srgb": "#2F6B4F"
+          },
+          {
+            "role": "warning",
+            "srgb": "#9A3412"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "fail"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
+        }
+      ],
+      "feasibility": {
+        "density": "High density suits tabular history; on compact phones the margin column collapses under each row.",
+        "reduced_motion": "Static by nature; strike and margin notes appear without animation, so reduced motion loses nothing.",
+        "localization_expansion": "Margin notes wrap below the entry when translated labels grow; numeric columns stay aligned for Indian digit grouping.",
+        "android": "Maps to Material list and table patterns with custom dividers; no platform-specific identity is required.",
+        "web": "Native tables with sticky headers carry the ledger on wide screens.",
+        "admin": "Ledger rows suit operator queues, but operator views must show metadata only, never user line items."
+      }
+    },
+    {
+      "id": "DIR-02",
+      "name": "Route Atlas",
+      "material_tradition": "folded_paper_map",
+      "graphic_tradition": "cartographic_wayfinding",
+      "category_default": false,
+      "rationale": "The product frames a payoff date as a destination rather than a chore (product spec section 1). A route map shows where the household is, the remaining distance and the alternative routes (avalanche, snowball, hybrid) without ranking people.",
+      "intended_feel": "Oriented and unhurried: a trip planner open on the table, with the destination fixed and several honest routes to it.",
+      "form_language": "A single route line with stations for milestones; contour shading for uncertainty bands; a legend that names every symbol; muted terrain surfaces.",
+      "signature_interaction": "Route comparison: switching strategies redraws the route and moves the arrival station, showing time and interest difference side by side instead of a single verdict.",
+      "content_behavior": "Wayfinding phrasing such as you are here, remaining distance and arrival estimate; every estimate names its assumptions; missed payments read as a detour, not a failure.",
+      "risks": [
+        "The journey metaphor can imply the product steers the route, close to advice the spec forbids (section 2.3).",
+        "Contour shading for uncertainty is faint on the illustrative surface and fails the non-text contrast minimum.",
+        "Map literacy varies; the metaphor may confuse some people (unvalidated)."
+      ],
+      "accessibility_notes": [
+        "Every route and station needs a text summary; the map is never the only carrier of the payoff estimate.",
+        "Uncertainty must be stated in words and ranges, not only by shading.",
+        "Strategy switching must not rely on drag gestures; plain buttons are required."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "People in repayment respond to a destination framing with less anxiety than to a budget framing.",
+          "validated": false
+        },
+        {
+          "text": "A detour framing for missed payments avoids shame for people with irregular income.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#EEF3EC"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#1B3A2F"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#4F6B5E"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#6E8B7D"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#1D4ED8"
+          },
+          {
+            "role": "progress",
+            "srgb": "#C2410C"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#8FA79A"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "fail"
+        }
+      ],
+      "feasibility": {
+        "density": "Medium; the map needs space, so compact phones show a linear route strip with stations.",
+        "reduced_motion": "Route redraw becomes an instant swap with the changed arrival stated in text.",
+        "localization_expansion": "Station labels sit beside the line and can wrap; the legend grows vertically.",
+        "android": "A custom canvas view for the route strip; standard Material controls for strategy choice.",
+        "web": "A wider route view with the comparison table beside it.",
+        "admin": "Not applicable to operator views beyond a neutral status strip; operators never see user routes."
+      }
+    },
+    {
+      "id": "DIR-03",
+      "name": "Almanac Grid",
+      "material_tradition": "uncoated_offset_print",
+      "graphic_tradition": "international_typographic",
+      "category_default": false,
+      "rationale": "Deterministic, verifiable claims are the product's value (product spec section 1). A strict typographic grid with one typeface family lets figures, dates and sources carry the identity, so clarity and provenance are the brand rather than decoration.",
+      "intended_feel": "Precise and quiet: a well-set reference timetable where the answer is always in the same place.",
+      "form_language": "Asymmetric column grid, strong type hierarchy, flush-left text, black on white with a single signal red; rules instead of boxes; no illustration.",
+      "signature_interaction": "Expanding footnote: every figure carries a numbered note that expands in place to show its source, method and uncertainty range.",
+      "content_behavior": "Short headline statements followed by figures and footnotes; numbers lead sentences; hedges are explicit ranges, never adjectives.",
+      "risks": [
+        "Can feel cold or clinical at moments of debt anxiety (unvalidated).",
+        "Heavy reliance on typography makes the direction sensitive to script coverage beyond Latin.",
+        "Close to generic minimal product styling; distinctness depends on disciplined grid and note behavior."
+      ],
+      "accessibility_notes": [
+        "Footnote expansion must be keyboard and screen-reader operable with the expanded state announced.",
+        "Signal red is reserved for warnings and focus and must always be paired with text or an icon shape.",
+        "Type hierarchy must survive user text scaling without overlapping columns."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "People comparing payoff strategies prefer exact figures with sources over reassurance.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#FFFFFF"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#111111"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#595959"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#767676"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#D7261E"
+          },
+          {
+            "role": "progress",
+            "srgb": "#111111"
+          },
+          {
+            "role": "warning",
+            "srgb": "#D7261E"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
+        }
+      ],
+      "feasibility": {
+        "density": "Supports high density on web and admin; compact phones reduce to a single column with footnotes inline.",
+        "reduced_motion": "Footnotes expand without animation; no motion is load-bearing.",
+        "localization_expansion": "Flush-left text tolerates growth; the grid must allow columns to stack when labels expand.",
+        "android": "Fits Material layout grids and typography roles with a constrained palette.",
+        "web": "Natural fit for responsive grids.",
+        "admin": "Well suited to operator queues and audit views that need dense, scannable metadata."
+      }
+    },
+    {
+      "id": "DIR-04",
+      "name": "Cut Paper Household",
+      "material_tradition": "layered_cut_paper",
+      "graphic_tradition": "paper_collage",
+      "category_default": false,
+      "rationale": "Household debt is a household problem (product spec section 1) and sharing must stay consent-based and revocable (section 2.1). Layered cut paper makes each person's share a separate, removable layer, so what is shared and what is private is physically legible.",
+      "intended_feel": "Warm, handmade and human: a family planning sheet made together, where pieces can be added or taken away.",
+      "form_language": "Overlapping flat paper shapes with torn or cut edges; each household member has a separate layer; warm pastel surfaces; soft offset edges instead of drop shadows.",
+      "signature_interaction": "Lift a layer: revoking a grant lifts that person's layer away at once, and the remaining view shows only what is still shared.",
+      "content_behavior": "Warm, second-person language; sharing states are named in full (shared totals only, shared with whom, until revoked); no blame wording for overdue items.",
+      "risks": [
+        "Pastel surfaces fail the non-text contrast minimum for the illustrative control boundary and progress shape, and provenance text fails body-text contrast.",
+        "A playful craft look may undercut credibility for large debts (unvalidated).",
+        "Layer metaphors can be hard to express to screen-reader users without careful structure."
+      ],
+      "accessibility_notes": [
+        "Each layer needs a named region and an explicit owner and scope label.",
+        "Control edges need a darker boundary than the illustrative value to meet non-text contrast.",
+        "Torn-edge shapes must not obscure text or focus outlines."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "Couples managing shared debt understand separate layers as separate consent.",
+          "validated": false
+        },
+        {
+          "text": "A warm craft look lowers anxiety without trivialising debt.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/client-state-taxonomy.json",
+          "sha256": "sha256:040d2f0c27332ce3f6794a90139e714b3c50afb5b7340aa596d47b8866f2b3fb"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#FBE9D7"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#3B1F2B"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#7A5C66"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#C98F7A"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#3B1F2B"
+          },
+          {
+            "role": "progress",
+            "srgb": "#E07A5F"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#5E7A5A"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "fail"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "fail"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
+          "background": "surface",
+          "result": "fail"
+        }
+      ],
+      "feasibility": {
+        "density": "Low density; suits summaries and household views, poor for long transaction lists.",
+        "reduced_motion": "Layer lift becomes an instant removal with a text confirmation of what is no longer shared.",
+        "localization_expansion": "Labels sit on layers that must grow; fixed cut shapes would clip longer translations.",
+        "android": "Custom drawn shapes are feasible but need care to keep Material touch targets and focus visible.",
+        "web": "Layered shapes are feasible with vector drawing; performance on low-end devices needs a check.",
+        "admin": "Not suited to operator tooling; admin would need a separate neutral treatment under the same thesis."
+      }
+    },
+    {
+      "id": "DIR-05",
+      "name": "Drafting Table",
+      "material_tradition": "drafting_vellum",
+      "graphic_tradition": "technical_drawing",
+      "category_default": false,
+      "rationale": "The what-if simulator is instant and deterministic (product spec section 3.2). A technical drawing shows a plan with dimensions, tolerances and revision marks, so a payoff plan reads as an engineered, checkable model and uncertainty is a stated tolerance.",
+      "intended_feel": "Competent and transparent: an engineer's plan you can check line by line, with every assumption dimensioned.",
+      "form_language": "Fine line work on a deep plan surface, dimension lines for amounts and durations, dashed lines for projected or uncertain values, a title block naming source and revision.",
+      "signature_interaction": "Revision block: each change to the plan adds a dated revision row naming what changed and why, and earlier revisions stay viewable.",
+      "content_behavior": "Labels in a measured, specification register; projections carry an explicit tolerance; every figure names its basis in the title block.",
+      "risks": [
+        "A dark plan surface may feel technical or intimidating to people new to debt planning (unvalidated).",
+        "Dashed uncertainty lines are faint on the illustrative surface and fail the non-text contrast minimum.",
+        "Thin line work degrades on low-density screens and in bright outdoor light."
+      ],
+      "accessibility_notes": [
+        "Dimensioned values need text equivalents; the drawing is never the only source of a figure.",
+        "Dashed lines need a second cue (a label such as projected) because dash patterns are hard to perceive.",
+        "A light-surface variant must exist for people who need positive polarity."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "People who use the simulator want to inspect assumptions rather than only see a result.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#0B3D6B"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#F2F6FA"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#A9C2DB"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#7FA6CC"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#FFD166"
+          },
+          {
+            "role": "progress",
+            "srgb": "#FFFFFF"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#5E88B3"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "fail"
+        }
+      ],
+      "feasibility": {
+        "density": "High density for plans and schedules; title blocks collapse to a summary row on phones.",
+        "reduced_motion": "Revisions appear as new rows without transitions.",
+        "localization_expansion": "Dimension labels must reflow off the line when translations grow; fixed label boxes would clip.",
+        "android": "Feasible with Material surfaces in a dark scheme plus a required light variant.",
+        "web": "Feasible; vector line work scales on high-density displays.",
+        "admin": "Revision blocks fit audit and change-history views for operators."
+      }
+    },
+    {
+      "id": "DIR-06",
+      "name": "Painted Shopfront",
+      "material_tradition": "enamel_painted_tin",
+      "graphic_tradition": "indic_hand_painted_signage",
+      "category_default": false,
+      "rationale": "The product serves households paying in rupees (product spec section 1). Hand-painted shopfront signage is a familiar public language of plain, bold, trustworthy statements; it can make the payoff date and next action unmistakable without banking imagery.",
+      "intended_feel": "Direct, local and confident: a clear painted sign that tells you what is here and what to do next.",
+      "form_language": "Bold display lettering for one headline figure, flat saturated panels, painted borders around actions, simple pictograms; body text stays in a plain readable face.",
+      "signature_interaction": "Next-step panel: one painted panel always names the single next action and its effect on the payoff date; other options sit below in plain text.",
+      "content_behavior": "Short imperative headlines and plain sentences; bilingual labels are anticipated; no slang, no hype, no urgency theatre.",
+      "risks": [
+        "Risk of cultural caricature if the signage tradition is used decoratively without local designers (unvalidated).",
+        "Display lettering may not cover every Indic script equally well; body text must not use it.",
+        "Saturated panels can feel loud during stressful moments."
+      ],
+      "accessibility_notes": [
+        "Display lettering is limited to large text; body copy uses a highly legible face.",
+        "Saturated yellow surfaces need checks for glare and for people with light sensitivity.",
+        "Pictograms always carry visible text labels."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "Households outside metro areas find signage-style statements clearer than app conventions.",
+          "validated": false
+        },
+        {
+          "text": "A single named next step reduces decision anxiety more than a list of options.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#FFD23F"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#1A1A1A"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#5A3E00"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#B3261E"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#1A1A1A"
+          },
+          {
+            "role": "progress",
+            "srgb": "#0F5132"
+          },
+          {
+            "role": "warning",
+            "srgb": "#B3261E"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
+        }
+      ],
+      "feasibility": {
+        "density": "Low to medium; one headline panel per view, plain lists below.",
+        "reduced_motion": "Static panels; no motion is needed.",
+        "localization_expansion": "Display headlines must shrink or wrap for longer scripts; panels are flexible rectangles.",
+        "android": "Feasible with Material components inside painted panel containers.",
+        "web": "Feasible; display lettering limited to headlines keeps performance acceptable.",
+        "admin": "Operators need a calmer neutral variant; signage panels would overload queue views."
+      }
+    },
+    {
+      "id": "DIR-07",
+      "name": "Handloom Weave",
+      "material_tradition": "handloom_textile",
+      "graphic_tradition": "warp_and_weft_pattern",
+      "category_default": false,
+      "rationale": "A household budget is many threads held together: income, debts, goals and members (product spec sections 1 and 3.5). A woven pattern shows each thread separately and the cloth they form together, so shared totals and private details are distinct threads.",
+      "intended_feel": "Patient and resilient: cloth built row by row, where a dropped thread is mended rather than hidden.",
+      "form_language": "Fine woven textures as quiet backgrounds, coloured threads for each debt or goal, rows of weave as months, indigo and natural cloth surfaces.",
+      "signature_interaction": "Row by row: each month adds a woven row; a missed payment shows as a mended thread with its note, not a hole.",
+      "content_behavior": "Gentle, steady phrasing; progress is described as rows completed and rows remaining; mending language for setbacks.",
+      "risks": [
+        "Illustrative control boundary and uncertainty threads fail the non-text contrast minimum on the cloth surface.",
+        "Textures can reduce text legibility and add visual noise for some readers.",
+        "Weaving metaphors may not translate across all audiences (unvalidated)."
+      ],
+      "accessibility_notes": [
+        "Textures sit behind text only at very low intensity, with a plain-surface option.",
+        "Thread colours need distinct patterns or labels so meaning does not rely on colour alone.",
+        "Monthly rows need a text table equivalent."
+      ],
+      "persona_assumptions": [
+        {
+          "text": "A mending framing for missed payments supports people with irregular income.",
+          "validated": false
+        }
+      ],
+      "grounding": [
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/01-product-spec.md",
+          "sha256": "sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/08-experience-design-and-sdlc-plan.md",
+          "sha256": "sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880"
+        },
+        {
+          "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+          "path": "product/client-state-taxonomy.json",
+          "sha256": "sha256:040d2f0c27332ce3f6794a90139e714b3c50afb5b7340aa596d47b8866f2b3fb"
+        }
+      ],
+      "illustrative_values": {
+        "binding": false,
+        "values": [
+          {
+            "role": "surface",
+            "srgb": "#F4EFE6"
+          },
+          {
+            "role": "text_primary",
+            "srgb": "#2E1F3D"
+          },
+          {
+            "role": "text_secondary",
+            "srgb": "#6B5B7B"
+          },
+          {
+            "role": "control_boundary",
+            "srgb": "#A08FB3"
+          },
+          {
+            "role": "focus_indicator",
+            "srgb": "#B5179E"
+          },
+          {
+            "role": "progress",
+            "srgb": "#1E5AA8"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#C9B8D9"
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "kind": "text",
+          "foreground": "text_primary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "text_secondary",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "control_boundary",
+          "background": "surface",
+          "result": "fail"
+        },
+        {
+          "kind": "ui",
+          "foreground": "focus_indicator",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "fail"
+        }
+      ],
+      "feasibility": {
+        "density": "Medium; the weave suits monthly summaries, while transaction lists use plain rows.",
+        "reduced_motion": "New rows appear without a weaving animation.",
+        "localization_expansion": "Labels sit outside the weave and can wrap freely.",
+        "android": "Feasible with textured surfaces as optional backgrounds behind Material components.",
+        "web": "Feasible; textures must be lightweight and removable.",
+        "admin": "Operators use the plain-surface variant only."
+      }
+    }
+  ]
+}

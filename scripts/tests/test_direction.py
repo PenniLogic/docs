@@ -727,5 +727,97 @@ class GitTests(FilesCase):
                 module.GitSources(root).blob(COMMIT, SOURCE_PATH)
 
 
+
+class RenderTests(FilesCase):
+    def test_render_mode_prints_the_markdown_view(self):
+        fixture = Fixture()
+        code, out, err = self.run_main(self.layout(fixture), "--render")
+        self.assertEqual((code, err), (0, ""))
+        self.assertEqual(out, module.render_markdown(fixture.check()))
+        self.assertTrue(out.startswith("# Concept directions and pending D2 direction record (T-UXR-07)\n"))
+        self.assertIn("reports **NOT GREEN: readiness incomplete**.", out)
+
+    def test_render_refuses_like_the_check(self):
+        fixture = Fixture()
+        fixture.record["participant_count"] = 0
+        self.assertEqual(self.run_main(self.layout(fixture), "--render"),
+                         (1, "", "Direction check refused: record.participant_count_zero\n"))
+
+    def test_render_and_structure_are_exclusive(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+            module.main(["--render", "--structure"], root=self.layout(Fixture()), sources=FakeSources())
+        self.assertEqual(caught.exception.code, 2)
+
+    def test_table_cells_escape_pipes(self):
+        self.assertEqual(module.table(("A",), [("x | y",)]), ["| A |", "|---|", "| x \\| y |"])
+
+    def test_displayed_ratio_never_overstates(self):
+        # #777777 on white computes 4.478:1; rounding would display 4.48, truncation displays 4.47.
+        self.assertEqual(module.ratio_text("#777777", "#FFFFFF"), "4.47")
+        self.assertEqual(module.ratio_text("#000000", "#FFFFFF"), "21.00")
+
+    def test_rendered_view_is_deterministic(self):
+        self.assertEqual(module.render_markdown(Fixture().check()), module.render_markdown(Fixture().check()))
+
+
+PUBLISHED_FAILING = [
+    "DIR-01 control_boundary:surface", "DIR-02 uncertainty:surface", "DIR-04 control_boundary:surface",
+    "DIR-04 progress:surface", "DIR-04 provenance:surface", "DIR-05 uncertainty:surface",
+    "DIR-07 control_boundary:surface", "DIR-07 uncertainty:surface",
+]
+
+
+class PublishedDataTests(unittest.TestCase):
+    """The committed data, grounded against this repository's own Git object store (read-only)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = module.load_and_check(ROOT)
+
+    def test_published_data_reports_exact_readiness_gaps(self):
+        self.assertEqual(module.readiness(self.model), {
+            "readiness.user_evidence_missing": ["pending:PenniLogic/docs#53"],
+            "readiness.persona_unvalidated": [f"DIR-{n:02d}" for n in range(1, 8)],
+            "readiness.review_pending": ["accessibility", "content", "android_design", "web_design", "admin_design"],
+            "readiness.contrast_failing": PUBLISHED_FAILING,
+            "readiness.decision_pending": ["D2"],
+            "readiness.held_gate": [
+                "pending:PenniLogic/docs#53", "pending:PenniLogic/docs#66", "pending:PenniLogic/infra#22",
+            ],
+        })
+
+    def test_published_structure_line(self):
+        self.assertEqual(module.structure_line(self.model), (
+            "Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing), record 0.1.0 pending"))
+
+    def test_published_record_is_pending_and_undecided(self):
+        record = self.model.record
+        self.assertEqual((record["status"], record["participant_count"], record["decision"]), ("pending", None, None))
+        self.assertEqual(record["token_contract"], {
+            "state": "not_started", "owner_issue": "PenniLogic/docs#55", "reference": None})
+
+    def test_published_candidates_are_pairwise_distinct(self):
+        candidates = self.model.candidates["candidates"]
+        for key in ("name", "material_tradition", "graphic_tradition"):
+            self.assertEqual(len({item[key] for item in candidates}), 7, key)
+        self.assertFalse(any(item["category_default"] for item in candidates))
+
+    def test_published_markdown_matches_the_rendered_view(self):
+        self.assertEqual((ROOT / module.MARKDOWN).read_bytes().decode("utf-8"), module.render_markdown(self.model),
+                         "regenerate with: " + module.RENDER_COMMAND)
+
+    def test_published_default_mode_output(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = module.main([])
+        self.assertEqual((code, err.getvalue()), (1, ""))
+        self.assertEqual(out.getvalue().splitlines(), [
+            "NOT GREEN: readiness incomplete",
+            "Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing), record 0.1.0 pending",
+            "readiness.user_evidence_missing: 1", "readiness.persona_unvalidated: 7", "readiness.review_pending: 5",
+            "readiness.contrast_failing: 8", "readiness.decision_pending: 1", "readiness.held_gate: 3",
+        ])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "kind": "direction_probes",
+  "source_issue": "PenniLogic/docs#76",
+  "probes": [
+    {
+      "id": "PRB-01",
+      "topic": "debt_progress",
+      "format": "text",
+      "data_origin": "synthetic",
+      "access_depiction": "none",
+      "scenario": "Synthetic household with two fictional debts: a card balance of INR 40,000 and a personal loan of INR 1,20,000. The projected payoff is 18 months away under the avalanche strategy and 20 months under snowball; one payment last month was late. The probe asks whether progress, the projection's uncertainty and the person's control are legible without praise or blame.",
+      "renderings": [
+        {
+          "candidate": "DIR-01",
+          "description": "Two ledger accounts, each closing with a payoff line; the late payment is an entry with a margin note, not a red mark on the person. A footer line states the projection range of 17 to 20 months and its assumptions."
+        },
+        {
+          "candidate": "DIR-02",
+          "description": "A route strip with a you-are-here station and an arrival station 18 months on; the late payment appears as a short detour. Switching to snowball moves the arrival two months later and shows the interest difference in text."
+        },
+        {
+          "candidate": "DIR-03",
+          "description": "Headline figure 18 months, followed by two columns for the debts and footnote 1 giving the method and a range of 17 to 20 months. The late payment is a neutral row in the history."
+        },
+        {
+          "candidate": "DIR-04",
+          "description": "Two paper shapes shrinking as balances fall, labelled with remaining amounts; a calm note says one payment arrived late and the plan has adjusted. Text states the 18-month estimate and its range."
+        },
+        {
+          "candidate": "DIR-05",
+          "description": "A plan drawing with a dimension line from today to the payoff date, tolerance marked as 17 to 20 months; the late payment is revision 3 in the title block with its effect stated."
+        },
+        {
+          "candidate": "DIR-06",
+          "description": "One painted panel: Debt free in about 18 months; next step: pay INR 2,000 extra on the card. Below, plain text lists both debts and notes the late payment without judgement."
+        },
+        {
+          "candidate": "DIR-07",
+          "description": "Woven rows for each month paid, two coloured threads for the debts, and remaining rows shown as unwoven warp; the late month is a mended row with a note. Text gives 18 months and the range."
+        }
+      ]
+    },
+    {
+      "id": "PRB-02",
+      "topic": "transaction_clarification",
+      "format": "text",
+      "data_origin": "synthetic",
+      "access_depiction": "none",
+      "scenario": "Synthetic imported transaction of INR 1,500 from a fictional merchant called Sample Grocer, auto-categorised as dining with low confidence. The person corrects it to groceries. The probe asks whether the source of the original reading, the uncertainty and the correction are legible and reversible.",
+      "renderings": [
+        {
+          "candidate": "DIR-01",
+          "description": "The entry shows dining struck through and groceries written beside it, with a margin note: imported from statement, categorised automatically with low confidence, corrected by you; undo is available."
+        },
+        {
+          "candidate": "DIR-02",
+          "description": "The transaction is a waypoint with a dotted connector marked uncertain; after correction the connector becomes solid and a legend line names the change and its source."
+        },
+        {
+          "candidate": "DIR-03",
+          "description": "The row reads INR 1,500, Sample Grocer, groceries, with footnote 2 explaining the original automatic category, its low confidence and the correction; the footnote offers undo."
+        },
+        {
+          "candidate": "DIR-04",
+          "description": "A paper tag on the transaction flips from dining to groceries; a small note under it names where the first guess came from and how to reverse the change."
+        },
+        {
+          "candidate": "DIR-05",
+          "description": "The transaction appears in a schedule with a dashed category field marked unconfirmed; correcting it adds a revision row stating the old value, the new value and the reason."
+        },
+        {
+          "candidate": "DIR-06",
+          "description": "A painted panel asks: Is this groceries? with two plain buttons; after the answer the panel states what changed and offers undo in plain text."
+        },
+        {
+          "candidate": "DIR-07",
+          "description": "The transaction is a thread with a loose end marked unsure; after correction it is woven into the groceries row with a note naming the original guess and an undo action."
+        }
+      ]
+    },
+    {
+      "id": "PRB-03",
+      "topic": "household_privacy",
+      "format": "text",
+      "data_origin": "synthetic",
+      "access_depiction": "explicit_revocable_grant",
+      "scenario": "Synthetic household of two fictional members, Member A and Member B. Member A has granted Member B a view of debt totals only, not transactions; Member A can revoke at any time without notifying the reason, and every view by Member B appears in Member A's access log. The probe asks whether the scope of the grant, who can see what and the way out are legible, and that shared access never looks like ordinary browsing.",
+      "renderings": [
+        {
+          "candidate": "DIR-01",
+          "description": "A shared summary page headed: Shared with Member B by Member A, totals only, revocable. Transaction rows are not present. Member A's own view has an access-log column listing each view by Member B and a plain stop-sharing action."
+        },
+        {
+          "candidate": "DIR-02",
+          "description": "Member B sees a separate shared route showing totals only, framed with a legend line naming the grant and its scope; Member A's map shows a viewer marker and a stop-sharing action that removes the shared route at once."
+        },
+        {
+          "candidate": "DIR-03",
+          "description": "A labelled shared section: Grant from Member A, scope debt totals, revocable at any time. Member A's settings list the grant, the access log and a stop-sharing action in the same grid position every time."
+        },
+        {
+          "candidate": "DIR-04",
+          "description": "Member B sees one separate layer marked shared by Member A, totals only. Member A can lift the layer away at once; the log of views sits beside the layer, and leaving sends no dramatic notification."
+        },
+        {
+          "candidate": "DIR-05",
+          "description": "The shared view carries a title block stating grantor, scope and revocability; Member A's plan has a revision row for each grant change and a view log, with a stop-sharing action."
+        },
+        {
+          "candidate": "DIR-06",
+          "description": "A painted header on the shared view says: Shared by Member A, totals only. Member A's panel offers one plain action, Stop sharing, and a line of text showing the latest views by Member B."
+        },
+        {
+          "candidate": "DIR-07",
+          "description": "Member B sees only the combined cloth of totals, with a woven label naming Member A's grant; Member A sees which threads are shared, the view log and an action to pull the shared thread out at once."
+        }
+      ]
+    },
+    {
+      "id": "PRB-04",
+      "topic": "operator_urgency",
+      "format": "text",
+      "data_origin": "synthetic",
+      "access_depiction": "audited_elevation",
+      "scenario": "Synthetic operator scenario: a fictional support ticket reports a failed statement import for a fictional user. The operator sees system metadata only. Opening any user financial detail requires a time-boxed elevation with a stated reason, recorded in an audit trail the user can see. The probe asks whether urgency, the boundary of operator access and the audited elevation are legible, and that admin access never looks like ordinary browsing.",
+      "renderings": [
+        {
+          "candidate": "DIR-01",
+          "description": "An operator queue in ledger rows with import status and age; user amounts are absent. Requesting detail opens an elevation entry requiring a reason and showing its expiry, written to the audit ledger."
+        },
+        {
+          "candidate": "DIR-02",
+          "description": "A neutral status strip shows the import failure as a blocked segment; detail access is a separate gated step that names the reason, duration and audit record before anything is shown."
+        },
+        {
+          "candidate": "DIR-03",
+          "description": "A dense grid of tickets sorted by urgency with metadata only; the elevation request is a distinct form with reason, scope and expiry, and the granted view carries a persistent elevated banner with time remaining."
+        },
+        {
+          "candidate": "DIR-04",
+          "description": "Operators use a plain neutral variant: a ticket list with metadata only and a separate elevation request naming reason and expiry; no household layers are shown to operators."
+        },
+        {
+          "candidate": "DIR-05",
+          "description": "A ticket sheet with a title block for system metadata; elevation adds a stamped revision row with reason and expiry, and the elevated view is framed and labelled until the time box ends."
+        },
+        {
+          "candidate": "DIR-06",
+          "description": "Operators use a calm neutral variant; one panel names the urgent ticket and its next step, and elevation is a separate step with a reason field, an expiry and an audit notice."
+        },
+        {
+          "candidate": "DIR-07",
+          "description": "Operators use the plain-surface variant: a metadata-only list, and an elevation step stating reason, scope and expiry; the elevated view stays visibly framed and logged."
+        }
+      ]
+    }
+  ]
+}

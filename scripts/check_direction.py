@@ -17,7 +17,8 @@ AI-preference, internal-vote, synthetic-participant and mood-board "evidence", s
 approval, any final token contract and any non-pending status: no D2 gate record is resolvable offline, so no
 session can record the decision_coordinator's D2 choice here. Representative-user evidence (docs#53), validated
 personas (docs#66), qualified Accessibility, Content and platform reviews and the D2 decision are counted as
-readiness gaps, never filled in, and keep the default mode NOT GREEN.
+readiness gaps, never filled in, and keep the default mode NOT GREEN. `--render` prints the generated markdown view
+product/direction/README.md; a unittest pins the committed file to it.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a DIR/PRB
 grammar, a semantic role, a gate role or a `PenniLogic/<repo>#N` reference; input text is never echoed. Everything
@@ -532,6 +533,124 @@ def structure_line(model):
     )
 
 
+MARKDOWN = "product/direction/README.md"
+RENDER_COMMAND = "python scripts/check_direction.py --render > product/direction/README.md"
+
+
+def cell(text):
+    """A markdown table cell: pipes escaped; checked content has no newlines or markup."""
+    return str(text).replace("|", "\\|")
+
+
+def table(header, rows):
+    lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    lines += ["| " + " | ".join(cell(item) for item in row) + " |" for row in rows]
+    return lines
+
+
+def ratio_text(foreground, background):
+    """The ratio truncated (never rounded up) to two decimals, so a displayed value never overstates contrast."""
+    return f"{int(contrast_ratio(foreground, background) * 100) / 100:.2f}"
+
+
+def render_candidate(candidate):
+    values = {item["role"]: item["srgb"] for item in candidate["illustrative_values"]["values"]}
+    lines = [
+        f"### {candidate['id']} {candidate['name']}", "",
+        f"Material tradition `{candidate['material_tradition']}`; graphic tradition "
+        f"`{candidate['graphic_tradition']}`.", "",
+    ]
+    for label, key in (("Rationale", "rationale"), ("Intended feel", "intended_feel"),
+                       ("Form language", "form_language"), ("Signature interaction", "signature_interaction"),
+                       ("Content behavior", "content_behavior")):
+        lines += [f"- **{label}:** {candidate[key]}"]
+    for label, key in (("Risks", "risks"), ("Accessibility notes", "accessibility_notes")):
+        lines += ["", f"{label}:", ""] + [f"- {item}" for item in candidate[key]]
+    lines += ["", "Persona assumptions (unvalidated until docs#66):", ""]
+    lines += [f"- {item['text']}" for item in candidate["persona_assumptions"]]
+    lines += ["", "Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative luminance):", ""]
+    lines += table(("Kind", "Foreground", "Background", "Ratio", "Minimum", "Result"), [
+        (pair["kind"], f"{pair['foreground']} `{values[pair['foreground']]}`",
+         f"{pair['background']} `{values[pair['background']]}`",
+         ratio_text(values[pair["foreground"]], values[pair["background"]]),
+         f"{CONTRAST_MINIMUM[pair['kind']]:.1f}", pair["result"])
+        for pair in candidate["contrast_pairs"]
+    ])
+    lines += ["", "Feasibility:", ""]
+    lines += table(("Criterion", "Assessment"), [(key, text) for key, text in candidate["feasibility"].items()])
+    lines += ["", "Grounding (verified against the local Git object store):", ""]
+    lines += [f"- `{pin['path']}` at `{pin['commit']}` (`{pin['sha256']}`)" for pin in candidate["grounding"]]
+    return lines + [""]
+
+
+def render_probe(probe):
+    lines = [
+        f"### {probe['id']} {probe['topic']}", "",
+        f"Format `{probe['format']}`; data origin `{probe['data_origin']}`; access depiction "
+        f"`{probe['access_depiction']}`.", "", probe["scenario"], "",
+    ]
+    lines += table(("Candidate", "Rendering"), [(item["candidate"], item["description"])
+                                                for item in probe["renderings"]])
+    return lines + [""]
+
+
+def render_record(record):
+    lines = [
+        "## Direction record (pending)", "",
+        f"Version `{record['version']}`, gate `{record['gate']}`, status `{record['status']}`, prepared by role "
+        f"`{record['prepared_by']['role']}` ({record['prepared_by']['ref']}). Participant count: not recorded "
+        "(null; no study has run). Decision: none (null). Token contract: "
+        f"`{record['token_contract']['state']}` ({record['token_contract']['owner_issue']}).", "",
+        "Evidence:", "",
+    ]
+    lines += table(("Kind", "Reference", "Origin", "State"), [
+        (item["kind"], item["study_ref"], item["data_origin"], item["state"]) for item in record["evidence"]])
+    lines += ["", "Reviews:", ""]
+    lines += table(("Role", "State", "Reviewer"), [
+        (item["role"], item["state"], item["reviewer_ref"] or "none recorded") for item in record["reviews"]])
+    lines += ["", "Semantic roles:", ""]
+    lines += table(("Role", "Meaning"), [(item["role"], item["meaning"]) for item in record["semantic_roles"]])
+    lines += ["", "Platform consequences:", ""]
+    lines += table(("Platform", "Consequence"), list(record["platform_consequences"].items()))
+    for label, key in (("Unresolved risks", "unresolved_risks"),
+                       ("Implementation consequences", "implementation_consequences"),
+                       ("Consumers", "consumers"), ("Held gates", "held_gates")):
+        lines += ["", f"{label}:", ""] + [f"- {item}" for item in record[key]]
+    lines += ["", f"Supersession: {record['supersession']['requires']}", ""]
+    return lines
+
+
+def render_markdown(model):
+    """The generated markdown view of the published data; a unittest pins product/direction/README.md to it."""
+    gaps = readiness(model)
+    lines = [
+        "# Concept directions and pending D2 direction record (T-UXR-07)", "",
+        "> **Status: proposal; D2 decision pending.** Generated from `candidates.json`, `probes.json` and",
+        "> `direction-record.json` by `" + RENDER_COMMAND + "`; do not edit by hand.",
+        "> Source issue PenniLogic/docs#76. Nothing here is user evidence, a review, an approval or a",
+        "> selected direction: candidates and probes are authored proposals with synthetic figures, persona",
+        "> assumptions are unvalidated, illustrative values are non-binding and are not a token contract.", "",
+        "## Readiness", "",
+        f"`python scripts/check_direction.py` reports **{NOT_GREEN if any(gaps.values()) else GREEN}**.",
+        structure_line(model) + ".", "",
+    ]
+    lines += table(("Readiness rule", "Open gaps"), [(rule, len(gaps[rule])) for rule in READINESS_RULES])
+    lines += ["", "## Candidates", ""]
+    lines += table(("ID", "Name", "Material", "Graphic", "Failing contrast pairs"), [
+        (item["id"], item["name"], item["material_tradition"], item["graphic_tradition"],
+         sum(pair["result"] == "fail" for pair in item["contrast_pairs"]))
+        for item in model.candidates["candidates"]
+    ])
+    lines += [""]
+    for candidate in model.candidates["candidates"]:
+        lines += render_candidate(candidate)
+    lines += ["## Probes (static, synthetic, text only)", ""]
+    for probe in model.probes["probes"]:
+        lines += render_probe(probe)
+    lines += render_record(model.record)
+    return "\n".join(lines).rstrip("\n") + "\n"
+
+
 def load_and_check(root, sources=None):
     root = Path(root)
 
@@ -543,12 +662,17 @@ def load_and_check(root, sources=None):
 
 def main(argv=None, root=None, sources=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--structure", action="store_true", help="Check structure only; readiness is not evaluated.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--structure", action="store_true", help="Check structure only; readiness is not evaluated.")
+    mode.add_argument("--render", action="store_true", help=f"Print the generated {MARKDOWN} to standard output.")
     args = parser.parse_args(argv)
     try:
         model = load_and_check(ROOT if root is None else root, sources)
         if args.structure:
             print(structure_line(model) + "; readiness not evaluated.")
+            return 0
+        if args.render:
+            sys.stdout.write(render_markdown(model))
             return 0
         gaps = readiness(model)
         status = NOT_GREEN if any(gaps.values()) else GREEN
