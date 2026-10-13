@@ -156,8 +156,9 @@ STRUCTURE_RULES = (
     "blueprint.journey_mismatch", "blueprint.missing_journey", "blueprint.unknown_journey",
     "blueprint.name_mismatch", "blueprint.persona_mismatch", "blueprint.flow_mismatch",
     "blueprint.audience_mismatch", "blueprint.order",
-    "persona.basis_ref", "persona.validated_without_evidence", "research.complete_without_evidence",
-    "status.validated_with_gaps", "approval.order", "approval.source_mismatch",
+    "persona.basis_ref", "approval.order", "approval.ia_before_backlog",
+    "held.approval", "held.research_evidence", "held.status", "held.persona_basis", "held.backlog_item",
+    "held.gap_status",
     "diagram.set_mismatch", "diagram.registry_mismatch",
     "map.supersedes_mismatch", "metric.minted", "metric.ref_not_pending",
     "step.journey_mismatch", "step.lane_mismatch", "step.channel_lane_mismatch", "step.flow_missing",
@@ -420,15 +421,17 @@ def check_header(model):
     document, registry = model.document, model.registry
     approvals = document["approvals"]
     require([approval["role"] for approval in approvals] == list(APPROVAL_ROLES), "approval.order")
+    # docs#67 criterion 5: journey gaps create owned backlog items before IA approval.
+    unfiled = [gap for gap in model.gaps["gaps"] if gap["status"] == "open" and gap["backlog_item"] is None]
+    require(approvals[-1]["status"] == "pending" or not unfiled, "approval.ia_before_backlog", "ia")
+    # HC-m13: approvals, research evidence and the validated status are held human inputs. No session here records
+    # them and this checker cannot resolve or digest-check a decision or evidence record, so a well-formed source
+    # pointer proves nothing: every resolved value is refused rather than trusted (held.*, as H05 and H07 do).
     for approval in approvals:
-        # A recorded approval cites its decision record; a pending one cites nothing (never fabricated).
-        require((approval["status"] == "recorded") == (approval["source"] is not None), "approval.source_mismatch",
-                approval["role"])
+        require(approval["status"] == "pending" and approval["source"] is None, "held.approval", approval["role"])
     gate = document["research_gate"]
-    require(gate["status"] == "pending" or gate["evidence"], "research.complete_without_evidence", RESEARCH_ISSUE)
-    if document["status"] == "validated":
-        require(gate["status"] == "complete" and all(item["status"] == "recorded" for item in approvals),
-                "status.validated_with_gaps")
+    require(gate["status"] == "pending" and not gate["evidence"], "held.research_evidence", RESEARCH_ISSUE)
+    require(document["status"] == "provisional", "held.status")
     require([diagram["id"] for diagram in document["diagrams"]] == list(OWNED_DIAGRAMS), "diagram.set_mismatch")
     for identifier in OWNED_DIAGRAMS:
         record = registry["diagrams"].get(identifier)
@@ -452,11 +455,9 @@ def check_blueprint(model, blueprint):
     operator = all(_flow_platform(flow_id) == "admin" for flow_id in journey["flow_ids"])
     require(blueprint["audience"] == ("operator" if operator else "customer"), "blueprint.audience_mismatch",
             identifier)
-    if blueprint["persona_basis"] == "provisional":
-        require(blueprint["persona_basis_ref"] == "pending:" + RESEARCH_ISSUE, "persona.basis_ref", identifier)
-    else:
-        require(model.document["research_gate"]["status"] == "complete", "persona.validated_without_evidence",
-                identifier)
+    # Personas stay planning hypotheses until docs#66 evidence exists; a validated basis is a held input.
+    require(blueprint["persona_basis"] == "provisional", "held.persona_basis", identifier)
+    require(blueprint["persona_basis_ref"] == "pending:" + RESEARCH_ISSUE, "persona.basis_ref", identifier)
     require(blueprint["target_map"]["supersedes"] == f"{identifier}.current_map", "map.supersedes_mismatch",
             identifier)
     metric = blueprint["outcome"]["metric_ref"]
@@ -621,8 +622,10 @@ def check_gaps(model):
         require(gap["owner_issue"] in model.issues, "reference.unknown_issue", identifier, gap["owner_issue"])
         expected = GAP_OWNERS.get(gap["category"])
         require(expected is None or gap["owner_issue"] == expected, "gap.category_owner", identifier)
-        if gap["backlog_item"] is not None:
-            require(gap["backlog_item"] in model.issues, "reference.unknown_issue", identifier, gap["backlog_item"])
+        # HC-m10: creating a backlog issue is an owner-approved mutation outside this change, and any inventory
+        # issue (the gap's own owner, docs#67 itself, a closed issue) would otherwise clear criterion 5.
+        require(gap["backlog_item"] is None, "held.backlog_item", identifier)
+        require(gap["status"] == "open", "held.gap_status", identifier)
 
 
 def check(document, gaps, schema, inventory, adrs, sources, pin=None):

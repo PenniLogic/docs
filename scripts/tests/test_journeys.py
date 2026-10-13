@@ -32,6 +32,8 @@ REGISTRY_PATH = "planning/source/evidence/experience-coverage.json"
 SYNTHETIC_COMMIT = "1" * 40
 ADRS = frozenset({"ADR-015"})
 EVENT = "pending:PenniLogic/contracts#3"
+# Well-formed but resolvable nowhere: the commit does not exist (review round 1 SS-03).
+FABRICATED_SOURCE = {"commit": "f" * 40, "path": "governance/does-not-exist.json", "sha256": "sha256:" + "a" * 64}
 
 
 def encode(value):
@@ -353,18 +355,32 @@ class HeaderTests(JourneyCase):
         self.assertRefused("approval.order", None, lambda d: d["approvals"].reverse())
 
     def test_recorded_approval_without_source(self):
-        self.assertRefused("approval.source_mismatch", "security", setter(("approvals", 2, "status"), "recorded"))
+        self.assertRefused("held.approval", "security", setter(("approvals", 2, "status"), "recorded"))
 
     def test_pending_approval_with_source(self):
-        source = {"commit": "3" * 40, "path": "governance/synthetic.json", "sha256": "sha256:" + "b" * 64}
-        self.assertRefused("approval.source_mismatch", "ia", setter(("approvals", 4, "source"), source))
+        self.assertRefused("held.approval", "ia", setter(("approvals", 4, "source"), FABRICATED_SOURCE))
+
+    def test_recorded_approval_with_fabricated_source(self):
+        # A well-formed pointer to a commit that does not exist proves nothing; no session records approvals.
+        self.assertRefused("held.approval", "product",
+                           setter(("approvals", 0), {"role": "product", "status": "recorded",
+                                                     "source": FABRICATED_SOURCE}))
+
+    def test_ia_approval_before_backlog_items(self):
+        # docs#67 criterion 5: open gaps need owned backlog items before IA approval (checked before held.*).
+        self.assertRefused("approval.ia_before_backlog", "ia",
+                           setter(("approvals", 4), {"role": "ia", "status": "recorded", "source": FABRICATED_SOURCE}))
 
     def test_research_complete_without_evidence(self):
-        self.assertRefused("research.complete_without_evidence", "PenniLogic/docs#66",
+        self.assertRefused("held.research_evidence", "PenniLogic/docs#66",
                            setter(("research_gate", "status"), "complete"))
 
-    def test_validated_status_with_pending_gates(self):
-        self.assertRefused("status.validated_with_gaps", None, setter(("status",), "validated"))
+    def test_research_complete_with_fabricated_evidence(self):
+        self.assertRefused("held.research_evidence", "PenniLogic/docs#66", setter(
+            ("research_gate",), {"issue": "PenniLogic/docs#66", "status": "complete", "evidence": [FABRICATED_SOURCE]}))
+
+    def test_validated_status_refused(self):
+        self.assertRefused("held.status", None, setter(("status",), "validated"))
 
     def test_diagram_set_mismatch(self):
         self.assertRefused("diagram.set_mismatch", None, lambda d: d["diagrams"].pop())
@@ -409,9 +425,8 @@ class BlueprintTests(JourneyCase):
         self.assertRefused("persona.basis_ref", "BP-J01",
                            setter(("BP-J01", "persona_basis_ref"), "pending:PenniLogic/docs#65"))
 
-    def test_validated_persona_basis_without_research(self):
-        self.assertRefused("persona.validated_without_evidence", "BP-J01",
-                           setter(("BP-J01", "persona_basis"), "validated"))
+    def test_validated_persona_basis_refused(self):
+        self.assertRefused("held.persona_basis", "BP-J01", setter(("BP-J01", "persona_basis"), "validated"))
 
     def test_target_map_supersedes_its_own_current_map(self):
         self.assertRefused("map.supersedes_mismatch", "BP-J01",
@@ -648,9 +663,20 @@ class GapTests(JourneyCase):
         gaps["gaps"][0].update(category="service", owner_issue="PenniLogic/contracts#3")
         self.run_check(gaps=gaps)
 
-    def test_backlog_item_must_be_an_inventory_issue(self):
-        self.assertRefused("reference.unknown_issue", "GAP-J10-01 PenniLogic/docs#9999",
-                           gap_setter("backlog_item", "PenniLogic/docs#9999"), "gaps")
+    def test_backlog_item_is_held(self):
+        self.assertRefused("held.backlog_item", "GAP-J10-01", gap_setter("backlog_item", "PenniLogic/docs#9999"),
+                           "gaps")
+
+    def test_backlog_item_equal_to_the_owner_issue_is_held(self):
+        self.assertRefused("held.backlog_item", "GAP-J10-01", gap_setter("backlog_item", "PenniLogic/docs#75"),
+                           "gaps")
+
+    def test_backlog_item_equal_to_docs67_is_held(self):
+        self.assertRefused("held.backlog_item", "GAP-J10-01", gap_setter("backlog_item", "PenniLogic/docs#67"),
+                           "gaps")
+
+    def test_resolved_gap_is_held(self):
+        self.assertRefused("held.gap_status", "GAP-J10-01", gap_setter("status", "resolved"), "gaps")
 
 
 EXPECTED_GAPS = {
@@ -671,17 +697,12 @@ class ReadinessTests(JourneyCase):
         self.assertEqual(module.readiness(self.run_check()), EXPECTED_GAPS)
 
     def test_backlog_item_clears_only_the_backlog_gap(self):
-        gaps = copy.deepcopy(GAPS)
-        gaps["gaps"][0]["backlog_item"] = "PenniLogic/docs#75"
-        result = module.readiness(self.run_check(gaps=gaps))
+        # The readiness computation itself, on a checked model changed in memory (the structure holds this input).
+        model = self.run_check()
+        model.gaps["gaps"][0]["backlog_item"] = "PenniLogic/docs#75"
+        result = module.readiness(model)
         self.assertEqual(result["readiness.gap_backlog_missing"], [])
         self.assertEqual(result["readiness.gap_open"], ["GAP-J10-01"])
-
-    def test_resolved_gap_is_not_counted(self):
-        gaps = copy.deepcopy(GAPS)
-        gaps["gaps"][0]["status"] = "resolved"
-        result = module.readiness(self.run_check(gaps=gaps))
-        self.assertEqual((result["readiness.gap_open"], result["readiness.gap_backlog_missing"]), ([], []))
 
     def test_reopen_index_lists_only_referencing_blueprints(self):
         index = module.reopen_index(self.run_check())
