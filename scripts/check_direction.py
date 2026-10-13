@@ -6,11 +6,14 @@ one SemVer-versioned direction record as product/direction/direction-record.json
 product/direction/direction.schema.json (a self-contained draft-07 subset; definitions candidate_set, probe_set and
 direction_record).
 
-Candidates span distinct material and graphic traditions and cite product truth by {commit, path, sha256}, verified
-against the local Git object store. Each candidate may carry non-binding, candidate-scoped illustrative sRGB values;
-they exist only to compute WCAG 2.x contrast feasibility (relative luminance) per text and UI pair, and every
-claimed pass/fail must equal the computed result. The no-raw-token rule applies to the direction record only: it
-exposes semantic roles and platform consequences, never a raw color, dimension, font or token contract (docs#55).
+Candidates span distinct material and graphic traditions and cite product truth by {commit, path, sha256}: a path
+under a product-truth root (product/, adr/, research/, governance/, architecture/; never product/direction/) at a
+commit reachable from the accepted base ACCEPTED_BASE, whose blob digest is checked in the local Git object store. The
+check proves the cited bytes exist on accepted main; it does not prove that the cited text supports the candidate.
+Each candidate may carry non-binding, candidate-scoped illustrative sRGB values; they exist only to compute WCAG 2.x
+contrast feasibility (relative luminance) per text and UI pair, and every claimed pass/fail must equal the computed
+result. The no-raw-token rule applies to the direction record only: it exposes semantic roles and platform
+consequences, never a raw color, dimension, font or token contract (docs#55).
 
 The record stays `pending` with `participant_count: null` (never 0) and `decision: null`. The validator refuses
 AI-preference, internal-vote, synthetic-participant and mood-board "evidence", self-approval and platform-lead
@@ -116,6 +119,12 @@ RAW_TOKEN = re.compile(
 ASSET = re.compile(r"(?i)\.(?:png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf|js|mjs|css|html?|mp4|webm|lottie)\b")
 # Grounding pins are the only exempt strings, and only with their exact grammar.
 EXEMPT = {"commit": COMMIT, "sha256": re.compile(r"sha256:[0-9a-f]{64}")}
+# The accepted main commit this source branched from. Every grounding pin must be reachable from it, so a pin can
+# never cite unmerged or candidate-local bytes; citing a newer accepted commit means updating this reviewed constant.
+ACCEPTED_BASE = "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4"
+# Product truth is published under these roots; this source's own directory is never its own grounding.
+PRODUCT_TRUTH_ROOTS = ("product/", "adr/", "research/", "governance/", "architecture/")
+SELF_ROOT = "product/direction/"
 CATEGORY_DEFAULT = re.compile(r"(?:^|_)(?:fintech|neobank|dashboard|banking_app|glassmorphism)(?:_|$)")
 
 STRUCTURE_RULES = (
@@ -127,7 +136,8 @@ STRUCTURE_RULES = (
     "candidate.count", "candidate.id_sequence", "candidate.incomplete", "candidate.name_duplicate",
     "candidate.material_not_distinct", "candidate.graphic_not_distinct", "candidate.category_default",
     "candidate.binding_values", "held.persona_validation",
-    "grounding.missing", "grounding.path_not_canonical", "grounding.unavailable", "grounding.digest_mismatch",
+    "grounding.missing", "grounding.path_not_canonical", "grounding.self_reference", "grounding.not_product_truth",
+    "grounding.not_accepted", "grounding.unavailable", "grounding.digest_mismatch",
     "contrast.duplicate_role", "contrast.unknown_role", "contrast.duplicate_pair", "contrast.required_pair_missing",
     "contrast.result_mismatch",
     "probe.count", "probe.topic_mismatch", "probe.markup", "probe.external_asset", "probe.not_synthetic",
@@ -305,8 +315,17 @@ def trusted_git(root):
 class GitSources:
     """Pinned blobs from the local Git object store; never fetches, writes or pushes."""
 
-    def __init__(self, root):
-        self.root, self.executable = Path(root), None
+    def __init__(self, root, base=None):
+        self.root, self.executable, self.base = Path(root), None, base
+
+    def accepted(self, commit):
+        """True when the pinned commit is the accepted base or one of its ancestors (reachable from accepted main)."""
+        if not (isinstance(commit, str) and COMMIT.fullmatch(commit)):
+            raise LookupError("unpinned source")
+        result = self._git("merge-base", "--is-ancestor", commit, self.base or ACCEPTED_BASE)
+        if result.returncode not in (0, 1):
+            raise LookupError("ancestry unavailable")
+        return result.returncode == 0
 
     def _git(self, *args):
         self.executable = self.executable or trusted_git(self.root)
@@ -381,15 +400,19 @@ def check_contrast(candidate):
 
 
 def check_grounding(candidate, sources, verified):
-    """Each candidate cites product truth by {commit, path, sha256}, verified against the local object store."""
+    """Each candidate cites product truth by {commit, path, sha256}: a canonical path under a product-truth root
+    (never this source's own directory) at a commit reachable from the accepted base, whose blob digest matches."""
     identifier = candidate["id"]
     require(candidate["grounding"], "grounding.missing", identifier)
     for pin in candidate["grounding"]:
         # A pin names one canonical tree path: no `.` or `..` segment that git might resolve differently.
         require(not {".", ".."} & set(pin["path"].split("/")), "grounding.path_not_canonical", identifier)
+        require(not pin["path"].startswith(SELF_ROOT), "grounding.self_reference", identifier)
+        require(pin["path"].startswith(PRODUCT_TRUTH_ROOTS), "grounding.not_product_truth", identifier)
         key = (pin["commit"], pin["path"])
         if key not in verified:
             try:
+                require(sources.accepted(pin["commit"]), "grounding.not_accepted", identifier)
                 verified[key] = sha256(sources.blob(*key))
             except LookupError:
                 raise Refused("grounding.unavailable", identifier) from None
@@ -617,7 +640,7 @@ def render_candidate(candidate):
     ])
     lines += ["", "Feasibility:", ""]
     lines += table(("Criterion", "Assessment"), [(key, text) for key, text in candidate["feasibility"].items()])
-    lines += ["", "Grounding (verified against the local Git object store):", ""]
+    lines += ["", "Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):", ""]
     lines += [f"- `{pin['path']}` at `{pin['commit']}` (`{pin['sha256']}`)" for pin in candidate["grounding"]]
     return lines + [""]
 

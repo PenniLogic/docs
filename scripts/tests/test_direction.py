@@ -49,8 +49,12 @@ DEPICTION = {"household_privacy": "explicit_revocable_grant", "operator_urgency"
 class FakeSources:
     """In-memory blob port: the only Git objects the synthetic fixtures may cite."""
 
-    def __init__(self, blobs=None):
+    def __init__(self, blobs=None, accepted=(COMMIT,)):
         self.blobs = {(COMMIT, SOURCE_PATH): SOURCE_BYTES} if blobs is None else blobs
+        self.accepted_commits = set(accepted)
+
+    def accepted(self, commit):
+        return commit in self.accepted_commits
 
     def blob(self, commit, path):
         try:
@@ -313,6 +317,28 @@ class GroundingTests(Case):
     def test_digest_mismatch_refused(self):
         self.refuses(lambda f: at(f, 5)["grounding"][0].update(sha256="sha256:" + "0" * 64),
                      "grounding.digest_mismatch", "DIR-05")
+
+    def test_self_citation_refused(self):
+        self.refuses(lambda f: at(f, 1)["grounding"][0].update(path=module.CANDIDATES),
+                     "grounding.self_reference", "DIR-01")
+
+    def test_path_outside_product_truth_refused(self):
+        for path in (".gitignore", "scripts/check_direction.py", "productive/notes.md"):
+            with self.subTest(path=path):
+                self.refuses(lambda f: at(f, 2)["grounding"][0].update(path=path),
+                             "grounding.not_product_truth", "DIR-02")
+
+    def test_every_product_truth_root_is_accepted(self):
+        for root in module.PRODUCT_TRUTH_ROOTS:
+            fixture = Fixture()
+            path = root + "source.md"
+            fixture.sources.blobs[(COMMIT, path)] = SOURCE_BYTES
+            at(fixture, 3)["grounding"][0].update(path=path)
+            with self.subTest(root=root):
+                self.assertIsInstance(fixture.check(), module.Model)
+
+    def test_commit_not_on_accepted_main_refused(self):
+        self.refuses(lambda f: setattr(f, "sources", FakeSources(accepted=())), "grounding.not_accepted", "DIR-01")
 
     def test_pinned_commit_and_digest_are_exempt_from_the_secret_scan(self):
         self.assertTrue(module._secret_token(SOURCE_DIGEST))
@@ -725,6 +751,10 @@ class GitTests(FilesCase):
         for item in fixture.candidates["candidates"]:
             item["grounding"][0]["commit"] = commit
         (root / module.CANDIDATES).write_bytes(encode(fixture.candidates))
+        # The synthetic first commit stands in for accepted main for the duration of the test.
+        patcher = mock.patch.object(module, "ACCEPTED_BASE", commit)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         return root, commit
 
     def run_git(self, root, *argv):
@@ -746,6 +776,21 @@ class GitTests(FilesCase):
         root, _ = self.repository(fixture)
         self.assertEqual(self.run_git(root, "--structure"),
                          (1, "", "Direction check refused: grounding.digest_mismatch DIR-01\n"))
+
+    def test_commit_after_the_accepted_base_is_not_accepted(self):
+        fixture = Fixture()
+        root, base = self.repository(fixture)
+        self.assertEqual(self.run_git(root, "--structure")[0], 0)
+        git(root, "commit", "-q", "--allow-empty", "-m", "synthetic unmerged change")
+        later = git(root, "rev-parse", "HEAD")
+        sources = module.GitSources(root)
+        self.assertEqual((sources.accepted(base), sources.accepted(later)), (True, False))
+        with self.assertRaises(LookupError):
+            sources.accepted("2" * 40)
+        fixture.candidates["candidates"][0]["grounding"][0]["commit"] = later
+        (root / module.CANDIDATES).write_bytes(encode(fixture.candidates))
+        self.assertEqual(self.run_git(root, "--structure"),
+                         (1, "", "Direction check refused: grounding.not_accepted DIR-01\n"))
 
     def test_unknown_commit_or_path_is_unavailable(self):
         root, commit = self.repository(Fixture())

@@ -81,7 +81,7 @@ Feasibility:
 | web | Native tables with sticky headers carry the ledger on wide screens. |
 | admin | Ledger rows suit operator queues, but operator views must show metadata only, never user line items. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
@@ -135,7 +135,7 @@ Feasibility:
 | web | A wider route view with the comparison table beside it. |
 | admin | Not applicable to operator views beyond a neutral status strip; operators never see user routes. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
@@ -188,7 +188,7 @@ Feasibility:
 | web | Natural fit for responsive grids. |
 | admin | Well suited to operator queues and audit views that need dense, scannable metadata. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
@@ -242,7 +242,7 @@ Feasibility:
 | web | Layered shapes are feasible with vector drawing; performance on low-end devices needs a check. |
 | admin | Not suited to operator tooling; admin would need a separate neutral treatment under the same thesis. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
@@ -296,7 +296,7 @@ Feasibility:
 | web | Feasible; vector line work scales on high-density displays. |
 | admin | Revision blocks fit audit and change-history views for operators. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
@@ -350,7 +350,7 @@ Feasibility:
 | web | Feasible; display lettering limited to headlines keeps performance acceptable. |
 | admin | Operators need a calmer neutral variant; signage panels would overload queue views. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
@@ -403,7 +403,7 @@ Feasibility:
 | web | Feasible; textures must be lightweight and removable. |
 | admin | Operators use the plain-surface variant only. |
 
-Grounding (verified against the local Git object store):
+Grounding (pins on accepted main; bytes verified by digest, relevance not machine-checked):
 
 - `product/01-product-spec.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:6f3c55a64eeb2c5a4138f0c6cdea59151871a8807f0a0305e2210639a4872221`)
 - `product/08-experience-design-and-sdlc-plan.md` at `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4` (`sha256:0310f45a7feb23454f600248f83bb040baab2ac0d2743a69fc66aec6f820d880`)
