@@ -12,6 +12,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -233,6 +234,7 @@ class ControlTests(Harness):
         self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 9)])
         self.assertEqual(gaps["readiness.reading_level_provisional"], ["voice.reading_level"])
         self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
+        self.assertEqual(gaps["readiness.nav_labels_held"], ["PenniLogic/docs#74"])
 
     def test_rule_identifiers_are_unique_and_each_is_raised_somewhere(self):
         rules = content.STRUCTURE_RULES + content.READINESS_RULES
@@ -446,7 +448,7 @@ class MessageKeyTests(Harness):
     def test_state_key_derived_from_a_variant_and_a_cause(self):
         docs = documents()
         add_key(docs, key("state.permission_denied.device.body", None, "denial"))
-        add_key(docs, key("state.permission_denied.action.device", None, "denial"))
+        add_key(docs, key("state.permission_denied.device.action", None, "action"))
         self.run_check(docs)
 
     def test_state_key_may_not_restate_taxonomy_copy(self):
@@ -952,7 +954,8 @@ class TaxonomyImportTests(unittest.TestCase):
         self.assertEqual(facts["forbidden_terms"], published["forbidden_terms"])
         self.assertEqual(facts["copy_rules"], {rule["id"] for rule in published["copy_rules"]})
         self.assertEqual(facts["states"], {state["id"] for state in published["states"]})
-        self.assertIn("state.permission_denied.action.device", facts["state_keys"])
+        self.assertIn("state.permission_denied.device.action", facts["state_keys"])
+        self.assertIn("state.error.validation.action", facts["state_keys"])
         self.assertIn("state.quota_exceeded.with_reset.body", facts["state_keys"])
 
     def test_published_design_gates_roles_include_the_legal_owner(self):
@@ -968,6 +971,19 @@ class TaxonomyImportTests(unittest.TestCase):
             with self.assertRaises(content.Refused) as caught:
                 content.taxonomy_facts(broken)
             self.assertEqual(caught.exception.rule, "taxonomy.unreadable")
+
+    def test_taxonomy_deriving_a_key_that_is_also_a_node_fails_closed(self):
+        content.taxonomy_facts(taxonomy())  # control
+        broken = taxonomy()
+        broken["states"][0]["copy"]["variants"] = {"action": {}}  # state.empty.action.headline under state.empty.action
+        with self.assertRaises(content.Refused) as caught:
+            content.taxonomy_facts(broken)
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("taxonomy.unreadable", None))
+
+    def test_published_taxonomy_derives_prefix_free_state_keys(self):
+        keys = sorted(content.taxonomy_facts(content.support.load_json(ROOT / content.TAXONOMY))["state_keys"])
+        self.assertFalse([pair for pair in zip(keys, keys[1:]) if pair[1].startswith(pair[0] + ".")])
+        self.assertEqual(len(keys), 43)  # 8 states x 3, 7 variants x 2, 5 cause or variant actions
 
 
 def git_environment():
@@ -1038,7 +1054,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(lines[2:], [
             "readiness.comprehension_evidence: 7", "readiness.reading_level_provisional: 1",
             "readiness.term_unapproved: 8", "readiness.key_unapproved: 16", "readiness.regulated_unapproved: 8",
-            "readiness.approver_unassigned: 1",
+            "readiness.approver_unassigned: 1", "readiness.nav_labels_held: 1",
         ])
 
     def test_structure_mode_passes_without_readiness(self):
@@ -1146,6 +1162,177 @@ class SchemaTests(unittest.TestCase):
         self.assertIsNone(content.TERM.fullmatch("term.debt.extra"))
         self.assertIsNone(content.REGULATED.fullmatch("RC-0011"))
 
+
+def published():
+    """The committed content documents checked against the committed taxonomy and design-gates roles."""
+    docs, published_schemas = content.load_documents(ROOT)
+    model = content.check(
+        docs, published_schemas, content.support.load_json(ROOT / content.TAXONOMY),
+        content.support.load_json(ROOT / content.GATES), NOW, FakeSources(),
+    )
+    return docs, model
+
+
+class PublishedContentTests(unittest.TestCase):
+    """The published documents: structure passes, every judgment stays proposed and the gaps are exactly these."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.docs, cls.model = published()
+
+    def test_published_content_passes_structure(self):
+        self.assertEqual(content.structure_line(self.model), (
+            "Content glossary 0.1.0 structure valid: 30 terms (7 need comprehension evidence); voice 0.1.0: 15 "
+            "banned patterns, 8 content patterns, taxonomy copy rules imported by reference; message keys 0.1.0: "
+            "81 keys (43 state., 0 nav., 8 reg., 15 common.); regulated copy 0.1.0: 8 records, 0 approved"
+        ))
+
+    def test_published_readiness_gaps_are_exact(self):
+        gaps = content.readiness(self.model)
+        self.assertEqual(gaps["readiness.comprehension_evidence"], sorted(f"term.{slug}" for slug in COMPREHENSION))
+        self.assertEqual(gaps["readiness.reading_level_provisional"], ["voice.reading_level"])
+        self.assertEqual(len(gaps["readiness.term_unapproved"]), 30)
+        self.assertEqual(gaps["readiness.term_unapproved"], sorted(terms_of(self.docs)))
+        self.assertEqual(len(gaps["readiness.key_unapproved"]), 81)
+        self.assertEqual(gaps["readiness.key_unapproved"], sorted(keys_of(self.docs)))
+        self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 9)])
+        self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
+        self.assertEqual(gaps["readiness.nav_labels_held"], ["PenniLogic/docs#74"])
+
+    def test_every_published_judgment_is_proposed_and_nothing_is_approved(self):
+        self.assertEqual(self.docs["glossary"]["status"], "provisional")
+        self.assertEqual({term["status"] for term in self.docs["glossary"]["terms"]}, {"provisional"})
+        self.assertEqual({entry["status"] for entry in self.docs["message-keys"]["keys"]}, {"provisional"})
+        reading = self.docs["voice"]["reading_level"]
+        self.assertEqual((reading["status"], reading["evidence_ref"]), ("provisional", "pending:PenniLogic/docs#66"))
+        for record in self.docs["regulated-copy"]["records"]:
+            with self.subTest(record=record["id"]):
+                self.assertEqual((record["status"], record["approval"], record["history"], record["rollback_version"]),
+                                 ("draft", None, [], None))
+        for term in self.docs["glossary"]["terms"]:
+            with self.subTest(term=term["id"]):
+                expected = "pending:PenniLogic/docs#66" if term["comprehension"]["required"] else None
+                self.assertEqual(term["comprehension"]["evidence_ref"], expected)
+                self.assertEqual(term["contract_field_names"], [])  # contracts owns field names; none invented
+
+    def test_published_state_keys_are_exactly_the_taxonomy_derived_set(self):
+        facts = content.taxonomy_facts(content.support.load_json(ROOT / content.TAXONOMY))
+        state = {key: entry for key, entry in keys_of(self.docs).items() if key.startswith("state.")}
+        self.assertEqual(set(state), facts["state_keys"])
+        self.assertEqual({entry["copy"] for entry in state.values()}, {None})
+
+    def test_no_nav_key_is_published_while_docs74_holds_the_labels(self):
+        self.assertEqual([key for key in keys_of(self.docs) if key.startswith("nav.")], [])
+
+    def test_each_regulated_key_binds_its_record_and_falls_back_to_neutral_copy(self):
+        keys = keys_of(self.docs)
+        records = self.docs["regulated-copy"]["records"]
+        self.assertEqual(sorted(record["category"] for record in records), sorted(CATEGORIES))
+        for record in records:
+            with self.subTest(record=record["id"]):
+                self.assertEqual(keys[record["key"]]["regulated_ref"], record["id"])
+                fallback = keys[record["fail_closed_key"]]
+                self.assertTrue(fallback["neutral_safe_exit"])
+                self.assertNotIn("{", fallback["copy"])
+
+    def test_published_documents_are_canonical_json(self):
+        for name in content.DOCUMENTS:
+            with self.subTest(document=name):
+                raw = (ROOT / content.document_path(name)).read_bytes()
+                self.assertNotIn(b"\r", raw)
+                expected = json.dumps(content.support.load_json(ROOT / content.document_path(name)), indent=2,
+                                      ensure_ascii=True) + "\n"
+                self.assertEqual(raw.decode("utf-8"), expected)
+
+    def test_published_views_match_the_documents_byte_for_byte(self):
+        views = content.render_views(self.model)
+        self.assertEqual(sorted(views), [f"product/content/{name}.md" for name in sorted(content.DOCUMENTS)])
+        for relative, text in views.items():
+            with self.subTest(view=relative):
+                self.assertEqual((ROOT / relative).read_bytes(), text.encode("utf-8"))
+        content.check_views(ROOT, views)
+
+class ViewTests(unittest.TestCase):
+    """--write-views and --check-views against a throwaway repository; rendering is inert and deterministic."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.repository = RepositoryFixture(self.directory.name)
+        self.repository.write(documents())
+        self.repository.commit_as_base()
+        self.views = self.repository.root / content.CONTENT
+
+    def main(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(content, "ROOT", self.repository.root), redirect_stdout(out), redirect_stderr(err):
+            code = content.main(list(argv), now=NOW)
+        return code, out.getvalue(), err.getvalue()
+
+    def test_written_views_then_match(self):
+        self.assertEqual(self.main("--check-views"), (1, "", "Content check refused: views.missing\n"))
+        self.assertEqual(self.main("--write-views"), (0, "Content views written: 4\n", ""))
+        self.assertEqual(self.main("--check-views"), (0, "Content views match: 4\n", ""))
+        written = (self.views / "glossary.md").read_bytes()
+        self.assertTrue(written.endswith(b"\n") and b"\r" not in written)
+
+    def test_one_changed_byte_is_drift(self):
+        self.main("--write-views")
+        self.assertEqual(self.main("--check-views")[0], 0)  # control
+        target = self.views / "voice.md"
+        target.write_bytes(target.read_bytes().replace(b"Voice and tone", b"Voice and Tone", 1))
+        self.assertEqual(self.main("--check-views"), (1, "", "Content check refused: views.drift\n"))
+
+    def test_a_symlinked_view_is_never_read_or_written(self):
+        self.main("--write-views")
+        self.assertEqual(self.main("--check-views")[0], 0)  # control
+        outside = Path(self.directory.name) / "outside.md"
+        outside.write_bytes((self.views / "glossary.md").read_bytes())
+        (self.views / "glossary.md").unlink()
+        try:
+            (self.views / "glossary.md").symlink_to(outside)
+        except OSError:
+            self.skipTest("symbolic links are not available to this user")
+        self.assertEqual(self.main("--check-views"), (1, "", "Content check refused: views.unsafe_path\n"))
+        self.assertEqual(self.main("--write-views"), (1, "", "Content check refused: views.unsafe_path\n"))
+        self.assertEqual(outside.read_bytes(), (self.views / "glossary.md").read_bytes())
+
+    def test_views_are_not_written_when_structure_fails(self):
+        docs = documents()
+        docs["glossary"]["terms"].append(copy.deepcopy(docs["glossary"]["terms"][0]))
+        self.repository.write(docs)
+        self.assertEqual(self.main("--write-views"),
+                         (1, "", "Content check refused: term.duplicate_id term.payoff\n"))
+        self.assertFalse((self.views / "glossary.md").exists())
+
+    def test_modes_are_mutually_exclusive(self):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            content.main(["--structure", "--check-views"], now=NOW)
+
+    def test_free_text_is_rendered_inert(self):
+        self.assertEqual(content.cell("a|b*c<d>e`f_g[h]i\\j#k&l~m"),
+                         "a\\|b\\*c\\<d\\>e\\`f\\_g\\[h\\]i\\\\j\\#k\\&l\\~m")
+        docs = documents()
+        terms_of(docs)["term.debt"]["definition"] = "Owed money | <b>bold</b> and [link](x)."
+        lines = content.render_glossary(docs["glossary"])
+        row = next(line for line in lines if line.startswith("| `term.debt`"))
+        self.assertEqual(len(re.findall(r"(?<!\\)\|", row)), 9)  # eight columns, no injected cell
+        self.assertNotIn("<b>", row)
+
+    def test_rendering_is_deterministic(self):
+        model = content.check(documents(), schemas(), taxonomy(), gates(), NOW, FakeSources())
+        first, second = content.render_views(model), content.render_views(model)
+        self.assertEqual(first, second)
+        self.assertTrue(all(text.endswith("\n") and "\r" not in text for text in first.values()))
+
+    def test_an_approval_window_is_rendered_from_the_record(self):
+        docs = documents()
+        first = docs["regulated-copy"]["records"][0]
+        first.update(status="approved", approval=approval())
+        model = content.check(docs, schemas(), taxonomy(), gates(), NOW, FakeSources(), OWNER)
+        text = content.render_views(model)["product/content/regulated-copy.md"]
+        self.assertIn("| RC-001 | consent | `reg.consent.text` | 0.1.0 | approved | 2026-10-03T12:00:00Z to "
+                      "2026-10-23T12:00:00Z |", text)
 
 if __name__ == "__main__":
     unittest.main()

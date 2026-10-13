@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "voice_version": "0.1.0",
+  "source_issue": "PenniLogic/docs#84",
+  "reading_level": {
+    "target": "Plain language that a reader of school grade six to eight can follow on first read; to be confirmed or replaced by comprehension research.",
+    "status": "provisional",
+    "evidence_ref": "pending:PenniLogic/docs#66"
+  },
+  "max_sentence_words": 20,
+  "taxonomy_copy_rules": [
+    "no_blame",
+    "no_invented_cause",
+    "no_internal_detail",
+    "no_hidden_data_disclosure",
+    "same_wording",
+    "one_action",
+    "positive_framing",
+    "plain_language",
+    "no_money_in_state_copy",
+    "calm_tone"
+  ],
+  "principles": [
+    {
+      "id": "voice.say_what_happened",
+      "rule": "Say what happened, what remains safe, what the person can do and what happens next, in that order, using only facts the surface knows."
+    },
+    {
+      "id": "voice.no_blame",
+      "rule": "Describe the situation, not the person; debt and corrections are facts to work with, never a judgement of character."
+    },
+    {
+      "id": "voice.show_uncertainty",
+      "rule": "Label every projection, scenario and estimate as such and name what it depends on; never present a calculation as a promise."
+    },
+    {
+      "id": "voice.calculator_not_adviser",
+      "rule": "Explain the arithmetic of the person's own data and the trade-offs between choices they select; never tell them which financial product to buy or sell."
+    },
+    {
+      "id": "voice.name_consequences",
+      "rule": "State a destructive or irreversible consequence before the action, in plain words, and never hide it behind a link."
+    },
+    {
+      "id": "voice.one_term",
+      "rule": "Use the preferred glossary label for each concept on every platform; do not switch synonyms within a flow."
+    },
+    {
+      "id": "voice.discreet_by_default",
+      "rule": "Notifications and lock-screen text name no amounts, people, merchants or shared data; neutral safe-exit keys cover shared-device and coercive contexts."
+    }
+  ],
+  "banned_patterns": [
+    {
+      "id": "banned.irresponsible",
+      "category": "shame",
+      "phrase": "irresponsible"
+    },
+    {
+      "id": "banned.careless",
+      "category": "shame",
+      "phrase": "careless"
+    },
+    {
+      "id": "banned.bad_with_money",
+      "category": "shame",
+      "phrase": "bad with money"
+    },
+    {
+      "id": "banned.should_have",
+      "category": "shame",
+      "phrase": "you should have"
+    },
+    {
+      "id": "banned.guaranteed",
+      "category": "guarantee",
+      "phrase": "guaranteed"
+    },
+    {
+      "id": "banned.debt_free_by",
+      "category": "guarantee",
+      "phrase": "debt free by"
+    },
+    {
+      "id": "banned.risk_free",
+      "category": "guarantee",
+      "phrase": "risk-free"
+    },
+    {
+      "id": "banned.never_miss",
+      "category": "guarantee",
+      "phrase": "never miss a payment"
+    },
+    {
+      "id": "banned.amazing",
+      "category": "hype",
+      "phrase": "amazing"
+    },
+    {
+      "id": "banned.crush_your_debt",
+      "category": "hype",
+      "phrase": "crush your debt"
+    },
+    {
+      "id": "banned.life_changing",
+      "category": "hype",
+      "phrase": "life-changing"
+    },
+    {
+      "id": "banned.should_invest",
+      "category": "advice",
+      "phrase": "you should invest"
+    },
+    {
+      "id": "banned.best_investment",
+      "category": "advice",
+      "phrase": "best investment"
+    },
+    {
+      "id": "banned.buy_this_fund",
+      "category": "advice",
+      "phrase": "buy this fund"
+    },
+    {
+      "id": "banned.we_recommend",
+      "category": "advice",
+      "phrase": "we recommend"
+    }
+  ],
+  "conventions": [
+    {
+      "id": "convention.sentence_case",
+      "rule": "Headlines, labels and buttons use sentence case and no terminal full stop."
+    },
+    {
+      "id": "convention.minor_units",
+      "rule": "Amounts come from the ledger as integer minor units with a currency code and are formatted by the client locale formatter; copy never hard-codes a currency symbol, separator or rounding."
+    },
+    {
+      "id": "convention.one_currency_per_total",
+      "rule": "Totals in different currencies are shown separately and never silently combined into one figure."
+    },
+    {
+      "id": "convention.dates",
+      "rule": "Dates are absolute and locale formatted; relative phrases such as yesterday are used only next to the absolute date."
+    },
+    {
+      "id": "convention.rates",
+      "rule": "Rates are shown as a percentage with the period named, such as APR per year."
+    },
+    {
+      "id": "convention.plurals",
+      "rule": "Counts use the locale plural rules supplied with each key; copy never builds a plural by adding letters."
+    },
+    {
+      "id": "convention.ranges",
+      "rule": "Every key declares minimum, typical and maximum character counts so translated and pseudo-localized copy fits before layout approval."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "empty",
+      "taxonomy_state": "empty",
+      "slots": {
+        "source": null,
+        "status": null,
+        "consequence": null,
+        "safe_remainder": null,
+        "next_action": null
+      }
+    },
+    {
+      "id": "loading",
+      "taxonomy_state": "loading",
+      "slots": {
+        "source": null,
+        "status": null,
+        "consequence": null,
+        "safe_remainder": null,
+        "next_action": null
+      }
+    },
+    {
+      "id": "error",
+      "taxonomy_state": "error",
+      "slots": {
+        "source": null,
+        "status": null,
+        "consequence": null,
+        "safe_remainder": null,
+        "next_action": null
+      }
+    },
+    {
+      "id": "stale",
+      "taxonomy_state": "stale",
+      "slots": {
+        "source": null,
+        "status": null,
+        "consequence": null,
+        "safe_remainder": null,
+        "next_action": null
+      }
+    },
+    {
+      "id": "denied",
+      "taxonomy_state": "permission_denied",
+      "slots": {
+        "source": null,
+        "status": null,
+        "consequence": null,
+        "safe_remainder": null,
+        "next_action": null
+      }
+    },
+    {
+      "id": "destructive",
+      "taxonomy_state": null,
+      "slots": {
+        "source": "pattern.destructive.source",
+        "status": "pattern.destructive.status",
+        "consequence": "pattern.destructive.consequence",
+        "safe_remainder": "pattern.destructive.safe_remainder",
+        "next_action": "pattern.destructive.next_action"
+      }
+    },
+    {
+      "id": "success",
+      "taxonomy_state": null,
+      "slots": {
+        "source": "pattern.success.source",
+        "status": "pattern.success.status",
+        "consequence": "pattern.success.consequence",
+        "safe_remainder": "pattern.success.safe_remainder",
+        "next_action": "pattern.success.next_action"
+      }
+    },
+    {
+      "id": "recovery",
+      "taxonomy_state": null,
+      "slots": {
+        "source": "pattern.recovery.source",
+        "status": "pattern.recovery.status",
+        "consequence": "pattern.recovery.consequence",
+        "safe_remainder": "pattern.recovery.safe_remainder",
+        "next_action": "pattern.recovery.next_action"
+      }
+    }
+  ]
+}

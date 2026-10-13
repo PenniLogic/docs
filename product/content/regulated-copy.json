@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "regulated_version": "0.1.0",
+  "source_issue": "PenniLogic/docs#84",
+  "approver_role": "legal",
+  "records": [
+    {
+      "id": "RC-001",
+      "category": "consent",
+      "key": "reg.consent.message_capture",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "Allow PenniLogic to read bank and payment messages on this phone to record transactions? Messages are read on this phone only. You can withdraw consent at any time in settings.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-002",
+      "category": "permission",
+      "key": "reg.permission.message_access",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "Automatic capture needs the device permission to read messages. Without it, you can still add every transaction by hand.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-003",
+      "category": "disclaimer",
+      "key": "reg.disclaimer.not_investment_advice",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "This is not investment advice. Please consult a SEBI-registered investment adviser.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-004",
+      "category": "plan_change",
+      "key": "reg.plan_change.effective",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "Your plan changes on the date shown. Features outside the new plan stop then, and your data stays yours to view and export.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-005",
+      "category": "refund",
+      "key": "reg.refund.recorded",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "Your refund request is recorded. The refund goes back to the original payment method once it is processed.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-006",
+      "category": "deletion",
+      "key": "reg.deletion.confirm",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "Account deletion permanently removes your account and its data. Records the law requires are kept only as long as required. This can't be undone.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-007",
+      "category": "access",
+      "key": "reg.access.support_request",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "A support operator has asked for support access to your records for a stated reason. Access is time-limited, logged and ends on its own.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    },
+    {
+      "id": "RC-008",
+      "category": "incident",
+      "key": "reg.incident.notice",
+      "version": "0.1.0",
+      "status": "draft",
+      "copy": "We are looking into a security incident that may affect your account. We will tell you what happened and what to do next when we know more.",
+      "fail_closed_key": "common.safe_exit.denial",
+      "owner": "content",
+      "approval": null,
+      "history": [],
+      "rollback_version": null
+    }
+  ]
+}
