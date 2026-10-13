@@ -43,9 +43,13 @@ def encode(value):
     return (json.dumps(value, indent=2, ensure_ascii=True) + "\n").encode("utf-8")
 
 
+NAMES = {"C-SYN-BUTTON": "Button", "C-SYN-CHIP": "Chip", "C-SYN-DRAFT": "Draft banner"}
+
+
 def pinned(components):
-    """A synthetic registry blob and its {commit, path, sha256} pin."""
-    blob = encode({"components": [{"id": key, "platforms": value} for key, value in components]})
+    """A synthetic registry blob and its {commit, path, sha256} pin; names follow the fixture's records."""
+    blob = encode({"components": [{"id": key, "name": NAMES.get(key, "Synthetic pinned component"),
+                                   "platforms": value} for key, value in components]})
     return blob, {"commit": SYNTHETIC_COMMIT, "path": REGISTRY_PATH,
                   "sha256": "sha256:" + hashlib.sha256(blob).hexdigest()}
 
@@ -304,10 +308,34 @@ class StructureTests(RuleCase):
 
     def test_text_length_is_bounded(self):
         document = fixture()
-        find(document, "components", "C-SYN-DRAFT")["name"] = "Draft " * 66 + "x"  # 397 characters pass
+        find(document, "components", "C-SYN-BUTTON")["description"] = "Draft " * 66 + "word"  # 400 characters pass
         run_check(document)
-        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Draft " * 67),
-                           "content.too_long", "C-SYN-DRAFT")
+        self.assertRefused(lambda d: button(d).update(description="Draft " * 66 + "words"),  # 401 characters
+                           "content.too_long", "C-SYN-BUTTON")
+
+    def test_host_and_link_shapes_are_refused(self):
+        samples = ("see www" + ".example", "mail" + "to:someone", "Prototype at bit" + ".ly/3xYzAbC",
+                   "host pl" + ".figma" + ".site", "files" + ".example" + ".de/proto", "local" + "host:8080/proto",
+                   "10" + ".0.0.7/proto")
+        for sample in samples:
+            with self.subTest(sample=sample):
+                self.assertRefused(lambda d: button(d).update(description=sample), "content.url_shape",
+                                   "C-SYN-BUTTON")
+
+    def test_key_shapes_are_refused(self):
+        samples = ("key " + "FP7lqd1V00" + "LUaT5zvdklkk", "a" * 34, "fig" + "d_" + "Ab3-" * 6)
+        for sample in samples:
+            with self.subTest(sample=sample):
+                self.assertRefused(lambda d: button(d).update(description=sample), "content.secret_shape",
+                                   "C-SYN-BUTTON")
+
+    def test_file_paths_are_exempt_only_at_their_fields(self):
+        self.assertIn("C-SYN-BUTTON", run_check(fixture()).components)  # registry and decision paths pass
+        self.assertRefused(lambda d: button(d).update(description="see governance/synthetic-decision" + ".json"),
+                           "content.url_shape", "C-SYN-BUTTON")
+        self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0")["cdo_approval"][
+            "decision_source"].update(path="pl" + ".figma" + ".site/x" + ".json"), "content.url_shape",
+            "LIB-COMPONENTS@1.0.0")
 
     def test_phone_shape_is_refused(self):
         self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Call 98 7654 3210"),
@@ -362,6 +390,50 @@ class RegistryTests(RuleCase):
                          pin=pin)
         self.assertEqual(str(caught.exception), "registry.invalid")
 
+    def refused_registry(self, blob):
+        """A real-mode document re-pinned to `blob` (control: the plain real document passes)."""
+        document = real()
+        run_check(copy.deepcopy(document), False)
+        pin = {"commit": SYNTHETIC_COMMIT, "path": REGISTRY_PATH,
+               "sha256": "sha256:" + hashlib.sha256(blob).hexdigest()}
+        document["registry_ref"] = pin
+        with self.assertRaises(module.Refused) as caught:
+            module.check(document, SCHEMA, POLICY, POLICY_SCHEMA, Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}),
+                         pin=pin)
+        return str(caught.exception)
+
+    def test_duplicate_registry_ids_are_invalid(self):
+        record = {"id": "C-ACTION", "name": "Action", "platforms": ["web"]}
+        self.assertEqual(self.refused_registry(encode({"components": [record, record]})), "registry.invalid")
+
+    def test_duplicate_registry_keys_are_invalid(self):
+        blob = b'{"components": [{"id": "C-ACTION", "id": "C-OTHER", "name": "Action", "platforms": ["web"]}]}'
+        self.assertEqual(self.refused_registry(blob), "registry.invalid")
+
+    def test_registry_names_are_required(self):
+        self.assertEqual(self.refused_registry(encode({"components": [{"id": "C-ACTION", "platforms": ["web"]}]})),
+                         "registry.invalid")
+
+    def test_registry_grammar_ids_are_gaps_not_failures(self):
+        blob, pin = pinned([("C-OP-2FA", ["admin"]), ("C-DATA-VISUALIZATION", ["web"]), ("C-INPUT-OTP-6", ["web"]),
+                            ("C-A--B", ["web"])])
+        document = real()
+        document["registry_ref"] = pin
+        model = module.check(document, SCHEMA, POLICY, POLICY_SCHEMA,
+                             Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}), pin=pin)
+        self.assertEqual(module.readiness(model)["readiness.registry_component_ungoverned"],
+                         ["C-A--B", "C-DATA-VISUALIZATION", "C-INPUT-OTP-6", "C-OP-2FA"])
+        record = component("C-OP-2FA", "Synthetic pinned component", status="draft", platforms=["admin"], since=None)
+        record.update(semantic_role=None, description=None, properties=[], accessibility=None)
+        document["components"].append(record)
+        self.assertIn("C-OP-2FA", module.check(document, SCHEMA, POLICY, POLICY_SCHEMA,
+                                               Sources({(SYNTHETIC_COMMIT, REGISTRY_PATH): blob}), pin=pin).components)
+        self.assertFalse(module.printable("C-A--B"))
+
+    def test_record_name_is_the_registry_name(self):
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT").update(name="Floating banner"),
+                           "component.registry_name_mismatch", "C-SYN-DRAFT")
+
     def test_ids_outside_the_pin_are_readiness_gaps_not_failures(self):
         document = fixture()
         find(document, "components", "C-SYN-DRAFT")["id"] = "C-SYN-NEW"
@@ -391,6 +463,11 @@ class RealRegistryTests(unittest.TestCase):
                      [str(root), str(real_git)]):
             with self.subTest(path=path), mock.patch.dict(os.environ, {"PATH": os.pathsep.join(path)}):
                 self.assertEqual(Path(module.trusted_git(root)).parent, real_git)
+        outside = Path(folder.name) / "outside"
+        outside.mkdir()
+        (outside / name).symlink_to(planted / name)  # outside the repository, resolving into it
+        with mock.patch.dict(os.environ, {"PATH": os.pathsep.join([str(outside), str(real_git)])}):
+            self.assertEqual(Path(module.trusted_git(root)).parent, real_git)
         with mock.patch.dict(os.environ, {"PATH": os.pathsep.join([str(planted), "."])}):
             with self.assertRaises(LookupError):
                 module.trusted_git(root)
@@ -564,7 +641,8 @@ class HeldTests(RuleCase):
                            fixture_mode=False)
 
     def test_token_references_are_held_until_docs_55(self):
-        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT")["token_refs"].append("color.action"),
+        # A dotted token path would be refused as a host shape; docs#55's grammar must be exempted when it lands.
+        self.assertRefused(lambda d: find(d, "components", "C-SYN-DRAFT")["token_refs"].append("color-action"),
                            "held.token_refs", "C-SYN-DRAFT")
 
     def test_real_data_never_publishes_a_release(self):
@@ -574,6 +652,11 @@ class HeldTests(RuleCase):
     def test_real_data_never_records_a_cdo_decision(self):
         self.assertRefused(lambda d: find_release(d, "LIB-COMPONENTS@1.0.0")["cdo_approval"].update(status="recorded"),
                            "held.cdo_recorded", "LIB-COMPONENTS@1.0.0", fixture_mode=False)
+
+    def test_real_data_never_publishes_a_component(self):
+        record = component("C-ACTION", "Action", since="1.0.0")
+        self.assertRefused(lambda d: d["components"].append(record), "held.publication", "C-ACTION",
+                           fixture_mode=False)
 
     def test_real_data_refuses_synthetic_component_ids(self):
         draft = fixture()["components"][2]
@@ -944,10 +1027,12 @@ class DuplicateTests(RuleCase):
             document["components"].append(other)
         self.assertRefused(twin, "duplicate.semantic_component", "C-SYN-BUTTON-AND", "C-SYN-BUTTON-ANDTWO")
 
-    def test_replacement_pair_sharing_a_name_is_exempt(self):
+    def test_replacement_pair_sharing_a_role_is_exempt(self):
         document = fixture()
-        find(document, "components", "C-SYN-CHIP")["name"] = "Button"
-        self.assertEqual(run_check(document).components["C-SYN-CHIP"]["name"], "Button")
+        document["components"] = [item for item in document["components"] if item["id"] != "C-SYN-BUTTON-AND"]
+        run_check(copy.deepcopy(document))
+        find(document, "components", "C-SYN-CHIP")["semantic_role"] = "primary action"  # shared with its replacement
+        self.assertEqual(run_check(document).components["C-SYN-CHIP"]["semantic_role"], "primary action")
 
     def test_duplicate_of_a_deprecated_published_component(self):
         self.assertRefused(lambda d: local(d).update(semantic_role="filter toggle"), "duplicate.semantic_component",
@@ -1130,7 +1215,8 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(sorted(self.model.components), sorted(self.model.pinned))
         for identifier, component in self.model.components.items():
             with self.subTest(component=identifier):
-                self.assertEqual(set(component["platforms"]), set(self.model.pinned[identifier]))
+                self.assertEqual(set(component["platforms"]), set(self.model.pinned[identifier][0]))
+                self.assertEqual(component["name"], self.model.pinned[identifier][1])
                 self.assertEqual(component["token_refs"], [])
                 self.assertIsNone(component["since_version"])
 
@@ -1186,14 +1272,23 @@ class MirrorTests(unittest.TestCase):
     def test_hostile_names_cannot_break_cells_or_markers(self):
         document = fixture()
         self.render(copy.deepcopy(document))
-        find(document, "components", "C-SYN-DRAFT")["name"] = f"A | b `c` *d* [e] &amp; {module.MIRROR_END}"
+        # The full end marker names a dotted file and is refused as content; its opening cannot pass either.
+        local(document)["name"] = "A | b `c` *d* [e] &amp; <!-- END GENERATED: x -->"  # not pinned: no registry name
         text = self.render(document)
         self.assertEqual((text.count(module.MIRROR_BEGIN), text.count(module.MIRROR_END)), (1, 1))
-        row = next(line for line in text.splitlines() if line.startswith("| C-SYN-DRAFT |"))
+        row = next(line for line in text.splitlines() if line.startswith("| C-SYN-LOCAL |"))
         self.assertIn("A \\| b \\`c\\` \\*d\\* \\[e\\] &amp;amp; &lt;!-- END GENERATED", row)
         # Eight columns: nine unescaped pipes.
         self.assertEqual(len(re.findall(r"(?<!\\)\|", row)), 9)
         self.assertEqual(module.mirror_section(text), text)
+
+    def test_emphasis_and_strikethrough_are_escaped(self):
+        document = fixture()
+        self.render(copy.deepcopy(document))
+        local(document)["name"] = "Draft _banner_ ~~old~~"
+        row = next(line for line in self.render(document).splitlines() if line.startswith("| C-SYN-LOCAL |"))
+        self.assertIn("| Draft \\_banner\\_ \\~\\~old\\~\\~ |", row)
+        self.assertIn("| android_design |", row)  # an intraword underscore cannot open emphasis
 
     def test_missing_or_ambiguous_markers_have_no_section(self):
         text = self.render(fixture())

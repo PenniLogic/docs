@@ -120,14 +120,14 @@
     },
     "component_id": {
       "type": "string",
-      "pattern": "^C-[A-Z][A-Z0-9]{0,11}(-[A-Z][A-Z0-9]{0,11}){0,3}$(?![\\s\\S])"
+      "pattern": "^(?=[A-Z0-9-]{3,64}$(?![\\s\\S]))C-[A-Z0-9]+(-[A-Z0-9]+)*$(?![\\s\\S])"
     },
     "optional_component_id": {
       "type": [
         "string",
         "null"
       ],
-      "pattern": "^C-[A-Z][A-Z0-9]{0,11}(-[A-Z][A-Z0-9]{0,11}){0,3}$(?![\\s\\S])"
+      "pattern": "^(?=[A-Z0-9-]{3,64}$(?![\\s\\S]))C-[A-Z0-9]+(-[A-Z0-9]+)*$(?![\\s\\S])"
     },
     "library_id": {
       "enum": [

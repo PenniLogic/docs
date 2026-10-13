@@ -88,7 +88,12 @@ APPROVAL_ROLES = ("systems", "design_ops", "accessibility", "ux_engineering", "d
 CDO_ROLE, CDO_SCOPE = "decision_coordinator", "shared_system_major"
 TABLETOP_ID = re.compile(r"TT-[0-9]{2}")
 SEMVER = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
-COMPONENT = re.compile(r"C-[A-Z][A-Z0-9]{0,11}(?:-[A-Z][A-Z0-9]{0,11}){0,3}")
+# The ID-authority grammar (hyphen-separated upper-case/digit segments), bounded to 64 characters for safe output.
+COMPONENT = re.compile(r"(?=[A-Z0-9-]{3,64}\Z)C-[A-Z0-9]+(?:-[A-Z0-9]+)*")
+# The registry schema's own grammar for pinned IDs; a pinned ID outside COMPONENT has no record and stays a gap.
+REGISTRY_COMPONENT = re.compile(r"C-[A-Z0-9-]+")
+# Repository-relative file paths at the exempt *.path fields (dotted file names are not host names there).
+FILE_PATH = re.compile(r"(?=[a-z0-9_./-]{1,200}\Z)(?:[a-z0-9_-]+/)*[a-z0-9_-]+\.(?:json|md)")
 # Component IDs with this prefix belong to test fixtures only and are refused in published data.
 SYNTHETIC_PREFIX = "C-SYN-"
 # The public PenniLogic repositories (check_test_strategy.REPOSITORY_IDS); issue numbers have at most six digits.
@@ -100,20 +105,26 @@ TEXT_LIMIT = 400
 NUMBER_PATHS = frozenset({("schema_version",)})
 # Exempt from the content scan only at these paths and only with exactly this grammar (a digest is hex-shaped).
 EXEMPT_PATHS = {("registry_ref", "commit"): COMMIT, ("registry_ref", "sha256"): DIGEST,
+                ("registry_ref", "path"): FILE_PATH,
                 ("releases", "*", "cdo_approval", "decision_source", "commit"): COMMIT,
-                ("releases", "*", "cdo_approval", "decision_source", "sha256"): DIGEST}
+                ("releases", "*", "cdo_approval", "decision_source", "sha256"): DIGEST,
+                ("releases", "*", "cdo_approval", "decision_source", "path"): FILE_PATH}
 CONTENT_SHAPES = (
     ("content.unprintable_character", re.compile(r"[^\x20-\x7e]")),
     ("content.secret_shape", re.compile(
         r"\bgh[pousr]_[A-Za-z0-9]{8,}|\bgithub_pat_|-----BEGIN|\bAKIA[0-9A-Z]{16}\b|\bxox[abposr]-"
-        r"|\bsk-[A-Za-z0-9_-]{20,}"
-        # A key-shaped run: 32 or more letters, digits, + / = with at least one digit (file keys, hex, base64).
-        r"|(?=[A-Za-z0-9+/=]{32})[A-Za-z+/=]*[0-9][A-Za-z0-9+/=]*"
+        r"|\bsk-[A-Za-z0-9_-]{20,}|\bfig[a-z]_"
+        # Key-shaped runs: 32 or more letters, digits, + / = with a digit (hex, base64); 32 or more letters or digits
+        # without one; 16 or more mixing upper case, lower case and digits (a Figma file key has 22).
+        r"|(?=[A-Za-z0-9+/=]{32})[A-Za-z+/=]*[0-9][A-Za-z0-9+/=]*|[A-Za-z0-9]{32,}"
+        r"|(?<![A-Za-z0-9])(?=[A-Za-z0-9]*[0-9])(?=[A-Za-z0-9]*[a-z])(?=[A-Za-z0-9]*[A-Z])[A-Za-z0-9]{16,}"
     )),
-    # E34-F06: no public links, file keys or hosts; any scheme, www. or dotted host name is refused.
+    # E34-F06: no public links, file keys or hosts: any scheme, www., dotted host name (any letter top-level label),
+    # host:port or IPv4 shape is refused. Repository file paths are exempt only at EXEMPT_PATHS.
     ("content.url_shape", re.compile(
         r"[A-Za-z][A-Za-z0-9+.-]*:/|\bwww\.|\b(?:mailto|javascript|data|file|tel):"
-        r"|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:com|org|net|io|co|dev|app|ai|gov|edu|in|xyz|design)\b",
+        r"|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b|\b[A-Za-z][A-Za-z0-9-]*:[0-9]{2,5}\b"
+        r"|\b[0-9]{1,3}(?:\.[0-9]{1,3}){3}\b",
         re.IGNORECASE,
     )),
     ("content.email_shape", re.compile(r"@")),
@@ -140,8 +151,9 @@ STRUCTURE_RULES = (
     "release.rollback_target", "approval.source_mismatch",
     "reference.invalid",
     "component.library_invalid", "component.candidate_published", "component.platform_mismatch",
-    "component.registry_platform_mismatch",
-    "component.variant_invalid", "component.variant_parent_unpublished", "component.owner_not_maintainer", "component.property_contract",
+    "component.registry_platform_mismatch", "component.registry_name_mismatch",
+    "component.variant_invalid", "component.variant_parent_unpublished", "component.owner_not_maintainer",
+    "component.property_contract",
     "published.owner_missing", "published.description_missing", "published.properties_missing",
     "published.accessibility_missing", "published.platforms_missing", "published.semantic_role_missing",
     "published.release_missing",
@@ -301,7 +313,7 @@ class GitSources:
 
 
 def read_registry(document, sources, pin, fixture):
-    """The pinned registry's component platforms by C-* ID, read at the pinned commit and digest-checked."""
+    """The pinned registry's (platforms, name) by C-* ID, read at the pinned commit and digest-checked."""
     require(document["registry_ref"] == pin, "registry.ref_mismatch")
     try:
         blob = sources.blob(pin["commit"], pin["path"])
@@ -317,7 +329,7 @@ def read_registry(document, sources, pin, fixture):
     pinned = {}
     for record in components:
         identifier = record.get("id") if isinstance(record, dict) else None
-        require(isinstance(identifier, str) and COMPONENT.fullmatch(identifier) is not None
+        require(isinstance(identifier, str) and REGISTRY_COMPONENT.fullmatch(identifier) is not None
                 and identifier not in pinned and (fixture or not identifier.startswith(SYNTHETIC_PREFIX)),
                 "registry.invalid")
         platforms = record.get("platforms")
@@ -325,7 +337,9 @@ def read_registry(document, sources, pin, fixture):
         if platforms == ["shared"]:
             platforms = list(PLATFORMS)
         require(isinstance(platforms, list) and platforms and set(platforms) <= set(PLATFORMS), "registry.invalid")
-        pinned[identifier] = tuple(platforms)
+        name = record.get("name")
+        require(isinstance(name, str) and name != "", "registry.invalid")
+        pinned[identifier] = (tuple(platforms), name)
     return pinned
 
 
@@ -697,8 +711,11 @@ def check(document, schema, policy_data, policy_schema, sources, pin=None, fixtu
         require(branch is None or branch not in branches, "contribution.branch_duplicate", component["id"])
         branches.add(branch)
         # A record keyed by a pinned registry ID supports exactly the platforms the registry assigns to it.
-        require(component["id"] not in pinned or set(component["platforms"]) == set(pinned[component["id"]]),
+        require(component["id"] not in pinned or set(component["platforms"]) == set(pinned[component["id"]][0]),
                 "component.registry_platform_mismatch", component["id"])
+        # The registry owns the name of a pinned ID; a record copies it verbatim (re-pins surface renames).
+        require(component["id"] not in pinned or component["name"] == pinned[component["id"]][1],
+                "component.registry_name_mismatch", component["id"])
     check_component_graph(components, releases)
     check_tabletop(document, policy, libraries)
     check_approvals(document)
@@ -746,9 +763,11 @@ def structure_line(model):
 MIRROR = "governance/figma-library-governance.md"
 MIRROR_BEGIN = "<!-- BEGIN GENERATED: governance/figma-libraries.json (check_figma_libraries.py --mirror) -->"
 MIRROR_END = "<!-- END GENERATED: governance/figma-libraries.json -->"
-# Free text cannot break a table cell or the generated-section markers, nor add emphasis, code or links.
-_CELL_ESCAPES = str.maketrans({character: "\\" + character for character in "\\|`*[]"}
+# Free text cannot break a table cell or the generated-section markers, nor add emphasis, strikethrough, code or
+# links; `_` is escaped where it could open or close emphasis (intraword `_`, as in role IDs, cannot).
+_CELL_ESCAPES = str.maketrans({character: "\\" + character for character in "\\|`*[]~"}
                               | {"&": "&amp;", "<": "&lt;", ">": "&gt;"})
+_EMPHASIS_UNDERSCORE = re.compile(r"(?<![A-Za-z0-9])_|_(?![A-Za-z0-9])")
 
 
 def cell(value):
@@ -759,7 +778,7 @@ def cell(value):
         return "yes" if value else "no"
     if isinstance(value, list):
         value = ", ".join(value)
-    return str(value).translate(_CELL_ESCAPES)
+    return _EMPHASIS_UNDERSCORE.sub(r"\\_", str(value).translate(_CELL_ESCAPES))
 
 
 def table(header, rows):

@@ -18,7 +18,7 @@ test fails when it drifts; the other sections are the contract text.
 | [`design-gates.json`](design-gates.json) | Role IDs, the `components` and `foundations_tokens` artifact classes (accountable and responsible roles), reserved Figma files and pages, the proposal-branch pattern, the `shared_system_major` CDO-equivalent scope | docs#64 (accepted, byte-pinned; read only) |
 | [`design-operations.md`](design-operations.md) section 6 | Figma topology, branch grammar, SemVer classes, promotion, archive, restoration and rollback freeze | docs#64 (read only; section 5 below adds H07's labelled proposals on top of it) |
 | [`design-operations.md`](design-operations.md) section 7 | Default-deny grants, no public links or external sharing, offboarding revocation | docs#64 (read only) |
-| Imported registry `planning/source/evidence/experience-coverage.json` at `1722fc79` | Component IDs (`C-*`) and their platforms, pinned by commit, path and sha256 (`registry_ref`) | docs#75 (moves to `product/experience-coverage.json` when docs#75 integrates; a one-field re-pin) |
+| Imported registry `planning/source/evidence/experience-coverage.json` at `1722fc79` | Component IDs (`C-*`) and their platforms, pinned by commit, path and sha256 (`registry_ref`) | docs#75 (moves to `product/experience-coverage.json` when docs#75 integrates; the re-pin changes `registry_ref` and the checker's `REGISTRY_PIN` together, then regenerates section 11 and updates the published-data test expectations) |
 | docs#76 visual direction (D2) | `direction_ref`; stays `null` until the decision exists | docs#76 (held) |
 | docs#55 token grammar | `token_refs`; stays empty until a grammar is published | docs#55 (held) |
 
@@ -47,10 +47,14 @@ release exists) or `frozen` (rollback freeze, section 7). Today every library is
 
 ## 3. Component records
 
-Each record is keyed by its registry `C-*` ID; `C-SYN-*` is reserved for test fixtures and refused in
-this data (`id.synthetic_reserved`). A record keyed by a pinned ID supports exactly the pinned platforms
-(`component.registry_platform_mismatch`). IDs absent from the pin and pinned IDs without a record are
-readiness gaps, never structure failures.
+Each record is keyed by its registry `C-*` ID in the ID-authority grammar `C-[A-Z0-9]+(-[A-Z0-9]+)*`
+(at most 64 characters); `C-SYN-*` is reserved for test fixtures and refused in this data
+(`id.synthetic_reserved`). Pinned IDs are read with the registry schema's own grammar `C-[A-Z0-9-]+`, so
+a pinned ID outside the record grammar never fails the check: it cannot have a record and stays a
+readiness gap. A record keyed by a pinned ID copies the pinned name verbatim
+(`component.registry_name_mismatch`, so a registry rename surfaces at the re-pin) and supports exactly
+the pinned platforms (`component.registry_platform_mismatch`). IDs absent from the pin and pinned IDs
+without a record are readiness gaps, never structure failures.
 
 Lifecycle: `draft` (imported, unpublished) -> `candidate` (`LIB-CANDIDATE` only) -> `published` ->
 `deprecated`. Status `candidate` holds exactly in `LIB-CANDIDATE` (`contribution.candidate_library`).
