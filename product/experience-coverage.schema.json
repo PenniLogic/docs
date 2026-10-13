@@ -990,7 +990,7 @@
           }
         },
         "scope_questions": {
-          "description": "Non-frontend DesignOps proposals whose own rationale names user-visible scope no registry screen maps yet. Each stays a readiness gap (readiness.partition_scope_question) until the owning design owner confirms the exclusion or maps it; removing an issue here is that reviewed decision.",
+          "description": "Non-frontend DesignOps proposals whose own rationale names user-visible scope no registry screen maps yet. Each stays a readiness gap (readiness.partition_scope_question) until the owning design owner confirms the exclusion or maps it; removing an issue here is that reviewed decision. An issue whose user-visible scope a registry screen already maps through another ticket is not listed: its rationale names that coverage, and co-listing the issue as an implementation ticket stays an ordinary owner decision on the proposal.",
           "type": "array",
           "uniqueItems": true,
           "items": {

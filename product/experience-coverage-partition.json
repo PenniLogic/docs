@@ -12,11 +12,8 @@
     "PenniLogic/android#69"
   ],
   "scope_questions": [
-    "PenniLogic/android#7",
     "PenniLogic/android#19",
-    "PenniLogic/android#27",
-    "PenniLogic/android#37",
-    "PenniLogic/android#57"
+    "PenniLogic/android#27"
   ],
   "entries": [
     {
@@ -72,7 +69,7 @@
       "plan_id": null,
       "disposition": "non_frontend",
       "rationale_class": "other",
-      "rationale": "Analytics instrumentation: a consent-state machine checked before every event, a funnel drop-off report and a payload allowlist lint. Its user-facing analytics opt-out toggle is not mapped to any registry screen; the Android design owner should confirm this exclusion or map it to a consent screen.",
+      "rationale": "Analytics instrumentation: a consent-state machine checked before every event, a funnel drop-off report and a payload allowlist lint. Its user-facing parts are mapped: the analytics opt-out on S-AND-056 through PenniLogic/android#31 (T-TRU-02) and consent before any event on S-AND-009 through PenniLogic/android#17; the owner should confirm this exclusion or co-list this issue on S-AND-056.",
       "proposed_by": "design_ops"
     },
     {
@@ -168,7 +165,7 @@
       "plan_id": "T-SYN-03",
       "disposition": "non_frontend",
       "rationale_class": "backend_integration",
-      "rationale": "Offline sync client reconciled with the published sync contract: queue, conflicts, backoff and durability. Its plain-language pending, failed and conflicted sync state is user-visible but not mapped to a registry screen; the Android design owner should confirm this exclusion or add a mapping.",
+      "rationale": "Offline sync client reconciled with the published sync contract: queue, conflicts, backoff and durability. Pending and failed sync status shows on S-AND-028 through PenniLogic/android#6, but no registry screen presents the choice for a conflicted record; the Android design owner should map it or confirm.",
       "proposed_by": "design_ops"
     },
     {
@@ -232,7 +229,7 @@
       "plan_id": "T-SEC-05",
       "disposition": "non_frontend",
       "rationale_class": "platform_security_or_storage",
-      "rationale": "Platform hardening: encrypted local storage keyed from hardware-backed storage, integrity verdicts, pinned transport and window protections. User-facing privacy controls are a stated non-goal; its biometric key unwrap fallback and read-only adverse-verdict states are user-visible, so the owner should confirm coverage by existing screens such as S-AND-002.",
+      "rationale": "Platform hardening: encrypted local storage keyed from hardware-backed storage, integrity verdicts, pinned transport and window protections. The biometric fallback is on S-AND-002 through PenniLogic/android#30 and tracking paused on S-AND-028, but no registry screen presents the recoverable read-only adverse-verdict state; the owner should map it or confirm.",
       "proposed_by": "design_ops"
     },
     {
@@ -472,7 +469,7 @@
       "plan_id": "T-AND-07",
       "disposition": "non_frontend",
       "rationale_class": "capture_or_device_runtime",
-      "rationale": "Android API level baseline: SDK targets, app-wide edge-to-edge insets, predictive back, large-screen, scheduling and stopped-state handling. Feature-specific UI is a stated non-goal, so it maps to no single flow or screen; the owner should confirm.",
+      "rationale": "Android API level baseline: SDK targets, app-wide edge-to-edge insets, predictive back, large-screen, scheduling and stopped-state handling. Feature UI is a non-goal; back, insets and window classes follow the T-UXA-01 shell (F-AND-01, S-AND-003) and tracking paused shows on S-AND-028; the owner should confirm this exclusion or co-list this issue on F-AND-01.",
       "proposed_by": "design_ops"
     },
     {

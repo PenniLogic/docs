@@ -1846,7 +1846,7 @@ PUBLISHED_GAPS = {
     "readiness.d6_missing": 141, "readiness.route_missing": 141, "readiness.qa_unverified": 35,
     "readiness.persona_outside_journey": 3, "readiness.screen_ticket_outside_flows": 1,
     "readiness.security_states_missing": 7, "readiness.proposal_unconfirmed": 232, "readiness.ticket_unresolved": 0,
-    "readiness.post_snapshot_issue": 1, "readiness.partition_scope_question": 5,
+    "readiness.post_snapshot_issue": 1, "readiness.partition_scope_question": 2,
 }
 PUBLISHED_STRUCTURE = re.escape(
     "Experience coverage 1.0.0 structure valid: 12 personas, 12 journeys, 38 user stories, 38 flows (35 critical), "
@@ -1925,11 +1925,21 @@ class PublishedDataTests(unittest.TestCase):
             "S-AND-005", "S-AND-057", "S-WEB-009", "S-WEB-035", "S-ADM-021", "S-ADM-022", "S-ADM-024",
         ])
         self.assertEqual(gaps["readiness.post_snapshot_issue"], ["PenniLogic/android#69"])
-        # SC-3: the five DesignOps exclusions whose own rationale names unmapped user-visible scope.
-        self.assertEqual(gaps["readiness.partition_scope_question"], [
-            "PenniLogic/android#7", "PenniLogic/android#19", "PenniLogic/android#27", "PenniLogic/android#37",
-            "PenniLogic/android#57",
-        ])
+        # SC-3 / DF-R2-1: the DesignOps exclusions whose own rationale names user-visible scope no registry screen
+        # maps (a sync conflict choice, a read-only adverse-verdict state). android#7, #37 and #57 left the list:
+        # S-AND-056/S-AND-009, S-AND-001 and the F-AND-01 shell/S-AND-028 already map their user-visible scope, and
+        # each rationale names that coverage and the open co-listing question.
+        self.assertEqual(gaps["readiness.partition_scope_question"], ["PenniLogic/android#19", "PenniLogic/android#27"])
+        entries = {entry["issue"]: entry for entry in model.partition["entries"]}
+        for issue, cited in (("PenniLogic/android#7", ("S-AND-056", "PenniLogic/android#31", "S-AND-009")),
+                             ("PenniLogic/android#19", ("S-AND-028", "PenniLogic/android#6")),
+                             ("PenniLogic/android#27", ("S-AND-002", "PenniLogic/android#30", "S-AND-028")),
+                             ("PenniLogic/android#37", ("S-AND-001", "PenniLogic/android#2")),
+                             ("PenniLogic/android#57", ("F-AND-01", "S-AND-003", "S-AND-028"))):
+            with self.subTest(issue=issue):
+                self.assertEqual(entries[issue]["proposed_by"], "design_ops")
+                for reference in cited:
+                    self.assertIn(reference, entries[issue]["rationale"])
         proposals = gaps["readiness.proposal_unconfirmed"]
         self.assertEqual([sum(subject.startswith(prefix) for subject in proposals)
                           for prefix in ("S-", "C-", "PenniLogic/")], [141, 57, 34])
