@@ -1,0 +1,2182 @@
+{
+  "schema_version": "1.0.0",
+  "catalogue_version": "0.1.0",
+  "source_issue": "PenniLogic/docs#77",
+  "plan_id": "T-UXR-08",
+  "status": "proposed",
+  "registry_ref": {
+    "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+    "path": "planning/source/evidence/experience-coverage.json",
+    "sha256": "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
+  },
+  "collection": {
+    "enabled": false,
+    "enable_requires": ["consent", "payload_allowlist", "cohort_minimum"],
+    "rollback": "Stop collection and retain only approved aggregate history"
+  },
+  "privacy": {
+    "payload_allowlist_refs": [
+      "pending:PenniLogic/android#18",
+      "pending:PenniLogic/android#38",
+      "pending:PenniLogic/api#82"
+    ],
+    "consent_ref": "pending:PenniLogic/docs#65",
+    "opt_out": {
+      "honoured": true,
+      "rule": "Opted-out sessions emit no event and are excluded from every denominator"
+    },
+    "cohort_minimum_ref": "pending:PenniLogic/infra#27",
+    "retention_ref": "pending:PenniLogic/infra#27",
+    "aggregation_ref": "pending:PenniLogic/infra#27",
+    "access_ref": "pending:PenniLogic/infra#27",
+    "session_recording": "prohibited",
+    "privacy_budget": {"max_fields_per_event": 4, "max_values_per_field": 12}
+  },
+  "events": [
+    {
+      "id": "EV-001",
+      "name": "journey_step_shown",
+      "purpose": "A journey entry step was shown to an opted-in session",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "stage", "kind": "enum", "values": ["entry", "core", "confirmation"]},
+        {"name": "assistive_mode", "kind": "boolean", "values": []}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-002",
+      "name": "journey_step_finished",
+      "purpose": "A journey step ended, coarsened to its outcome and elapsed bucket",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "step_outcome", "kind": "enum", "values": ["completed", "abandoned"]},
+        {"name": "elapsed", "kind": "duration_bucket", "values": ["under_minute", "few_minutes", "longer"]},
+        {"name": "assistive_mode", "kind": "boolean", "values": []}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-003",
+      "name": "journey_error_shown",
+      "purpose": "A recoverable error state was shown during a journey step",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {
+          "name": "error_class",
+          "kind": "enum",
+          "values": ["validation", "connectivity", "conflict", "unavailable"]
+        }
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-004",
+      "name": "journey_step_reversed",
+      "purpose": "A confirmed step was undone, coarsened to how soon after confirming",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "elapsed", "kind": "duration_bucket", "values": ["immediate", "same_session", "later"]}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-005",
+      "name": "correction_finished",
+      "purpose": "A correction flow ended, saved or discarded",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "correction_outcome", "kind": "enum", "values": ["saved", "discarded"]}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-006",
+      "name": "recovery_started",
+      "purpose": "A recovery path was entered after a failure or lockout",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "recovery_route", "kind": "enum", "values": ["self_service", "assisted"]}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-007",
+      "name": "recovery_finished",
+      "purpose": "A recovery path ended, coarsened to its outcome",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "recovery_outcome", "kind": "enum", "values": ["restored", "abandoned", "escalated"]}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-008",
+      "name": "comprehension_check_answered",
+      "purpose": "An optional in-flow comprehension check was answered, coarsened to understood or not",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {
+          "name": "check_result",
+          "kind": "enum",
+          "values": ["understood", "partly_understood", "not_understood"]
+        }
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-009",
+      "name": "milestone_reached",
+      "purpose": "A progress milestone was reached, by milestone kind only",
+      "fields": [
+        {
+          "name": "milestone_kind",
+          "kind": "enum",
+          "values": ["first_plan_set", "first_month_on_plan", "first_goal_met"]
+        }
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-010",
+      "name": "permission_request_answered",
+      "purpose": "A system permission request was answered",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "answer", "kind": "enum", "values": ["granted", "declined", "deferred"]},
+        {"name": "times_shown", "kind": "count_bucket", "values": ["once", "twice", "three_or_more"]}
+      ],
+      "incentive": "permission_grant",
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-011",
+      "name": "assistant_explanation_opened",
+      "purpose": "An assistant explanation of a figure was opened",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {
+          "name": "explanation_kind",
+          "kind": "enum",
+          "values": ["figure_source", "uncertainty", "consequence"]
+        }
+      ],
+      "incentive": "ai_use",
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-012",
+      "name": "subscription_change_confirmed",
+      "purpose": "A subscription change was confirmed, by change kind only",
+      "fields": [
+        {"name": "change_kind", "kind": "enum", "values": ["start", "upgrade", "downgrade", "cancel"]}
+      ],
+      "incentive": "subscription",
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-013",
+      "name": "share_offer_accepted",
+      "purpose": "A sharing or access grant offer was accepted, by scope only",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "share_scope", "kind": "enum", "values": ["view_only", "edit"]}
+      ],
+      "incentive": "sharing",
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-014",
+      "name": "shared_access_revoked",
+      "purpose": "A sharing or access grant was revoked, coarsened to how soon",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "elapsed", "kind": "duration_bucket", "values": ["same_day", "within_week", "later"]}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    },
+    {
+      "id": "EV-015",
+      "name": "support_route_opened",
+      "purpose": "A help or support route was opened from a journey",
+      "fields": [
+        {
+          "name": "journey",
+          "kind": "enum",
+          "values": ["j01", "j02", "j03", "j04", "j05", "j06", "j07", "j08", "j09", "j10", "j11", "j12"]
+        },
+        {"name": "route", "kind": "enum", "values": ["help_article", "request_form", "escalation"]}
+      ],
+      "incentive": null,
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
+    }
+  ],
+  "metrics": [
+    {
+      "id": "M-J01-01",
+      "journey_id": "J01",
+      "role": "primary",
+      "kind": "sustained_progress",
+      "statement": "Share of opted-in first-run sessions that later reach a first progress milestone",
+      "numerator": {"event_ids": ["EV-009"], "definition": "Milestones of kind first_month_on_plan"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the first-run entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J01-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-02",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j01 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-03",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j01"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-04",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j01 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-05",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "trust",
+      "statement": "Share of permission requests declined or deferred while the first run still continues",
+      "numerator": {"event_ids": ["EV-010"], "definition": "Answers declined or deferred"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the J01 offer step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": "Declining a permission stays a supported path; grants are never counted as success",
+      "guardrail_ids": ["G-J01-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-008",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-01",
+      "journey_id": "J02",
+      "role": "primary",
+      "kind": "recovery",
+      "statement": "Share of recovery attempts that restore access",
+      "numerator": {"event_ids": ["EV-007"], "definition": "Recovery paths ending restored"},
+      "denominator": {
+        "event_ids": ["EV-006"],
+        "eligibility": "Opted-in sessions that entered a recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J02-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-02",
+      "journey_id": "J02",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j02 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-03",
+      "journey_id": "J02",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j02"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-04",
+      "journey_id": "J02",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j02 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J03-01",
+      "journey_id": "J03",
+      "role": "primary",
+      "kind": "correction",
+      "statement": "Share of started corrections that are saved",
+      "numerator": {"event_ids": ["EV-005"], "definition": "Correction flows ending saved"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a captured-entry review step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J03-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J03-02",
+      "journey_id": "J03",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j03 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J03-03",
+      "journey_id": "J03",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j03"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J03-04",
+      "journey_id": "J03",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j03 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-01",
+      "journey_id": "J04",
+      "role": "primary",
+      "kind": "comprehension",
+      "statement": "Share of comprehension checks answered understood after comparing strategies",
+      "numerator": {"event_ids": ["EV-008"], "definition": "Checks answered understood in J04"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the strategy comparison; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J04-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-02",
+      "journey_id": "J04",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j04 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-03",
+      "journey_id": "J04",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j04"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-04",
+      "journey_id": "J04",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j04 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-01",
+      "journey_id": "J05",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of planning tasks finished without abandonment",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J05 steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a planning entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J05-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-02",
+      "journey_id": "J05",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j05 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-03",
+      "journey_id": "J05",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j05"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-04",
+      "journey_id": "J05",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j05 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-01",
+      "journey_id": "J06",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of split groups that reach settlement",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J06 settlement steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a split entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J06-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-02",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j06 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-03",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j06"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-04",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j06 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-05",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "trust",
+      "statement": "Share of accepted share offers that use the least scope",
+      "numerator": {"event_ids": ["EV-013"], "definition": "Accepted offers with share_scope view_only"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the J06 offer step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": "Sharing completes a split the user started, at the least scope that settles it",
+      "guardrail_ids": ["G-J06-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-008",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J07-01",
+      "journey_id": "J07",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of started safe exits or grant revocations that finish",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J07 exit steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the safe-exit entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J07-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J07-02",
+      "journey_id": "J07",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j07 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J07-03",
+      "journey_id": "J07",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j07"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J07-04",
+      "journey_id": "J07",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j07 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-01",
+      "journey_id": "J08",
+      "role": "primary",
+      "kind": "comprehension",
+      "statement": "Share of comprehension checks answered understood after an assistant explanation",
+      "numerator": {"event_ids": ["EV-008"], "definition": "Checks answered understood in J08"},
+      "denominator": {
+        "event_ids": ["EV-011"],
+        "eligibility": "Opted-in sessions that opened an explanation; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J08-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-02",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j08 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-03",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j08"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-04",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j08 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-05",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of sessions shown an assistant figure that open its explanation",
+      "numerator": {"event_ids": ["EV-011"], "definition": "Explanations opened in J08"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the J08 offer step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": "The explanation states the source, uncertainty and consequence of a figure; use alone is not success",
+      "guardrail_ids": ["G-J08-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-008",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-01",
+      "journey_id": "J09",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of subscription or notification control tasks finished",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J09 control steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a control entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J09-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-02",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j09 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-03",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j09"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-04",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j09 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-05",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "task_success",
+      "statement": "Share of cancellation entries that reach a confirmed cancellation",
+      "numerator": {"event_ids": ["EV-012"], "definition": "Changes of kind cancel"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown the J09 offer step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": "Cancelling is as reachable as starting; subscription starts are never counted as success",
+      "guardrail_ids": ["G-J09-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-008",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-01",
+      "journey_id": "J10",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of rights or support requests finished in product",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J10 request steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a rights or support entry; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J10-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-02",
+      "journey_id": "J10",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j10 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-03",
+      "journey_id": "J10",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j10"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-04",
+      "journey_id": "J10",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j10 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J11-01",
+      "journey_id": "J11",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of operator fulfillment tasks finished without abandonment",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J11 steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Operator sessions shown a fulfillment entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J11-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J11-02",
+      "journey_id": "J11",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j11 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J11-03",
+      "journey_id": "J11",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j11"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J11-04",
+      "journey_id": "J11",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j11 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-01",
+      "journey_id": "J12",
+      "role": "primary",
+      "kind": "task_success",
+      "statement": "Share of configuration and release tasks finished without reversal",
+      "numerator": {"event_ids": ["EV-002"], "definition": "J12 steps ending completed"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Operator sessions shown a configuration entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": ["G-J12-01"],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-001",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-02",
+      "journey_id": "J12",
+      "role": "secondary",
+      "kind": "time_on_task",
+      "statement": "Share of finished steps that fall in the longer elapsed bucket",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Steps with journey j12 and elapsed longer"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "duration_bucket_share",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-03",
+      "journey_id": "J12",
+      "role": "secondary",
+      "kind": "error",
+      "statement": "Recoverable errors shown per eligible session",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown with journey j12"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-04",
+      "journey_id": "J12",
+      "role": "secondary",
+      "kind": "abandonment",
+      "statement": "Share of started steps that are abandoned",
+      "numerator": {
+        "event_ids": ["EV-002"],
+        "definition": "Steps with journey j12 and step_outcome abandoned"
+      },
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {"value": null, "source": "unmeasured"},
+      "target": {"value": null, "source": "unset"},
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "G-J01-01",
+      "journey_id": "J01",
+      "class": "permission_coercion",
+      "concern": "harm",
+      "signal": "Share of permission requests shown again after a decline",
+      "numerator": {"event_ids": ["EV-010"], "definition": "Answers with times_shown twice or more"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-003",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J02-01",
+      "journey_id": "J02",
+      "class": "support_demand",
+      "concern": "trust",
+      "signal": "Share of recovery attempts that open a support route",
+      "numerator": {"event_ids": ["EV-015"], "definition": "Support routes opened from J02"},
+      "denominator": {
+        "event_ids": ["EV-006"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-005",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J03-01",
+      "journey_id": "J03",
+      "class": "accessibility",
+      "concern": "trust",
+      "signal": "Gap in correction completion for sessions using assistive mode",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Abandoned J03 steps in assistive mode"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-006",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J04-01",
+      "journey_id": "J04",
+      "class": "dark_pattern",
+      "concern": "harm",
+      "signal": "Share of confirmed strategy choices reversed immediately",
+      "numerator": {"event_ids": ["EV-004"], "definition": "Reversals in J04 with elapsed immediate"},
+      "denominator": {
+        "event_ids": ["EV-002"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-007",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J05-01",
+      "journey_id": "J05",
+      "class": "accessibility",
+      "concern": "trust",
+      "signal": "Gap in planning completion for sessions using assistive mode",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Abandoned J05 steps in assistive mode"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-006",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J06-01",
+      "journey_id": "J06",
+      "class": "harmful_sharing",
+      "concern": "harm",
+      "signal": "Share of accepted shares revoked within a day",
+      "numerator": {"event_ids": ["EV-014"], "definition": "J06 revocations with elapsed same_day"},
+      "denominator": {
+        "event_ids": ["EV-013"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-004",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J07-01",
+      "journey_id": "J07",
+      "class": "harmful_sharing",
+      "concern": "harm",
+      "signal": "Share of household grants revoked within a day of acceptance",
+      "numerator": {"event_ids": ["EV-014"], "definition": "J07 revocations with elapsed same_day"},
+      "denominator": {
+        "event_ids": ["EV-013"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-004",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J08-01",
+      "journey_id": "J08",
+      "class": "dark_pattern",
+      "concern": "harm",
+      "signal": "Share of assistant-proposed actions reversed immediately",
+      "numerator": {"event_ids": ["EV-004"], "definition": "Reversals in J08 with elapsed immediate"},
+      "denominator": {
+        "event_ids": ["EV-002"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-007",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J09-01",
+      "journey_id": "J09",
+      "class": "dark_pattern",
+      "concern": "harm",
+      "signal": "Share of cancellation attempts abandoned before confirmation",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Abandoned J09 steps at the confirmation stage"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-007",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J10-01",
+      "journey_id": "J10",
+      "class": "support_demand",
+      "concern": "trust",
+      "signal": "Share of rights requests that escalate to a support route",
+      "numerator": {"event_ids": ["EV-015"], "definition": "J10 support routes with route escalation"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-005",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J11-01",
+      "journey_id": "J11",
+      "class": "accessibility",
+      "concern": "trust",
+      "signal": "Gap in operator completion for sessions using assistive mode",
+      "numerator": {"event_ids": ["EV-002"], "definition": "Abandoned J11 steps in assistive mode"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-006",
+      "status": "unvalidated"
+    },
+    {
+      "id": "G-J12-01",
+      "journey_id": "J12",
+      "class": "support_demand",
+      "concern": "harm",
+      "signal": "Share of configuration steps that hit a recoverable error",
+      "numerator": {"event_ids": ["EV-003"], "definition": "Errors shown in J12"},
+      "denominator": {
+        "event_ids": ["EV-001"],
+        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "baseline": {"value": null, "source": "unmeasured"},
+      "threshold_id": "TH-005",
+      "status": "unvalidated"
+    }
+  ],
+  "thresholds": [
+    {
+      "id": "TH-001",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-002",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-003",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research", "privacy"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-004",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research", "privacy", "security"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-005",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research", "service_design"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-006",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research", "accessibility"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-007",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research", "content", "legal"],
+      "decision_record": null
+    },
+    {
+      "id": "TH-008",
+      "warn": {"value": null, "source": "unset"},
+      "kill": {"value": null, "source": "unset"},
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": ["product_owner", "research", "privacy"],
+      "decision_record": null
+    }
+  ],
+  "research_triggers": [
+    {
+      "id": "RT-001",
+      "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-001",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-002",
+      "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-002",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-003",
+      "journey_ids": ["J01"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-003",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-004",
+      "journey_ids": ["J06", "J07"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-004",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-005",
+      "journey_ids": ["J02", "J10", "J12"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-005",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-006",
+      "journey_ids": ["J03", "J05", "J11"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-006",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-007",
+      "journey_ids": ["J04", "J08", "J09"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-007",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-008",
+      "journey_ids": ["J01", "J06", "J08", "J09"],
+      "condition": "threshold_crossed",
+      "source_id": "TH-008",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-009",
+      "journey_ids": ["J01"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J01",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-010",
+      "journey_ids": ["J02"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J02",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-011",
+      "journey_ids": ["J03"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J03",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-012",
+      "journey_ids": ["J04"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J04",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-013",
+      "journey_ids": ["J05"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J05",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-014",
+      "journey_ids": ["J06"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J06",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-015",
+      "journey_ids": ["J07"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J07",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-016",
+      "journey_ids": ["J08"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J08",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-017",
+      "journey_ids": ["J09"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J09",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-018",
+      "journey_ids": ["J10"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J10",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-019",
+      "journey_ids": ["J11"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J11",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-020",
+      "journey_ids": ["J12"],
+      "condition": "benchmark_regression",
+      "source_id": "BM-J12",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    }
+  ],
+  "research_calendar": {
+    "operations_ref": "pending:PenniLogic/docs#65",
+    "cadences": [
+      {
+        "study": "moderated_usability",
+        "cadence": "quarterly",
+        "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+        "next_session": null
+      },
+      {
+        "study": "unmoderated_benchmark",
+        "cadence": "per_release",
+        "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+        "next_session": null
+      },
+      {
+        "study": "diary_follow_up",
+        "cadence": "post_beta",
+        "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+        "next_session": null
+      },
+      {
+        "study": "panel_health_review",
+        "cadence": "monthly",
+        "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+        "next_session": null
+      },
+      {
+        "study": "guardrail_review",
+        "cadence": "monthly",
+        "journey_ids": ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"],
+        "next_session": null
+      }
+    ],
+    "panel_health": ["attrition", "coverage", "recency", "consent_currency", "duplicate_screening"]
+  },
+  "benchmarks": [
+    {
+      "id": "BM-J01",
+      "journey_id": "J01",
+      "version": "1.0.0",
+      "scenario": "Synthetic first run with synthetic accounts",
+      "task_steps": [
+        "Open the app for the first time",
+        "Choose a setup path, with or without granting permissions",
+        "Set a first plan from synthetic data",
+        "Explain what the plan shows next"
+      ],
+      "task_script_sha256": "sha256:ae7ef9c469a5bf6258de203d6218930b607b027265c4ac0db14e21f511340c1f",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J02",
+      "journey_id": "J02",
+      "version": "1.0.0",
+      "scenario": "Synthetic returning account with a lost second factor",
+      "task_steps": [
+        "Sign in on a new synthetic device",
+        "Recover access through the offered route",
+        "Confirm the trusted return state"
+      ],
+      "task_script_sha256": "sha256:4035d2fe1aeb43cc6aec2d49e26179c067da4175c25de32035d69d54eeb52626",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J03",
+      "journey_id": "J03",
+      "version": "1.0.0",
+      "scenario": "Synthetic captured entry with a wrong category",
+      "task_steps": [
+        "Find the captured entry",
+        "Correct the category",
+        "Confirm the corrected entry is trusted"
+      ],
+      "task_script_sha256": "sha256:c4201d3033183df2dff0f5c6ab36d2e259642720a9ba5bdf01a3cc26ad725b8a",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J04",
+      "journey_id": "J04",
+      "version": "1.0.0",
+      "scenario": "Synthetic plan with two strategies to compare",
+      "task_steps": [
+        "Compare the two strategies",
+        "Explain the consequence of each",
+        "Choose one and confirm the decision"
+      ],
+      "task_script_sha256": "sha256:4600a1541ddd2d148eb21480eee27ae58a146a5b361aee3881ab58be3a0f93c4",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J05",
+      "journey_id": "J05",
+      "version": "1.0.0",
+      "scenario": "Synthetic income, budget and goal",
+      "task_steps": [
+        "Record synthetic income",
+        "Set a budget and a goal",
+        "Review the resulting net-worth view"
+      ],
+      "task_script_sha256": "sha256:10393f3eb9471155527fd73a6099523dc06212fe795b921d814e56cd0c00c311",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J06",
+      "journey_id": "J06",
+      "version": "1.0.0",
+      "scenario": "Synthetic group of three with one shared bill",
+      "task_steps": ["Create the group and invite synthetic members", "Split the bill", "Settle and confirm"],
+      "task_script_sha256": "sha256:41828739edfa0d090fd4edd6dbd2b2788b0d373ebb1dc9da1b421479a78e4b85",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J07",
+      "journey_id": "J07",
+      "version": "1.0.0",
+      "scenario": "Synthetic shared goal with a grant to revoke",
+      "task_steps": ["Review who can see the shared goal", "Revoke the grant", "Confirm the safe exit state"],
+      "task_script_sha256": "sha256:50805e1e627492f724d5ddcac082dd7342b9d8854d87c870b6f4e42093778319",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J08",
+      "journey_id": "J08",
+      "version": "1.0.0",
+      "scenario": "Synthetic figure with an assistant explanation",
+      "task_steps": [
+        "Open the explanation of a figure",
+        "State its source and uncertainty",
+        "Accept or decline the proposed action"
+      ],
+      "task_script_sha256": "sha256:3a07282059101e89473dfa2eb00c964a83850c95cfdc6e9e83f4d50c6e7cd848",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J09",
+      "journey_id": "J09",
+      "version": "1.0.0",
+      "scenario": "Synthetic subscription and notification settings",
+      "task_steps": [
+        "Change notification preferences",
+        "Cancel the synthetic subscription",
+        "Confirm the final state"
+      ],
+      "task_script_sha256": "sha256:1821a411fdb41128f27ef104b78db3820056d8406130e8bbea23e9620c97750e",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J10",
+      "journey_id": "J10",
+      "version": "1.0.0",
+      "scenario": "Synthetic data-rights request",
+      "task_steps": ["Find the rights request", "Submit it", "Read what happens next"],
+      "task_script_sha256": "sha256:68da431d08147754d64fd3c644d3483d850c919fae1a7b2b4cad1f969a3bb6a1",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J11",
+      "journey_id": "J11",
+      "version": "1.0.0",
+      "scenario": "Synthetic access request with a synthetic statutory clock",
+      "task_steps": ["Open the queued request", "Verify the access scope", "Fulfil and record the outcome"],
+      "task_script_sha256": "sha256:94411a9276e407fdd519a21d3637761643fced18ca354f837a7ae2750f47e4cc",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    },
+    {
+      "id": "BM-J12",
+      "journey_id": "J12",
+      "version": "1.0.0",
+      "scenario": "Synthetic configuration change with audit review",
+      "task_steps": [
+        "Change a synthetic configuration value",
+        "Review the audit trail",
+        "Approve the release step"
+      ],
+      "task_script_sha256": "sha256:1db2b6b6c9fa73a10dbf508250d585c10b42fe69ea8b4d038ab55841992fa77d",
+      "success_definition": "Every step finished unassisted and the final state explained correctly",
+      "entry_criteria": "moderated_defects_closed",
+      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "baseline": {"value": null, "source": "unmeasured"},
+      "results": null
+    }
+  ],
+  "longitudinal_plan": {
+    "cohort": "Opted-in post-beta participants recruited through the research operations route",
+    "cohort_minimum_ref": "pending:PenniLogic/infra#27",
+    "cadence": "monthly",
+    "retention_ref": "pending:PenniLogic/infra#27",
+    "stop_criteria": [
+      "Participant withdrawal or consent expiry",
+      "Any guardrail threshold crossed for the studied journey",
+      "Privacy review withdraws approval"
+    ],
+    "decisions_it_may_change": ["M-J01-01", "M-J04-01", "M-J05-01", "G-J01-01", "TH-001"],
+    "privacy_review_ref": "pending:PenniLogic/docs#65",
+    "status": "unrun"
+  },
+  "design_debt": [],
+  "approvals": [
+    {"role": "privacy", "status": "pending", "decision_ref": null},
+    {"role": "product_owner", "status": "pending", "decision_ref": null},
+    {"role": "research", "status": "pending", "decision_ref": null},
+    {"role": "decision_coordinator", "status": "pending", "decision_ref": null}
+  ]
+}

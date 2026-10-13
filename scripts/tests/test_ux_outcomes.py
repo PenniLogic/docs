@@ -3,8 +3,9 @@
 Every negative starts from the synthetic catalogue built in this file, which passes (its control test is
 `test_synthetic_catalogue_passes`), applies exactly one mutation and asserts the exact static rule and, where the
 rule names one, the offending identifier. The pinned registry is a synthetic in-memory blob served by a fake source;
-the Git tests use throwaway repositories under the system temporary directory. Nothing is written inside the
-repository and nothing touches the network.
+the Git tests use throwaway repositories under the system temporary directory. `PublishedCatalogueTests` read the
+committed catalogue through the real loader and assert its exact readiness gaps and summary bytes. Nothing is
+written inside the repository and nothing touches the network.
 """
 
 import contextlib
@@ -966,6 +967,129 @@ class ContentGuardTests(CatalogueCase):
     def test_non_ascii_text_is_refused(self):
         self.assertRefused("content.unprintable_character", "G-J01-01", mutate(
             self.document, lambda d: d["guardrails"][0].update(signal="Pay " + chr(0x20B9) + "5")))
+
+
+JOURNEYS = [f"J{number:02d}" for number in range(1, 13)]
+INCENTIVE_JOURNEYS = ("J01", "J06", "J08", "J09")
+
+
+class PublishedCatalogueTests(unittest.TestCase):
+    """The committed catalogue, read through the real loader (pinned registry from local Git), never written."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = module.load_and_check(ROOT)
+        cls.document = cls.model["document"]
+        cls.gaps = module.readiness(cls.model, date(2026, 10, 13))
+
+    def test_pinned_registry_has_twelve_critical_journeys(self):
+        self.assertEqual(self.model["pinned"], {journey: True for journey in JOURNEYS})
+        self.assertEqual(self.document["registry_ref"], module.REGISTRY_PIN)
+
+    def test_every_critical_journey_has_primary_guardrail_and_benchmark(self):
+        indexed = self.model["indexed"]
+        for journey in JOURNEYS:
+            with self.subTest(journey=journey):
+                primaries = [m["id"] for m in indexed["metrics"].values()
+                             if m["journey_id"] == journey and m["role"] == "primary"]
+                self.assertEqual(primaries, [f"M-{journey}-01"])
+                self.assertEqual(indexed["metrics"][f"M-{journey}-01"]["guardrail_ids"], [f"G-{journey}-01"])
+                self.assertIn(indexed["guardrails"][f"G-{journey}-01"]["concern"], ("trust", "harm"))
+                self.assertIsNone(indexed["benchmarks"][f"BM-{journey}"]["results"])
+
+    def test_exact_readiness_gaps(self):
+        measures = sorted([*(f"M-{j}-0{n}" for j in JOURNEYS for n in range(1, 5)),
+                           *(f"M-{j}-05" for j in INCENTIVE_JOURNEYS), *(f"G-{j}-01" for j in JOURNEYS)],
+                          key=lambda identifier: (identifier[2:5], identifier))
+        benchmarks = [f"BM-{journey}" for journey in JOURNEYS]
+        expected = {
+            "readiness.approval_pending": ["decision_coordinator", "privacy", "product_owner", "research"],
+            "readiness.collection_disabled": ["collection"],
+            "readiness.payload_review_pending": [f"EV-{number:03d}" for number in range(1, 16)],
+            "readiness.pending_reference": [
+                "pending:PenniLogic/android#18", "pending:PenniLogic/android#38", "pending:PenniLogic/api#82",
+                "pending:PenniLogic/docs#65", "pending:PenniLogic/docs#66", "pending:PenniLogic/infra#27"],
+            "readiness.baseline_unmeasured": sorted([*measures, *benchmarks],
+                                                    key=lambda identifier: (module.journey_of(identifier),
+                                                                            identifier)),
+            "readiness.threshold_unset": [f"TH-{number:03d}" for number in range(1, 9)],
+            "readiness.measure_unvalidated": measures,
+            "readiness.benchmark_unrun": benchmarks,
+            "readiness.longitudinal_unrun": ["longitudinal_plan"],
+            "readiness.journey_outside_pin": [],
+            "readiness.registry_import_pin": ["registry_ref"],
+            "readiness.d8_blocking_debt": [],
+        }
+        self.assertEqual(self.gaps, expected)
+        self.assertEqual({rule: len(items) for rule, items in self.gaps.items()}, {
+            "readiness.approval_pending": 4, "readiness.collection_disabled": 1,
+            "readiness.payload_review_pending": 15, "readiness.pending_reference": 6,
+            "readiness.baseline_unmeasured": 76, "readiness.threshold_unset": 8,
+            "readiness.measure_unvalidated": 64, "readiness.benchmark_unrun": 12,
+            "readiness.longitudinal_unrun": 1, "readiness.journey_outside_pin": 0,
+            "readiness.registry_import_pin": 1, "readiness.d8_blocking_debt": 0})
+
+    def test_summary_matches_the_catalogue_byte_for_byte(self):
+        expected = module.render_summary(self.model, self.gaps).encode("utf-8")
+        self.assertEqual((ROOT / module.SUMMARY).read_bytes(), expected)
+
+
+    def test_held_values_stay_unmeasured_unset_and_pending(self):
+        indexed = self.model["indexed"]
+        for record in [*indexed["metrics"].values(), *indexed["guardrails"].values(),
+                       *indexed["benchmarks"].values()]:
+            with self.subTest(record=record["id"]):
+                self.assertEqual(record["baseline"], {"value": None, "source": "unmeasured"})
+        for metric in indexed["metrics"].values():
+            self.assertEqual(metric["target"], {"value": None, "source": "unset"})
+        for threshold in indexed["thresholds"].values():
+            self.assertEqual((threshold["warn"]["value"], threshold["kill"]["value"]), (None, None))
+            self.assertIsNone(threshold["decision_record"])
+            self.assertEqual(threshold["on_cross"], "product_decision_review")
+        self.assertEqual({item["status"] for item in self.document["approvals"]}, {"pending"})
+        self.assertEqual({item["decision_ref"] for item in self.document["approvals"]}, {None})
+        self.assertFalse(self.document["collection"]["enabled"])
+        self.assertEqual({event["enabled"] for event in indexed["events"].values()}, {False})
+        self.assertEqual(self.document["status"], "proposed")
+        self.assertEqual({item["next_session"] for item in self.document["research_calendar"]["cadences"]}, {None})
+
+    def test_published_register_records_no_debt_or_exception(self):
+        # No accepted source lists a design-debt item, so the register stays empty rather than invented.
+        self.assertEqual(self.document["design_debt"], [])
+        for today in (date(2026, 1, 1), date(2026, 10, 13), date(2030, 12, 31)):
+            self.assertEqual(module.d8_blocking_debt(self.document["design_debt"], today), [])
+
+    def test_incentive_events_are_never_primary_and_carry_safety_context(self):
+        indexed = self.model["indexed"]
+        incentives = {identifier for identifier, event in indexed["events"].items() if event["incentive"]}
+        self.assertEqual(incentives, {"EV-010", "EV-011", "EV-012", "EV-013"})
+        users = sorted(m["id"] for m in indexed["metrics"].values()
+                       if set(m["numerator"]["event_ids"]) & incentives)
+        self.assertEqual(users, [f"M-{journey}-05" for journey in INCENTIVE_JOURNEYS])
+        for identifier in users:
+            metric = indexed["metrics"][identifier]
+            self.assertEqual(metric["role"], "secondary")
+            self.assertIsNotNone(metric["benefit_context"])
+            self.assertNotEqual(metric["guardrail_ids"], [])
+
+    def test_every_event_field_is_coarsened_and_non_sensitive(self):
+        for event in self.model["indexed"]["events"].values():
+            for field in event["fields"]:
+                with self.subTest(event=event["id"], field=field["name"]):
+                    self.assertIn(field["kind"], module.FIELD_KINDS)
+                    for token in (event["name"], field["name"], *field["values"]):
+                        self.assertIsNone(module.sensitive_rule(token))
+
+    def test_default_mode_reports_not_green_with_counts(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = module.main([], root=ROOT, today=date(2026, 10, 13))
+        self.assertEqual((code, err.getvalue()), (1, ""))
+        lines = out.getvalue().splitlines()
+        self.assertEqual(lines[0], module.NOT_GREEN)
+        self.assertIn("readiness.measure_unvalidated: 64", lines)
+        self.assertIn("readiness.d8_blocking_debt: 0", lines)
+        self.assertEqual(len(lines), 1 + len(module.READINESS_RULES))
 
 
 if __name__ == "__main__":
