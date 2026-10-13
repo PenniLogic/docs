@@ -135,8 +135,9 @@
       "minLength": 1
     },
     "semver": {
+      "description": "MAJOR.MINOR.PATCH without leading zeroes, each part at most three digits (the registry version is printed in the structure line and D20).",
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$(?![\\s\\S])"
+      "pattern": "^(0|[1-9][0-9]{0,2})\\.(0|[1-9][0-9]{0,2})\\.(0|[1-9][0-9]{0,2})$(?![\\s\\S])"
     },
     "digest": {
       "type": "string",
@@ -321,8 +322,9 @@
       }
     },
     "state": {
+      "description": "A state name: one to three lowercase letter words of at most 16 letters joined by hyphens, so no digit (number, date, phone or key) can enter a state vocabulary or the D20 state rows.",
       "type": "string",
-      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"
+      "pattern": "^[a-z]{1,16}(?:-[a-z]{1,16}){0,2}$(?![\\s\\S])"
     },
     "state_vocabulary": {
       "type": "array",

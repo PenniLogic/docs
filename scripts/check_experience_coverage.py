@@ -13,7 +13,10 @@ independent-QA status (docs#126 has no record format). Those fields stay empty, 
 GREEN until a later version resolves the owning interface's pinned records.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match
-the registry ID or `PenniLogic/<repo>#N` grammar; input text is never echoed. Readiness gaps (D6
+the registry ID or `PenniLogic/<repo>#N` grammar; input text is never echoed. The content guard scans every string
+value and key of both files for secret, URL, email, phone, amount and personal-ID shapes, whatever the schema
+says; only digests at their own registry paths and a screen's grammar-checked route hint are exempt, and the only
+numbers are the schema versions and ID-range bounds. Readiness gaps (D6
 dependencies and handoffs, docs#74 route IDs, verified independent QA, owner confirmation of DesignOps
 proposals, imported persona and ticket contradictions, security states, unresolved and post-snapshot
 issues, partition scope questions) are counted, never filled in, and keep the default mode NOT GREEN.
@@ -94,8 +97,10 @@ ISSUE_REF = re.compile(
 )
 HANDOFF = re.compile(r"HND-(AND|WEB|ADM)-([0-9]{3})@(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
 COMMIT = re.compile(r"[0-9a-f]{40}")
+DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 REVISION = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/-]{0,199}")
-# Letters only: a hint names a place, never an identifier, number, amount or token (it is not content-scanned).
+# Letters only: a hint names a place, never an identifier, number, amount or token (a screen's hint is not
+# content-scanned, because a deep link would trip the URL shape).
 _SEGMENT = r"[a-z]+(?:-[a-z]+)*"
 _ELEMENT = rf"(?:{_SEGMENT}|:{_SEGMENT})"
 # route_hint is the imported provisional hint, not a docs#74 route: Android deep links or web/admin paths.
@@ -104,12 +109,22 @@ ROUTE_HINTS = {
     "path": re.compile(rf"/{_ELEMENT}(?:/{_ELEMENT})*(?:/\*)?"),
 }
 ROUTE_HINT_LIMIT = 120
-FREE_TEXT = frozenset({
-    "description", "name", "jobs", "as_a", "i_want", "so_that", "artifact_path", "security_reason",
-    "retired_reason", "rationale",
-})
-GRAMMAR_CHECKED = frozenset({"route_hint"})
-FREE_TEXT_LIMIT = 400
+# The content guard scans every string value and key of the registry and partition, whatever the schema says, with
+# three exceptions located by their path from the document root ("*" = any list index): a sha256 digest or commit ID
+# is indistinguishable from a hex key and a docs#86 handoff reference contains an at sign, so each is exempt only at
+# its own registry path and only while it has exactly that grammar; a screen's route hint is grammar-checked
+# instead; the schema versions and ID-range bounds are the only numbers (bounded in code), so no other field can
+# carry a phone number or an amount as a number.
+EXEMPT_PATHS = {
+    ("imported_from", "commit"): COMMIT, ("imported_from", "sha256"): DIGEST,
+    ("flows", "*", "qa_independence", "evidence", "commit"): COMMIT,
+    ("flows", "*", "qa_independence", "evidence", "sha256"): DIGEST,
+    ("screens", "*", "d6_dependency", "scope_sha256"): DIGEST, ("screens", "*", "handoff_ref"): HANDOFF,
+    ("id_ledger", "*", "name_sha256"): DIGEST,
+}
+ROUTE_HINT_PATH = ("screens", "*", "route_hint")
+NUMBER_PATHS = frozenset({("schema_version",), ("id_ranges", "*", "first"), ("id_ranges", "*", "last")})
+TEXT_LIMIT = 400
 _CURRENCIES = "INR|USD|EUR|GBP|AED|SGD|AUD|CAD|JPY|CNY|CHF|SAR|QAR|KWD|BHD|OMR|NZD|HKD|ZAR"
 CONTENT_SHAPES = (
     # Printable ASCII only: control characters and look-alike digits, at signs or currency signs cannot slip past
@@ -117,7 +132,7 @@ CONTENT_SHAPES = (
     ("content.unprintable_character", re.compile(r"[^\x20-\x7e]")),
     ("content.secret_shape", re.compile(
         r"\bgh[pousr]_[A-Za-z0-9]{8,}|\bgithub_pat_|-----BEGIN|\bAKIA[0-9A-Z]{16}\b|\bxox[abposr]-"
-        r"|\bsk-[A-Za-z0-9_-]{20,}|[0-9a-fA-F]{32,}"
+        r"|\bsk-[A-Za-z0-9_-]{20,}"
     )),
     ("content.url_shape", re.compile(
         r"[A-Za-z][A-Za-z0-9+.-]*://|\bwww\.|\b(?:mailto|javascript|vbscript|tel|sms|file|intent|ftp):"
@@ -127,30 +142,34 @@ CONTENT_SHAPES = (
     )),
     # Any at sign: email addresses, UPI handles and user@host forms alike.
     ("content.email_shape", re.compile(r"@")),
+    # Indian shorthand too: 1,50,000/- and 1.5L (upper case only, so a lone l is not an amount), 2 Cr, 3 lk.
     ("content.amount_shape", re.compile(
         r"\$\s*[0-9]|\b(?:" + _CURRENCIES + r"|Rs\.?)\s*[0-9]|[0-9]\s*(?:" + _CURRENCIES + r")\b"
-        r"|[0-9]\s*(?:k|lakhs?|lacs?|crores?|rupees?|paise|dollars?|euros?|pounds?|cents?|bucks?|dirhams?)\b",
+        r"|[0-9]\s*(?:k|lakhs?|lacs?|lk|crores?|cr|rupees?|paise|dollars?|euros?|pounds?|cents?|bucks?|dirhams?)\b"
+        r"|[0-9]\s*(?:/-|(?-i:L)\b)",
         re.IGNORECASE,
     )),
     ("content.personal_id_shape", re.compile(r"\b[A-Z]{5}[0-9]{4}[A-Z]\b")),  # Indian PAN layout
 )
-# Nine or more digits, whatever short non-alphanumeric separators sit between them.
-PHONE = re.compile(r"[0-9](?:[^A-Za-z0-9]{0,2}[0-9]){8,}")
+# Nine or more digits, whatever short (up to three characters) non-alphanumeric separators sit between them.
+PHONE = re.compile(r"[0-9](?:[^A-Za-z0-9]{0,3}[0-9]){8,}")
+# Key-shaped runs, checked with and without - / _ separators: 32+ hex digits (a split UUID too), 32+ upper-case
+# base32 characters with a digit (a grouped TOTP seed too) and 32+ mixed-case alphanumerics with a digit.
 TOKEN = re.compile(r"[A-Za-z0-9+=_]{32,}")
+HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
+BASE32_RUN = re.compile(r"[A-Z2-7]{32,}")
 # A disclosed post-snapshot issue is at most this many numbers past its repository's highest inventory issue.
 POST_SNAPSHOT_MARGIN = 200
-# A string schema whose pattern accepts any of these is free text, whatever its anchoring.
-FREE_TEXT_PROBES = ("a b", "a\tb", "a\nb")
 SCRUBBED_GIT_VARIABLES = (
     "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
     "GIT_COMMON_DIR", "GIT_NAMESPACE",
 )
 
 STRUCTURE_RULES = (
-    "input.unreadable_or_invalid", "schema.invalid", "schema.free_text_unlisted",
+    "input.unreadable_or_invalid", "schema.invalid",
     "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.secret_shape",
     "content.url_shape", "content.email_shape", "content.phone_shape", "content.amount_shape",
-    "content.personal_id_shape",
+    "content.personal_id_shape", "content.unexpected_number",
     "import.mismatch", "import.unavailable", "import.digest_mismatch", "import.invalid",
     "ledger.base_unavailable", "ledger.base_invalid", "inventory.invalid", "taxonomy.unreadable",
     "id.duplicate", "id.platform_infix_mismatch", "id.synthetic_reserved", "id.out_of_range",
@@ -272,95 +291,59 @@ def shape(value, schema, definition=None):
         raise Refused("schema.invalid", *_schema_subject(error, value)) from None
 
 
-def unconstrained_text(schema):
-    """Property names whose schema leaves a string (or list of strings) without pattern, enum or const."""
-    definitions = schema.get("definitions", {})
-
-    def resolve(node):
-        for _ in range(32):
-            if not (isinstance(node, dict) and "$ref" in node):
-                break
-            node = definitions.get(str(node["$ref"]).rsplit("/", 1)[-1], {})
-        return node if isinstance(node, dict) else {}
-
-    def permissive(pattern):
-        try:
-            return any(re.search(pattern, probe) for probe in FREE_TEXT_PROBES)
-        except (re.error, TypeError):
+def _secret_token(text):
+    """A key-shaped run, also with separators removed, so a key split by hyphens, slashes or underscores (a UUID, a
+    grouped base32 seed) is still one token; slash-joined registry IDs keep the digit 0 and never form one."""
+    for candidate in (text, re.sub(r"[-/_]", "", text)):
+        if HEX_RUN.search(candidate):
             return True
-
-    def free(node):
-        """True when the node can hold a string the content guard must scan: untyped, or a string without an
-        enum or const and without a pattern that excludes whitespace."""
-        node = resolve(node)
-        if {"enum", "const"} & node.keys():
-            return False
-        if "type" not in node:
+        if any(any(c.isdigit() for c in run.group()) for run in BASE32_RUN.finditer(candidate)):
             return True
-        types = node["type"] if isinstance(node["type"], list) else [node["type"]]
-        if "string" in types and ("pattern" not in node or permissive(node["pattern"])):
-            return True
-        return "array" in types and free(node.get("items", {}))
-
-    found = set()
-
-    def walk(node):
-        if not isinstance(node, dict):
-            return
-        for name, child in node.get("properties", {}).items():
-            if free(child):
-                found.add(name)
-            walk(child)
-        types = node.get("type", [])
-        is_object = "properties" in node or "object" in (types if isinstance(types, list) else [types])
-        extra = node.get("additionalProperties")
-        if isinstance(extra, dict):
-            if free(extra):
-                found.add("*")
-            walk(extra)
-        elif is_object and extra is not False:
-            found.add("*")  # an open object accepts any key, so its strings would go unscanned
-        walk(node.get("items"))
-
-    walk(schema)
-    for definition in definitions.values():
-        walk(definition)
-    return found
+        for match in TOKEN.finditer(candidate):
+            if all(any(test(c) for c in match.group()) for test in (str.isdigit, str.islower, str.isupper)):
+                return True
+    return False
 
 
 def _scan(text, subject):
-    require(len(text) <= FREE_TEXT_LIMIT, "content.too_long", *subject)
+    require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
     require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
     for rule, pattern in CONTENT_SHAPES:
         require(pattern.search(text) is None, rule, *subject)
     require(PHONE.search(text) is None, "content.phone_shape", *subject)
-    # Also with separators removed, so a key split by hyphens, slashes or underscores is still one token.
-    for candidate in (text, re.sub(r"[-/_]", "", text)):
-        for match in TOKEN.finditer(candidate):
-            token = match.group()
-            mixed = all(any(test(c) for c in token) for test in (str.isdigit, str.islower, str.isupper))
-            require(not mixed, "content.secret_shape", *subject)
+    require(not _secret_token(text), "content.secret_shape", *subject)
 
 
-def guard_content(value, subject=()):
-    """Scan every allowlisted free-text value; the schema leaves no other string unconstrained."""
-    if isinstance(value, dict):
-        for key in ("id", "issue"):
-            if printable(value.get(key)):
-                subject = (value[key],)
-                break
-        for key, item in value.items():
-            if key in FREE_TEXT:
-                for text in item if isinstance(item, list) else [item]:
-                    if isinstance(text, str):
-                        _scan(text, subject)
-            elif key == "plan_id" and isinstance(item, str):
-                _scan(item, subject)  # unresolved plan IDs reach the summary without an inventory match
-            elif key not in GRAMMAR_CHECKED:
-                guard_content(item, subject)
-    elif isinstance(value, list):
-        for item in value:
-            guard_content(item, subject)
+def guard_content(document):
+    """Scan every string value and key, wherever the schema puts it; only the EXEMPT_PATHS values with their exact
+    grammar, a screen's route hint (grammar-checked in check_platforms) and the NUMBER_PATHS numbers are exempt."""
+    clean = set()  # scanning is pure, so a string that passed once is not scanned again in this document
+
+    def scan(text, subject):
+        if text not in clean:
+            _scan(text, subject)
+            clean.add(text)
+
+    def walk(value, subject, path):
+        if isinstance(value, dict):
+            for key in ("id", "issue"):
+                if printable(value.get(key)):
+                    subject = (value[key],)
+                    break
+            for key, item in value.items():
+                scan(key, subject)
+                walk(item, subject, (*path, key))
+        elif isinstance(value, list):
+            for item in value:
+                walk(item, subject, (*path, "*"))
+        elif isinstance(value, str):
+            grammar = EXEMPT_PATHS.get(path)
+            if not (path == ROUTE_HINT_PATH or (grammar is not None and grammar.fullmatch(value))):
+                scan(value, subject)
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            require(path in NUMBER_PATHS, "content.unexpected_number", *subject)
+
+    walk(document, (), ())
 
 
 def trusted_git(root):
@@ -781,7 +764,7 @@ def check_platforms(model):
                         "platform.implementation_repository", record["id"], ticket["issue"])
     for screen in model.screens.values():
         hint = screen["route_hint"]
-        require(len(hint) <= ROUTE_HINT_LIMIT, "route.hint_grammar", screen["id"])
+        require(isinstance(hint, str) and len(hint) <= ROUTE_HINT_LIMIT, "route.hint_grammar", screen["id"])
         family = next((name for name, grammar in ROUTE_HINTS.items() if grammar.fullmatch(hint)), None)
         require(family is not None, "route.hint_grammar", screen["id"])
         require((family == "android") == (screen["platform"] == "android"), "platform.route_hint", screen["id"])
@@ -942,7 +925,6 @@ def check(registry, partition, schema, inventory, taxonomy, sources, import_pin=
     """Run every structure rule in a fixed order; raise Refused at the first violation, else return the model."""
     shape(registry, schema)
     shape(partition, schema, "partition")
-    require(unconstrained_text(schema) <= FREE_TEXT | GRAMMAR_CHECKED, "schema.free_text_unlisted")
     guard_content(registry)
     guard_content(partition)
     imported = read_import(registry, sources, import_pin or (IMPORT_PATH, IMPORT_SHA256))

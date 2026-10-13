@@ -14,6 +14,7 @@ refs/remotes/origin/main) without writing anything. Nothing here touches the net
 """
 
 import ast
+import collections
 import contextlib
 import copy
 import hashlib
@@ -468,8 +469,40 @@ class BaselineAndSchemaTests(CoverageCase):
         self.assertNotEqual(SCHEMA["title"], PLANNING_SCHEMA["title"])
         self.assertTrue(SCHEMA["$id"].endswith("/product/experience-coverage.schema.json"))
 
-    def test_free_text_allowlist_matches_the_schema_exactly(self):
-        self.assertEqual(module.unconstrained_text(SCHEMA), module.FREE_TEXT | module.GRAMMAR_CHECKED)
+    def test_only_located_digests_and_screen_route_hints_go_unscanned(self):
+        """R2-AV-03: the guard scans every string value and key of the published files; it skips only the import
+        commit and digest, the ledger fingerprints (each at its own path, with exactly that grammar) and screen
+        route hints (grammar-checked), and the only numbers are the schema versions and ID-range bounds."""
+        documents = (Published().registry, Published().partition)
+        strings, located, numbers = collections.Counter(), collections.defaultdict(set), set()
+
+        def collect(value, path=()):
+            if isinstance(value, dict):
+                for key, item in value.items():
+                    strings[key] += 1
+                    collect(item, (*path, key))
+            elif isinstance(value, list):
+                for item in value:
+                    collect(item, (*path, "*"))
+            elif isinstance(value, str):
+                strings[value] += 1
+                located[value].add(path)
+            elif isinstance(value, int) and not isinstance(value, bool):
+                numbers.add(path)
+        scanned = set()
+        with mock.patch.object(module, "_scan", side_effect=lambda text, subject: scanned.add(text)):
+            for document in documents:
+                collect(document)
+                module.guard_content(document)
+        self.assertLessEqual(scanned, set(strings))
+        exempt = collections.Counter()
+        for text in set(strings) - scanned:
+            (path,) = located[text]  # an unscanned string occurs at one exempt path only
+            exempt[path] += strings[text]
+        self.assertEqual(exempt, {("imported_from", "commit"): 1, ("imported_from", "sha256"): 1,
+                                  ("id_ledger", "*", "name_sha256"): 319, module.ROUTE_HINT_PATH: 141})
+        self.assertLessEqual(set(exempt) - {module.ROUTE_HINT_PATH}, set(module.EXEMPT_PATHS))
+        self.assertEqual(numbers, set(module.NUMBER_PATHS))
 
     def test_source_and_dependency_shapes_agree_with_design_gates(self):
         source = {"commit": "a" * 40, "path": "governance/example.json", "sha256": "sha256:" + "b" * 64}
@@ -575,6 +608,25 @@ class InputAndSchemaRuleTests(CoverageCase):
         self.refused(lambda f: f.registry.update(schema_version=2.0), "schema.invalid")
         self.refused(lambda f: f.partition.update(schema_version=True), "schema.invalid")
 
+    def test_state_names_and_registry_version_are_bounded_grammars(self):
+        """R2-AV-02: state names and the registry version are printed in D20 and on stdout, so their grammars cannot
+        carry a number, date or key: one to three lowercase words of at most 16 letters; at most three digits per
+        version part."""
+        fixture = Fixture()
+        fixture.registry["component_states"] += ["a" * 16, "abc-def-ghi"]
+        fixture.registry["registry_version"] = "999.999.99"
+        fixture.check()
+        for state in ("9876543210", "3f2504e04f8911d39a0c0305e82c3301deadbeef", "synthetic-dob-12-05-1990",
+                      "a" * 17, "a-b-c-d", "Empty"):
+            with self.subTest(state=state):
+                self.refused(lambda f: f.registry["required_states"].append(state), "schema.invalid")
+                self.refused(lambda f: f.registry["component_states"].append(state), "schema.invalid")
+        for version in ("1000.0.0", "9876543210.0.0", "1.0.0001"):
+            with self.subTest(version=version):
+                self.refused(lambda f: f.registry.update(registry_version=version), "schema.invalid")
+        # Within the grammar, the content guard still refuses nine digits in a row (it scans every string).
+        self.refused(lambda f: f.registry.update(registry_version="999.999.999"), "content.phone_shape")
+
     def test_published_json_files_are_canonical(self):
         """F1 / plan data hygiene: json.dumps(indent=2, ensure_ascii=True) plus a final newline, LF only."""
         for relative in (module.SCHEMA, module.REGISTRY, module.PARTITION):
@@ -587,27 +639,48 @@ class InputAndSchemaRuleTests(CoverageCase):
             fixture.record("S-AND-002")["id"] = "S-AND-002\n"
         self.refused(mutate, "schema.invalid", None)
 
-    def test_free_text_field_must_be_allowlisted(self):
-        def mutate(fixture):
-            fixture.schema["definitions"]["screen"]["properties"]["notes"] = {"type": "string"}
-        self.refused(mutate, "schema.free_text_unlisted")
-
-        def free_map(fixture):
-            fixture.schema["definitions"]["screen"]["additionalProperties"] = {"type": "string"}
-        self.refused(free_map, "schema.free_text_unlisted")
-        # AV-09: an untyped property, a pattern that accepts whitespace and an open object all admit free text.
-        self.refused(lambda f: f.schema["definitions"]["screen"]["properties"].update(notes={}),
-                     "schema.free_text_unlisted")
-        self.refused(lambda f: f.schema["definitions"]["screen"]["properties"].update(
-            notes={"type": "string", "pattern": "^[\\s\\S]*$(?![\\s\\S])"}), "schema.free_text_unlisted")
-        self.refused(lambda f: f.schema["definitions"]["screen"].pop("additionalProperties"),
-                     "schema.free_text_unlisted")
+    def test_schema_edits_cannot_open_an_unscanned_channel(self):
+        """AV-09 and R2-AV-03: whatever a schema edit admits (a new or untyped property, a permissive or reused
+        identifier pattern, an enum, an open map, a route hint off a screen, a number), the content guard still
+        scans every string and key and refuses numbers outside the bounded fields. Control: the edit alone passes."""
+        persona = lambda f: f.schema["definitions"]["persona"]  # noqa: E731
+        key = "3f2504e04f8911d39a0c0305e82c3301deadbeef"  # a 40-hex value, valid as a commit ID
+        cases = [
+            ({"type": "string"}, "Call 98765 43210", "content.phone_shape"),
+            ({}, 9876543210, "content.unexpected_number"),
+            ({"type": "string", "pattern": "^[\\s\\S]*$(?![\\s\\S])"}, "Mail a" + "@b", "content.email_shape"),
+            ({"type": "string", "pattern": "^\\S+$(?![\\s\\S])"}, "someone" + "@example", "content.email_shape"),
+            ({"$ref": "#/definitions/portable_path"}, "9876543210", "content.phone_shape"),
+            ({"enum": ["Pays Rs. 500"]}, "Pays Rs. 500", "content.amount_shape"),
+            ({"type": "integer"}, 150000, "content.unexpected_number"),
+            ({"type": "array", "items": {}}, [{"contact": "Call 9876543210"}], "content.phone_shape"),
+            ({"type": "object", "additionalProperties": {"type": "boolean"}}, {"Call 9876543210": True},
+             "content.phone_shape"),
+            ({"$ref": "#/definitions/source"}, {"commit": key, "path": "a", "sha256": "sha256:" + "0" * 64},
+             "content.secret_shape"),
+        ]
+        for node, value, rule in cases:
+            with self.subTest(node=node):
+                self.refused(lambda f: f.record("P01").update(notes=value), rule, "P01",
+                             prepare=lambda f: persona(f)["properties"].update(notes=node))
+        # A route hint is exempt from the scan only on a screen, where it is grammar-checked.
+        for hint, rule in (("Call 9876543210", "content.phone_shape"), ("android://home", "content.url_shape")):
+            with self.subTest(hint=hint):
+                self.refused(lambda f: f.record("P01").update(route_hint=hint), rule, "P01",
+                             prepare=lambda f: persona(f)["properties"].update(route_hint={"type": "string"}))
+        # An open object or map: its keys are scanned like values.
+        self.refused(lambda f: f.record("S-AND-002").update({"Call 9876543210": "x"}), "content.phone_shape",
+                     "S-AND-002", prepare=lambda f: f.schema["definitions"]["screen"].pop("additionalProperties"))
 
     def test_forbidden_content_pattern_fails(self):
         cases = {
             "content.secret_shape": [
                 planted_token(), "Key " + "a1" * 16, "Token " + "Zq9" * 11, "-----" + "BEGIN key",
                 "Key " + "Ab1" * 6 + "-" + "Cd2" * 6, "Key " + "Ab1" * 6 + "/" + "Cd2" * 6, "Key " + "Ab1_" * 9,
+                # R2-AV-04: a UUID in either case, hex split by other separators, base32 seeds plain or grouped.
+                "Owner key 3f2504e0-4f89-11d3-9a0c-0305e82c3301", "Owner key 3F2504E0-4F89-11D3-9A0C-0305E82C3301",
+                "Key 3f2504e0/4f8911d3/9a0c0305/e82c3301", "Seed " + "JBSWY3DPEHPK3PXP" * 2,
+                "Seed " + "-".join(["JBSW", "Y3DP", "EHPK", "3PXP"] * 2),
             ],
             "content.url_shape": [
                 "See https://example.invalid/x", "See www.example.invalid", "See drive.example.com/file/d/abc",
@@ -616,9 +689,11 @@ class InputAndSchemaRuleTests(CoverageCase):
             "content.email_shape": ["Mail fixture" + "@" + "example.invalid", "Pay someone" + "@okaxis",
                                     "Mail someone" + "@localhost"],
             "content.phone_shape": ["Call +91 98765 43210", "Call 98765/43210", "Call 030/12345678",
-                                    "Call 98765_43210"],
+                                    "Call 98765_43210", "Call 98765 - 43210"],
             "content.amount_shape": ["Pays Rs. 500", "Pays 500 rupees", "Owes $12", "Owes USD 12", "Owes 500 dollars",
-                                     "Pays 10k INR", "Refund of 500 paise", "Fee AED 500"],
+                                     "Pays 10k INR", "Refund of 500 paise", "Fee AED 500",
+                                     "Paid 1,50,000/- last month", "Salary 1.5L per month", "Loan of 2 Cr pending",
+                                     "Loan of 2 cr pending", "Saved 3 lk"],
             "content.personal_id_shape": ["PAN ABCDE" + "1234F"],
             "content.blank_or_padded": [" ", " Padded job", "Padded job "],
             "content.unprintable_character": [
@@ -654,15 +729,21 @@ class InputAndSchemaRuleTests(CoverageCase):
 
     def test_content_boundaries(self):
         fixture = Fixture()
-        fixture.record("D01")["artifact_path"] = "x" * module.FREE_TEXT_LIMIT  # a name change would be a repoint
+        fixture.record("D01")["artifact_path"] = "x" * module.TEXT_LIMIT  # a name change would be a repoint
         fixture.record("US-ADM-01")["so_that"] = "the phone digit run 1234-5678 stays below nine digits"
         fixture.record("P01")["jobs"].append("Release plan path design/android/handoff-and-001-v1-2-0-final-review")
+        # R2-AV-04 calibration boundaries: slash-joined IDs, a 4-character digit gap and a lone lower-case l pass.
+        fixture.record("P01")["jobs"].append("Covers S-AND-042/S-AND-043/S-AND-044/S-AND-045/S-AND-046")
+        fixture.record("P01")["jobs"].append("Gap rule 98765 -- 43210 stops at three separator characters")
+        fixture.record("P01")["jobs"].append("Shows 2 l items")
         fixture.check()
-        self.refused(lambda f: f.record("D01").update(artifact_path="x" * (module.FREE_TEXT_LIMIT + 1)),
+        self.refused(lambda f: f.record("D01").update(artifact_path="x" * (module.TEXT_LIMIT + 1)),
                      "content.too_long", "D01")
         self.refused(lambda f: f.record("US-ADM-01").update(so_that="runs 123-456-789 in a row"),
                      "content.phone_shape", "US-ADM-01")
         self.refused(lambda f: f.record("US-ADM-01").update(so_that="runs 1234/5678_9 in a row"),
+                     "content.phone_shape", "US-ADM-01")
+        self.refused(lambda f: f.record("US-ADM-01").update(so_that="runs 1234 - 5678 - 9 in a row"),
                      "content.phone_shape", "US-ADM-01")
 
     def test_route_hint_is_exempt_from_the_url_scan_but_grammar_checked(self):
