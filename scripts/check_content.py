@@ -759,10 +759,15 @@ def check_base(documents, base):
 
 
 class Model:
-    """The checked documents plus the indexes readiness and the structure line read."""
+    """The checked documents plus the indexes readiness and the structure line read.
 
-    def __init__(self, documents, terms, keys, owner):
+    `base_documents` names the content documents found at the base commit (empty when the base predates them), so a
+    caller can assert which additive-versioning comparisons actually ran.
+    """
+
+    def __init__(self, documents, terms, keys, owner, base_documents=()):
         self.documents, self.terms, self.keys, self.owner = documents, terms, keys, owner
+        self.base_documents = tuple(base_documents)
 
 
 def check(documents, schemas, taxonomy, gates, now, sources, owner=None):
@@ -794,8 +799,9 @@ def check(documents, schemas, taxonomy, gates, now, sources, owner=None):
     keys = check_keys(catalogue, facts, terms, context, roles, identifiers)
     check_patterns(voice, keys)
     check_regulated(regulated, keys, terms, context, roles, now, owner)
-    check_base(documents, read_base(sources, schemas))
-    return Model(documents, terms, keys, owner)
+    base = read_base(sources, schemas)
+    check_base(documents, base)
+    return Model(documents, terms, keys, owner, (name for name in DOCUMENTS if base[name] is not None))
 
 
 def readiness(model):

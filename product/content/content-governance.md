@@ -44,8 +44,9 @@ Removing or renaming a term or key needs a major version bump; additions are min
 3. Only that owner records approval: role, decision reference, `effective_at` and `expires_at` (at most 366 days
    apart). The checker refuses an approval from any other role, without a decision reference, or without a
    coordinator-verified assignment of the role; the published data supplies none.
-4. Approved copy is usable only while `effective_at <= now < expires_at`; at `expires_at` it is expired. The clock
-   is injected (`--now`), never inferred.
+4. Approved copy is usable only while `effective_at <= now < expires_at`; at `expires_at` it is expired. The checker
+   reads the system clock (UTC) by default, and CI evaluates the published records at that real clock; `--now` pins
+   an instant for tests and audits only.
 5. Changing approved copy means a new version; the record keeps its prior versions in `history`.
 6. Withdrawal sets `withdrawn`; records are never deleted.
 

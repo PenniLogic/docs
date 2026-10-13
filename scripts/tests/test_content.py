@@ -1,8 +1,10 @@
 """Tests of scripts/check_content.py (T-CNT-01, PenniLogic/docs#84).
 
 Every rule test builds a synthetic, in-memory content set that passes (the control), applies exactly one mutation and
-asserts the exact static rule identifier and subject. No test reads the network, the system clock or writes inside the
-repository; the clock and the qualified-owner assignment are injected.
+asserts the exact static rule identifier and subject. No test reads the network or writes inside the repository; the
+clock and the qualified-owner assignment are injected. The one exception to the injected clock is PublishedGitPathTests,
+which checks the published documents exactly as an integration gate would: the real clock (deterministic while no
+record is approved) and the real merge base with origin/main from the local Git object store.
 """
 
 import copy
@@ -1332,6 +1334,29 @@ class PublishedContentTests(unittest.TestCase):
             with self.subTest(view=relative):
                 self.assertEqual((ROOT / relative).read_bytes(), text.encode("utf-8"))
         content.check_views(ROOT, views)
+
+def git_output(*args):
+    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+
+
+class PublishedGitPathTests(unittest.TestCase):
+    """Review round 1 F-02: the published documents through the real loader, GitSources and main(), so CI enforces
+    the additive-versioning and base rules (unittest discover is the only content gate CI runs)."""
+
+    def test_published_content_passes_against_the_real_merge_base_at_the_real_clock(self):
+        model = content.load_and_check(ROOT, datetime.now(timezone.utc))
+        merge_base = git_output("merge-base", "HEAD", content.BASE_REF)
+        present = tuple(name for name in content.DOCUMENTS
+                        if git_output("ls-tree", "--name-only", merge_base, "--", content.document_path(name)))
+        self.assertEqual(model.base_documents, present)  # which comparisons ran: none before the first merge
+
+    def test_published_structure_mode_exits_zero_through_main(self):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = content.main(["--structure"])
+        self.assertEqual((code, err.getvalue()), (0, ""))
+        self.assertTrue(out.getvalue().endswith("; readiness not evaluated.\n"))
+
 
 class ViewTests(unittest.TestCase):
     """--write-views and --check-views against a throwaway repository; rendering is inert and deterministic."""
