@@ -24,6 +24,7 @@ contacts a network, records an approval or implies that research, consent or col
 
 import argparse
 from datetime import date, datetime, timezone
+import functools
 import importlib.util
 import json
 import os
@@ -227,12 +228,22 @@ def _secret_token(text):
     return False
 
 
-def _scan(text, subject):
-    require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
-    require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
+@functools.lru_cache(maxsize=65536)
+def _shape_rule(text):
+    """The first content rule a string breaks, or None. Pure, so repeated strings are scanned once."""
+    if len(text) > TEXT_LIMIT:
+        return "content.too_long"
+    if text.strip() != text or text == "":
+        return "content.blank_or_padded"
     for rule, pattern in CONTENT_SHAPES:
-        require(pattern.search(text) is None, rule, *subject)
-    require(not _secret_token(text), "content.secret_shape", *subject)
+        if pattern.search(text) is not None:
+            return rule
+    return "content.secret_shape" if _secret_token(text) else None
+
+
+def _scan(text, subject):
+    rule = _shape_rule(text)
+    require(rule is None, rule, *subject)
 
 
 def guard_numbers(document):
