@@ -4,7 +4,8 @@ PenniLogic/docs#77 publishes governance/ux-outcomes.json, validated against gove
 (the shared draft-07 subset) and by the rules below, and the generated summary governance/ux-outcomes.md. Journey
 identifiers come from the experience-coverage registry pinned by commit, path and sha256 (the frozen planning import
 at docs 1722fc79 until PenniLogic/docs#75 integrates), read from the local Git object store only. Every `pending:`
-reference must name an issue of the committed inventory snapshot (planning/issue-inventory.json) other than this one.
+reference must name an open issue of the committed inventory snapshot (planning/issue-inventory.json) other than this
+one.
 
 The catalogue defines outcomes; it collects nothing. Collection stays disabled, every event is an allowlisted,
 non-financial shape (bucketed or enumerated values whose every name and value segment comes from a reviewed
@@ -32,6 +33,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from types import MappingProxyType
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -439,20 +441,24 @@ def read_base(sources):
 
 
 def read_inventory(root):
-    """The issue references of the committed inventory snapshot, validated by check_test_strategy (offline)."""
+    """{issue reference: state} of the committed inventory snapshot, validated by check_test_strategy (offline).
+    Fable review round 1 (F1): the state is kept so a pending reference to a closed issue can be refused."""
     try:
-        return frozenset(strategy.validate_inventory(support.load_json(local_path(root, INVENTORY))))
+        issues = strategy.validate_inventory(support.load_json(local_path(root, INVENTORY)))
+        return MappingProxyType({reference: issue["state"] for reference, issue in issues.items()})
     except (OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError):
         raise Refused("inventory.invalid") from None
 
 
 def check_references(document, inventory):
     """Review round 1 (spec-and-safety.-r1-F9): every `pending:` reference names an issue in the inventory, and never
-    this ticket, so each held gate has an owner that can close it."""
+    this ticket, so each held gate has an owner that can close it. Fable review round 1 (F1): that issue must also be
+    open in the snapshot; a closed issue can no longer close the gate."""
     for reference in pending_references(document):
         issue = reference[len("pending:"):]
         require(issue != SOURCE_ISSUE, "reference.self")
         require(issue in inventory, "reference.unknown_issue")
+        require(inventory[issue] != "closed", "reference.closed_issue")
 
 
 COLLECTIONS = (
@@ -946,7 +952,7 @@ def d8_blocking_debt(design_debt, today):
 def check(document, schema, sources, pin=None, base=None, fixture=False, inventory=None):
     """Every structure rule, fail closed. `base` is {BM ID: {version: digest}} of the base catalogue or None;
     `fixture` (tests only, never the CLI) admits a recorded debt exception so the D8 rules can be exercised;
-    `inventory` holds the known issue references (default: this repository's committed snapshot)."""
+    `inventory` maps each known issue reference to its state (default: this repository's committed snapshot)."""
     pin = REGISTRY_PIN if pin is None else pin
     inventory = read_inventory(ROOT) if inventory is None else inventory
     shape(document, schema)

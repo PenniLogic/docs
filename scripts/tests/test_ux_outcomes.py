@@ -30,10 +30,11 @@ SPEC.loader.exec_module(module)
 SCHEMA = module.support.load_json(ROOT / module.SCHEMA)
 REGISTRY_PATH = "planning/source/evidence/experience-coverage.json"
 COMMIT = "a" * 40
-# The synthetic inventory: issues the fixtures may name. docs#77 exists, so the self rule is tested on its own.
-INVENTORY = frozenset(f"PenniLogic/{issue}" for issue in (
+# The synthetic inventory: issues the fixtures may name, with their state. docs#77 exists, so the self rule is tested
+# on its own; docs#69 is closed (Fable review round 1, F1), so a pending reference to it is refused.
+INVENTORY = {**{f"PenniLogic/{issue}": "open" for issue in (
     "android#7", "android#18", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#77", "docs#129", "docs#130",
-    "docs#131", "infra#27"))
+    "docs#131", "infra#27")}, "PenniLogic/docs#69": "closed"}
 
 
 # Synthetic flows: J01 runs on Android and web, J02 on admin, J03 on web (review round 1, F1 platform owners).
@@ -510,6 +511,13 @@ class FrameTests(CatalogueCase):
                 self.assertRefused("reference.unknown_issue", document=mutate(
                     self.document, lambda d: d["longitudinal_plan"].update(privacy_review_ref=reference)))
 
+    def test_pending_reference_cannot_name_a_closed_issue(self):
+        # Fable review round 1 (F1): a held gate pointing at a closed issue has no open owner that can close it.
+        def point(reference):
+            return mutate(self.document, lambda d: d["longitudinal_plan"].update(privacy_review_ref=reference))
+        self.assertRefused("reference.closed_issue", document=point("pending:PenniLogic/docs#69"))
+        self.run_check(document=point("pending:PenniLogic/docs#66"))  # control: an open issue passes
+
     def test_pending_reference_cannot_name_this_ticket(self):
         self.assertRefused("reference.self", document=mutate(
             self.document, lambda d: d["longitudinal_plan"].update(privacy_review_ref="pending:PenniLogic/docs#77")))
@@ -532,8 +540,11 @@ class FrameTests(CatalogueCase):
 
     def test_inventory_snapshot_is_read_and_validated(self):
         known = module.read_inventory(ROOT)
-        self.assertTrue({"PenniLogic/docs#77", "PenniLogic/infra#27", "PenniLogic/api#82"} <= known)
+        self.assertTrue({"PenniLogic/docs#77", "PenniLogic/infra#27", "PenniLogic/api#82"} <= known.keys())
         self.assertNotIn("PenniLogic/docs#9999", known)
+        # Fable review round 1 (F1): the snapshot keeps each issue's state, so closed issues are recognised.
+        self.assertEqual((known["PenniLogic/docs#77"], known["PenniLogic/docs#69"]), ("open", "closed"))
+        self.assertTrue(set(known.values()) <= {"open", "closed"})
         with tempfile.TemporaryDirectory() as temporary:
             target = Path(temporary) / module.INVENTORY
             target.parent.mkdir(parents=True)
