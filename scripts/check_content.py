@@ -1211,8 +1211,15 @@ def render_voice(voice):
     return lines
 
 
+def approval_window(approval):
+    return f"{approval['effective_at']} to {approval['expires_at']}"
+
+
 def render_keys(catalogue, regulated):
-    statuses = {record["id"]: record["status"] for record in regulated["records"]}
+    # A regulated key shows its record's version and status, and the approval window whenever one is on record.
+    statuses = {record["id"]: f"{record['version']} ({record['status']}" + (
+        "" if record["approval"] is None else f", {approval_window(record['approval'])}") + ")"
+        for record in regulated["records"]}
     lines = [f"# Message keys {catalogue['catalogue_version']}", ""]
     lines += banner("message-keys", f"`nav.` keys are held for {NAV_SOURCE}; `state.` copy lives in the taxonomy "
                                     "and `reg.` copy in its regulated record.")
@@ -1223,7 +1230,7 @@ def render_keys(catalogue, regulated):
     rows = []
     for entry in catalogue["keys"]:
         if entry["regulated_ref"] is not None:
-            copy = f"{entry['regulated_ref']} ({statuses[entry['regulated_ref']]})"
+            copy = f"{entry['regulated_ref']} {statuses[entry['regulated_ref']]}"
         else:
             copy = "taxonomy" if entry["copy"] is None else cell(entry["copy"])
         bounds = entry["range"]
@@ -1252,8 +1259,9 @@ def render_regulated(regulated):
     lines += table(["ID", "Category", "Key", "Version", "Status", "Approval", "Fail-closed key", "History",
                     "Rollback"], [
         [record["id"], record["category"], code(record["key"]), record["version"], record["status"],
-         "none" if record["approval"] is None else f"{record['approval']['effective_at']} to "
-                                                    f"{record['approval']['expires_at']}",
+         "none" if record["approval"] is None else cell(
+             f"{record['approval']['role']}, {record['approval']['decision_ref']}, "
+             f"{approval_window(record['approval'])}"),
          code(record["fail_closed_key"]), listing([prior["version"] for prior in record["history"]]),
          record["rollback_version"] or "none"]
         for record in regulated["records"]

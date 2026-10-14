@@ -2183,6 +2183,13 @@ class PublishedContentTests(unittest.TestCase):
         self.assertNotIn("refunded", reversed_)
         self.assertIn("never a reversal", refund)
         self.assertNotIn("reverses", refund)
+        # Independent review F15: "in full or in part" and "is not income" are sourced in ADR-016 section 8.3 (a
+        # partial refund is proportional; a refund reduces spending "without becoming income", PenniLogic/api#66).
+        self.assertIn("in full or in part", refund)
+        self.assertIn("is not income", refund)
+        adr = (ROOT / "adr" / "ADR-016.md").read_text(encoding="utf-8")
+        self.assertIn("without becoming income", adr)
+        self.assertIn("a partial refund is proportional", adr)
 
     def test_governance_lists_every_held_gate(self):
         # Review round 2 SS-08: DoD 4, the human no-blame and uncertainty review, the contracts mapping and the
@@ -2195,6 +2202,20 @@ class PublishedContentTests(unittest.TestCase):
                      "RC-005", "generic `pattern.` keys", "`pattern.destructive.consequence`"):
             with self.subTest(gate=gate):
                 self.assertIn(gate, held)
+
+    def test_governance_states_copy_precedence_and_consumer_scope(self):
+        # Independent review F10-F13: which copy is in force, what each reg. key binds, what web#26 may not take
+        # from here, and that the record status (not the key status) governs regulated copy.
+        page = " ".join((ROOT / "product" / "content" / "content-governance.md").read_text(encoding="utf-8").split())
+        for statement in (
+                "**Which copy is in force.**", "whatever the current version's status (draft, in review, expired or "
+                "withdrawn)", "A pin whose window has closed falls through to (3)",
+                "the other `reg.` keys bind consent, permission, plan-change, refund, deletion, access and incident "
+                "records", "governed only by the bound record's status and approval window",
+                "Web onboarding copy (PenniLogic/web#26) is not in this catalogue",
+                "must not be reused for consent revocation", "provisional as a whole"):
+            with self.subTest(statement=statement):
+                self.assertIn(statement, page)
 
     def test_every_published_judgment_is_proposed_and_nothing_is_approved(self):
         self.assertEqual(self.docs["glossary"]["status"], "provisional")
@@ -2378,8 +2399,24 @@ class ViewTests(unittest.TestCase):
         first.update(status="approved", approval=approval())
         model = content.check(docs, schemas(), taxonomy(), gates(), NOW, FakeSources(), OWNER)
         text = content.render_views(model)["product/content/regulated-copy.md"]
-        self.assertIn("| RC-001 | consent | `reg.consent.text` | 0.1.0 | approved | 2026-10-03T12:00:00Z to "
-                      "2026-10-23T12:00:00Z |", text)
+        self.assertIn("| RC-001 | consent | `reg.consent.text` | 0.1.0 | approved | legal, synthetic decision, "
+                      "2026-10-03T12:00:00Z to 2026-10-23T12:00:00Z |", text)
+
+
+class ApprovalViewTests(unittest.TestCase):
+    """Independent review F14: an approved record shows its window in the key view and its full approval (role,
+    decision reference, window) in the regulated view; a draft shows none."""
+
+    def test_approval_window_and_evidence_are_rendered(self):
+        docs = documents()
+        approve(first(docs))
+        keys_view = "\n".join(content.render_keys(docs["message-keys"], docs["regulated-copy"]))
+        regulated_view = "\n".join(content.render_regulated(docs["regulated-copy"]))
+        window = f"{first(docs)['approval']['effective_at']} to {first(docs)['approval']['expires_at']}"
+        self.assertIn(f"RC-001 0.1.0 (approved, {window})", keys_view)
+        self.assertIn(f"legal, synthetic decision, {window}", regulated_view)
+        self.assertIn("RC-002 0.1.0 (draft)", keys_view)
+
 
 if __name__ == "__main__":
     unittest.main()

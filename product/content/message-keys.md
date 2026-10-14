@@ -39,17 +39,17 @@ None.
 | `pattern.success.safe_remainder` | success | Nothing else was changed | 12/24/48 | none | no | android, web, admin | provisional | content |
 | `pattern.success.source` | success | From {item} | 5/11/22 | none | no | android, web, admin | provisional | content |
 | `pattern.success.status` | success | {item} are saved | 7/15/30 | none | no | android, web, admin | provisional | content |
-| `reg.access.support_request` | disclosure | RC-007 (draft) | 68/136/272 | `term.support_access` | no | android, web, admin | provisional | content |
-| `reg.ai_disclosure.insight` | disclosure | RC-009 (draft) | 27/55/110 | `term.ai_insight` | no | android, web, admin | provisional | content |
-| `reg.consent.message_capture` | disclosure | RC-001 (draft) | 88/176/352 | `term.consent` | no | android | provisional | content |
-| `reg.deletion.confirm` | disclosure | RC-006 (draft) | 72/145/290 | `term.account_deletion` | no | android, web, admin | provisional | content |
-| `reg.disclaimer.not_investment_advice` | disclosure | RC-003 (draft) | 41/83/166 | none | no | android, web, admin | provisional | content |
-| `reg.disclaimer.projection` | disclosure | RC-011 (draft) | 22/44/88 | `term.projected` | no | android, web, admin | provisional | content |
-| `reg.disclaimer.scenario_not_advice` | disclosure | RC-010 (draft) | 20/40/80 | `term.scenario` | no | android, web, admin | provisional | content |
-| `reg.incident.notice` | disclosure | RC-008 (draft) | 69/139/278 | none | no | android, web, admin | provisional | content |
-| `reg.permission.message_access` | disclosure | RC-002 (draft) | 60/120/240 | `term.permission` | no | android | provisional | content |
-| `reg.plan_change.effective` | disclosure | RC-004 (draft) | 61/123/246 | `term.plan` | no | android, web, admin | provisional | content |
-| `reg.refund.recorded` | disclosure | RC-005 (draft) | 53/106/212 | `term.refund` | no | android, web, admin | provisional | content |
+| `reg.access.support_request` | disclosure | RC-007 0.1.0 (draft) | 68/136/272 | `term.support_access` | no | android, web, admin | provisional | content |
+| `reg.ai_disclosure.insight` | disclosure | RC-009 0.1.0 (draft) | 27/55/110 | `term.ai_insight` | no | android, web, admin | provisional | content |
+| `reg.consent.message_capture` | disclosure | RC-001 0.1.0 (draft) | 88/176/352 | `term.consent` | no | android | provisional | content |
+| `reg.deletion.confirm` | disclosure | RC-006 0.1.0 (draft) | 72/145/290 | `term.account_deletion` | no | android, web, admin | provisional | content |
+| `reg.disclaimer.not_investment_advice` | disclosure | RC-003 0.1.0 (draft) | 41/83/166 | none | no | android, web, admin | provisional | content |
+| `reg.disclaimer.projection` | disclosure | RC-011 0.1.0 (draft) | 22/44/88 | `term.projected` | no | android, web, admin | provisional | content |
+| `reg.disclaimer.scenario_not_advice` | disclosure | RC-010 0.1.0 (draft) | 20/40/80 | `term.scenario` | no | android, web, admin | provisional | content |
+| `reg.incident.notice` | disclosure | RC-008 0.1.0 (draft) | 69/139/278 | none | no | android, web, admin | provisional | content |
+| `reg.permission.message_access` | disclosure | RC-002 0.1.0 (draft) | 60/120/240 | `term.permission` | no | android | provisional | content |
+| `reg.plan_change.effective` | disclosure | RC-004 0.1.0 (draft) | 61/123/246 | `term.plan` | no | android, web, admin | provisional | content |
+| `reg.refund.recorded` | disclosure | RC-005 0.1.0 (draft) | 53/106/212 | `term.refund` | no | android, web, admin | provisional | content |
 | `state.degraded.action` | action | taxonomy | 4/9/19 | none | no | android, web, admin | provisional | content |
 | `state.degraded.body` | error | taxonomy | 24/48/96 | none | no | android, web, admin | provisional | content |
 | `state.degraded.headline` | error | taxonomy | 19/38/76 | none | no | android, web, admin | provisional | content |

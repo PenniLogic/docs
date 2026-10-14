@@ -35,7 +35,10 @@ any key the taxonomy derives (`key.state_missing`). The taxonomy's `content_rend
 carry no key in this catalogue and are not checked here.
 
 AI disclosure, advice boundaries and projection disclosures are regulated copy (product/08 section 12): every
-`disclosure`-category key lives under `reg.` and binds a record (`ai_disclosure` or `disclaimer`), and no ordinary key
+`disclosure`-category key lives under `reg.` and binds one record. The AI-disclosure, advice and projection keys bind
+`ai_disclosure` or `disclaimer` records; the other `reg.` keys bind consent, permission, plan-change, refund,
+deletion, access and incident records. A `reg.` key's own `status` is its catalogue status; whether its copy may be
+shown is governed only by the bound record's status and approval window (see Fail closed). No ordinary key
 may restate a record's text, even inside longer copy. The restatement rule is sentence-level: an ordinary key is
 refused when its copy contains, as a run of whole words, any complete sentence of any regulated record, current or
 prior (`history`) version. Both sides are compared as words only, so case, spacing, terminal and internal
@@ -79,6 +82,22 @@ the taxonomy string behind each `state.` key must fit the declared range of the 
 **Rollback** pins `rollback_version` to a prior version in `history` whose status is `approved` and whose window
 still contains `now`; any other target is refused. The pinned entry carries the text to show, and a rollback pin is
 refused while the current version is approved, so exactly one copy is in force.
+
+**Which copy is in force.** A consumer evaluates, at render time and in this order: (1) the current version, when it
+is `approved` and `effective_at <= now < expires_at`; (2) otherwise a `rollback_version` pin whose approved window
+still contains `now`, which applies whatever the current version's status (draft, in review, expired or withdrawn);
+(3) otherwise the fail-closed key, or the flow is blocked. A pin whose window has closed falls through to (3).
+
+## Scope boundaries for consumers
+
+- Web onboarding copy (PenniLogic/web#26) is not in this catalogue: age eligibility, refusal, purpose and policy
+  version, consent receipt and re-consent copy need their own keys or regulated records. RC-001 is Android message
+  capture ("on this phone") and its key serves Android only.
+- The existing `revoked`, `recovery` and `success` items mean sharing ended, data restored and totals changed. They
+  are not consent copy and must not be reused for consent revocation, consent recovery or consent success.
+- The voice rules in `voice.json` (principles, banned patterns, patterns, conventions, sentence limit) are
+  provisional as a whole, like every value on this page, until the held Content review; only the reading level
+  carries its own machine-readable `status`.
 
 ## Proposed observability signals (metadata only)
 
