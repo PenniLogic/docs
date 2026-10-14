@@ -261,7 +261,7 @@
     {
       "key": "pattern.destructive.consequence",
       "category": "destructive",
-      "copy": "This can't be undone and its history goes with it",
+      "copy": "This can't be undone and their history goes with them",
       "status": "provisional",
       "term_refs": [],
       "regulated_ref": null,
@@ -441,7 +441,7 @@
     {
       "key": "pattern.recovery.status",
       "category": "recovery",
-      "copy": "{item} is back",
+      "copy": "{item} are back",
       "status": "provisional",
       "term_refs": [],
       "regulated_ref": null,
@@ -541,7 +541,7 @@
     {
       "key": "pattern.success.status",
       "category": "success",
-      "copy": "{item} is saved",
+      "copy": "{item} are saved",
       "status": "provisional",
       "term_refs": [],
       "regulated_ref": null,

@@ -746,6 +746,31 @@ class ContentGuardTests(Harness):
     def test_long_digit_run(self):
         self.assertRefused(self.mutate_copy("Call 98 76 5"), "content.number_shape", "debt.delete.next")
 
+    def test_written_currency_and_indian_magnitudes_next_to_a_number(self):
+        # Review round 2 SS-09 (round 1 F-16): written amounts and lower-case codes are amounts too.
+        for text in ("Pay 50 rupees", "Pay 1 rupee", "Up to 2 lakh", "Up to 2 lakhs", "Up to 3 lac", "About 4 crore",
+                     "Only 50 paise", "Pay inr 50", "Pay Rs. 50", "Pay rs 50", "Pay 50 rs", "Pay Rupees 50",
+                     "Pay 50 inr"):
+            with self.subTest(text=text):
+                self.assertRefused(self.mutate_copy(text), "content.number_shape", "debt.delete.next")
+
+    def test_currency_words_without_a_number_pass(self):
+        docs = documents()
+        keys_of(docs)["debt.delete.next"]["copy"] = "Review rupee {item}"
+        self.run_check(docs)
+
+    def test_singular_verb_after_the_plural_item_placeholder(self):
+        # Review round 2 SS-09 (round 1 F-17): the taxonomy's {item} is the surface's plural noun.
+        for text in ("{item} is back", "{item} was saved", "{item} has changed", "{item} isn't ready",
+                     "{item}  Is back"):
+            with self.subTest(text=text):
+                self.assertRefused(self.mutate_copy(text), "key.item_agreement", "debt.delete.next")
+
+    def test_plural_verb_after_the_item_placeholder_passes(self):
+        docs = documents()
+        keys_of(docs)["debt.delete.next"]["copy"] = "{item} are back"
+        self.run_check(docs)
+
     def test_short_number_passes(self):
         docs = documents()
         keys_of(docs)["debt.delete.next"]["copy"] = "Review 2 {item}"
@@ -1636,6 +1661,13 @@ class PublishedContentTests(unittest.TestCase):
              for slot in ("source", "consequence", "safe_remainder")]
             + ["pattern.stale.consequence", "pattern.stale.safe_remainder", "pattern.denied.source",
                "pattern.denied.consequence"]))
+
+    def test_published_pattern_copy_agrees_with_the_plural_item(self):
+        # Review round 2 SS-09 (round 1 F-17): {item} is the surface's plural noun.
+        keys = keys_of(self.docs)
+        self.assertEqual([keys[key]["copy"] for key in (
+            "pattern.recovery.status", "pattern.success.status", "pattern.destructive.consequence")],
+            ["{item} are back", "{item} are saved", "This can't be undone and their history goes with them"])
 
     def test_every_published_judgment_is_proposed_and_nothing_is_approved(self):
         self.assertEqual(self.docs["glossary"]["status"], "provisional")

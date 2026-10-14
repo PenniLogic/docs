@@ -24,7 +24,7 @@ None.
 | `common.label.revoked` | label | Access revoked | 7/14/28 | `term.revoked` | no | android, web, admin | provisional | content |
 | `common.safe_exit.denial` | denial | This isn't available here | 12/25/50 | none | yes | android, web, admin | provisional | content |
 | `common.safe_exit.notification` | notification | You have an update | 9/18/36 | none | yes | android, web, admin | provisional | content |
-| `pattern.destructive.consequence` | destructive | This can't be undone and its history goes with it | 24/49/98 | none | no | android, web, admin | provisional | content |
+| `pattern.destructive.consequence` | destructive | This can't be undone and their history goes with them | 24/49/98 | none | no | android, web, admin | provisional | content |
 | `pattern.destructive.next_action` | destructive | Delete {item} | 6/13/26 | none | no | android, web, admin | provisional | content |
 | `pattern.destructive.safe_remainder` | destructive | Your other records stay as they are | 17/35/70 | none | no | android, web, admin | provisional | content |
 | `pattern.destructive.source` | destructive | Selected: {item} | 8/16/32 | none | no | android, web, admin | provisional | content |
@@ -33,12 +33,12 @@ None.
 | `pattern.recovery.next_action` | recovery | Review {item} | 6/13/26 | none | no | android, web, admin | provisional | content |
 | `pattern.recovery.safe_remainder` | recovery | Changes made elsewhere stay as they are | 19/39/78 | none | no | android, web, admin | provisional | content |
 | `pattern.recovery.source` | recovery | Restored from your last saved copy | 17/34/68 | none | no | android, web, admin | provisional | content |
-| `pattern.recovery.status` | recovery | {item} is back | 7/14/28 | none | no | android, web, admin | provisional | content |
+| `pattern.recovery.status` | recovery | {item} are back | 7/14/28 | none | no | android, web, admin | provisional | content |
 | `pattern.success.consequence` | success | Totals now include this change | 15/30/60 | none | no | android, web, admin | provisional | content |
 | `pattern.success.next_action` | success | Done | 2/4/14 | none | no | android, web, admin | provisional | content |
 | `pattern.success.safe_remainder` | success | Nothing else was changed | 12/24/48 | none | no | android, web, admin | provisional | content |
 | `pattern.success.source` | success | From {item} | 5/11/22 | none | no | android, web, admin | provisional | content |
-| `pattern.success.status` | success | {item} is saved | 7/15/30 | none | no | android, web, admin | provisional | content |
+| `pattern.success.status` | success | {item} are saved | 7/15/30 | none | no | android, web, admin | provisional | content |
 | `reg.access.support_request` | disclosure | RC-007 (draft) | 68/136/272 | `term.support_access` | no | android, web, admin | provisional | content |
 | `reg.ai_disclosure.insight` | disclosure | RC-009 (draft) | 27/55/110 | `term.ai_insight` | no | android, web, admin | provisional | content |
 | `reg.consent.message_capture` | disclosure | RC-001 (draft) | 88/176/352 | `term.consent` | no | android, web, admin | provisional | content |

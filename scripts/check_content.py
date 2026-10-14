@@ -143,7 +143,7 @@ STRUCTURE_RULES = (
     "key.copy_missing", "key.range_order",
     "key.copy_out_of_range", "key.unknown_term", "key.term_label_missing", "key.forbidden_term",
     "key.forbidden_alias", "key.banned_pattern", "key.sentence_too_long", "key.placeholder_unknown",
-    "key.safe_exit_placeholder", "key.notification_data_placeholder", "key.neutral_safe_exit_missing",
+    "key.safe_exit_placeholder", "key.notification_data_placeholder", "key.item_agreement", "key.neutral_safe_exit_missing",
     "held.key_approval",
     "regulated.id_grammar", "regulated.duplicate_id", "regulated.approver_role_unqualified",
     "regulated.category_missing", "regulated.key_mismatch", "regulated.fail_closed_key_unknown",
@@ -216,7 +216,9 @@ CONTENT_SHAPES = (
     ("content.email_shape", re.compile(r"[^\s@]+@[^\s@]+\.[^\s@]+")),
     ("content.number_shape", re.compile(
         r"[0-9](?:[^A-Za-z0-9\n]{0,2}[0-9]){4,}|[$£€₹¥]\s?[0-9]|[0-9]\s?[$£€₹¥]"
-        r"|\b(?:INR|USD|EUR|GBP|Rs)\.?\s?[0-9]|[0-9]\s?(?:INR|USD|EUR|GBP)\b"
+        # Currency codes, written currency and Indian magnitudes next to a number, in any letter case.
+        r"|(?i:\b(?:INR|USD|EUR|GBP|Rs|rupees?|lakhs?|lacs?|crores?|paise)\.?\s?[0-9]"
+        r"|[0-9]\s?(?:INR|USD|EUR|GBP|Rs|rupees?|lakhs?|lacs?|crores?|paise)\b)"
     )),
 )
 # Curly quotes and apostrophes, en and em dashes, and the ellipsis: the only non-ASCII characters in content text.
@@ -466,6 +468,7 @@ def check_copy(text, subject, context, rules):
     return names
 
 
+ITEM_SINGULAR = re.compile(r"\{item\}\s+(?:is|was|has|does)(?:n't|n\u2019t)?\b", re.IGNORECASE)
 KEY_COPY_RULES = {
     "forbidden_term": "key.forbidden_term", "forbidden_alias": "key.forbidden_alias",
     "banned_pattern": "key.banned_pattern", "sentence": "key.sentence_too_long",
@@ -529,6 +532,8 @@ def check_keys(catalogue, facts, terms, context, roles, regulated_ids):
                 label = terms[reference]["preferred_label"].casefold()
                 require(forbidden_in(copy, [label]) is not None, "key.term_label_missing", key, reference)
             names = check_copy(copy, key, context, KEY_COPY_RULES)
+            # The taxonomy's {item} is the surface's plural noun ("{item} are back", never "{item} is back").
+            require(ITEM_SINGULAR.search(copy) is None, "key.item_agreement", key)
             require(not (entry["neutral_safe_exit"] and names), "key.safe_exit_placeholder", key)
             require(entry["category"] != "notification" or not set(names) & context["data_placeholders"],
                     "key.notification_data_placeholder", key)
