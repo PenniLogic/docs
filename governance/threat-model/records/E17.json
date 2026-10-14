@@ -83,9 +83,10 @@
           ]
         },
         {
-          "data_class": "Per-user AI usage and control records: virtual-key budgets, reservations and usage events, spend counters, per-user throttle and injection-suspicion counters, routing decisions and tool-call audit (tool name and scope, no arguments)",
+          "data_class": "Per-user AI usage and control records: virtual-key budgets, reservations and usage events, spend counters, per-user throttle and injection-suspicion counters, routing decisions and tool-call audit (tool name and scope, no arguments), and injection-screening records that keep a bounded excerpt of the suspected merchant or memo text",
           "subjects": [
             "users",
+            "counterparties",
             "operators"
           ],
           "purpose_ref": "ADR-023 sections 6 and 7 (usage ledger); quota primitive PenniLogic/api#30; audit stream PenniLogic/api#39; the abuse counter of PenniLogic/ai-service#4 has no purpose-registry entry yet and needs one from PenniLogic/api#24",
@@ -93,6 +94,19 @@
           "erasure_path": "Account erasure through PenniLogic/api#24 retention jobs; append-only usage and audit events keep only opaque identifiers so they need no rewrite (ADR-023 section 6)",
           "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44 and the pre-onboarding age gate is PenniLogic/android#17; AI features are reachable only by an onboarded account, so a child is not a subject unless that gate fails, and no AI-specific child path exists",
           "processors": []
+        },
+        {
+          "data_class": "Verified-channel notifications of a pending, suspended or revoked provider key or custom destination, with the cancellation path",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "PenniLogic/ai-service#2 and PenniLogic/ai-service#3 acceptance criteria (pending activation, recovery suspension, verified-channel notification); the notice must not expose the key or the full endpoint (PenniLogic/web#15)",
+          "retention": "Delivery records follow the notification channel's retention, which no E17 ticket sets; the lifecycle event itself is audited under PenniLogic/api#39",
+          "erasure_path": "Account erasure through PenniLogic/api#24; a delivered message already in the user's own inbox is outside PenniLogic's reach and therefore carries no key or full endpoint",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44 and the pre-onboarding age gate is PenniLogic/android#17; AI features are reachable only by an onboarded account, so a child is not a subject unless that gate fails, and no AI-specific child path exists",
+          "processors": [
+            "The delivery provider of the verified channel (e-mail or push); none is selected in this epic"
+          ]
         },
         {
           "data_class": "Evaluation corpus cases and harmful-answer reports, including a reported answer that is de-identified before it becomes an adversarial case",
@@ -148,7 +162,7 @@
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Five data classes (see data_flows): the minimised prompt payload, bring-your-own-key credentials, custom destination registrations and address evidence, per-user usage and control records, and evaluation and harmful-answer material. Raw content never leaves the device (ADR-004): the only path from captured messages to a model is structured fields read by api#36 tools, and ADR-022 section 2.1 forbids raw-derived digests, account and card numbers, counterparty and household names and identifiers in any payload; O-8 traffic capture (PenniLogic/android#16) covers the device side. Leak points: provider prompts without minimisation (E17-F06); other principals' shared data sent to a user-controlled endpoint without their grant (E17-F07); keys in logs, traces and errors (E17-F08); context bleed between users through gateway caches (E17-F09); providers retaining prompts without accepted zero-retention evidence (E17-F10); and AI-derived personal data with no retention value or erasure job (E17-F11). Metric labels must stay bounded (no host, model name, account or destination identifier, ADR-022 section 7). No persisted embedding exists by decision (ADR-025).",
+          "analysis": "Six data classes (see data_flows): the minimised prompt payload, bring-your-own-key credentials, custom destination registrations and address evidence, per-user usage and control records, verified-channel notifications of key and destination changes, and evaluation and harmful-answer material. Raw content never leaves the device (ADR-004): the only path from captured messages to a model is structured fields read by api#36 tools, and ADR-022 section 2.1 forbids raw-derived digests, account and card numbers, counterparty and household names and identifiers in any payload; O-8 traffic capture (PenniLogic/android#16) covers the device side. Leak points: provider prompts without minimisation (E17-F06); other principals' shared data sent to a user-controlled endpoint without their grant (E17-F07); keys in logs, traces and errors (E17-F08); context bleed between users through gateway caches (E17-F09); providers retaining prompts without accepted zero-retention evidence (E17-F10); and AI-derived personal data with no retention value or erasure job (E17-F11). Metric labels must stay bounded (no host, model name, account or destination identifier, ADR-022 section 7). No persisted embedding exists by decision (ADR-025).",
           "evidence": [
             "ADR-004: the server API has no field that can accept raw message content",
             "ADR-025: durable user-derived embeddings prohibited for the current release"
@@ -459,7 +473,7 @@
           "severity": "high",
           "title": "No ticket owns rotation, revocation or a compromise drill for the Mode A platform provider credential",
           "attack_path": "The server-held platform key leaks from the gateway host, the secret store, a deploy artefact or a provider dashboard session; with no rotation schedule, revocation procedure or drill, it stays valid and the attacker spends against PenniLogic's account or uses it to read provider-side data.",
-          "recommended_control": "Assign an owner for the platform credential lifecycle: a scoped key per environment resolved at runtime from the secret store, scheduled and on-suspicion rotation, a rehearsed revocation that takes effect without a deploy, and provider-side spend limits as a backstop. PenniLogic/infra#25 provisions the secret store and PenniLogic/infra#32 governs human key access, but neither scope covers this credential's rotation or revocation; the coordinator must place it.",
+          "recommended_control": "Assign an owner for the platform credential lifecycle: a scoped key per environment resolved at runtime from the secret store, scheduled and on-suspicion rotation, a rehearsed revocation that takes effect without a deploy, and provider-side spend limits as a backstop. PenniLogic/infra#25 provisions the secret store and PenniLogic/infra#32 governs human key access, but neither scope covers this credential's rotation or revocation; ai-service#2 rotates its audience-bound workload credentials, PenniLogic/api#53 rotates the encryption keys and PenniLogic/infra#23 rotates only secrets found in repositories, so the coordinator must place it.",
           "status": "open",
           "owner_ticket": null,
           "resolution": null
