@@ -43,7 +43,13 @@ may restate a record's text, even inside longer copy. The restatement rule is se
 refused when its copy contains, as a run of whole words, any complete sentence of any regulated record, current or
 prior (`history`) version. Both sides are compared as words only, so case, spacing, terminal and internal
 punctuation, hyphen and dash variants, typographic apostrophes and contractions ("can't", "cannot", "can not") do not
-change the result; a fragment shorter than a complete sentence is not a restatement.
+change the result; a fragment shorter than a complete sentence is not a restatement. A sentence of fewer than four
+words is a generic phrase that ordinary copy may share: it is refused only as a key's whole copy, never as words
+inside longer copy. In the published records these are RC-009's "AI insight." (also the glossary's preferred label)
+and RC-011's "It can change."; every other published sentence has five to sixteen words. Four is the smallest bound
+that frees those two phrases, and every sentence of four or more words, including the five-word sentences the
+reported restatements used, is still matched anywhere. Consecutive sentences of a record also count as one run, so a
+record made only of short sentences is still refused when they are restated together inside longer copy.
 
 Versions are compared with the merge base of `HEAD` and `origin/main`. Adding a term or key, or changing what
 consumers read (a term's label, definition, surfaces, forbidden aliases or contract field names; a key's category,

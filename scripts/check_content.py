@@ -743,20 +743,32 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
     for name in keys:
         require(not name.startswith("reg.") or name in bound, "key.regulated_unbound", name)
     # Regulated text is usable only through its record: no ordinary key may restate it, even inside longer copy.
-    # Every complete sentence of every current and prior (history) version is compared as a word sequence, so
-    # terminal punctuation, commas, dash and apostrophe variants, contractions, case and spacing do not bypass it.
-    sentences = {sentence for record in regulated["records"]
-                 for text in [record["copy"]] + [prior["copy"] for prior in record["history"]]
-                 for sentence in regulated_sentences(text)}
+    # Every complete sentence, and every run of consecutive sentences, of every current and prior (history) version
+    # is compared as a word sequence, so terminal punctuation, commas, dash and apostrophe variants, contractions,
+    # case and spacing do not bypass it. A run of fewer than RESTATED_MIN_WORDS words is a generic phrase ("AI
+    # insight.", "It can change."): it is refused only as a key's whole copy, never as words inside longer copy.
+    runs = set()
+    for record in regulated["records"]:
+        for text in [record["copy"]] + [prior["copy"] for prior in record["history"]]:
+            sentences = regulated_sentences(text)
+            runs.update(" ".join(sentences[start:end]) for start in range(len(sentences))
+                        for end in range(start + 1, len(sentences) + 1))
+    embedded = [f" {run} " for run in runs if len(run.split()) >= RESTATED_MIN_WORDS]
     for name, entry in keys.items():
         if entry["copy"] is not None:
-            spoken = f" {word_sequence(entry['copy'])} "
-            require(not any(f" {sentence} " in spoken for sentence in sentences), "key.regulated_copy_restated",
+            spoken = word_sequence(entry["copy"])
+            padded = f" {spoken} "
+            require(spoken not in runs and not any(run in padded for run in embedded), "key.regulated_copy_restated",
                     name)
 
 
 SENTENCE_END = re.compile(r"[.!?\u2026]+(?:\s+|$)")
 WORD = re.compile(r"[^\W_]+")
+# Below this many words a regulated sentence is a generic phrase that ordinary copy may share. The published records'
+# sentences run 2, 3, then 5 to 16 words; four is the smallest bound that frees the two generic ones ("AI insight.",
+# "It can change.") and leaves every longer sentence matched anywhere, including the five-word ones that the
+# reported restatements used.
+RESTATED_MIN_WORDS = 4
 
 
 def word_sequence(text):

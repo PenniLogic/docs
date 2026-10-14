@@ -1165,6 +1165,36 @@ class RegulatedRestatementTests(Harness):
         add_key(docs, key("debt.delete.more", "This is a synthetic list"))
         self.run_check(docs)
 
+    SHORT = "Synthetic notice. It can change. Please read the full draft notes."
+
+    def test_short_sentence_inside_longer_copy_is_not_a_restatement(self):
+        # Fable check N2: a regulated sentence of fewer than four words is a generic phrase, so ordinary copy that
+        # only uses its words inside longer copy stays accepted, whatever the punctuation around them.
+        for text in ("It can change when you edit it", "Your total is saved. It can change later",
+                     "Turn off the synthetic notice", "Synthetic notice: it may vary"):
+            with self.subTest(text=text):
+                docs = documents()
+                self.restated(text, self.SHORT)(docs)
+                self.run_check(docs)
+
+    def test_short_sentence_as_the_whole_copy_is_refused(self):
+        for text, history in (("It can change", None), ("it can change.", None), ("It can\u2014change", None),
+                              ("Synthetic-notice", None), ("Old notice", "Old notice. Please read the full notes.")):
+            with self.subTest(text=text):
+                self.assertRefused(self.restated(text, self.SHORT, history), "key.regulated_copy_restated",
+                                   "debt.delete.help")
+
+    def test_consecutive_short_sentences_are_matched_as_one_run(self):
+        # A record made only of short sentences stays protected: consecutive sentences restated together are a run
+        # of four or more words, matched anywhere like a long sentence.
+        for text in ("This is not advice. It can change at any time", "Not advice, it can change"):
+            with self.subTest(text=text):
+                self.assertRefused(self.restated(text, "Not advice. It can change."), "key.regulated_copy_restated",
+                                   "debt.delete.help")
+        docs = documents()
+        self.restated("This is not advice for you", "Not advice. It can change.")(docs)
+        self.run_check(docs)  # control: one short sentence inside longer copy
+
 
 class TaxonomyRestatementTests(Harness):
     """Review round 1 F-15: a taxonomy string restated under a look-alike root forks same_wording."""
@@ -2157,6 +2187,33 @@ class PublishedContentTests(unittest.TestCase):
                 self.assertEqual((caught.exception.rule, caught.exception.subject),
                                  ("key.regulated_copy_restated", "pattern.destructive.consequence"))
 
+    def test_published_short_sentences_block_only_a_whole_copy(self):
+        # Fable check N2: RC-009 "AI insight." (also the glossary's preferred label) and RC-011 "It can change." are
+        # the only published sentences under four words. Ordinary copy that uses their words inside longer copy
+        # stays accepted; a key whose whole copy is one of them is refused.
+        sentences = {sentence for item in self.docs["regulated-copy"]["records"]
+                     for text in [item["copy"]] + [entry["copy"] for entry in item["history"]]
+                     for sentence in content.regulated_sentences(text)}
+        self.assertEqual({sentence for sentence in sentences if len(sentence.split()) < 4},
+                         {"ai insight", "it can change"})
+
+        def outcome(text, term_refs=()):
+            docs = copy.deepcopy(self.docs)
+            add_key(docs, key("insight.card.help", text, term_refs=list(term_refs)))
+            try:
+                content.check(docs, content.load_documents(ROOT)[1], content.support.load_json(ROOT / content.TAXONOMY),
+                              content.support.load_json(ROOT / content.GATES), NOW, FakeSources())
+            except content.Refused as error:
+                return error.rule, error.subject
+            return "accepted"
+        for text in ("AI insight uses your own data, and it can change", "Show AI insight on this screen",
+                     "Your budget is saved. It can change any time"):
+            with self.subTest(text=text):
+                self.assertEqual(outcome(text, ["term.ai_insight"] if "AI" in text else ()), "accepted")
+        for text in ("AI insight", "AI insight.", "It can change", "it can change."):
+            with self.subTest(text=text):
+                self.assertEqual(outcome(text), ("key.regulated_copy_restated", "insight.card.help"))
+
     def test_published_device_wording_reaches_only_android(self):
         # Independent review F4: copy that speaks of "this phone" or the device permission is Android message
         # capture, so its key may not be served to web or admin.
@@ -2242,6 +2299,20 @@ class PublishedContentTests(unittest.TestCase):
                 "records", "governed only by the bound record's status and approval window",
                 "Web onboarding copy (PenniLogic/web#26) is not in this catalogue",
                 "must not be reused for consent revocation", "provisional as a whole"):
+            with self.subTest(statement=statement):
+                self.assertIn(statement, page)
+
+    def test_governance_states_the_restatement_rule(self):
+        # Independent review F1 and criterion 4, Fable check N2: the sentence-level rule, the multi-sentence rule
+        # and the short-sentence bound are stated where consumers read them, with the bound the validator applies.
+        page = " ".join((ROOT / "product" / "content" / "content-governance.md").read_text(encoding="utf-8").split())
+        self.assertEqual(content.RESTATED_MIN_WORDS, 4)
+        for statement in (
+                "any complete sentence of any regulated record, current or prior (`history`) version",
+                "a fragment shorter than a complete sentence is not a restatement",
+                "A sentence of fewer than four words is a generic phrase that ordinary copy may share: it is refused "
+                "only as a key's whole copy, never as words inside longer copy",
+                "Consecutive sentences of a record also count as one run"):
             with self.subTest(statement=statement):
                 self.assertIn(statement, page)
 
