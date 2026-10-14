@@ -1157,7 +1157,7 @@
         "status": "provisional",
         "message_key": null
       },
-      "audience": "signed_out",
+      "audience": "signed_in",
       "primary": false,
       "presentation": {
         "compact": null,

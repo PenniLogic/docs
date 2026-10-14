@@ -106,7 +106,7 @@
           "flow_ids": []
         }
       },
-      "rationale": "Debt tracking and strategy decisions are the customer's own job on Android and web, where web adds dense side-by-side comparison (product/08 section 8.2); the admin console is powerful over the system, not over user financial data (product/01 section 2.2).",
+      "rationale": "Debt tracking and strategy decisions are the customer's own job on Android and web, where desktop web adds dense comparison and side-by-side derivation (product/08 section 8.2); the admin console is powerful over the system, not over user financial data (product/01 section 2.2).",
       "cdo_approval": {
         "status": "pending",
         "ref": null
@@ -381,7 +381,7 @@
           "flow_ids": []
         }
       },
-      "rationale": "AI and bring-your-own-key settings are explicit web work alongside Android (product/01 section 3.8); operators configure providers, routing and spend for the system (CAP-016), never a user's assistant history (product/01 section 2.2).",
+      "rationale": "AI and bring-your-own-key settings are explicit web work alongside Android (product/01 section 3.8); operators configure providers, models, routing and spend caps for the whole system (product/01 section 2.2, CAP-016) and have no destination for a user's assistant history.",
       "cdo_approval": {
         "status": "pending",
         "ref": null
@@ -510,7 +510,7 @@
           ]
         }
       },
-      "rationale": "Plans, feature flags, quotas, AI providers and spend caps, aggregate analytics and audit review are the system powers of the admin console (product/01 section 2.2); customers see only their own plan and assistant settings.",
+      "rationale": "Plans, feature flags, quotas, AI providers and spend caps, aggregate analytics and audit review are the system powers of the admin console (product/01 section 2.2), and incidents and break-glass are operator destinations (product/08 section 8.3); customers see only their own plan and assistant settings.",
       "cdo_approval": {
         "status": "pending",
         "ref": null
