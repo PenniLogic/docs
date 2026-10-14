@@ -83,6 +83,14 @@
           {
             "role": "warning",
             "srgb": "#9A3412"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#7A7468"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#6B4E2E"
           }
         ]
       },
@@ -114,6 +122,18 @@
         {
           "kind": "ui",
           "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
           "background": "surface",
           "result": "pass"
         },
@@ -211,6 +231,14 @@
           {
             "role": "uncertainty",
             "srgb": "#8FA79A"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#3F5A7A"
+          },
+          {
+            "role": "warning",
+            "srgb": "#9A3412"
           }
         ]
       },
@@ -250,6 +278,18 @@
           "foreground": "uncertainty",
           "background": "surface",
           "result": "fail"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
         }
       ],
       "feasibility": {
@@ -335,6 +375,14 @@
           {
             "role": "warning",
             "srgb": "#D7261E"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#767676"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#4A4A4A"
           }
         ]
       },
@@ -366,6 +414,18 @@
         {
           "kind": "ui",
           "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
           "background": "surface",
           "result": "pass"
         },
@@ -468,6 +528,14 @@
           {
             "role": "provenance",
             "srgb": "#5E7A5A"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#9C7A84"
+          },
+          {
+            "role": "warning",
+            "srgb": "#8C2F1B"
           }
         ]
       },
@@ -503,10 +571,22 @@
           "result": "fail"
         },
         {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
           "kind": "text",
           "foreground": "provenance",
           "background": "surface",
           "result": "fail"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
         }
       ],
       "feasibility": {
@@ -592,6 +672,14 @@
           {
             "role": "uncertainty",
             "srgb": "#5E88B3"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#C9D8E8"
+          },
+          {
+            "role": "warning",
+            "srgb": "#FFB4A2"
           }
         ]
       },
@@ -631,6 +719,18 @@
           "foreground": "uncertainty",
           "background": "surface",
           "result": "fail"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
         }
       ],
       "feasibility": {
@@ -648,7 +748,7 @@
       "material_tradition": "enamel_painted_tin",
       "graphic_tradition": "indic_hand_painted_signage",
       "category_default": false,
-      "rationale": "The product serves households paying in rupees (product spec section 1). Hypothesis (unvalidated; depends on personas in docs#66 and the docs#53 study): hand-painted shopfront signage may read to these households as a familiar public language of plain, bold statements; if so, it can make the payoff date and next action unmistakable without banking imagery.",
+      "rationale": "The product serves households paying in rupees (product spec section 1). Hypothesis (unvalidated; depends on personas in docs#66 and the direction concept study this ticket requires): hand-painted shopfront signage may read to these households as a familiar public language of plain, bold statements; if so, it can make the payoff date and next action unmistakable without banking imagery.",
       "intended_feel": "Direct, local and confident: a clear painted sign that tells you what is here and what to do next.",
       "form_language": "Bold display lettering for one headline figure, flat saturated panels, painted borders around actions, simple pictograms; body text stays in a plain readable face.",
       "signature_interaction": "Next-step panel: one painted panel always names the single next action and its effect on the payoff date; other options sit below in plain text.",
@@ -720,6 +820,14 @@
           {
             "role": "warning",
             "srgb": "#B3261E"
+          },
+          {
+            "role": "uncertainty",
+            "srgb": "#7A5C00"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#3D2B00"
           }
         ]
       },
@@ -751,6 +859,18 @@
         {
           "kind": "ui",
           "foreground": "progress",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "ui",
+          "foreground": "uncertainty",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
           "background": "surface",
           "result": "pass"
         },
@@ -849,6 +969,14 @@
           {
             "role": "uncertainty",
             "srgb": "#C9B8D9"
+          },
+          {
+            "role": "provenance",
+            "srgb": "#5C4A6E"
+          },
+          {
+            "role": "warning",
+            "srgb": "#A4161A"
           }
         ]
       },
@@ -888,6 +1016,18 @@
           "foreground": "uncertainty",
           "background": "surface",
           "result": "fail"
+        },
+        {
+          "kind": "text",
+          "foreground": "provenance",
+          "background": "surface",
+          "result": "pass"
+        },
+        {
+          "kind": "text",
+          "foreground": "warning",
+          "background": "surface",
+          "result": "pass"
         }
       ],
       "feasibility": {

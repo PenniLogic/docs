@@ -93,7 +93,7 @@
         },
         {
           "candidate": "DIR-02",
-          "description": "Member B sees a separate shared route showing totals only, framed with a legend line naming the grant and its scope; Member A's map shows a viewer marker and a stop-sharing action that removes the shared route at once."
+          "description": "Member B sees a separate shared route showing totals only, framed with a legend line naming the grant and its scope; Member A's map shows a viewer marker, a view log and a stop-sharing action that removes the shared route at once."
         },
         {
           "candidate": "DIR-03",
@@ -101,19 +101,19 @@
         },
         {
           "candidate": "DIR-04",
-          "description": "Member B sees one separate layer marked shared by Member A, totals only. Member A can lift the layer away at once; the log of views sits beside the layer, and leaving sends no dramatic notification."
+          "description": "Member B sees one separate layer marked shared by Member A, totals only. Member A can lift the layer away at once with a stop-sharing action; the log of views sits beside the layer, and leaving sends no dramatic notification."
         },
         {
           "candidate": "DIR-05",
-          "description": "The shared view carries a title block stating grantor, scope and revocability; Member A's plan has a revision row for each grant change and a view log, with a stop-sharing action."
+          "description": "The shared view carries a title block stating grantor, scope (debt totals only) and revocability; Member A's plan has a revision row for each grant change and a view log, with a stop-sharing action."
         },
         {
           "candidate": "DIR-06",
-          "description": "A painted header on the shared view says: Shared by Member A, totals only. Member A's panel offers one plain action, Stop sharing, and a line of text showing the latest views by Member B."
+          "description": "A painted header on the shared view says: Shared by Member A, totals only. Member A's panel offers one plain action, Stop sharing, and a view log line showing the latest views by Member B."
         },
         {
           "candidate": "DIR-07",
-          "description": "Member B sees only the combined cloth of totals, with a woven label naming Member A's grant; Member A sees which threads are shared, the view log and an action to pull the shared thread out at once."
+          "description": "Member B sees only the combined cloth of totals, with a woven label naming Member A's grant of totals only; Member A sees which threads are shared, the view log and a stop-sharing action that pulls the shared thread out at once."
         }
       ]
     },

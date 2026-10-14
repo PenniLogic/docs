@@ -36,16 +36,20 @@ GRAPHICS = ("swiss_grid", "editorial", "cartographic", "technical_drawing", "ver
             "modernist_poster")
 VALUES = {
     "surface": "#FFFFFF", "text_primary": "#1A1A1A", "text_secondary": "#595959",
-    "control_boundary": "#767676", "focus_indicator": "#1A1A1A", "warning": "#B3B3B3",
+    "control_boundary": "#767676", "focus_indicator": "#1A1A1A", "progress": "#2F6B4F", "uncertainty": "#767676",
+    "provenance": "#595959", "warning": "#9A3412",
 }
 PAIRS = (
     ("text", "text_primary", "surface", "pass"), ("text", "text_secondary", "surface", "pass"),
     ("ui", "control_boundary", "surface", "pass"), ("ui", "focus_indicator", "surface", "pass"),
+    ("ui", "progress", "surface", "pass"), ("ui", "uncertainty", "surface", "pass"),
+    ("text", "provenance", "surface", "pass"), ("text", "warning", "surface", "pass"),
 )
 # The synthetic offline inventory: the only issue references the fixtures may resolve.
-ISSUES = frozenset(f"PenniLogic/docs#{n}" for n in (53, 55, 66, 67, 74, 75, 76, 78)) | {"PenniLogic/infra#22"}
+ISSUES = frozenset(f"PenniLogic/docs#{n}" for n in (53, 55, 65, 66, 67, 74, 75, 76, 78)) | {"PenniLogic/infra#22"}
 HELD_GATES = [f"pending:{reference}" for reference in (
-    "PenniLogic/docs#53", "PenniLogic/docs#66", "PenniLogic/docs#67", "PenniLogic/docs#74", "PenniLogic/docs#75",
+    "PenniLogic/docs#53", "PenniLogic/docs#65", "PenniLogic/docs#66", "PenniLogic/docs#67", "PenniLogic/docs#74",
+    "PenniLogic/docs#75",
     "PenniLogic/infra#22")]
 TOPICS = ("debt_progress", "transaction_clarification", "household_privacy", "operator_urgency")
 DEPICTION = {"household_privacy": "explicit_revocable_grant", "operator_urgency": "audited_elevation"}
@@ -132,7 +136,7 @@ def record():
         "candidates_considered": [f"DIR-{n:02d}" for n in range(1, 8)],
         "participant_count": None,
         "evidence": [{
-            "kind": "representative_user_study", "study_ref": "pending:PenniLogic/docs#53",
+            "kind": "representative_user_study", "study_ref": "pending:PenniLogic/docs#76",
             "data_origin": "pending", "state": "pending",
         }],
         "decision": None,
@@ -266,9 +270,39 @@ class SchemaAndContentTests(Case):
         self.refuses(lambda f: probe(f, 1)["renderings"][0].update(description="Shows hero\uff0epng full width."),
                      "probe.external_asset", "PRB-01")
 
-    def test_greek_or_cyrillic_words_on_their_own_are_allowed(self):
+    def test_non_ascii_letters_left_after_folding_are_refused(self):
+        cases = (
+            "Calm, like \u03b7\u03c1\u03b5\u03bc\u03af\u03b1.",  # a Greek word on its own
+            "Calm, like \u0441\u043f\u043e\u043a\u043e\u0439\u043d\u043e.",  # a Cyrillic word on its own
+            "A \ua731hield shows safety.",  # Latin letter small capital s
+            "A \u029fock icon shows safety.",  # Latin letter small capital l
+            "A sh\u00edeld shows safety.",  # precomposed i with acute (NFKC keeps it)
+            "A s\u0332hield shows safety.",  # combining low line splits the word
+            "Win a b\u0251dge today.",  # Latin small letter alpha
+            "Keep your \u0915streak alive.",  # Devanagari letter glued to a word
+            "Keep your streak\u4e4b alive.",  # Han letter glued to a word
+            "Calm \u2014 and plain.",  # em dash: ASCII-only data until a localization field needs more
+        )
+        for text in cases:
+            with self.subTest(text=ascii(text)):
+                self.refuses(lambda f, text=text: at(f, 4).update(intended_feel=text), "content.non_ascii", "DIR-04")
+
+    def test_extended_lexicons_are_refused(self):
+        cases = (
+            ("content.trust_theater", "A PCI DSS compliant seal sits on every screen."),
+            ("content.trust_theater", "Every view shows 256-bit encryption in the header."),
+            ("content.trust_theater", "A certified label sits in the footer."),
+            ("content.gamification", "Unlock a reward when the card is paid off."),
+            ("content.gamification", "Collect 50 coins for each on-time payment."),
+            ("content.gamification", "Reach the gold tier."),
+        )
+        for rule, text in cases:
+            with self.subTest(text=text):
+                self.refuses(lambda f, text=text: at(f, 4).update(intended_feel=text), rule, "DIR-04")
+
+    def test_progress_described_as_not_a_reward_is_allowed(self):
         fixture = Fixture()
-        at(fixture, 4)["intended_feel"] = "Calm, like \u03b7\u03c1\u03b5\u03bc\u03af\u03b1 or \u0441\u043f\u043e\u043a\u043e\u0439\u043d\u043e."
+        at(fixture, 4)["intended_feel"] = "Progress shown as fact rather than reward."
         self.assertIsInstance(fixture.check(), module.Model)
 
     def test_content_guard_scans_probes_and_record(self):
@@ -417,8 +451,8 @@ class ContrastTests(Case):
 
     def test_honest_failing_pair_is_a_readiness_gap_not_a_structure_failure(self):
         fixture = Fixture()
-        at(fixture, 4)["contrast_pairs"].append(
-            {"kind": "ui", "foreground": "warning", "background": "surface", "result": "fail"})
+        value(fixture, 4, "warning").update(srgb="#B3B3B3")
+        pair(fixture, 4, 7).update(result="fail")
         model = fixture.check()
         self.assertEqual(module.readiness(model)["readiness.contrast_failing"], ["DIR-04 warning:surface"])
 
@@ -433,6 +467,17 @@ class ContrastTests(Case):
     def test_duplicate_pair_refused(self):
         self.refuses(lambda f: at(f, 6)["contrast_pairs"].append(dict(pair(f, 6, 0))),
                      "contrast.duplicate_pair", "DIR-06 text_primary:surface")
+
+    def test_unused_illustrative_value_refused(self):
+        extra = {"role": "emphasis", "srgb": "#FF00FF"}
+        self.refuses(lambda f: at(f, 1)["illustrative_values"]["values"].append(extra),
+                     "contrast.unused_role", "DIR-01 emphasis")
+
+    def test_every_legibility_pair_is_required(self):
+        for index, role in ((4, "progress"), (5, "uncertainty"), (6, "provenance"), (7, "warning")):
+            with self.subTest(role=role):
+                self.refuses(lambda f, index=index: at(f, 2)["contrast_pairs"].pop(index),
+                             "contrast.required_pair_missing", f"DIR-02 {role}:surface")
 
     def test_required_pair_missing_refused(self):
         self.refuses(lambda f: at(f, 7)["contrast_pairs"].pop(3),
@@ -588,9 +633,25 @@ class RecordTests(Case):
         fixture.record["implementation_consequences"].append("Consumed by PenniLogic/docs#126 later.")
         self.assertIsInstance(fixture.check(), module.Model)
 
-    def test_candidate_scoped_values_are_allowed_outside_the_record(self):
+    def test_raw_values_refused_in_candidate_prose(self):
+        for text in ("Ink near #1A1A1A on paper, illustrative only.", "Body copy 14px in font-family Georgia.",
+                     "An 8dp radius."):
+            with self.subTest(text=text):
+                self.refuses(lambda f, text=text: at(f, 1).update(form_language=text), "candidate.raw_value", "DIR-01")
+        self.refuses(lambda f: at(f, 1)["risks"].append("Ink is rgb 31 42 68."), "candidate.raw_value", "DIR-01")
+
+    def test_ascii_spellings_of_raw_values_refused_in_the_record(self):
+        for text in ("Surface is 0xFFF7F3E8.", "Ink is hsl 220 40 20.", "Ink is rgb 31 42 68.",
+                     "Touch targets are 48-dp squares.", "Gutters are 16 pixels.",
+                     "Android maps surface to palette.surface.", "Use button.primary.container here.",
+                     "Use theme.surface here."):
+            with self.subTest(text=text):
+                self.refuses(lambda f, text=text: f.record["implementation_consequences"].append(text),
+                             "record.raw_token")
+
+    def test_sentence_ending_in_a_token_word_is_not_a_raw_value(self):
         fixture = Fixture()
-        at(fixture, 1)["form_language"] = "Ink near #1A1A1A on paper, illustrative only."
+        fixture.record["implementation_consequences"].append("Fits Material grids with a constrained palette.")
         self.assertIsInstance(fixture.check(), module.Model)
 
     def test_considered_candidates_must_be_all_seven(self):
@@ -727,7 +788,7 @@ class ReadinessTests(Case):
     def test_synthetic_baseline_reports_exact_gaps(self):
         gaps = module.readiness(Fixture().check())
         self.assertEqual(gaps, {
-            "readiness.user_evidence_missing": ["pending:PenniLogic/docs#53"],
+            "readiness.user_evidence_missing": ["pending:PenniLogic/docs#76"],
             "readiness.persona_unvalidated": [f"DIR-{n:02d}" for n in range(1, 8)],
             "readiness.review_pending": ["accessibility", "content", "android_design", "web_design", "admin_design"],
             "readiness.contrast_failing": [],
@@ -773,9 +834,9 @@ class CliTests(FilesCase):
         self.assertEqual((code, err), (1, ""))
         self.assertEqual(out.splitlines(), [
             "NOT GREEN: readiness incomplete",
-            "Direction structure valid: 7 candidates, 4 probes, 28 contrast pairs (0 failing), record 0.1.0 pending",
+            "Direction structure valid: 7 candidates, 4 probes, 56 contrast pairs (0 failing), record 0.1.0 pending",
             "readiness.user_evidence_missing: 1", "readiness.persona_unvalidated: 7", "readiness.review_pending: 5",
-            "readiness.contrast_failing: 0", "readiness.decision_pending: 1", "readiness.held_gate: 6",
+            "readiness.contrast_failing: 0", "readiness.decision_pending: 1", "readiness.held_gate: 7",
         ])
 
     def test_structure_mode_passes(self):
@@ -996,6 +1057,11 @@ class RenderTests(FilesCase):
         self.assertEqual(module.ratio_text("#777777", "#FFFFFF"), "4.47")
         self.assertEqual(module.ratio_text("#000000", "#FFFFFF"), "21.00")
 
+    def test_view_states_comparable_pairs_and_lexical_tripwires(self):
+        text = module.render_markdown(Fixture().check())
+        self.assertIn("Every candidate is assessed on the same 8 contrast pairs on its base surface", text)
+        self.assertIn("lexical tripwires over ASCII text", text)
+
     def test_rendered_view_is_deterministic(self):
         self.assertEqual(module.render_markdown(Fixture().check()), module.render_markdown(Fixture().check()))
 
@@ -1016,7 +1082,7 @@ class PublishedDataTests(unittest.TestCase):
 
     def test_published_data_reports_exact_readiness_gaps(self):
         self.assertEqual(module.readiness(self.model), {
-            "readiness.user_evidence_missing": ["pending:PenniLogic/docs#53"],
+            "readiness.user_evidence_missing": ["pending:PenniLogic/docs#76"],
             "readiness.persona_unvalidated": [f"DIR-{n:02d}" for n in range(1, 8)],
             "readiness.review_pending": ["accessibility", "content", "android_design", "web_design", "admin_design"],
             "readiness.contrast_failing": PUBLISHED_FAILING,
@@ -1026,7 +1092,7 @@ class PublishedDataTests(unittest.TestCase):
 
     def test_published_structure_line(self):
         self.assertEqual(module.structure_line(self.model), (
-            "Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing), record 0.1.0 pending"))
+            "Direction structure valid: 7 candidates, 4 probes, 56 contrast pairs (8 failing), record 0.1.0 pending"))
 
     def test_published_record_is_pending_and_undecided(self):
         record = self.model.record
@@ -1037,10 +1103,40 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(record["consumers"], ["PenniLogic/docs#55", "PenniLogic/docs#78"])
         self.assertEqual(record["held_gates"], HELD_GATES)
         self.assertEqual([(item["state"], item["owner_ref"]) for item in record["unresolved_risks"]], [
-            ("open", "PenniLogic/docs#53"), ("open", "PenniLogic/docs#66"), ("open", "PenniLogic/docs#76"),
-            ("open", "PenniLogic/docs#55"), ("open", "PenniLogic/docs#76"), ("open", "PenniLogic/docs#76"),
+            ("open", "PenniLogic/docs#76"), ("open", "PenniLogic/docs#53"), ("open", "PenniLogic/docs#65"),
+            ("open", "PenniLogic/docs#66"), ("open", "PenniLogic/docs#76"), ("open", "PenniLogic/docs#55"),
+            ("open", "PenniLogic/docs#76"), ("open", "PenniLogic/docs#76"),
         ])
-        self.assertIn("D1", record["unresolved_risks"][2]["text"])
+        self.assertIn("D1", record["unresolved_risks"][4]["text"])
+
+    def test_published_direction_study_is_routed_to_this_ticket_not_docs53(self):
+        # docs#53's accepted protocol compares a debt card with an expense card; it cannot test DIR-01..DIR-07.
+        record = self.model.record
+        self.assertEqual([item["study_ref"] for item in record["evidence"]], ["pending:PenniLogic/docs#76"])
+        study, debt, contact = (item["text"] for item in record["unresolved_risks"][:3])
+        # The ticket's Observability measures and its order-balanced preference test (SS-17).
+        for measure in ("order-balanced", "comprehension", "identification", "task clarity", "accessibility defects",
+                        "preference", "no direction study is planned"):
+            with self.subTest(measure=measure):
+                self.assertIn(measure, study)
+        self.assertIn("debt card with an expense card", debt)
+        self.assertIn("reviewed amendment", debt)
+        self.assertIn("docs#65 pre-contact and consent", contact)
+        self.assertIn("pending:PenniLogic/docs#65", record["held_gates"])
+        self.assertNotIn("docs#53 study", self.model.candidates["candidates"][5]["rationale"])
+
+    def test_published_household_probe_shows_a_bounded_revocable_logged_grant(self):
+        household = self.model.probes["probes"][2]
+        self.assertEqual((household["topic"], household["access_depiction"]),
+                         ("household_privacy", "explicit_revocable_grant"))
+        for phrase in ("totals only, not transactions", "revoke", "access log", "never looks like ordinary browsing"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, household["scenario"])
+        for item in household["renderings"]:
+            text = item["description"].lower().replace("-", " ")
+            with self.subTest(candidate=item["candidate"]):
+                for phrase in ("totals", "stop sharing", "log"):
+                    self.assertIn(phrase, text)
 
     def test_published_operator_probe_shows_the_distinct_approver_and_wait(self):
         # ADR-020: elevation needs a distinct approver and opens nothing until its chain record is confirmed.
@@ -1079,9 +1175,9 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual((code, err.getvalue()), (1, ""))
         self.assertEqual(out.getvalue().splitlines(), [
             "NOT GREEN: readiness incomplete",
-            "Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing), record 0.1.0 pending",
+            "Direction structure valid: 7 candidates, 4 probes, 56 contrast pairs (8 failing), record 0.1.0 pending",
             "readiness.user_evidence_missing: 1", "readiness.persona_unvalidated: 7", "readiness.review_pending: 5",
-            "readiness.contrast_failing: 8", "readiness.decision_pending: 1", "readiness.held_gate: 6",
+            "readiness.contrast_failing: 8", "readiness.decision_pending: 1", "readiness.held_gate: 7",
         ])
 
 

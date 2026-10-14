@@ -24,7 +24,7 @@
   "evidence": [
     {
       "kind": "representative_user_study",
-      "study_ref": "pending:PenniLogic/docs#53",
+      "study_ref": "pending:PenniLogic/docs#76",
       "data_origin": "pending",
       "state": "pending"
     }
@@ -114,9 +114,19 @@
   },
   "unresolved_risks": [
     {
-      "text": "No representative-user concept evidence exists yet; preference, comprehension and identification for every candidate are unknown (docs#53).",
+      "text": "No representative-user concept evidence exists for DIR-01..DIR-07, and no direction study is planned: the ticket's order-balanced concept study must still measure comprehension, identification, task clarity, accessibility defects and preference for every candidate (docs#76 test 1).",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#76"
+    },
+    {
+      "text": "The accepted docs#53 protocol compares a debt card with an expense card in text only, so it cannot test the visual directions without a reviewed amendment; docs#53 is held here only as the debt-study input.",
       "state": "open",
       "owner_ref": "PenniLogic/docs#53"
+    },
+    {
+      "text": "No participant contact or study execution is authorized until the docs#65 pre-contact and consent conditions are met.",
+      "state": "open",
+      "owner_ref": "PenniLogic/docs#65"
     },
     {
       "text": "Persona-dependent assumptions in every candidate are unvalidated (docs#66).",
@@ -166,6 +176,7 @@
   ],
   "held_gates": [
     "pending:PenniLogic/docs#53",
+    "pending:PenniLogic/docs#65",
     "pending:PenniLogic/docs#66",
     "pending:PenniLogic/docs#67",
     "pending:PenniLogic/docs#74",

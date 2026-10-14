@@ -5,11 +5,13 @@
 > Source issue PenniLogic/docs#76. Nothing here is user evidence, a review, an approval or a
 > selected direction: candidates and probes are authored proposals with synthetic figures, persona
 > assumptions are unvalidated, illustrative values are non-binding and are not a token contract.
+> The raw-value, gamification, shame and trust-theater checks are lexical tripwires over ASCII text;
+> qualified Design and Accessibility review remains the control for those categories.
 
 ## Readiness
 
 `python scripts/check_direction.py` reports **NOT GREEN: readiness incomplete**.
-Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing), record 0.1.0 pending.
+Direction structure valid: 7 candidates, 4 probes, 56 contrast pairs (8 failing), record 0.1.0 pending.
 
 | Readiness rule | Open gaps |
 |---|---|
@@ -18,9 +20,11 @@ Direction structure valid: 7 candidates, 4 probes, 42 contrast pairs (8 failing)
 | readiness.review_pending | 5 |
 | readiness.contrast_failing | 8 |
 | readiness.decision_pending | 1 |
-| readiness.held_gate | 6 |
+| readiness.held_gate | 7 |
 
 ## Candidates
+
+Every candidate is assessed on the same 8 contrast pairs on its base surface, so the failing counts below are comparable.
 
 | ID | Name | Material | Graphic | Failing contrast pairs |
 |---|---|---|---|---|
@@ -68,6 +72,8 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | control_boundary `#8A8F99` | surface `#F7F3E8` | 2.92 | 3.0 | fail |
 | ui | focus_indicator `#B03A2E` | surface `#F7F3E8` | 5.42 | 3.0 | pass |
 | ui | progress `#2F6B4F` | surface `#F7F3E8` | 5.67 | 3.0 | pass |
+| ui | uncertainty `#7A7468` | surface `#F7F3E8` | 4.18 | 3.0 | pass |
+| text | provenance `#6B4E2E` | surface `#F7F3E8` | 6.87 | 4.5 | pass |
 | text | warning `#9A3412` | surface `#F7F3E8` | 6.59 | 4.5 | pass |
 
 Feasibility:
@@ -124,6 +130,8 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | focus_indicator `#1D4ED8` | surface `#EEF3EC` | 5.95 | 3.0 | pass |
 | ui | progress `#C2410C` | surface `#EEF3EC` | 4.60 | 3.0 | pass |
 | ui | uncertainty `#8FA79A` | surface `#EEF3EC` | 2.28 | 3.0 | fail |
+| text | provenance `#3F5A7A` | surface `#EEF3EC` | 6.31 | 4.5 | pass |
+| text | warning `#9A3412` | surface `#EEF3EC` | 6.49 | 4.5 | pass |
 
 Feasibility:
 
@@ -177,6 +185,8 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | control_boundary `#767676` | surface `#FFFFFF` | 4.54 | 3.0 | pass |
 | ui | focus_indicator `#D7261E` | surface `#FFFFFF` | 5.01 | 3.0 | pass |
 | ui | progress `#111111` | surface `#FFFFFF` | 18.88 | 3.0 | pass |
+| ui | uncertainty `#767676` | surface `#FFFFFF` | 4.54 | 3.0 | pass |
+| text | provenance `#4A4A4A` | surface `#FFFFFF` | 8.86 | 4.5 | pass |
 | text | warning `#D7261E` | surface `#FFFFFF` | 5.01 | 4.5 | pass |
 
 Feasibility:
@@ -232,7 +242,9 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | control_boundary `#C98F7A` | surface `#FBE9D7` | 2.30 | 3.0 | fail |
 | ui | focus_indicator `#3B1F2B` | surface `#FBE9D7` | 12.51 | 3.0 | pass |
 | ui | progress `#E07A5F` | surface `#FBE9D7` | 2.49 | 3.0 | fail |
+| ui | uncertainty `#9C7A84` | surface `#FBE9D7` | 3.20 | 3.0 | pass |
 | text | provenance `#5E7A5A` | surface `#FBE9D7` | 4.02 | 4.5 | fail |
+| text | warning `#8C2F1B` | surface `#FBE9D7` | 6.99 | 4.5 | pass |
 
 Feasibility:
 
@@ -288,6 +300,8 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | focus_indicator `#FFD166` | surface `#0B3D6B` | 7.68 | 3.0 | pass |
 | ui | progress `#FFFFFF` | surface `#0B3D6B` | 11.08 | 3.0 | pass |
 | ui | uncertainty `#5E88B3` | surface `#0B3D6B` | 2.98 | 3.0 | fail |
+| text | provenance `#C9D8E8` | surface `#0B3D6B` | 7.64 | 4.5 | pass |
+| text | warning `#FFB4A2` | surface `#0B3D6B` | 6.49 | 4.5 | pass |
 
 Feasibility:
 
@@ -310,7 +324,7 @@ Grounding (pins on accepted main; bytes verified by digest, relevance not machin
 
 Material tradition `enamel_painted_tin`; graphic tradition `indic_hand_painted_signage`.
 
-- **Rationale:** The product serves households paying in rupees (product spec section 1). Hypothesis (unvalidated; depends on personas in docs#66 and the docs#53 study): hand-painted shopfront signage may read to these households as a familiar public language of plain, bold statements; if so, it can make the payoff date and next action unmistakable without banking imagery.
+- **Rationale:** The product serves households paying in rupees (product spec section 1). Hypothesis (unvalidated; depends on personas in docs#66 and the direction concept study this ticket requires): hand-painted shopfront signage may read to these households as a familiar public language of plain, bold statements; if so, it can make the payoff date and next action unmistakable without banking imagery.
 - **Intended feel:** Direct, local and confident: a clear painted sign that tells you what is here and what to do next.
 - **Form language:** Bold display lettering for one headline figure, flat saturated panels, painted borders around actions, simple pictograms; body text stays in a plain readable face.
 - **Signature interaction:** Next-step panel: one painted panel always names the single next action and its effect on the payoff date; other options sit below in plain text.
@@ -342,6 +356,8 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | control_boundary `#B3261E` | surface `#FFD23F` | 4.52 | 3.0 | pass |
 | ui | focus_indicator `#1A1A1A` | surface `#FFD23F` | 12.05 | 3.0 | pass |
 | ui | progress `#0F5132` | surface `#FFD23F` | 6.48 | 3.0 | pass |
+| ui | uncertainty `#7A5C00` | surface `#FFD23F` | 4.33 | 3.0 | pass |
+| text | provenance `#3D2B00` | surface `#FFD23F` | 9.41 | 4.5 | pass |
 | text | warning `#B3261E` | surface `#FFD23F` | 4.52 | 4.5 | pass |
 
 Feasibility:
@@ -397,6 +413,8 @@ Contrast feasibility (illustrative, non-binding values; WCAG 2.x relative lumina
 | ui | focus_indicator `#B5179E` | surface `#F4EFE6` | 5.12 | 3.0 | pass |
 | ui | progress `#1E5AA8` | surface `#F4EFE6` | 5.94 | 3.0 | pass |
 | ui | uncertainty `#C9B8D9` | surface `#F4EFE6` | 1.61 | 3.0 | fail |
+| text | provenance `#5C4A6E` | surface `#F4EFE6` | 6.89 | 4.5 | pass |
+| text | warning `#A4161A` | surface `#F4EFE6` | 6.77 | 4.5 | pass |
 
 Feasibility:
 
@@ -459,12 +477,12 @@ Synthetic household of two fictional members, Member A and Member B. Member A ha
 | Candidate | Rendering |
 |---|---|
 | DIR-01 | A shared summary page headed: Shared with Member B by Member A, totals only, revocable. Transaction rows are not present. Member A's own view has an access-log column listing each view by Member B and a plain stop-sharing action. |
-| DIR-02 | Member B sees a separate shared route showing totals only, framed with a legend line naming the grant and its scope; Member A's map shows a viewer marker and a stop-sharing action that removes the shared route at once. |
+| DIR-02 | Member B sees a separate shared route showing totals only, framed with a legend line naming the grant and its scope; Member A's map shows a viewer marker, a view log and a stop-sharing action that removes the shared route at once. |
 | DIR-03 | A labelled shared section: Grant from Member A, scope debt totals, revocable at any time. Member A's settings list the grant, the access log and a stop-sharing action in the same grid position every time. |
-| DIR-04 | Member B sees one separate layer marked shared by Member A, totals only. Member A can lift the layer away at once; the log of views sits beside the layer, and leaving sends no dramatic notification. |
-| DIR-05 | The shared view carries a title block stating grantor, scope and revocability; Member A's plan has a revision row for each grant change and a view log, with a stop-sharing action. |
-| DIR-06 | A painted header on the shared view says: Shared by Member A, totals only. Member A's panel offers one plain action, Stop sharing, and a line of text showing the latest views by Member B. |
-| DIR-07 | Member B sees only the combined cloth of totals, with a woven label naming Member A's grant; Member A sees which threads are shared, the view log and an action to pull the shared thread out at once. |
+| DIR-04 | Member B sees one separate layer marked shared by Member A, totals only. Member A can lift the layer away at once with a stop-sharing action; the log of views sits beside the layer, and leaving sends no dramatic notification. |
+| DIR-05 | The shared view carries a title block stating grantor, scope (debt totals only) and revocability; Member A's plan has a revision row for each grant change and a view log, with a stop-sharing action. |
+| DIR-06 | A painted header on the shared view says: Shared by Member A, totals only. Member A's panel offers one plain action, Stop sharing, and a view log line showing the latest views by Member B. |
+| DIR-07 | Member B sees only the combined cloth of totals, with a woven label naming Member A's grant of totals only; Member A sees which threads are shared, the view log and a stop-sharing action that pulls the shared thread out at once. |
 
 ### PRB-04 operator_urgency
 
@@ -490,7 +508,7 @@ Evidence:
 
 | Kind | Reference | Origin | State |
 |---|---|---|---|
-| representative_user_study | pending:PenniLogic/docs#53 | pending | pending |
+| representative_user_study | pending:PenniLogic/docs#76 | pending | pending |
 
 Reviews:
 
@@ -531,7 +549,9 @@ Unresolved risks:
 
 | Risk | Disposition | Owner |
 |---|---|---|
-| No representative-user concept evidence exists yet; preference, comprehension and identification for every candidate are unknown (docs#53). | open | PenniLogic/docs#53 |
+| No representative-user concept evidence exists for DIR-01..DIR-07, and no direction study is planned: the ticket's order-balanced concept study must still measure comprehension, identification, task clarity, accessibility defects and preference for every candidate (docs#76 test 1). | open | PenniLogic/docs#76 |
+| The accepted docs#53 protocol compares a debt card with an expense card in text only, so it cannot test the visual directions without a reviewed amendment; docs#53 is held here only as the debt-study input. | open | PenniLogic/docs#53 |
+| No participant contact or study execution is authorized until the docs#65 pre-contact and consent conditions are met. | open | PenniLogic/docs#65 |
 | Persona-dependent assumptions in every candidate are unvalidated (docs#66). | open | PenniLogic/docs#66 |
 | D2 requires the D1 experience architecture, which is not accepted: personas (docs#66), journeys and service blueprints (docs#67), platform allocation and sitemaps (docs#74) and the traceability registry (docs#75). | open | PenniLogic/docs#76 |
 | Illustrative contrast values fail for some candidates; the selected direction's final values must be set and verified by the token contract (docs#55). | open | PenniLogic/docs#55 |
@@ -554,6 +574,7 @@ Consumers:
 Held gates:
 
 - pending:PenniLogic/docs#53
+- pending:PenniLogic/docs#65
 - pending:PenniLogic/docs#66
 - pending:PenniLogic/docs#67
 - pending:PenniLogic/docs#74

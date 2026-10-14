@@ -13,19 +13,23 @@ whose blob digest is checked in the local Git object store. The check proves the
 it does not prove that the cited text supports the candidate.
 Each candidate may carry non-binding, candidate-scoped illustrative sRGB values; they exist only to compute WCAG 2.x
 contrast feasibility (relative luminance) per text and UI pair, and every claimed pass/fail must equal the computed
-result. The no-raw-token rule applies to the direction record only: it exposes semantic roles and platform
-consequences, never a raw color, dimension, font or token contract (docs#55).
+result; every value must be used by a pair. The no-raw-token rule applies to every other string: the record and the
+probes and all candidate prose expose semantic roles and platform consequences, never a raw color, dimension, font
+or token contract (docs#55). The raw-value, gamification, shame and trust-theater checks are lexical tripwires over
+ASCII text (non-ASCII is refused); qualified Design and Accessibility review remains the control for those categories.
 
 The record stays `pending` with `participant_count: null` (never 0) and `decision: null`. The validator refuses
 AI-preference, internal-vote, synthetic-participant and mood-board "evidence", self-approval and platform-lead
 approval, any final token contract and any non-pending status: no D2 gate record is resolvable offline, so no session
-can record the decision_coordinator's D2 choice here. Representative-user evidence (docs#53), validated personas
-(docs#66), qualified Accessibility, Content and platform reviews and the D2 decision are counted as readiness gaps,
-never filled in, and keep the default mode NOT GREEN. `--render` prints the generated markdown view
+can record the decision_coordinator's D2 choice here. Representative-user evidence from the ticket's own
+order-balanced direction study (docs#76 test 1; docs#53's frozen protocol covers debt versus expense cards only, and
+participant contact waits for docs#65's pre-contact and consent conditions), validated personas (docs#66),
+qualified Accessibility, Content and platform reviews and the D2 decision are counted as readiness gaps, never filled
+in, and keep the default mode NOT GREEN. `--render` prints the generated markdown view
 product/direction/README.md; a unittest pins the committed file to it. Every issue reference in the record must
 resolve in the offline snapshot planning/issue-inventory.json; the record must name non-empty unresolved risks (each
 open, with an owning issue), implementation consequences and consumers including docs#55, and, while pending, hold
-docs#53, infra#22 and D2's prerequisite D1 (docs#66, docs#67, docs#74, docs#75).
+docs#53, docs#65, infra#22 and D2's prerequisite D1 (docs#66, docs#67, docs#74, docs#75).
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a DIR/PRB
 grammar, a semantic role, a gate role or a `PenniLogic/<repo>#N` reference; input text is never echoed. Everything
@@ -33,6 +37,7 @@ runs offline: no network, remote action, approval, appointment or study is made 
 """
 
 import argparse
+import functools
 import hashlib
 import importlib.util
 import json
@@ -83,19 +88,25 @@ SEMANTIC_ROLES = (
 )
 # WCAG 2.x minimum contrast ratios: 1.4.3 (text, large text) and 1.4.11 (non-text UI components and focus).
 CONTRAST_MINIMUM = {"text": 4.5, "large_text": 3.0, "ui": 3.0}
-# Every candidate shows body text, secondary text, a control boundary and a focus indicator on its base surface.
+# Every candidate is assessed on the same pairs on its base surface, so failing counts compare across candidates:
+# body and secondary text, the control boundary (the ticket's "control" legibility subject), the focus indicator, and
+# the legibility subjects progress and uncertainty (non-text marks), provenance and warning (text).
 REQUIRED_PAIRS = (
     ("text", "text_primary", "surface"), ("text", "text_secondary", "surface"),
     ("ui", "control_boundary", "surface"), ("ui", "focus_indicator", "surface"),
+    ("ui", "progress", "surface"), ("ui", "uncertainty", "surface"),
+    ("text", "provenance", "surface"), ("text", "warning", "surface"),
 )
 # Roles that review the record (D2 verifier and the ticket's Content and platform feasibility reviews).
 REQUIRED_REVIEWS = ("accessibility", "content", "android_design", "web_design", "admin_design")
 PLATFORM_ROLES = ("android_design", "web_design", "admin_design")
 APPROVER_ROLE = "decision_coordinator"
-# While pending, the record keeps the coordinator appendix's retained gates (docs#53 study, docs#66 personas,
-# infra#22 CI conformance) and D2's prerequisite D1 (docs#66, docs#67, docs#74, docs#75; design-gates D2 requires D1).
+# While pending, the record keeps the coordinator appendix's retained gates (docs#53 debt-study input, docs#66
+# personas, infra#22 CI conformance), the docs#65 pre-contact and consent conditions (research/operations/README.md:
+# no participant contact before them) and D2's prerequisite D1 (docs#66, docs#67, docs#74, docs#75; design-gates D2
+# requires D1).
 REQUIRED_HELD_GATES = tuple(f"pending:PenniLogic/{name}" for name in (
-    "docs#53", "docs#66", "docs#67", "docs#74", "docs#75", "infra#22"))
+    "docs#53", "docs#65", "docs#66", "docs#67", "docs#74", "docs#75", "infra#22"))
 # T-DSY-01 consumes the approved direction's semantic roles as its token contract.
 REQUIRED_CONSUMERS = ("PenniLogic/docs#55",)
 INVENTORY_REF = re.compile(r"PenniLogic/[A-Za-z0-9._-]+#[1-9][0-9]*")
@@ -113,12 +124,14 @@ CONTENT_SHAPES = (
     ("content.account_shape", re.compile(r"[0-9](?:[ .-]?[0-9]){8,}")),
     ("content.gamification", re.compile(
         r"(?i)\b(?:streaks?|leaderboards?|confetti|badges?|troph(?:y|ies)|level(?:ed|s)? up|high scores?|"
-        r"achievements? unlocked|earn(?:ed)? points|xp)\b")),
+        r"achievements? unlocked|earn(?:ed)? points|xp|coins?|reward points|(?:bronze|silver|gold|platinum|vip) tiers?|"
+        r"(?:unlock|earn|win|collect|claim)(?:s|ed|ing)?(?:\s+\w+){0,3}?\s+(?:rewards?|prizes?|tiers?|levels?))\b")),
     ("content.shame_language", re.compile(
         r"(?i)\b(?:you failed|lazy|irresponsible|bad with money|careless|shameful|embarrassing)\b")),
     ("content.trust_theater", re.compile(
         r"(?i)\b(?:padlocks?|shields?|lock icons?|locks?|bank[- ]grade|military[- ]grade|100% (?:secure|safe)|"
-        r"fully secure|compliance badges?|certified secure|guaranteed safe)\b")),
+        r"fully secure|compliance badges?|certified(?: secure)?|guaranteed safe|compliant|encrypt(?:ion|ed)|"
+        r"seals?)\b")),
 )
 TOKEN = re.compile(r"[A-Za-z0-9+/=_-]{32,}")
 HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
@@ -128,7 +141,11 @@ HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
 RAW_TOKEN = re.compile(
     r"(?i)#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\s*\(|"
     r"\b[0-9]+(?:\.[0-9]+)?\s*(?:px|dp|sp|pt|rem|em)\b|\bfont-(?:family|weight|size)\b|"
-    r"\b(?:colou?r|spacing|radius|elevation|typography|font|motion|shadow)\.[a-z]|(?<![A-Za-z0-9])--[a-z][a-z0-9-]*"
+    r"\b(?:colou?r|spacing|radius|elevation|typography|font|motion|shadow|palette|theme|button|tokens?|sys)\.[a-z]|"
+    r"(?<![A-Za-z0-9])--[a-z][a-z0-9-]*|"
+    # ASCII spellings without the CSS syntax: 0xAARRGGBB, `rgb 31 42 68`, `48-dp`, `16 pixels`.
+    r"\b0x[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|oklab|oklch)\s+[0-9]|"
+    r"\b[0-9]+(?:\.[0-9]+)?\s*-\s*(?:px|dp|sp|pt|rem|em)\b|\b[0-9]+(?:\.[0-9]+)?\s*-?\s*(?:pixels?|dips?)\b"
 )
 TEXT_ISSUE_REF = re.compile(
     r"(?:pending:)?(?:PenniLogic/)?\b(?:docs|android|web|admin|api|contracts|infra)#[1-9][0-9]*\b")
@@ -145,6 +162,8 @@ SELF_ROOT = "product/direction/"
 # Product truth is a document: Markdown or a JSON data file. Checkers, generators, spike code and schemas under the
 # roots (for example research/operations/*.py, research/spikes/** or *.schema.json) describe tooling, not the product.
 PRODUCT_TRUTH_DOCUMENT = re.compile(r"[^/]+\.(?:md|json)")
+# Candidate keys whose values are raw by design: illustrative sRGB values and grounding pins.
+CANDIDATE_RAW_KEYS = ("srgb", "commit", "path", "sha256")
 CATEGORY_DEFAULT = re.compile(r"(?:^|_)(?:fintech|neobank|dashboard|banking_app|glassmorphism)(?:_|$)")
 
 STRUCTURE_RULES = (
@@ -153,14 +172,14 @@ STRUCTURE_RULES = (
     "content.mixed_script",
     "content.secret_shape",
     "content.markup", "content.url_shape", "content.email_shape", "content.account_shape", "content.gamification",
-    "content.shame_language", "content.trust_theater",
+    "content.shame_language", "content.trust_theater", "content.non_ascii",
     "candidate.count", "candidate.id_sequence", "candidate.incomplete", "candidate.name_duplicate",
     "candidate.material_not_distinct", "candidate.graphic_not_distinct", "candidate.category_default",
-    "candidate.binding_values", "held.persona_validation",
+    "candidate.binding_values", "candidate.raw_value", "held.persona_validation",
     "grounding.missing", "grounding.path_not_canonical", "grounding.self_reference", "grounding.not_product_truth",
     "grounding.not_accepted", "grounding.unavailable", "grounding.digest_mismatch",
     "contrast.duplicate_role", "contrast.unknown_role", "contrast.duplicate_pair", "contrast.required_pair_missing",
-    "contrast.result_mismatch",
+    "contrast.result_mismatch", "contrast.unused_role",
     "probe.count", "probe.topic_mismatch", "probe.markup", "probe.external_asset", "probe.raw_value", "probe.not_synthetic",
     "probe.unsafe_access_depiction", "probe.candidate_coverage",
     "record.version_grammar", "record.raw_token", "record.candidate_mismatch", "record.unknown_role",
@@ -250,7 +269,8 @@ def fold(text):
     Shape and lexicon scans run on the text, on this form and on its Latin skeleton (see forms), so fullwidth
     letters, ligatures, mathematical alphanumerics or Devanagari digits do not carry a refused word, raw value or
     account-like number past them; invisible marks are refused outright. Residual: look-alikes outside the
-    CONFUSABLE subset (for example Armenian or Cherokee letters, or rarer Cyrillic and Greek forms) are not mapped.
+    CONFUSABLE subset are not mapped, but scan_text refuses any character still non-ASCII after this fold
+    (content.non_ascii), so they cannot reach published data while it is ASCII-only.
     """
     if text.isascii():
         return text
@@ -299,16 +319,37 @@ def mixed_script(text):
     return False
 
 
+@functools.lru_cache(maxsize=8192)
+def content_rule(text):
+    """The first content rule the text violates, or None; depends on the text alone, so repeated strings (roles,
+    kinds, results) are scanned once per process."""
+    try:
+        _scan(text)
+    except Refused as refused:
+        return refused.rule
+    return None
+
+
 def scan_text(text, subject):
-    require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
-    require(text.strip() == text and text != "", "content.blank_or_padded", *subject)
-    require(text.isprintable(), "content.unprintable_character", *subject)
-    require(DEFAULT_IGNORABLE.search(text) is None, "content.invisible_character", *subject)
-    require(not mixed_script(text), "content.mixed_script", *subject)
+    rule = content_rule(text)
+    if rule is not None:
+        raise Refused(rule, *subject)
+
+
+def _scan(text):
+    require(len(text) <= TEXT_LIMIT, "content.too_long")
+    require(text.strip() == text and text != "", "content.blank_or_padded")
+    require(text.isprintable(), "content.unprintable_character")
+    require(DEFAULT_IGNORABLE.search(text) is None, "content.invisible_character")
+    require(not mixed_script(text), "content.mixed_script")
     variants = forms(text)
-    require(not any(_secret_token(form) for form in variants), "content.secret_shape", *subject)
+    require(not any(_secret_token(form) for form in variants), "content.secret_shape")
     for rule, pattern in CONTENT_SHAPES:
-        require(not any(pattern.search(form) for form in variants), rule, *subject)
+        require(not any(pattern.search(form) for form in variants), rule)
+    # The published data is ASCII. Until a declared localization field needs other scripts, any character left
+    # non-ASCII after folding (accented or small-capital Latin, IPA, other scripts, combining marks) is refused, so a
+    # look-alike outside the CONFUSABLE subset or a foreign letter glued to a word cannot slip past the lexicons.
+    require(fold(text).isascii(), "content.non_ascii")
 
 
 def strings(document):
@@ -452,6 +493,10 @@ def check_contrast(candidate):
             failing.append(f"{identifier} {subject}")
     for required in REQUIRED_PAIRS:
         require(required in seen, "contrast.required_pair_missing", identifier, f"{required[1]}:{required[2]}")
+    used = {role for key in seen for role in key[1:]}
+    for role in values:
+        # A value no pair uses is never computed, so it could carry an unchecked raw color into the candidate.
+        require(role in used, "contrast.unused_role", identifier, role)
     return failing
 
 
@@ -502,6 +547,10 @@ def check_candidates(document, sources):
         # docs#66 has no validated personas, so no assumption may claim validation.
         require(not any(item["validated"] for item in candidate["persona_assumptions"]),
                 "held.persona_validation", identifier)
+        # Only illustrative_values carries raw sRGB (computed for contrast) and grounding carries pins; candidate
+        # prose is described in semantic terms like the record and the probes.
+        require(not any(raw_value(text) for text, _, key in strings(candidate) if key not in CANDIDATE_RAW_KEYS),
+                "candidate.raw_value", identifier)
         unvalidated.append(identifier)
         check_grounding(candidate, sources, verified)
         failing.extend(check_contrast(candidate))
@@ -548,7 +597,7 @@ def check_evidence(record):
         if item["kind"] in REFUSED_EVIDENCE:
             raise Refused(REFUSED_EVIDENCE[item["kind"]])
         require(item["data_origin"] != "synthetic_fixture", "evidence.synthetic")
-        # No accepted representative-user study (docs#53) exists to resolve offline.
+        # No accepted representative-user direction study exists to resolve offline (none is planned yet).
         require(item["state"] == "pending" and item["study_ref"].startswith("pending:"), "held.study_evidence")
     count = record["participant_count"]
     require(count is None or count >= 1, "record.participant_count_zero")
@@ -802,13 +851,17 @@ def render_markdown(model):
         "> `direction-record.json` by `" + RENDER_COMMAND + "`; do not edit by hand.",
         "> Source issue PenniLogic/docs#76. Nothing here is user evidence, a review, an approval or a",
         "> selected direction: candidates and probes are authored proposals with synthetic figures, persona",
-        "> assumptions are unvalidated, illustrative values are non-binding and are not a token contract.", "",
+        "> assumptions are unvalidated, illustrative values are non-binding and are not a token contract.",
+        "> The raw-value, gamification, shame and trust-theater checks are lexical tripwires over ASCII text;",
+        "> qualified Design and Accessibility review remains the control for those categories.", "",
         "## Readiness", "",
         f"`python scripts/check_direction.py` reports **{NOT_GREEN if any(gaps.values()) else GREEN}**.",
         structure_line(model) + ".", "",
     ]
     lines += table(("Readiness rule", "Open gaps"), [(rule, len(gaps[rule])) for rule in READINESS_RULES])
-    lines += ["", "## Candidates", ""]
+    lines += ["", "## Candidates", "",
+              f"Every candidate is assessed on the same {len(REQUIRED_PAIRS)} contrast pairs on its base surface, "
+              "so the failing counts below are comparable.", ""]
     lines += table(("ID", "Name", "Material", "Graphic", "Failing contrast pairs"), [
         (item["id"], item["name"], item["material_tradition"], item["graphic_tradition"],
          sum(pair["result"] == "fail" for pair in item["contrast_pairs"]))
