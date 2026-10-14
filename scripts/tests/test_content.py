@@ -2131,6 +2131,17 @@ class PublishedContentTests(unittest.TestCase):
                 self.assertEqual((caught.exception.rule, caught.exception.subject),
                                  ("key.regulated_copy_restated", "pattern.destructive.consequence"))
 
+    def test_published_device_wording_reaches_only_android(self):
+        # Independent review F4: copy that speaks of "this phone" or the device permission is Android message
+        # capture, so its key may not be served to web or admin.
+        keys = keys_of(self.docs)
+        device = [item for item in self.docs["regulated-copy"]["records"]
+                  if re.search(r"\b(this phone|device permission)\b", item["copy"])]
+        self.assertEqual(sorted(item["id"] for item in device), ["RC-001", "RC-002"])
+        for item in device:
+            with self.subTest(record=item["id"]):
+                self.assertEqual(keys[item["key"]]["platforms"], ["android"])
+
     def test_published_key_breakdown_sums_to_the_total(self):
         # Independent review F6: every key is counted under exactly one root group.
         line = content.structure_line(self.model)

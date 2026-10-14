@@ -41,7 +41,7 @@ None.
 | `pattern.success.status` | success | {item} are saved | 7/15/30 | none | no | android, web, admin | provisional | content |
 | `reg.access.support_request` | disclosure | RC-007 (draft) | 68/136/272 | `term.support_access` | no | android, web, admin | provisional | content |
 | `reg.ai_disclosure.insight` | disclosure | RC-009 (draft) | 27/55/110 | `term.ai_insight` | no | android, web, admin | provisional | content |
-| `reg.consent.message_capture` | disclosure | RC-001 (draft) | 88/176/352 | `term.consent` | no | android, web, admin | provisional | content |
+| `reg.consent.message_capture` | disclosure | RC-001 (draft) | 88/176/352 | `term.consent` | no | android | provisional | content |
 | `reg.deletion.confirm` | disclosure | RC-006 (draft) | 72/145/290 | `term.account_deletion` | no | android, web, admin | provisional | content |
 | `reg.disclaimer.not_investment_advice` | disclosure | RC-003 (draft) | 41/83/166 | none | no | android, web, admin | provisional | content |
 | `reg.disclaimer.projection` | disclosure | RC-011 (draft) | 22/44/88 | `term.projected` | no | android, web, admin | provisional | content |
