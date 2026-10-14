@@ -29,6 +29,11 @@ state identifiers and carry no copy, and a forbidden term restated here is refus
 | `common.` | Shared by Android, web and admin, including the neutral safe-exit keys. |
 | other | Product copy such as `pattern.` slot keys; may not use the `term`, `voice`, `banned` or `convention` roots. |
 
+Derivation runs both ways: a `state.` key the taxonomy does not derive is refused, and so is a catalogue that omits
+any key the taxonomy derives (`key.state_missing`). The taxonomy's `content_renderings` (for example
+`erased_member_placeholder`) are not states: they are served from `product/client-state-taxonomy.json` by reference,
+carry no key in this catalogue and are not checked here.
+
 AI disclosure, advice boundaries and projection disclosures are regulated copy (product/08 section 12): every
 `disclosure`-category key lives under `reg.` and binds a record (`ai_disclosure` or `disclaimer`), and no ordinary key
 may restate a record's text, even inside longer copy. The restatement rule is sentence-level: an ordinary key is

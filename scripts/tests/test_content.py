@@ -140,10 +140,12 @@ def catalogue():
         key("debt.restored.consequence", "Totals match the saved copy", "recovery"),
         key("debt.restored.safe_remainder", "Other records stay as they are", "recovery"),
         key("debt.restored.next_action", "Review {item}", "recovery"),
-        key("state.empty.headline", None, "empty"),
         key("common.safe_exit.notification", "You have an update", "notification", neutral_safe_exit=True),
         key("common.safe_exit.denial", "This is not available here", "denial", neutral_safe_exit=True),
     ]
+    # Every key the taxonomy derives is in the catalogue (independent review F7).
+    keys.extend(key(name, None, "action" if name.endswith(".action") else "empty")
+                for name in sorted(content.taxonomy_facts(taxonomy())["state_keys"]))
     for number, category in enumerate(CATEGORIES, start=1):
         keys.append(key(f"reg.{category}.text", None, "disclosure", regulated_ref=f"RC-{number:03d}"))
     return {"schema_version": 1, "catalogue_version": "0.1.0", "source_issue": "PenniLogic/docs#84",
@@ -251,14 +253,14 @@ class ControlTests(Harness):
     def test_synthetic_content_set_passes_structure(self):
         model = self.assertControlPasses()
         self.assertEqual(len(model.terms), 8)
-        self.assertEqual(len(model.keys), 27)
+        self.assertEqual(len(model.keys), 44)
 
     def test_synthetic_content_set_reports_exact_readiness_gaps(self):
         gaps = content.readiness(self.assertControlPasses())
         self.assertEqual(tuple(gaps), content.READINESS_RULES)
         self.assertEqual(gaps["readiness.comprehension_evidence"], sorted(f"term.{slug}" for slug in COMPREHENSION))
         self.assertEqual(len(gaps["readiness.term_unapproved"]), 8)
-        self.assertEqual(len(gaps["readiness.key_unapproved"]), 27)
+        self.assertEqual(len(gaps["readiness.key_unapproved"]), 44)
         self.assertEqual(gaps["readiness.regulated_unapproved"], [f"RC-{n:03d}" for n in range(1, 10)])
         self.assertEqual(gaps["readiness.reading_level_provisional"], ["voice.reading_level"])
         self.assertEqual(gaps["readiness.approver_unassigned"], ["approver_role"])
@@ -470,9 +472,10 @@ class PatternTests(Harness):
         self.assertRefused(lambda d: pattern(d, "loading")["slots"].update(status="state.empty.headline"),
                            "pattern.state_copy_forked", "loading")
 
-    def test_taxonomy_slot_names_an_existing_state_key(self):
-        self.assertRefused(lambda d: pattern(d, "empty")["slots"].update(status="state.empty.body"),
-                           "pattern.unknown_key", "empty")
+    def test_taxonomy_slot_names_one_of_its_own_derived_keys(self):
+        # Every derived key is catalogued (key.state_missing), so a slot outside them is refused as a fork.
+        self.assertRefused(lambda d: pattern(d, "empty")["slots"].update(status="state.empty.footer"),
+                           "pattern.state_copy_forked", "empty")
 
     def test_non_taxonomy_slot_key_has_the_patterns_category(self):
         self.assertRefused(lambda d: pattern(d, "destructive")["slots"].update(status="debt.saved.status"),
@@ -519,10 +522,15 @@ class MessageKeyTests(Harness):
                            "key.state_not_in_taxonomy", "state.empty.footer")
 
     def test_state_key_derived_from_a_variant_and_a_cause(self):
-        docs = documents()
-        add_key(docs, key("state.permission_denied.device.body", None, "denial"))
-        add_key(docs, key("state.permission_denied.device.action", None, "action"))
-        self.run_check(docs)
+        names = set(keys_of(documents()))
+        self.assertLessEqual({"state.permission_denied.device.body", "state.permission_denied.device.action"}, names)
+        self.run_check()
+
+    def test_derived_state_key_missing_from_the_catalogue_is_refused(self):
+        for name in ("state.empty.headline", "state.permission_denied.device.action", "state.stale.body"):
+            with self.subTest(name=name):
+                self.assertRefused(
+                    lambda d: d["message-keys"]["keys"].remove(keys_of(d)[name]), "key.state_missing", name)
 
     def test_state_key_may_not_restate_taxonomy_copy(self):
         self.assertRefused(lambda d: keys_of(d)["state.empty.headline"].update(copy="Nothing here yet"),
@@ -1854,7 +1862,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertTrue(lines[1].startswith("Content glossary 0.1.0 structure valid: 8 terms (7 need comprehension"))
         self.assertEqual(lines[2:], [
             "readiness.comprehension_evidence: 7", "readiness.reading_level_provisional: 1",
-            "readiness.term_unapproved: 8", "readiness.key_unapproved: 27", "readiness.regulated_unapproved: 9",
+            "readiness.term_unapproved: 8", "readiness.key_unapproved: 44", "readiness.regulated_unapproved: 9",
             "readiness.approver_unassigned: 1", "readiness.nav_labels_held: 1", "readiness.pattern_slot_unstated: 25",
         ])
 
@@ -1862,7 +1870,7 @@ class CommandLineTests(unittest.TestCase):
         code, out, err = self.main("--structure")
         self.assertEqual((code, err), (0, ""))
         self.assertTrue(out.rstrip().endswith("0 approved; readiness not evaluated."))
-        self.assertIn("27 keys (1 state., 0 nav., 9 reg., 2 common., 15 other)", out)
+        self.assertIn("44 keys (18 state., 0 nav., 9 reg., 2 common., 15 other)", out)
 
     def test_invalid_now_is_refused(self):
         self.assertEqual(self.main("--structure", "--now", "tomorrow"),
@@ -1872,12 +1880,14 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(self.main("--structure", "--now", "2026-10-13T12:00:00Z")[0], 0)
 
     def test_removed_key_against_the_committed_base(self):
-        docs = documents()
-        docs["message-keys"]["keys"] = [entry for entry in docs["message-keys"]["keys"]
-                                        if entry["key"] != "state.empty.headline"]
-        self.repository.write(docs)
+        base = documents()
+        add_key(base, key("debt.edit.title", "Edit"))
+        self.repository.write(base)
+        self.repository.run("commit", "-q", "-a", "-m", "synthetic base with one more key")
+        self.repository.run("update-ref", "refs/remotes/origin/main", "HEAD")
+        self.repository.write(documents())
         self.assertEqual(self.main("--structure"),
-                         (1, "", "Content check refused: catalogue.key_removed_without_major state.empty.headline\n"))
+                         (1, "", "Content check refused: catalogue.key_removed_without_major debt.edit.title\n"))
 
     def test_explicit_base_revision(self):
         self.assertEqual(self.main("--structure", "--base", "main")[0], 0)

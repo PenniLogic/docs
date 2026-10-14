@@ -155,7 +155,7 @@ STRUCTURE_RULES = (
     "pattern.slot_missing", "pattern.unknown_key", "pattern.slot_category", "pattern.slot_reused",
     "placeholder.grammar", "placeholder.duplicate", "placeholder.shadows_taxonomy", "placeholder.prohibited",
     "key.term_surface_missing", "key.grammar", "key.duplicate", "key.prefix_conflict", "key.foreign_root",
-    "key.state_not_in_taxonomy",
+    "key.state_not_in_taxonomy", "key.state_missing",
     "key.state_copy_forked", "held.nav_key", "key.regulated_outside_root", "key.regulated_root_without_record",
     "key.regulated_copy_forked", "key.disclosure_outside_reg", "key.regulated_copy_restated", "key.common_not_shared",
     "key.copy_missing", "key.range_order",
@@ -587,6 +587,9 @@ def check_keys(catalogue, facts, terms, context, roles, regulated_ids):
     for category in SAFE_EXIT_CATEGORIES:
         require(any(entry["category"] == category and entry["neutral_safe_exit"] and entry["copy"] is not None
                     for entry in entries), "key.neutral_safe_exit_missing")
+    # Both directions: every key the taxonomy derives is catalogued, so a client never renders an unkeyed state.
+    missing = sorted(facts["state_keys"] - set(index))
+    require(not missing, "key.state_missing", *missing[:1])
     return index
 
 
