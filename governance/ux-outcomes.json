@@ -47,7 +47,7 @@
     {
       "id": "EV-001",
       "name": "journey_step_shown",
-      "purpose": "A journey entry step was shown to an opted-in session",
+      "purpose": "A journey step was shown to an opted-in session, by stage",
       "fields": [
         {
           "name": "journey",
@@ -442,44 +442,6 @@
       "payload_review": "pending"
     },
     {
-      "id": "EV-011",
-      "name": "assistant_explanation_opened",
-      "purpose": "An assistant explanation of a figure was opened",
-      "fields": [
-        {
-          "name": "journey",
-          "kind": "enum",
-          "values": [
-            "j01",
-            "j02",
-            "j03",
-            "j04",
-            "j05",
-            "j06",
-            "j07",
-            "j08",
-            "j09",
-            "j10",
-            "j11",
-            "j12"
-          ]
-        },
-        {
-          "name": "explanation_kind",
-          "kind": "enum",
-          "values": [
-            "figure_source",
-            "uncertainty",
-            "consequence"
-          ]
-        }
-      ],
-      "incentive": "ai_use",
-      "opt_out_honoured": true,
-      "enabled": false,
-      "payload_review": "pending"
-    },
-    {
       "id": "EV-012",
       "name": "subscription_change_confirmed",
       "purpose": "A subscription change was confirmed, by change kind only",
@@ -612,6 +574,27 @@
       "opt_out_honoured": true,
       "enabled": false,
       "payload_review": "pending"
+    },
+    {
+      "id": "EV-016",
+      "name": "subscription_change_started",
+      "purpose": "A subscription change was started, by change kind only",
+      "fields": [
+        {
+          "name": "change_kind",
+          "kind": "enum",
+          "values": [
+            "start",
+            "upgrade",
+            "downgrade",
+            "cancel"
+          ]
+        }
+      ],
+      "incentive": "subscription",
+      "opt_out_honoured": true,
+      "enabled": false,
+      "payload_review": "pending"
     }
   ],
   "metrics": [
@@ -620,21 +603,43 @@
       "journey_id": "J01",
       "role": "primary",
       "kind": "sustained_progress",
-      "statement": "First progress milestones reached per opted-in first run, as an aggregate ratio",
+      "statement": "Milestones of kind first month on plan reached per J01 entry step shown, as an aggregate rate with no per-person linkage",
       "numerator": {
         "event_ids": [
           "EV-009"
         ],
-        "definition": "Milestones of kind first_month_on_plan; no per-person linkage"
+        "filters": [
+          {
+            "field": "milestone_kind",
+            "values": [
+              "first_month_on_plan"
+            ]
+          }
+        ],
+        "definition": "Milestones of kind first_month_on_plan"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown the first-run entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown the J01 first-run entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -657,21 +662,43 @@
       "journey_id": "J01",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J01 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j01 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J01 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "Ended J01 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -692,18 +719,34 @@
       "journey_id": "J01",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J01 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j01"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J01"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J01 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -727,18 +770,40 @@
       "journey_id": "J01",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J01 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j01 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J01 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "Ended J01 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -762,18 +827,40 @@
       "journey_id": "J01",
       "role": "secondary",
       "kind": "trust",
-      "statement": "Share of permission requests declined or deferred that are not asked again",
+      "statement": "Share of J01 permission answers given at the first request, without repeated asking",
       "numerator": {
         "event_ids": [
           "EV-010"
         ],
-        "definition": "Answers declined or deferred with times_shown once"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "times_shown",
+            "values": [
+              "once"
+            ]
+          }
+        ],
+        "definition": "J01 answers with times_shown once"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-010"
         ],
-        "eligibility": "Opted-in sessions shown the J01 offer step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "J01 permission answers; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -799,21 +886,43 @@
       "journey_id": "J02",
       "role": "primary",
       "kind": "recovery",
-      "statement": "Share of recovery attempts that restore access",
+      "statement": "Recovery paths ending restored per J02 recovery path entered",
       "numerator": {
         "event_ids": [
           "EV-007"
         ],
-        "definition": "Recovery paths ending restored"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J02 recovery paths ending restored"
       },
       "denominator": {
         "event_ids": [
           "EV-006"
         ],
-        "eligibility": "Opted-in sessions that entered a recovery path; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J02 recovery path; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -836,21 +945,43 @@
       "journey_id": "J02",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J02 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j02 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J02 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "Ended J02 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -871,18 +1002,34 @@
       "journey_id": "J02",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J02 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j02"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J02"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J02 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -906,18 +1053,40 @@
       "journey_id": "J02",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J02 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j02 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J02 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "Ended J02 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -941,18 +1110,40 @@
       "journey_id": "J03",
       "role": "primary",
       "kind": "correction",
-      "statement": "Share of started corrections that are saved",
+      "statement": "Share of ended J03 corrections that are saved",
       "numerator": {
         "event_ids": [
           "EV-005"
         ],
-        "definition": "Correction flows ending saved"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J03 corrections ending saved"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-005"
         ],
-        "eligibility": "Opted-in sessions shown a captured-entry review step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "eligibility": "Ended J03 corrections; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -978,21 +1169,43 @@
       "journey_id": "J03",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J03 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j03 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J03 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "eligibility": "Ended J03 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1013,18 +1226,34 @@
       "journey_id": "J03",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J03 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j03"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J03"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J03 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1048,18 +1277,40 @@
       "journey_id": "J03",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J03 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j03 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J03 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "eligibility": "Ended J03 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1083,18 +1334,40 @@
       "journey_id": "J04",
       "role": "primary",
       "kind": "comprehension",
-      "statement": "Share of comprehension checks answered understood after comparing strategies",
+      "statement": "Share of J04 strategy comprehension checks answered understood",
       "numerator": {
         "event_ids": [
           "EV-008"
         ],
-        "definition": "Checks answered understood in J04"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J04 checks answered understood"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-008"
         ],
-        "eligibility": "Opted-in sessions shown the strategy comparison; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "eligibility": "J04 comprehension checks answered; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1120,21 +1393,43 @@
       "journey_id": "J04",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J04 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j04 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J04 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "eligibility": "Ended J04 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1155,18 +1450,34 @@
       "journey_id": "J04",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J04 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j04"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J04"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J04 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1190,18 +1501,40 @@
       "journey_id": "J04",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J04 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j04 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J04 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "eligibility": "Ended J04 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1225,21 +1558,55 @@
       "journey_id": "J05",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of planning tasks finished without abandonment",
+      "statement": "Completed J05 planning confirmations per J05 planning entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J05 steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J05 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a planning entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -1262,21 +1629,43 @@
       "journey_id": "J05",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J05 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j05 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J05 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "eligibility": "Ended J05 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1297,18 +1686,34 @@
       "journey_id": "J05",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J05 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j05"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J05"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J05 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1332,18 +1737,40 @@
       "journey_id": "J05",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J05 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j05 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J05 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J05 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "eligibility": "Ended J05 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1367,21 +1794,55 @@
       "journey_id": "J06",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of split groups that reach settlement",
+      "statement": "Completed J06 settlement confirmations per J06 split entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J06 settlement steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J06 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a split entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -1404,21 +1865,43 @@
       "journey_id": "J06",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J06 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j06 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J06 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Ended J06 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1439,18 +1922,34 @@
       "journey_id": "J06",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J06 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j06"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J06"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J06 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1474,18 +1973,40 @@
       "journey_id": "J06",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J06 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j06 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J06 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J06 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Ended J06 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1509,18 +2030,40 @@
       "journey_id": "J06",
       "role": "secondary",
       "kind": "trust",
-      "statement": "Share of accepted share offers that use the least scope",
+      "statement": "Share of accepted J06 share offers that use the least scope",
       "numerator": {
         "event_ids": [
           "EV-013"
         ],
-        "definition": "Accepted offers with share_scope view_only"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "share_scope",
+            "values": [
+              "view_only"
+            ]
+          }
+        ],
+        "definition": "Accepted J06 offers with share_scope view_only"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-013"
         ],
-        "eligibility": "Opted-in sessions shown the J06 offer step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Accepted J06 share offers; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1546,21 +2089,55 @@
       "journey_id": "J07",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of started safe exits or grant revocations that finish",
+      "statement": "Completed J07 safe-exit or revocation confirmations per J07 safe-exit entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J07 exit steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J07 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown the safe-exit entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -1583,21 +2160,43 @@
       "journey_id": "J07",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J07 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j07 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J07 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "Ended J07 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1618,18 +2217,34 @@
       "journey_id": "J07",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J07 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j07"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J07"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J07 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1653,18 +2268,40 @@
       "journey_id": "J07",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J07 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j07 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J07 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J07 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "Ended J07 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1688,18 +2325,40 @@
       "journey_id": "J08",
       "role": "primary",
       "kind": "comprehension",
-      "statement": "Share of comprehension checks answered understood after an assistant explanation",
+      "statement": "Share of J08 comprehension checks answered understood",
       "numerator": {
         "event_ids": [
           "EV-008"
         ],
-        "definition": "Checks answered understood in J08"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J08 checks answered understood"
       },
       "denominator": {
         "event_ids": [
-          "EV-011"
+          "EV-008"
         ],
-        "eligibility": "Opted-in sessions that opened an explanation; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "eligibility": "J08 comprehension checks answered; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1725,21 +2384,43 @@
       "journey_id": "J08",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J08 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j08 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J08 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "eligibility": "Ended J08 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1760,18 +2441,34 @@
       "journey_id": "J08",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J08 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j08"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J08"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J08 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1795,18 +2492,40 @@
       "journey_id": "J08",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J08 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j08 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J08 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "eligibility": "Ended J08 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -1826,62 +2545,59 @@
       "status": "unvalidated"
     },
     {
-      "id": "M-J08-05",
-      "journey_id": "J08",
-      "role": "secondary",
-      "kind": "comprehension",
-      "statement": "Share of sessions shown an assistant figure that open its explanation",
-      "numerator": {
-        "event_ids": [
-          "EV-011"
-        ],
-        "definition": "Explanations opened in J08"
-      },
-      "denominator": {
-        "event_ids": [
-          "EV-001"
-        ],
-        "eligibility": "Opted-in sessions shown the J08 offer step; opted-out sessions excluded",
-        "excludes_opted_out": true
-      },
-      "unit": "proportion",
-      "direction": "increase",
-      "benefit_context": "The explanation states the source, uncertainty and consequence of a figure; use alone is not success",
-      "guardrail_ids": [
-        "G-J08-01"
-      ],
-      "baseline": {
-        "value": null,
-        "source": "unmeasured"
-      },
-      "target": {
-        "value": null,
-        "source": "unset"
-      },
-      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-008",
-      "status": "unvalidated"
-    },
-    {
       "id": "M-J09-01",
       "journey_id": "J09",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of subscription or notification control tasks finished",
+      "statement": "Completed J09 control confirmations per J09 control entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J09 control steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J09 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a control entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -1904,21 +2620,43 @@
       "journey_id": "J09",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J09 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j09 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J09 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "eligibility": "Ended J09 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -1939,18 +2677,34 @@
       "journey_id": "J09",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J09 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j09"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J09"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J09 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -1974,18 +2728,40 @@
       "journey_id": "J09",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J09 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j09 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J09 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J09 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "eligibility": "Ended J09 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -2009,21 +2785,37 @@
       "journey_id": "J09",
       "role": "secondary",
       "kind": "task_success",
-      "statement": "Share of cancellation entries that reach a confirmed cancellation",
+      "statement": "Confirmed cancellations per started cancellation",
       "numerator": {
         "event_ids": [
           "EV-012"
         ],
-        "definition": "Changes of kind cancel"
+        "filters": [
+          {
+            "field": "change_kind",
+            "values": [
+              "cancel"
+            ]
+          }
+        ],
+        "definition": "Confirmed changes of kind cancel"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-016"
         ],
-        "eligibility": "Opted-in sessions shown the J09 offer step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "change_kind",
+            "values": [
+              "cancel"
+            ]
+          }
+        ],
+        "eligibility": "Started changes of kind cancel; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": "Cancelling is as reachable as starting; subscription starts are never counted as success",
       "guardrail_ids": [
@@ -2046,21 +2838,55 @@
       "journey_id": "J10",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of rights or support requests finished in product",
+      "statement": "Completed J10 rights or support request confirmations per J10 entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J10 request steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J10 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a rights or support entry; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -2083,21 +2909,43 @@
       "journey_id": "J10",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J10 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j10 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J10 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "eligibility": "Ended J10 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -2118,18 +2966,34 @@
       "journey_id": "J10",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J10 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j10"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J10"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J10 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -2153,18 +3017,40 @@
       "journey_id": "J10",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J10 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j10 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J10 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "eligibility": "Ended J10 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -2188,21 +3074,55 @@
       "journey_id": "J11",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of operator fulfillment tasks finished without abandonment",
+      "statement": "Completed J11 fulfilment confirmations per J11 operator entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J11 steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J11 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Operator sessions shown a fulfillment entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -2225,21 +3145,43 @@
       "journey_id": "J11",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J11 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j11 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J11 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "eligibility": "Ended J11 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -2260,18 +3202,34 @@
       "journey_id": "J11",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J11 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j11"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J11"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J11 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -2295,18 +3253,40 @@
       "journey_id": "J11",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J11 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j11 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J11 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J11 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "eligibility": "Ended J11 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -2330,21 +3310,55 @@
       "journey_id": "J12",
       "role": "primary",
       "kind": "task_success",
-      "statement": "Share of configuration and release tasks finished",
+      "statement": "Completed J12 configuration and release confirmations per J12 entry shown",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "J12 steps ending completed"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J12 confirmation steps ending completed"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Operator sessions shown a configuration entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "proportion",
+      "unit": "rate_per_eligible",
       "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [
@@ -2367,21 +3381,43 @@
       "journey_id": "J12",
       "role": "secondary",
       "kind": "time_on_task",
-      "statement": "Steps finishing in the longer elapsed bucket per eligible session",
+      "statement": "Share of ended J12 steps that took the longer elapsed bucket",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j12 and elapsed longer"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "longer"
+            ]
+          }
+        ],
+        "definition": "J12 steps with elapsed longer"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "eligibility": "Ended J12 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
-      "unit": "rate_per_eligible",
+      "unit": "duration_bucket_share",
       "direction": "decrease",
       "benefit_context": null,
       "guardrail_ids": [],
@@ -2402,18 +3438,34 @@
       "journey_id": "J12",
       "role": "secondary",
       "kind": "error",
-      "statement": "Recoverable errors shown per eligible session",
+      "statement": "Recoverable errors shown per J12 step shown",
       "numerator": {
         "event_ids": [
           "EV-003"
         ],
-        "definition": "Errors shown with journey j12"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "definition": "Errors shown in J12"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J12 step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "rate_per_eligible",
@@ -2437,18 +3489,40 @@
       "journey_id": "J12",
       "role": "secondary",
       "kind": "abandonment",
-      "statement": "Share of started steps that are abandoned",
+      "statement": "Share of ended J12 steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Steps with journey j12 and step_outcome abandoned"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J12 steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions shown a J12 entry step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "eligibility": "Ended J12 steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "unit": "proportion",
@@ -2474,18 +3548,53 @@
       "journey_id": "J01",
       "class": "permission_coercion",
       "concern": "harm",
-      "signal": "Share of permission requests shown again after a decline",
+      "signal": "Share of J01 permission grants given only after a repeated request",
       "numerator": {
         "event_ids": [
           "EV-010"
         ],
-        "definition": "Answers with times_shown twice or more"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "answer",
+            "values": [
+              "granted"
+            ]
+          },
+          {
+            "field": "times_shown",
+            "values": [
+              "twice",
+              "three_or_more"
+            ]
+          }
+        ],
+        "definition": "J01 grants with times_shown twice or three_or_more"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-010"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "answer",
+            "values": [
+              "granted"
+            ]
+          }
+        ],
+        "eligibility": "J01 permission answers of granted; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2500,10 +3609,18 @@
       "journey_id": "J02",
       "class": "support_demand",
       "concern": "trust",
-      "signal": "Share of recovery attempts that open a support route",
+      "signal": "Support routes opened per J02 recovery path entered",
       "numerator": {
         "event_ids": [
           "EV-015"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
         ],
         "definition": "Support routes opened from J02"
       },
@@ -2511,7 +3628,15 @@
         "event_ids": [
           "EV-006"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J02 recovery path; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2526,18 +3651,52 @@
       "journey_id": "J03",
       "class": "accessibility",
       "concern": "trust",
-      "signal": "Gap in correction completion for sessions using assistive mode",
+      "signal": "Share of ended J03 steps in assistive mode that end abandoned; read against M-J03-04 for the gap",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Abandoned J03 steps in assistive mode"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "assistive_mode",
+            "values": [
+              "true"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J03 steps in assistive mode ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "assistive_mode",
+            "values": [
+              "true"
+            ]
+          }
+        ],
+        "eligibility": "Ended J03 steps in assistive mode; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2552,18 +3711,52 @@
       "journey_id": "J04",
       "class": "dark_pattern",
       "concern": "harm",
-      "signal": "Share of confirmed strategy choices reversed immediately",
+      "signal": "Immediate reversals per completed J04 confirmation step",
       "numerator": {
         "event_ids": [
           "EV-004"
         ],
-        "definition": "Reversals in J04 with elapsed immediate"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "immediate"
+            ]
+          }
+        ],
+        "definition": "J04 reversals with elapsed immediate"
       },
       "denominator": {
         "event_ids": [
           "EV-002"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "eligibility": "Completed J04 confirmation steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2578,18 +3771,52 @@
       "journey_id": "J05",
       "class": "accessibility",
       "concern": "trust",
-      "signal": "Gap in planning completion for sessions using assistive mode",
+      "signal": "Share of ended J05 steps in assistive mode that end abandoned; read against M-J05-04 for the gap",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Abandoned J05 steps in assistive mode"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "assistive_mode",
+            "values": [
+              "true"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J05 steps in assistive mode ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "assistive_mode",
+            "values": [
+              "true"
+            ]
+          }
+        ],
+        "eligibility": "Ended J05 steps in assistive mode; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2604,10 +3831,24 @@
       "journey_id": "J06",
       "class": "harmful_sharing",
       "concern": "harm",
-      "signal": "Share of accepted shares revoked within a day",
+      "signal": "Same-day share revocations per accepted J06 share offer",
       "numerator": {
         "event_ids": [
           "EV-014"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "same_day"
+            ]
+          }
         ],
         "definition": "J06 revocations with elapsed same_day"
       },
@@ -2615,7 +3856,15 @@
         "event_ids": [
           "EV-013"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Accepted J06 share offers; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2630,10 +3879,24 @@
       "journey_id": "J07",
       "class": "harmful_sharing",
       "concern": "harm",
-      "signal": "Share of household grants revoked within a day of acceptance",
+      "signal": "Same-day household grant revocations per accepted J07 grant",
       "numerator": {
         "event_ids": [
           "EV-014"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "same_day"
+            ]
+          }
         ],
         "definition": "J07 revocations with elapsed same_day"
       },
@@ -2641,7 +3904,15 @@
         "event_ids": [
           "EV-013"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "Accepted J07 grant offers; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2656,18 +3927,52 @@
       "journey_id": "J08",
       "class": "dark_pattern",
       "concern": "harm",
-      "signal": "Share of assistant-proposed actions reversed immediately",
+      "signal": "Immediate reversals per completed J08 confirmation step, such as an assistant-proposed action undone",
       "numerator": {
         "event_ids": [
           "EV-004"
         ],
-        "definition": "Reversals in J08 with elapsed immediate"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "elapsed",
+            "values": [
+              "immediate"
+            ]
+          }
+        ],
+        "definition": "J08 reversals with elapsed immediate"
       },
       "denominator": {
         "event_ids": [
           "EV-002"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "eligibility": "Completed J08 confirmation steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2682,18 +3987,52 @@
       "journey_id": "J09",
       "class": "dark_pattern",
       "concern": "harm",
-      "signal": "Share of cancellation attempts abandoned before confirmation",
+      "signal": "Share of ended J09 confirmation steps that end abandoned",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Abandoned J09 steps at the confirmation stage"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J09 confirmation steps ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          }
+        ],
+        "eligibility": "Ended J09 confirmation steps; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2708,18 +4047,46 @@
       "journey_id": "J10",
       "class": "support_demand",
       "concern": "trust",
-      "signal": "Share of rights requests that escalate to a support route",
+      "signal": "Escalations to support per J10 entry step shown",
       "numerator": {
         "event_ids": [
           "EV-015"
         ],
-        "definition": "J10 support routes with route escalation"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "route",
+            "values": [
+              "escalation"
+            ]
+          }
+        ],
+        "definition": "J10 support routes of escalation"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J10 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2734,18 +4101,52 @@
       "journey_id": "J11",
       "class": "accessibility",
       "concern": "trust",
-      "signal": "Gap in operator completion for sessions using assistive mode",
+      "signal": "Share of ended J11 steps in assistive mode that end abandoned; read against M-J11-04 for the gap",
       "numerator": {
         "event_ids": [
           "EV-002"
         ],
-        "definition": "Abandoned J11 steps in assistive mode"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "assistive_mode",
+            "values": [
+              "true"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "abandoned"
+            ]
+          }
+        ],
+        "definition": "J11 steps in assistive mode ending abandoned"
       },
       "denominator": {
         "event_ids": [
-          "EV-001"
+          "EV-002"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "assistive_mode",
+            "values": [
+              "true"
+            ]
+          }
+        ],
+        "eligibility": "Ended J11 steps in assistive mode; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -2760,18 +4161,40 @@
       "journey_id": "J12",
       "class": "support_demand",
       "concern": "harm",
-      "signal": "Share of configuration steps that hit a recoverable error",
+      "signal": "Support routes opened per J12 entry step shown",
       "numerator": {
         "event_ids": [
-          "EV-003"
+          "EV-015"
         ],
-        "definition": "Errors shown in J12"
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "definition": "Support routes opened from J12"
       },
       "denominator": {
         "event_ids": [
           "EV-001"
         ],
-        "eligibility": "Opted-in sessions eligible for the same step; opted-out sessions excluded",
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Operator sessions shown a J12 entry step; opted-out sessions excluded",
         "excludes_opted_out": true
       },
       "baseline": {
@@ -3048,7 +4471,6 @@
       "journey_ids": [
         "J01",
         "J06",
-        "J08",
         "J09"
       ],
       "condition": "threshold_crossed",

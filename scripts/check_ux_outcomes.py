@@ -581,7 +581,8 @@ def check_frame(document):
     for key in ("cohort_minimum_ref", "retention_ref", "aggregation_ref", "access_ref"):
         require(privacy[key] == PLATFORM_REF, "privacy.platform_ref")
     require(privacy["opt_out"]["honoured"] is True, "privacy.opt_out")
-    require(sorted(privacy["payload_allowlist_refs"]) == sorted(PAYLOAD_ALLOWLIST_REFS), "privacy.payload_allowlist_ref")
+    require(sorted(privacy["payload_allowlist_refs"]) == sorted(PAYLOAD_ALLOWLIST_REFS),
+            "privacy.payload_allowlist_ref")
     require(privacy["consent_ref"] == CONSENT_REF, "privacy.consent_ref")
     require(privacy["opt_out"]["enforcement_ref"] == OPT_OUT_ENFORCEMENT_REF, "privacy.opt_out_enforcement_ref")
     require(sorted(document["outcome_validation_refs"]) == sorted(OUTCOME_VALIDATION_REFS), "validation.refs")
@@ -636,15 +637,57 @@ def check_event(event, budget):
     require(event["enabled"] is False, "collection.enabled", identifier)
 
 
+# Units that describe a share of one counted population: the numerator narrows the same events as the denominator.
+SHARE_UNITS = frozenset({"proportion", "duration_bucket_share"})
+
+
+def field_values(event, name):
+    """The values a filter may select on one event field (a boolean reads true or false), or None."""
+    for field in event["fields"]:
+        if field["name"] == name:
+            return frozenset({"true", "false"}) if field["kind"] == "boolean" else frozenset(field["values"])
+    return None
+
+
+def selection(side, events, identifier):
+    """{field: values} of one ratio side. Every filter names a field of every event on the side and selects known
+    values that strictly narrow it (review round 1, spec-and-safety.-r1-F4)."""
+    selected = {}
+    for item in side["filters"]:
+        name = item["field"]
+        require(name not in selected, "ratio.filter_duplicate", identifier)
+        for event_id in side["event_ids"]:
+            known = field_values(events[event_id], name)
+            require(known is not None, "ratio.filter_field_unknown", identifier)
+            require(set(item["values"]) < known, "ratio.filter_values", identifier)
+        selected[name] = frozenset(item["values"])
+    return selected
+
+
 def check_ratio(record, events):
-    """An explicit numerator and a distinct, eligibility-defined denominator that excludes opted-out users."""
+    """An explicit numerator and an eligibility-defined denominator that excludes opted-out users, each a filtered
+    event selection scoped to the record's journey. A same-event denominator is allowed only when the numerator
+    strictly narrows it, so the ratio computes the share its statement names."""
     identifier = record["id"]
     numerator, denominator = record["numerator"]["event_ids"], record["denominator"]["event_ids"]
     require(numerator, "ratio.numerator_missing", identifier)
     require(denominator, "ratio.denominator_missing", identifier)
     for event_id in (*numerator, *denominator):
         require(event_id in events, "reference.dangling", identifier)
-    require(set(numerator) != set(denominator), "ratio.denominator_same_as_numerator", identifier)
+    chosen = {key: selection(record[key], events, identifier) for key in ("numerator", "denominator")}
+    journey = record["journey_id"].lower()
+    for key in ("numerator", "denominator"):
+        for event_id in record[key]["event_ids"]:
+            if field_values(events[event_id], "journey") is not None:
+                require(chosen[key].get("journey") == {journey}, "ratio.journey_scope", identifier)
+    same_events = set(numerator) == set(denominator)
+    if same_events:
+        require(chosen["numerator"] != chosen["denominator"], "ratio.denominator_same_as_numerator", identifier)
+        require(all(name in chosen["numerator"] and chosen["numerator"][name] <= values
+                    for name, values in chosen["denominator"].items()), "ratio.numerator_outside_denominator",
+                identifier)
+    if "unit" in record:
+        require((record["unit"] in SHARE_UNITS) == same_events, "ratio.unit_mismatch", identifier)
     require(record["denominator"]["excludes_opted_out"] is True, "ratio.opt_out_not_excluded", identifier)
 
 
@@ -918,7 +961,9 @@ def codes(values):
 def ratio(record, key):
     part = record[key]
     detail = part["definition"] if key == "numerator" else part["eligibility"]
-    return f"{codes(part['event_ids'])}: {cell(detail)}"
+    where = "; ".join(f"`{item['field']}` is {' or '.join(f'`{value}`' for value in item['values'])}"
+                      for item in part["filters"])
+    return f"{codes(part['event_ids'])}{' where ' + where if where else ''}: {cell(detail)}"
 
 
 def render_summary(model, gaps):

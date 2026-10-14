@@ -72,8 +72,8 @@ def pin_for(blob):
 
 def ratio(numerator, denominator):
     return (
-        {"event_ids": numerator, "definition": "Eligible sessions that complete the step"},
-        {"event_ids": denominator, "eligibility": "Opted-in sessions that reached the step",
+        {"event_ids": numerator, "filters": [], "definition": "Eligible sessions that complete the step"},
+        {"event_ids": denominator, "filters": [], "eligibility": "Opted-in sessions that reached the step",
          "excludes_opted_out": True},
     )
 
@@ -95,7 +95,8 @@ def metric(identifier, journey, role, kind, threshold, guardrails, numerator=("E
     return {
         "id": identifier, "journey_id": journey, "role": role, "kind": kind,
         "statement": "Share of eligible sessions that finish the task", "numerator": num, "denominator": den,
-        "unit": "proportion", "direction": "increase", "benefit_context": None, "guardrail_ids": list(guardrails),
+        "unit": "rate_per_eligible", "direction": "increase", "benefit_context": None,
+        "guardrail_ids": list(guardrails),
         "baseline": {"value": None, "source": "unmeasured"}, "target": {"value": None, "source": "unset"},
         "sample_limitation": "Synthetic catalogue only", "threshold_id": threshold, "status": "unvalidated",
     }
@@ -296,7 +297,8 @@ class EventPrivacyTests(CatalogueCase):
             ("familyshare", "boolean", (), "event.household_field"),
             ("pincode", "boolean", (), place), ("postcode", "boolean", (), place), ("city", "boolean", (), place),
             ("gender", "boolean", (), people), ("age_band", "enum", ("low", "high"), people),
-            ("religion", "boolean", (), people), ("caste", "boolean", (), people), ("disability", "boolean", (), people),
+            ("religion", "boolean", (), people), ("caste", "boolean", (), people),
+            ("disability", "boolean", (), people),
             ("am0unt_band", "enum", ("low", "high"), money), ("ba1ance_band", "enum", ("low", "high"), money),
             ("arnount_band", "enum", ("low", "high"), money),
             ("h0usehold_role", "enum", ("low", "high"), "event.household_field"),
@@ -311,7 +313,8 @@ class EventPrivacyTests(CatalogueCase):
 
     def test_reviewed_vocabulary_and_journey_codes_pass(self):
         self.run_check(mutate(self.document, add_field("step_kind", values=("entry", "core", "confirmation"))))
-        self.run_check(mutate(self.document, add_field("journey", values=("j01", "j02"))))
+        # Journey codes as values (a field named journey would also need journey-scoped ratios, F4).
+        self.run_check(mutate(self.document, add_field("source", values=("j01", "j02"))))
 
     def test_planted_sensitive_value_is_refused(self):
         self.assertRefused("event.money_field", "EV-001", mutate(self.document, lambda d: d["events"][0]["fields"][0]
@@ -524,6 +527,54 @@ class MeasureTests(CatalogueCase):
     def test_denominator_must_differ_from_numerator(self):
         self.assertRefused("ratio.denominator_same_as_numerator", "M-J01-01", mutate(
             self.document, lambda d: d["metrics"][0]["denominator"].update(event_ids=["EV-001"])))
+
+    def narrowed(self, numerator_filters, denominator_filters, unit="duration_bucket_share"):
+        """M-J01-02 as a same-event share: EV-001 selected by the given filters over EV-001 (review round 1, F4)."""
+        def change(d):
+            record = d["metrics"][1]
+            record["numerator"].update(event_ids=["EV-001"], filters=numerator_filters)
+            record["denominator"].update(event_ids=["EV-001"], filters=denominator_filters)
+            record["unit"] = unit
+        return mutate(self.document, change)
+
+    def test_same_event_share_narrowed_by_a_filter_passes(self):
+        # Spec-and-safety.-r1-F4: a same-event denominator was always refused, so shares were computed over the
+        # wrong population. A numerator that strictly narrows the same events is now the share it states.
+        assisted = [{"field": "assisted", "values": ["true"]}]
+        self.run_check(self.narrowed([{"field": "elapsed", "values": ["long"]}], []))
+        self.run_check(self.narrowed([{"field": "elapsed", "values": ["long"]}, *assisted], assisted))
+
+    def test_same_event_ratio_must_narrow_with_known_filters(self):
+        long = [{"field": "elapsed", "values": ["long"]}]
+        cases = (
+            (self.narrowed(long, long), "ratio.denominator_same_as_numerator"),
+            (self.narrowed(long, [{"field": "elapsed", "values": ["short"]}]), "ratio.numerator_outside_denominator"),
+            (self.narrowed([{"field": "stage", "values": ["entry"]}], []), "ratio.filter_field_unknown"),
+            (self.narrowed([{"field": "elapsed", "values": ["forever"]}], []), "ratio.filter_values"),
+            (self.narrowed([{"field": "elapsed", "values": ["short", "medium", "long"]}], []), "ratio.filter_values"),
+            (self.narrowed([{"field": "assisted", "values": ["yes"]}], []), "ratio.filter_values"),
+            (self.narrowed([*long, {"field": "elapsed", "values": ["short"]}], []), "ratio.filter_duplicate"),
+            (self.narrowed(long, [], unit="rate_per_eligible"), "ratio.unit_mismatch"),
+        )
+        for number, (document, rule) in enumerate(cases):
+            with self.subTest(case=number):
+                self.assertRefused(rule, "M-J01-02", document)
+
+    def test_share_unit_needs_a_same_event_ratio(self):
+        self.assertRefused("ratio.unit_mismatch", "M-J01-01", mutate(
+            self.document, lambda d: d["metrics"][0].update(unit="proportion")))
+
+    def test_journey_field_needs_the_measures_journey(self):
+        def scoped(code_for_m_j01_01):
+            def change(d):
+                d["events"][0]["fields"].append({"name": "journey", "kind": "enum", "values": ["j01", "j02"]})
+                for record in d["metrics"]:
+                    if "EV-001" in record["numerator"]["event_ids"]:
+                        code = code_for_m_j01_01 if record["id"] == "M-J01-01" else record["journey_id"].lower()
+                        record["numerator"]["filters"].append({"field": "journey", "values": [code]})
+            return mutate(self.document, change)
+        self.run_check(scoped("j01"))
+        self.assertRefused("ratio.journey_scope", "M-J01-01", scoped("j02"))
 
     def test_denominator_must_exclude_opted_out(self):
         self.assertRefused("ratio.opt_out_not_excluded", "G-J02-01", mutate(
@@ -1176,7 +1227,9 @@ class SummaryTextTests(CatalogueCase):
 
 
 JOURNEYS = [f"J{number:02d}" for number in range(1, 13)]
-INCENTIVE_JOURNEYS = ("J01", "J06", "J08", "J09")
+INCENTIVE_JOURNEYS = ("J01", "J06", "J09")
+# EV-011 (the raw AI-use event behind M-J08-05) is retired in review round 1; EV-016 starts a subscription change.
+EVENTS = [f"EV-{number:03d}" for number in range(1, 17) if number != 11]
 
 
 class PublishedCatalogueTests(unittest.TestCase):
@@ -1211,7 +1264,7 @@ class PublishedCatalogueTests(unittest.TestCase):
         expected = {
             "readiness.approval_pending": ["decision_coordinator", "privacy", "product_owner", "research"],
             "readiness.collection_disabled": ["collection"],
-            "readiness.payload_review_pending": [f"EV-{number:03d}" for number in range(1, 16)],
+            "readiness.payload_review_pending": EVENTS,
             "readiness.pending_reference": [f"pending:PenniLogic/{issue}" for issue in (
                 "android#7", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#129", "docs#130", "docs#131",
                 "infra#27")],
@@ -1230,8 +1283,8 @@ class PublishedCatalogueTests(unittest.TestCase):
         self.assertEqual({rule: len(items) for rule, items in self.gaps.items()}, {
             "readiness.approval_pending": 4, "readiness.collection_disabled": 1,
             "readiness.payload_review_pending": 15, "readiness.pending_reference": 10,
-            "readiness.baseline_unmeasured": 76, "readiness.threshold_unset": 8,
-            "readiness.measure_unvalidated": 64, "readiness.benchmark_unrun": 12,
+            "readiness.baseline_unmeasured": 75, "readiness.threshold_unset": 8,
+            "readiness.measure_unvalidated": 63, "readiness.benchmark_unrun": 12,
             "readiness.longitudinal_unrun": 1, "readiness.journey_outside_pin": 0,
             "readiness.registry_import_pin": 1, "readiness.d8_blocking_debt": 0})
 
@@ -1266,11 +1319,14 @@ class PublishedCatalogueTests(unittest.TestCase):
             self.assertEqual(module.d8_blocking_debt(self.document["design_debt"], today), [])
 
     def test_incentive_events_are_never_primary_and_carry_safety_context(self):
+        # Review round 1 (F3): a metric rewards an incentive through its numerator when it should increase and
+        # through its denominator when it should decrease.
         indexed = self.model["indexed"]
         incentives = {identifier for identifier, event in indexed["events"].items() if event["incentive"]}
-        self.assertEqual(incentives, {"EV-010", "EV-011", "EV-012", "EV-013"})
+        self.assertEqual(incentives, {"EV-010", "EV-012", "EV-013", "EV-016"})
         users = sorted(m["id"] for m in indexed["metrics"].values()
-                       if set(m["numerator"]["event_ids"]) & incentives)
+                       if set(m["numerator" if m["direction"] == "increase" else "denominator"]["event_ids"])
+                       & incentives)
         self.assertEqual(users, [f"M-{journey}-05" for journey in INCENTIVE_JOURNEYS])
         for identifier in users:
             metric = indexed["metrics"][identifier]
@@ -1293,7 +1349,7 @@ class PublishedCatalogueTests(unittest.TestCase):
         self.assertEqual((code, err.getvalue()), (1, ""))
         lines = out.getvalue().splitlines()
         self.assertEqual(lines[0], module.NOT_GREEN)
-        self.assertIn("readiness.measure_unvalidated: 64", lines)
+        self.assertIn("readiness.measure_unvalidated: 63", lines)
         self.assertIn("readiness.d8_blocking_debt: 0", lines)
         self.assertEqual(len(lines), 1 + len(module.READINESS_RULES))
 

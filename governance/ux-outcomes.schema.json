@@ -53,6 +53,27 @@
       ],
       "additionalProperties": false
     },
+    "filter": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "$ref": "#/definitions/id"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        }
+      },
+      "required": [
+        "field",
+        "values"
+      ],
+      "additionalProperties": false
+    },
     "ratio": {
       "type": "object",
       "properties": {
@@ -63,13 +84,21 @@
           },
           "uniqueItems": true
         },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/filter"
+          },
+          "uniqueItems": true
+        },
         "definition": {
           "$ref": "#/definitions/text"
         }
       },
       "required": [
         "definition",
-        "event_ids"
+        "event_ids",
+        "filters"
       ],
       "additionalProperties": false
     },
@@ -83,6 +112,13 @@
           },
           "uniqueItems": true
         },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/filter"
+          },
+          "uniqueItems": true
+        },
         "eligibility": {
           "$ref": "#/definitions/text"
         },
@@ -93,7 +129,8 @@
       "required": [
         "eligibility",
         "event_ids",
-        "excludes_opted_out"
+        "excludes_opted_out",
+        "filters"
       ],
       "additionalProperties": false
     },
