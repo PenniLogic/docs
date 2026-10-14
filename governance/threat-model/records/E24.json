@@ -501,8 +501,8 @@
           "title": "No ticket owns human access to the push, e-mail and paging or uptime service consoles",
           "attack_path": "A holder of the e-mail or push provider console, or a stale former member, reads recipient addresses and delivery history or changes sender settings; a holder of the paging console silences or reroutes pages during an incident. infra#43 concerned only the GitHub identity and was closed with hardening deferred, api#59 the ADR-020 administrative identity domain, and api#56 and infra#27 API credentials and the log store; none covers these vendor console accounts.",
           "recommended_control": "Create an owning ticket for third-party operational console accounts: roster, least-privilege roles, phishing-resistant sign-in, joiner and leaver revocation, audit export and a revocation drill per service, recorded before any real recipient or page flows through them.",
-          "status": "open",
-          "owner_ticket": null,
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#93",
           "resolution": null
         },
         {
