@@ -899,6 +899,60 @@ class RegulatedRecordTests(Harness):
         self.assertRefused(lambda d: first(d).update(status="approved"), "regulated.approval_missing", "RC-001")
 
 
+class RegulatedBindingTests(Harness):
+    """Review round 1 F-09 and F-12: fallback coverage, one-to-one reg. binding, ranges of record text."""
+
+    def test_fail_closed_key_must_cover_the_regulated_keys_platforms(self):
+        docs = documents()
+        add_key(docs, key("safe_exit.android.denial", "Not available here", "denial", platforms=["android"],
+                          neutral_safe_exit=True))
+        self.run_check(docs)  # control: the narrower fallback exists but is not used
+        first(docs).update(fail_closed_key="safe_exit.android.denial")
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs)
+        self.assertEqual((caught.exception.rule, caught.exception.subject),
+                         ("regulated.fail_closed_platform_missing", "RC-001"))
+
+    def test_second_reg_key_on_a_bound_record_is_refused(self):
+        self.assertRefused(
+            lambda d: add_key(d, key("reg.consent.second_surface", None, "disclosure", regulated_ref="RC-001")),
+            "key.regulated_unbound", "reg.consent.second_surface")
+
+    def test_record_copy_must_fit_its_keys_range(self):
+        self.assertRefused(lambda d: first(d).update(copy="Synthetic draft text for review. " * 2 + "Read it."),
+                           "key.copy_out_of_range", "reg.consent.text")
+
+    def test_rollback_pinned_copy_must_fit_its_keys_range(self):
+        def mutate(d):
+            first(d).update(version="2.0.0", rollback_version="1.0.0",
+                            history=[prior("1.0.0", "approved", approval(), text=("Earlier text. " * 6).strip())])
+        docs = documents()
+        first(docs).update(version="2.0.0", rollback_version="1.0.0",
+                           history=[prior("1.0.0", "approved", approval())])
+        self.run_check(docs, owner=OWNER)  # control
+        self.assertRefused(mutate, "key.copy_out_of_range", "reg.consent.text", owner=OWNER)
+
+    def test_state_key_range_must_fit_the_taxonomy_string(self):
+        self.assertRefused(
+            lambda d: keys_of(d)["state.empty.headline"].update(range={"min": 1, "typical": 4, "max": 5}),
+            "key.copy_out_of_range", "state.empty.headline")
+
+
+class TaxonomyRestatementTests(Harness):
+    """Review round 1 F-15: a taxonomy string restated under a look-alike root forks same_wording."""
+
+    def test_taxonomy_string_under_another_root_is_refused(self):
+        self.assertRefused(lambda d: add_key(d, key("states.empty.headline", "SYNTHETIC", "empty")),
+                           "key.taxonomy_copy_restated", "states.empty.headline")
+
+    def test_generic_action_label_may_repeat_a_taxonomy_label(self):
+        labelled = taxonomy()
+        labelled["states"][1]["recovery_action"]["label"] = "Cancel"
+        docs = documents()
+        add_key(docs, key("common.action.cancel", "Cancel", "action"))
+        self.run_check(docs, taxonomy_data=labelled)
+
+
 class ApprovalTests(Harness):
     def test_published_loader_never_assigns_the_qualified_owner(self):
         # Without an injected assignment (the published state: legal is unassigned) no approval is possible.

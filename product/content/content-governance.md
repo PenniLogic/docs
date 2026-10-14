@@ -58,8 +58,9 @@ cannot read fails closed.
 6. Withdrawal sets `withdrawn`; records are never deleted.
 
 **Fail closed.** A consumer that finds a record missing, draft, in review, not yet effective, expired or withdrawn
-shows the record's fail-closed key (a neutral safe-exit key without placeholders) or blocks the flow. It never
-substitutes local or cached text.
+shows the record's fail-closed key (a neutral safe-exit key without placeholders, available on every platform of the
+regulated key) or blocks the flow. It never substitutes local or cached text. Record text, a rollback-pinned text and
+the taxonomy string behind each `state.` key must fit the declared range of the key that renders them.
 
 **Rollback** pins `rollback_version` to a prior version in `history` whose status is `approved` and whose window
 still contains `now`; any other target is refused. The pinned entry carries the text to show, and a rollback pin is

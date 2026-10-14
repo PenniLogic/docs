@@ -91,6 +91,8 @@ REGULATED_CATEGORIES = (
 APPROVER_ROLE = "legal"
 # Neutral safe-exit copy must exist for shared-device and coercive contexts (security and privacy section).
 SAFE_EXIT_CATEGORIES = ("notification", "denial")
+# Generic action labels a non-state key may share with a taxonomy action label (compared case-folded).
+GENERIC_LABELS = ("cancel", "close", "continue", "done", "refresh", "retry", "try again")
 # A placeholder whose name contains one of these parts anywhere (underscores ignored, so "username" and
 # "account_number" both match) would echo raw content, credentials or hidden identity. Substring matching fails
 # closed: an innocent name that happens to contain a part is refused too and must be renamed.
@@ -148,7 +150,8 @@ STRUCTURE_RULES = (
     "regulated.category_missing", "regulated.key_mismatch", "regulated.fail_closed_key_unknown",
     "regulated.fail_closed_key_unsafe", "regulated.forbidden_term", "regulated.forbidden_alias",
     "regulated.banned_pattern", "regulated.sentence_too_long", "regulated.placeholder_unknown",
-    "regulated.term_label_missing",
+    "regulated.term_label_missing", "regulated.fail_closed_platform_missing", "key.regulated_unbound",
+    "key.taxonomy_copy_restated",
     "regulated.approval_missing", "regulated.approval_unexpected", "regulated.approver_role_mismatch",
     "regulated.approver_unassigned", "regulated.approval_evidence_missing", "time.invalid", "time.untrusted_clock",
     "regulated.approval_window_invalid", "regulated.approval_lifetime", "regulated.approval_not_yet_effective",
@@ -272,17 +275,24 @@ def taxonomy_facts(taxonomy):
         forbidden = list(taxonomy["forbidden_terms"])
         copy_rules = {rule["id"] for rule in taxonomy["copy_rules"]}
         placeholders = {placeholder["id"] for placeholder in taxonomy["placeholders"]}
-        states, keys = set(), set()
+        states, texts = set(), {}
         for state in taxonomy["states"]:
             identifier = state["id"]
             states.add(identifier)
-            keys.update(f"state.{identifier}.{field}" for field in ("headline", "body", "action"))
-            for variant in state["copy"].get("variants", {}):
-                keys.update(f"state.{identifier}.{variant}.{field}" for field in ("headline", "body"))
             action = state["recovery_action"]
+            texts[f"state.{identifier}.headline"] = state["copy"].get("headline")
+            texts[f"state.{identifier}.body"] = state["copy"].get("body")
+            texts[f"state.{identifier}.action"] = action.get("label")
+            for variant, copy in state["copy"].get("variants", {}).items():
+                for field in ("headline", "body"):
+                    texts[f"state.{identifier}.{variant}.{field}"] = copy.get(field)
             for field in ("label_by_cause", "label_by_variant"):
                 # A variant or cause label sits beside that variant's copy, so no derived key is also a node.
-                keys.update(f"state.{identifier}.{name}.action" for name in action.get(field, {}))
+                texts.update((f"state.{identifier}.{name}.action", label)
+                             for name, label in action.get(field, {}).items())
+        keys = set(texts)
+        # The same strings check_client_states.canonical_strings yields: copy, variants and action labels.
+        canonical = {" ".join(text.casefold().split()) for text in texts.values() if isinstance(text, str)}
         ordered = sorted(keys)
         valid = (
             forbidden and all(isinstance(term, str) and term for term in forbidden) and copy_rules and states
@@ -295,7 +305,8 @@ def taxonomy_facts(taxonomy):
     require(valid, "taxonomy.unreadable")
     return {
         "forbidden_terms": forbidden, "copy_rules": copy_rules, "placeholders": placeholders, "states": states,
-        "state_keys": keys,
+        "state_keys": keys, "state_texts": {key: text for key, text in texts.items() if isinstance(text, str)},
+        "canonical": canonical,
     }
 
 
@@ -468,6 +479,14 @@ def check_key_roots(entry, facts, regulated_ids):
     if root == "state":
         require(key in facts["state_keys"], "key.state_not_in_taxonomy", key)
         require(entry["copy"] is None, "key.state_copy_forked", key)
+        # The taxonomy string this key renders must fit the key's declared range, like any other copy.
+        text = facts["state_texts"].get(key)
+        bounds = entry["range"]
+        require(text is None or bounds["min"] <= len(text) <= bounds["max"], "key.copy_out_of_range", key)
+    elif entry["copy"] is not None:
+        # same_wording: a taxonomy string restated under another root would fork it; generic labels may repeat.
+        folded = " ".join(entry["copy"].casefold().split())
+        require(folded not in facts["canonical"] or folded in GENERIC_LABELS, "key.taxonomy_copy_restated", key)
     if root == "reg":
         require(entry["regulated_ref"] in regulated_ids, "key.regulated_root_without_record", key)
         require(entry["copy"] is None, "key.regulated_copy_forked", key)
@@ -612,7 +631,13 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
         require(fallback is not None, "regulated.fail_closed_key_unknown", identifier)
         require(fallback["regulated_ref"] is None and fallback["neutral_safe_exit"] and fallback["copy"] is not None,
                 "regulated.fail_closed_key_unsafe", identifier)
+        # Every client that can render the regulated key must also have its fail-closed copy.
+        require(set(key["platforms"]) <= set(fallback["platforms"]), "regulated.fail_closed_platform_missing",
+                identifier)
         check_copy(record["copy"], identifier, context, REGULATED_COPY_RULES)
+        # The record's text is what the reg. key renders, so it must fit that key's declared range.
+        bounds = key["range"]
+        require(bounds["min"] <= len(record["copy"]) <= bounds["max"], "key.copy_out_of_range", record["key"])
         for reference in key["term_refs"]:
             label = terms[reference]["preferred_label"].casefold()
             require(forbidden_in(record["copy"], [label]) is not None, "regulated.term_label_missing", identifier)
@@ -645,8 +670,13 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
             status, prior_window = windows.get(target, (None, None))
             require(status == "approved" and usable(prior_window, now), "regulated.rollback_target_unapproved",
                     identifier)
+            pinned = next(prior for prior in record["history"] if prior["version"] == target)
+            require(bounds["min"] <= len(pinned["copy"]) <= bounds["max"], "key.copy_out_of_range", record["key"])
     for category in REGULATED_CATEGORIES:
         require(any(record["category"] == category for record in regulated["records"]), "regulated.category_missing")
+    # One-to-one: every reg. key is the key of exactly one record (records already claim distinct keys).
+    for name in keys:
+        require(not name.startswith("reg.") or name in bound, "key.regulated_unbound", name)
     # Regulated text is usable only through its record: no ordinary key may restate it, even inside longer copy.
     texts = [" ".join(record["copy"].casefold().split()) for record in regulated["records"]]
     for name, entry in keys.items():
