@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/product/content/regulated-copy.schema.json",
+  "title": "PenniLogic regulated-copy records (T-CNT-01, PenniLogic/docs#84)",
+  "description": "Shape only. RC-NNN grammar, approver qualification, approval windows (evaluated with an injected clock; now == expires_at is expired), rollback pins, the copy and key binding kept for every prior version, append-only history against the base and key bindings are enforced by scripts/check_content.py. The qualified legal/compliance owner is unassigned, so no record can be approved.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "regulated_version",
+    "source_issue",
+    "approver_role",
+    "records"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "regulated_version": {
+      "type": "string",
+      "minLength": 5
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#84"
+    },
+    "approver_role": {
+      "type": "string",
+      "minLength": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/record"
+      }
+    }
+  },
+  "definitions": {
+    "record": {
+      "type": "object",
+      "required": [
+        "id",
+        "category",
+        "key",
+        "version",
+        "status",
+        "copy",
+        "fail_closed_key",
+        "owner",
+        "approval",
+        "history",
+        "rollback_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 6
+        },
+        "category": {
+          "enum": [
+            "consent",
+            "permission",
+            "disclaimer",
+            "plan_change",
+            "refund",
+            "deletion",
+            "access",
+            "incident",
+            "ai_disclosure"
+          ]
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 5
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "in_review",
+            "approved",
+            "expired",
+            "withdrawn"
+          ]
+        },
+        "copy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fail_closed_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approval": {
+          "$ref": "#/definitions/approval_or_null"
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/prior_version"
+          }
+        },
+        "rollback_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 5
+        }
+      }
+    },
+    "prior_version": {
+      "type": "object",
+      "required": [
+        "version",
+        "key",
+        "status",
+        "copy",
+        "approval"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 5
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "in_review",
+            "approved",
+            "expired",
+            "withdrawn"
+          ]
+        },
+        "copy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approval": {
+          "$ref": "#/definitions/approval_or_null"
+        }
+      }
+    },
+    "approval_or_null": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "role",
+        "decision_ref",
+        "effective_at",
+        "expires_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "effective_at": {
+          "type": "string",
+          "minLength": 20
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 20
+        }
+      }
+    }
+  }
+}

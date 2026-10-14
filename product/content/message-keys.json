@@ -1,0 +1,1656 @@
+{
+  "schema_version": 1,
+  "catalogue_version": "0.1.0",
+  "source_issue": "PenniLogic/docs#84",
+  "placeholders": [],
+  "keys": [
+    {
+      "key": "common.action.cancel",
+      "category": "action",
+      "copy": "Cancel",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 3,
+        "typical": 6,
+        "max": 16
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.action.close",
+      "category": "action",
+      "copy": "Close",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 2,
+        "typical": 5,
+        "max": 15
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.action.continue",
+      "category": "action",
+      "copy": "Continue",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 8,
+        "max": 18
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.aggregate",
+      "category": "label",
+      "copy": "Aggregate total",
+      "status": "provisional",
+      "term_refs": [
+        "term.aggregate"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 15,
+        "max": 30
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.available",
+      "category": "label",
+      "copy": "Available",
+      "status": "provisional",
+      "term_refs": [
+        "term.available"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 9,
+        "max": 19
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.payoff_date",
+      "category": "label",
+      "copy": "Payoff date",
+      "status": "provisional",
+      "term_refs": [
+        "term.payoff"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 5,
+        "typical": 11,
+        "max": 22
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.pending",
+      "category": "label",
+      "copy": "Pending",
+      "status": "provisional",
+      "term_refs": [
+        "term.pending"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 3,
+        "typical": 7,
+        "max": 17
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.projected",
+      "category": "label",
+      "copy": "Projected",
+      "status": "provisional",
+      "term_refs": [
+        "term.projected"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 9,
+        "max": 19
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.reversed",
+      "category": "label",
+      "copy": "Reversed",
+      "status": "provisional",
+      "term_refs": [
+        "term.reversed"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 8,
+        "max": 18
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.label.revoked",
+      "category": "label",
+      "copy": "Access revoked",
+      "status": "provisional",
+      "term_refs": [
+        "term.revoked"
+      ],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 14,
+        "max": 28
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "common.safe_exit.denial",
+      "category": "denial",
+      "copy": "This isn't available here",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 12,
+        "typical": 25,
+        "max": 50
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": true
+    },
+    {
+      "key": "common.safe_exit.notification",
+      "category": "notification",
+      "copy": "You have an update",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 9,
+        "typical": 18,
+        "max": 36
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": true
+    },
+    {
+      "key": "pattern.destructive.consequence",
+      "category": "destructive",
+      "copy": "Their history is deleted with them and can't be restored",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 24,
+        "typical": 49,
+        "max": 98
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.destructive.next_action",
+      "category": "destructive",
+      "copy": "Delete {item}",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 6,
+        "typical": 13,
+        "max": 26
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.destructive.safe_remainder",
+      "category": "destructive",
+      "copy": "Your other records stay as they are",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 17,
+        "typical": 35,
+        "max": 70
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.destructive.source",
+      "category": "destructive",
+      "copy": "Selected: {item}",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 8,
+        "typical": 16,
+        "max": 32
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.destructive.status",
+      "category": "destructive",
+      "copy": "{item} will be deleted",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 11,
+        "typical": 22,
+        "max": 44
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.recovery.consequence",
+      "category": "recovery",
+      "copy": "Figures now match your last saved copy",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 19,
+        "typical": 38,
+        "max": 76
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.recovery.next_action",
+      "category": "recovery",
+      "copy": "Review {item}",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 6,
+        "typical": 13,
+        "max": 26
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.recovery.safe_remainder",
+      "category": "recovery",
+      "copy": "Changes made elsewhere stay as they are",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 19,
+        "typical": 39,
+        "max": 78
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.recovery.source",
+      "category": "recovery",
+      "copy": "Restored from your last saved copy",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 17,
+        "typical": 34,
+        "max": 68
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.recovery.status",
+      "category": "recovery",
+      "copy": "{item} are back",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 14,
+        "max": 28
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.success.consequence",
+      "category": "success",
+      "copy": "Totals now include this change",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 15,
+        "typical": 30,
+        "max": 60
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.success.next_action",
+      "category": "success",
+      "copy": "Done",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 2,
+        "typical": 4,
+        "max": 14
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.success.safe_remainder",
+      "category": "success",
+      "copy": "Nothing else was changed",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 12,
+        "typical": 24,
+        "max": 48
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.success.source",
+      "category": "success",
+      "copy": "From {item}",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 5,
+        "typical": 11,
+        "max": 22
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "pattern.success.status",
+      "category": "success",
+      "copy": "{item} are saved",
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 15,
+        "max": 30
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.access.support_request",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.support_access"
+      ],
+      "regulated_ref": "RC-007",
+      "range": {
+        "min": 68,
+        "typical": 136,
+        "max": 272
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.ai_disclosure.insight",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.ai_insight"
+      ],
+      "regulated_ref": "RC-009",
+      "range": {
+        "min": 27,
+        "typical": 55,
+        "max": 110
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.consent.message_capture",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.consent"
+      ],
+      "regulated_ref": "RC-001",
+      "range": {
+        "min": 88,
+        "typical": 176,
+        "max": 352
+      },
+      "owner": "content",
+      "platforms": [
+        "android"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.deletion.confirm",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.account_deletion"
+      ],
+      "regulated_ref": "RC-006",
+      "range": {
+        "min": 72,
+        "typical": 145,
+        "max": 290
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.disclaimer.not_investment_advice",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": "RC-003",
+      "range": {
+        "min": 41,
+        "typical": 83,
+        "max": 166
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.disclaimer.projection",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.projected"
+      ],
+      "regulated_ref": "RC-011",
+      "range": {
+        "min": 22,
+        "typical": 44,
+        "max": 88
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.disclaimer.scenario_not_advice",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.scenario"
+      ],
+      "regulated_ref": "RC-010",
+      "range": {
+        "min": 20,
+        "typical": 40,
+        "max": 80
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.incident.notice",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": "RC-008",
+      "range": {
+        "min": 69,
+        "typical": 139,
+        "max": 278
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.permission.message_access",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.permission"
+      ],
+      "regulated_ref": "RC-002",
+      "range": {
+        "min": 60,
+        "typical": 120,
+        "max": 240
+      },
+      "owner": "content",
+      "platforms": [
+        "android"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.plan_change.effective",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.plan"
+      ],
+      "regulated_ref": "RC-004",
+      "range": {
+        "min": 61,
+        "typical": 123,
+        "max": 246
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "reg.refund.recorded",
+      "category": "disclosure",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [
+        "term.refund"
+      ],
+      "regulated_ref": "RC-005",
+      "range": {
+        "min": 53,
+        "typical": 106,
+        "max": 212
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.degraded.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 9,
+        "max": 19
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.degraded.body",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 24,
+        "typical": 48,
+        "max": 96
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.degraded.headline",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 19,
+        "typical": 38,
+        "max": 76
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.empty.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 8,
+        "typical": 16,
+        "max": 32
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.empty.body",
+      "category": "empty",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 9,
+        "typical": 19,
+        "max": 38
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.empty.headline",
+      "category": "empty",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 8,
+        "typical": 16,
+        "max": 32
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.error.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 9,
+        "max": 19
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.error.body",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 11,
+        "typical": 22,
+        "max": 44
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.error.headline",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 9,
+        "typical": 18,
+        "max": 36
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.error.validation.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 14,
+        "max": 28
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.error.validation.body",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 8,
+        "typical": 16,
+        "max": 32
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.error.validation.headline",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 9,
+        "typical": 18,
+        "max": 36
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.loading.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 3,
+        "typical": 6,
+        "max": 16
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.loading.body",
+      "category": "loading",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 18,
+        "typical": 36,
+        "max": 72
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.loading.headline",
+      "category": "loading",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 6,
+        "typical": 13,
+        "max": 26
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.offline.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 9,
+        "max": 19
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.offline.body",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 17,
+        "typical": 34,
+        "max": 68
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.offline.headline",
+      "category": "error",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 14,
+        "max": 28
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 6,
+        "typical": 13,
+        "max": 26
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 15,
+        "typical": 30,
+        "max": 60
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.device.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 9,
+        "typical": 18,
+        "max": 36
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.device.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 23,
+        "typical": 46,
+        "max": 92
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.device.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 15,
+        "typical": 31,
+        "max": 62
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 19,
+        "typical": 39,
+        "max": 78
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.plan.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 4,
+        "typical": 9,
+        "max": 19
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.plan.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 23,
+        "typical": 46,
+        "max": 92
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.plan.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 12,
+        "typical": 25,
+        "max": 50
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.role.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 7,
+        "typical": 14,
+        "max": 28
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.role.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 15,
+        "typical": 30,
+        "max": 60
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.role.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 15,
+        "typical": 31,
+        "max": 62
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.sharing.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 13,
+        "typical": 26,
+        "max": 52
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.sharing.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 15,
+        "typical": 30,
+        "max": 60
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.permission_denied.sharing.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 19,
+        "typical": 39,
+        "max": 78
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 9,
+        "typical": 19,
+        "max": 38
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 14,
+        "typical": 29,
+        "max": 58
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 22,
+        "typical": 45,
+        "max": 90
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.rate_limited.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 24,
+        "typical": 49,
+        "max": 98
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.rate_limited.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 21,
+        "typical": 43,
+        "max": 86
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.with_reset.body",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 24,
+        "typical": 49,
+        "max": 98
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.quota_exceeded.with_reset.headline",
+      "category": "denial",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 22,
+        "typical": 45,
+        "max": 90
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.stale.action",
+      "category": "action",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 3,
+        "typical": 7,
+        "max": 17
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.stale.body",
+      "category": "stale",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 14,
+        "typical": 28,
+        "max": 56
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    },
+    {
+      "key": "state.stale.headline",
+      "category": "stale",
+      "copy": null,
+      "status": "provisional",
+      "term_refs": [],
+      "regulated_ref": null,
+      "range": {
+        "min": 13,
+        "typical": 27,
+        "max": 54
+      },
+      "owner": "content",
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "neutral_safe_exit": false
+    }
+  ]
+}

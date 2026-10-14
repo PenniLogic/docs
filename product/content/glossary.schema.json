@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/product/content/glossary.schema.json",
+  "title": "PenniLogic product glossary (T-CNT-01, PenniLogic/docs#84)",
+  "description": "Shape only. Term grammar, uniqueness, alias collisions, taxonomy consistency, owner roles and the held comprehension evidence are enforced by scripts/check_content.py with static rule identifiers.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "glossary_version",
+    "source_issue",
+    "status",
+    "terms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "glossary_version": {
+      "type": "string",
+      "minLength": 5
+    },
+    "source_issue": {
+      "const": "PenniLogic/docs#84"
+    },
+    "status": {
+      "const": "provisional"
+    },
+    "terms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/term"
+      }
+    }
+  },
+  "definitions": {
+    "term": {
+      "type": "object",
+      "required": [
+        "id",
+        "preferred_label",
+        "definition",
+        "status",
+        "surfaces",
+        "forbidden_aliases",
+        "contract_field_names",
+        "comprehension",
+        "owner"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 6
+        },
+        "preferred_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "provisional",
+            "approved"
+          ]
+        },
+        "surfaces": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "android",
+              "web",
+              "admin",
+              "contracts",
+              "support"
+            ]
+          }
+        },
+        "forbidden_aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "contract_field_names": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "comprehension": {
+          "type": "object",
+          "required": [
+            "required",
+            "evidence_ref"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "evidence_ref": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            }
+          }
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

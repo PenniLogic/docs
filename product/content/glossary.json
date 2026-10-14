@@ -1,0 +1,631 @@
+{
+  "schema_version": 1,
+  "glossary_version": "0.1.0",
+  "source_issue": "PenniLogic/docs#84",
+  "status": "provisional",
+  "terms": [
+    {
+      "id": "term.transaction",
+      "preferred_label": "transaction",
+      "definition": "A single movement of money into or out of one of your accounts, recorded once even when it is seen in more than one place.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "txn"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.debt",
+      "preferred_label": "debt",
+      "definition": "Money you owe to a lender or person, with its balance, interest rate, minimum payment, term and fees.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "dues"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.principal",
+      "preferred_label": "principal",
+      "definition": "The part of a debt balance that is the borrowed money itself, not interest or fees.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "capital owed"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.interest",
+      "preferred_label": "interest",
+      "definition": "The cost of borrowing that a lender adds to a debt over time, set by its rate.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "finance charge"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.minimum_payment",
+      "preferred_label": "minimum payment",
+      "definition": "The smallest payment a lender accepts for a debt in a billing period; paying only this usually costs more interest over time.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "minimum due"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.apr",
+      "preferred_label": "APR",
+      "definition": "Annual percentage rate: the yearly interest rate a lender charges on a debt, shown as a percentage.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "rate of return"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.payoff",
+      "preferred_label": "payoff date",
+      "definition": "The date a debt or all debts would be fully repaid if the shown payments continue as planned. It is a calculation, not a promise.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "debt-free date"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.available",
+      "preferred_label": "available",
+      "definition": "Money the app shows as free to use after known bills, reserved amounts and pending transactions; it is not a bank balance.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "spare cash"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.projected",
+      "preferred_label": "projected",
+      "definition": "A figure calculated from your own data and stated assumptions about the future; it can change when the data or assumptions change.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "predicted"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.stale",
+      "preferred_label": "last updated",
+      "definition": "Marks figures that are shown from the last saved data and may not reflect recent changes; the time of the last update is shown with them.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "outdated"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.pending",
+      "preferred_label": "pending",
+      "definition": "A transaction that has started but has not settled; its final value or date can still change.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "uncleared"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.reversed",
+      "preferred_label": "reversed",
+      "definition": "A transaction undone to correct the record, for example a duplicate entry; it stays visible, is linked to its correction and is never a refund.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "voided"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.aggregate",
+      "preferred_label": "aggregate",
+      "definition": "A combined total across several accounts, members or categories that does not show the individual items behind it.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "rollup"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.shared",
+      "preferred_label": "shared",
+      "definition": "Data one member has chosen to let another member see, category by category and person by person.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.revoked",
+      "preferred_label": "revoked",
+      "definition": "Sharing or access that has been ended; the other person no longer sees the data, including earlier copies.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": true,
+        "evidence_ref": "pending:PenniLogic/docs#66"
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.refund",
+      "preferred_label": "refund",
+      "definition": "Money returned for an earlier payment, in full or in part; it is a new transaction linked to that payment, never a reversal, and is not income.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.consent",
+      "preferred_label": "consent",
+      "definition": "A choice you make to allow a specific use of your data; you can withdraw it at any time.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.permission",
+      "preferred_label": "device permission",
+      "definition": "Access to a phone feature, such as messages or notifications, that you can allow or deny in device settings.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.access_log",
+      "preferred_label": "access log",
+      "definition": "A record you can see of who viewed your detailed data and when.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.support_access",
+      "preferred_label": "support access",
+      "definition": "Time-limited access to a member's records that a support operator requests with a stated reason tied to a support ticket; the member is told and it ends on its own.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.audit_log",
+      "preferred_label": "audit log",
+      "definition": "An append-only record of operator actions that operators cannot change or delete.",
+      "status": "provisional",
+      "surfaces": [
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.two_person_approval",
+      "preferred_label": "two-person approval",
+      "definition": "A rule that a high-sensitivity operator action needs a second operator to approve it before it runs.",
+      "status": "provisional",
+      "surfaces": [
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.data_export",
+      "preferred_label": "data export",
+      "definition": "A full copy of your data that you can download in a readable format.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.account_deletion",
+      "preferred_label": "account deletion",
+      "definition": "Permanently removing your account and its data, with any legally required records kept only as long as required.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.plan",
+      "preferred_label": "plan",
+      "definition": "The subscription level of an account and the features and limits it includes.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "tier"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.ai_insight",
+      "preferred_label": "AI insight",
+      "definition": "An explanation or summary written by an AI model from your own data; figures in it come from the app's calculations, never from the model.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.own_ai_provider",
+      "preferred_label": "your own AI provider",
+      "definition": "An AI service you connect with your own provider credentials or address instead of the managed service.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "byok"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.split",
+      "preferred_label": "split",
+      "definition": "A shared expense divided between group members in equal, exact, percentage or share amounts.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.settlement",
+      "preferred_label": "settlement",
+      "definition": "A recorded payment between group members that reduces what one owes another.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    },
+    {
+      "id": "term.scenario",
+      "preferred_label": "scenario",
+      "definition": "An illustrative calculation of what would happen under choices you select; it is information, not advice.",
+      "status": "provisional",
+      "surfaces": [
+        "android",
+        "web",
+        "admin",
+        "contracts",
+        "support"
+      ],
+      "forbidden_aliases": [
+        "recommendation"
+      ],
+      "contract_field_names": [],
+      "comprehension": {
+        "required": false,
+        "evidence_ref": null
+      },
+      "owner": "content"
+    }
+  ]
+}
