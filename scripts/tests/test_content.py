@@ -1008,6 +1008,40 @@ class RegulatedBindingTests(Harness):
             "key.copy_out_of_range", "state.empty.headline")
 
 
+class ImportedCopyRuleTests(Harness):
+    """Review round 2 SS-07: the taxonomy's one_action and no_internal_detail checks apply to H04 copy too."""
+
+    def test_action_key_offers_one_action(self):
+        for text in ("Save or discard", "Retry/Cancel"):
+            with self.subTest(text=text):
+                self.assertRefused(lambda d: add_key(d, key("common.action.save", text, "action")),
+                                   "key.several_actions", "common.action.save")
+
+    def test_action_key_control_passes(self):
+        docs = documents()
+        add_key(docs, key("common.action.save", "Save", "action"))
+        self.run_check(docs)
+
+    def test_pattern_next_action_offers_one_action(self):
+        self.assertRefused(lambda d: keys_of(d)["debt.delete.next"].update(copy="Delete or archive {item}"),
+                           "key.several_actions", "debt.delete.next")
+
+    def test_key_copy_without_internal_codes(self):
+        for text in ("Couldn't sync (503)", "Sync stopped: ERR_SYNC_FAILED"):
+            with self.subTest(text=text):
+                self.assertRefused(lambda d: keys_of(d)["debt.delete.status"].update(copy=text + " for this debt"),
+                                   "key.code_like", "debt.delete.status")
+
+    def test_record_copy_without_internal_codes(self):
+        self.assertRefused(lambda d: first(d).update(copy="Consent is paused (code 403)."), "regulated.code_like",
+                           "RC-001")
+
+    def test_or_in_non_action_copy_passes(self):
+        docs = documents()
+        keys_of(docs)["debt.delete.status"]["copy"] = "This debt is removed or hidden"
+        self.run_check(docs)
+
+
 class NormalisedWordingTests(Harness):
     """Review round 2 SS-02: labels, aliases and restatements compare the normalised wording banned_in uses."""
 

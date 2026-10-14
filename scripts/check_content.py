@@ -146,7 +146,8 @@ STRUCTURE_RULES = (
     "key.copy_missing", "key.range_order",
     "key.copy_out_of_range", "key.unknown_term", "key.term_label_missing", "key.forbidden_term",
     "key.forbidden_alias", "key.banned_pattern", "key.sentence_too_long", "key.placeholder_unknown",
-    "key.safe_exit_placeholder", "key.notification_data_placeholder", "key.item_agreement", "key.neutral_safe_exit_missing",
+    "key.safe_exit_placeholder", "key.notification_data_placeholder", "key.item_agreement", "key.several_actions",
+    "key.code_like", "regulated.code_like", "key.neutral_safe_exit_missing",
     "held.key_approval",
     "regulated.id_grammar", "regulated.duplicate_id", "regulated.approver_role_unqualified",
     "regulated.category_missing", "regulated.key_mismatch", "regulated.fail_closed_key_unknown",
@@ -480,6 +481,8 @@ def check_copy(text, subject, context, rules):
     require(forbidden_in(text, context["forbidden_terms"]) is None, rules["forbidden_term"], subject)
     require(banned_in(text, context["aliases"]) is None, rules["forbidden_alias"], subject)
     require(banned_in(text, context["banned"]) is None, rules["banned_pattern"], subject)
+    # no_internal_detail (imported): an HTTP-style status or a SCREAMING_SNAKE token is an internal code.
+    require(support.CODE_LIKE.search(text) is None, rules["code_like"], subject)
     require(all(count <= context["max_words"] for count in words_per_sentence(text)), rules["sentence"], subject)
     names = PLACEHOLDER.findall(text)
     require(all(name in context["placeholders"] for name in names), rules["placeholder"], subject)
@@ -492,7 +495,7 @@ ITEM_SINGULAR = re.compile(r"\{item\}\s+(?:is|was|has|does)(?:n't|n\u2019t)?\b",
 KEY_COPY_RULES = {
     "forbidden_term": "key.forbidden_term", "forbidden_alias": "key.forbidden_alias",
     "banned_pattern": "key.banned_pattern", "sentence": "key.sentence_too_long",
-    "placeholder": "key.placeholder_unknown",
+    "placeholder": "key.placeholder_unknown", "code_like": "key.code_like",
 }
 
 
@@ -554,6 +557,9 @@ def check_keys(catalogue, facts, terms, context, roles, regulated_ids):
             names = check_copy(copy, key, context, KEY_COPY_RULES)
             # The taxonomy's {item} is the surface's plural noun ("{item} are back", never "{item} is back").
             require(ITEM_SINGULAR.search(copy) is None, "key.item_agreement", key)
+            # one_action (imported): an action label offers exactly one action.
+            require(entry["category"] != "action" or support.SEVERAL_ACTIONS.search(copy) is None,
+                    "key.several_actions", key)
             require(not (entry["neutral_safe_exit"] and names), "key.safe_exit_placeholder", key)
             require(entry["category"] != "notification" or not set(names) & context["data_placeholders"],
                     "key.notification_data_placeholder", key)
@@ -590,6 +596,11 @@ def check_patterns(voice, keys):
             require(value in keys, "pattern.unknown_key", identifier)
             require(keys[value]["copy"] is not None, "pattern.unknown_key", identifier)
             require(keys[value]["category"] == identifier, "pattern.slot_category", identifier)
+        next_action = pattern["slots"]["next_action"]
+        if state is None:
+            # one_action (imported): a pattern's next action offers exactly one action.
+            require(support.SEVERAL_ACTIONS.search(keys[next_action]["copy"]) is None, "key.several_actions",
+                    next_action)
         # Every stated slot names a distinct key: one string in two slots would hide a criterion-2 gap.
         stated = [value for value in values if value is not None]
         require(len(set(stated)) == len(stated), "pattern.slot_reused", identifier)
@@ -599,7 +610,7 @@ def check_patterns(voice, keys):
 REGULATED_COPY_RULES = {
     "forbidden_term": "regulated.forbidden_term", "forbidden_alias": "regulated.forbidden_alias",
     "banned_pattern": "regulated.banned_pattern", "sentence": "regulated.sentence_too_long",
-    "placeholder": "regulated.placeholder_unknown",
+    "placeholder": "regulated.placeholder_unknown", "code_like": "regulated.code_like",
 }
 
 
