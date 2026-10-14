@@ -1337,9 +1337,7 @@
           "data_class": "confidential",
           "authorization": "Signed-in owner on a device-bound session",
           "event_refs": [],
-          "policy_refs": [
-            "ADR-004"
-          ],
+          "policy_refs": [],
           "telemetry": {
             "signal": "abandonment",
             "fields": [

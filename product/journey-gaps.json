@@ -64,6 +64,16 @@
       "status": "open"
     },
     {
+      "id": "GAP-J03-02",
+      "journey_id": "J03",
+      "step_id": "J03.C.04",
+      "category": "policy",
+      "owner_issue": "PenniLogic/android#32",
+      "summary": "Step J03.C.04 captures a receipt or connects a mailbox, but no backstage step shows where raw email or receipt content is parsed or what the confirmation screen may show, and ADR-004 decides raw SMS and notification text only, so the step cites no ADR; android#32 (T-ING-01) and android#33 (T-ING-02) plan on-device extraction, and the blueprint gains that step once they publish the boundary.",
+      "backlog_item": null,
+      "status": "open"
+    },
+    {
       "id": "GAP-J05-01",
       "journey_id": "J05",
       "step_id": "J05.T.03",

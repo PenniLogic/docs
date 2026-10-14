@@ -1100,7 +1100,8 @@ def _ids(prefix, count):
     return [f"{prefix}{index:02d}" for index in range(1, count + 1)]
 
 
-PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J01-03", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J05-01", "GAP-J06-01",
+PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J01-03", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J03-02",
+                  "GAP-J05-01", "GAP-J06-01",
                   "GAP-J07-01", "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J10-02", "GAP-J10-03",
                   "GAP-J11-01",
                   "GAP-J11-02", "GAP-J12-01", "GAP-J12-02"]
@@ -1138,7 +1139,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(
             module.structure_line(self.model),
             "Journey blueprints 0.1.0 structure valid: 12 blueprints, 127 steps (69 customer, 58 team), 98 branches, "
-            "28 abuse paths, 19 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
+            "28 abuse paths, 20 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
         self.assertEqual(module.readiness(self.model), PUBLISHED_READINESS)
@@ -1315,6 +1316,20 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(routed, [("GAP-J10-03", "PenniLogic/docs#44", "policy")])
         summary = module.render_summary(self.model, module.readiness(self.model))
         self.assertIn("provisional scale proposed here", summary)
+
+    def test_receipt_and_mailbox_extraction_boundary_is_routed_not_cited_to_adr004(self):
+        # Fable review round 1 F1: ADR-004 decides raw SMS and notification text only, so a receipt or mailbox step
+        # must not cite it, and the unmodelled on-device extraction boundary is an open gap routed to T-ING-01.
+        decision = (ROOT / "adr" / "ADR-004.md").read_text(encoding="utf-8").split("**Decision.**")[1].split("\n\n")[0]
+        self.assertIn("Raw SMS and notification text", decision)
+        self.assertNotRegex(decision, r"(?i)e-?mail|mailbox|receipt")
+        citing = [step_id for step_id, step in self.model.steps.items() if "ADR-004" in step["policy_refs"]
+                  and re.search(r"(?i)e-?mail|mailbox|receipt", step["action"])]
+        self.assertEqual(citing, [])
+        routed = [(gap["id"], gap["category"], gap["owner_issue"], gap["status"]) for gap in self.gaps["gaps"]
+                  if gap["step_id"] == "J03.C.04"]
+        self.assertEqual(routed, [("GAP-J03-02", "policy", "PenniLogic/android#32", "open")])
+        self.assertEqual(self.model.issues["PenniLogic/android#32"]["plan_id"], "T-ING-01")
 
     def test_erasure_reversal_names_pre_shred_cancellation(self):
         # Review round 2 SR-09: ADR-021 Phase 1 freeze starts the cancellation window; cancellation is available
