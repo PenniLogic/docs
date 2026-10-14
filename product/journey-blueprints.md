@@ -19,7 +19,7 @@ The readiness verdict is NOT GREEN by construction: the checker holds every huma
 | readiness.persona_provisional | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.approval_pending | 5 | architecture, ia, operations, product, security |
 | readiness.metric_pending | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
-| readiness.event_pending | 32 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
+| readiness.event_pending | 33 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J06.T.05, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
 | readiness.gap_open | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
 | readiness.gap_backlog_missing | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
 | readiness.figma_held | 4 | D03, D04, D05, D21 |
@@ -662,7 +662,8 @@ flowchart LR
         J06_T_01["J06.T.01 service: Creates the group relation and a single-use invite bound to the invited contact"]
         J06_T_02["J06.T.02 service: Allocates expenses by share type with a deterministic remainder"]
         J06_T_03["J06.T.03 service: Records the settlement with its payment-proof reference and updates balances"]
-        J06_T_04["J06.T.04 service: Removes a leaving or erased member's identifiers and keeps the financial facts others depend on"]
+        J06_T_04["J06.T.04 service: Ends a leaving or removed member's seat by setting its left date; user and alias stay as the group's record"]
+        J06_T_05["J06.T.05 service: On the member's own erasure, turns the seat into an unclaimable placeholder and severs or pseudonymises its identifiers; shares and settlements others depend on stay"]
     end
     J06_C_01 --> J06_T_01
     J06_T_01 --> J06_C_02
@@ -674,6 +675,7 @@ flowchart LR
     J06_T_03 -. partial .-> J06_C_05
     J06_C_05 --> J06_T_03
     J06_C_06 -. revocation .-> J06_T_04
+    J06_C_06 -. revocation .-> J06_T_05
 ```
 
 | Step | Lane | Channel | System | Actor | Action | Flow | Screens | Data | Authorization | Events | Policies | Signal |
@@ -687,7 +689,8 @@ flowchart LR
 | J06.T.03 | team | service | api-split-ledger | Split ledger in the core API | Records the settlement with its payment-proof reference and updates balances | none | none | confidential | Member relation on the group | pending:PenniLogic/contracts#8 | ADR-002, ADR-015 | none |
 | J06.C.05 | customer | android | android-app | Split organiser or participant (provisional persona) | Raises or answers a dispute on an allocation | F-AND-11 | S-AND-045 | confidential | Member relation on the group | none | none | correction |
 | J06.C.06 | customer | web | web-app | Split organiser or participant (provisional persona) | Reviews the group, settlements and disputes on web | F-WEB-07 | S-WEB-022, S-WEB-023, S-WEB-024 | confidential | Member relation on the group | none | none | completion |
-| J06.T.04 | team | service | api-split-ledger | Split ledger in the core API | Removes a leaving or erased member's identifiers and keeps the financial facts others depend on | none | none | confidential | Member exit or erasure request | pending:PenniLogic/contracts#8 | ADR-006, ADR-021 | none |
+| J06.T.04 | team | service | api-split-ledger | Split ledger in the core API | Ends a leaving or removed member's seat by setting its left date; user and alias stay as the group's record | none | none | confidential | The leaving member, or an authorised member per the T-SPL-03 authorization matrix | pending:PenniLogic/contracts#8 | ADR-006, ADR-021 | none |
+| J06.T.05 | team | service | api-split-ledger | Split ledger in the core API | On the member's own erasure, turns the seat into an unclaimable placeholder and severs or pseudonymises its identifiers; shares and settlements others depend on stay | none | none | confidential | Erasure job for the member's own validated rights request, made under ADR-019 step-up | pending:PenniLogic/contracts#8 | ADR-006, ADR-019, ADR-021 | none |
 
 | Step | Branch | To | Recovery | Recovery owner |
 |---|---|---|---|---|
@@ -698,7 +701,9 @@ flowchart LR
 | J06.T.03 | partial | J06.C.05 | A partial settlement leaves the rest open and visible to both members | sharing_team |
 | J06.C.05 | escalation | terminal | An unresolved dispute stays open for the organiser to decide; no operator sees member finances | sharing_team |
 | J06.C.06 | revocation | J06.T.04 | A member leaves or is removed and their access ends within the published online revocation bound | sharing_team |
-| J06.T.04 | rollback | terminal | A removal made in error is undone by a fresh invite; placeholder history stays | sharing_team |
+| J06.C.06 | revocation | J06.T.05 | A member's own erasure request ends the seat as an unclaimable placeholder, the strongest revocation of ADR-021 | privacy_team |
+| J06.T.04 | rollback | terminal | A removal made in error is recovered only by a fresh invite and acceptance; the ended seat keeps its user and alias as the group's record | sharing_team |
+| J06.T.05 | partial | terminal | Descriptions the member authored are redacted while every balance stays identical for the remaining members | privacy_team |
 
 | Receiving step | Authoritative service | Receiving surface may show |
 |---|---|---|
@@ -712,7 +717,8 @@ flowchart LR
 |---|---|---|---|---|
 | J06.T.02 | Settlement and dispute windows are set by the sharing contract owner; values pending | Every allocation, settlement and dispute is an append-only split ledger entry | Members affected by an allocation, settlement or dispute are notified | Corrections post reversing split entries; settled history is never rewritten |
 | J06.T.03 | Settlement and dispute windows are set by the sharing contract owner; values pending | Every allocation, settlement and dispute is an append-only split ledger entry | Members affected by an allocation, settlement or dispute are notified | Corrections post reversing split entries; settled history is never rewritten |
-| J06.T.04 | Erasure follows the rights clock owned by the compliance pack; value pending | The exit and any anonymisation are audited as append-only events | Remaining members see that a member left, never why | Leaving is final for that member; amounts owed stay attached to a placeholder |
+| J06.T.04 | Access ends within the published online revocation bound of T-CON-04; value pending | The membership end is journaled and audited as an append-only event | Quiet by design: no notification describes the leave or removal, per ADR-021 section 2.2 | Leaving does not erase: user and alias stay until the member's own erasure; rejoining needs a fresh invite and acceptance |
+| J06.T.05 | Erasure follows the rights clock owned by the compliance pack; value pending | The erasure is journaled in the erasure register and audited as append-only events | No notification describes the erasure; counterparties see the seat as a former member | Cancellable until the shred phase starts, as in J10; afterwards the placeholder is final and can never be claimed |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
 |---|---|---|---|---|
@@ -800,8 +806,8 @@ flowchart LR
 
 | Step | Clock | Audit | Notification | Reversal |
 |---|---|---|---|---|
-| J07.T.01 | Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered, accepted or narrowed | Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite |
-| J07.T.02 | Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered, accepted or narrowed | Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite |
+| J07.T.01 | Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered or accepted; a narrowing or revocation sends nothing beyond a content-free pointer, per ADR-021 section 2.1 | Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite |
+| J07.T.02 | Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending | Every grant change is audited and detail reads are visible to the data owner | Both people are told when a grant is offered or accepted; a narrowing or revocation sends nothing beyond a content-free pointer, per ADR-021 section 2.1 | Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite |
 | J07.T.04 | Server reads stop within the published online revocation bound and cached copies within the offline lease bound; both values are pending on the sharing contract | The exit is audited and visible to the member who left | Quiet by design: no notification describes the exit and nothing beyond a content-free pointer is sent; whether the other person sees any pointer is a pending design decision | A revoked grant is never restored; sharing again needs a new invite and acceptance |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
@@ -1319,7 +1325,7 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | policy | ADR-016 | BP-J03, BP-J05, BP-J08 |
 | policy | ADR-017 | BP-J01, BP-J03, BP-J04, BP-J05 |
 | policy | ADR-018 | BP-J03, BP-J07 |
-| policy | ADR-019 | BP-J01, BP-J02, BP-J07 |
+| policy | ADR-019 | BP-J01, BP-J02, BP-J06, BP-J07 |
 | policy | ADR-020 | BP-J10, BP-J11, BP-J12 |
 | policy | ADR-021 | BP-J06, BP-J07, BP-J10 |
 | policy | ADR-022 | BP-J08, BP-J12 |

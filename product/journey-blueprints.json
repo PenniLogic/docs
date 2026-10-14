@@ -3095,6 +3095,12 @@
               "to": "J06.T.04",
               "recovery": "A member leaves or is removed and their access ends within the published online revocation bound",
               "recovery_owner": "sharing_team"
+            },
+            {
+              "kind": "revocation",
+              "to": "J06.T.05",
+              "recovery": "A member's own erasure request ends the seat as an unclaimable placeholder, the strongest revocation of ADR-021",
+              "recovery_owner": "privacy_team"
             }
           ],
           "next": []
@@ -3104,12 +3110,12 @@
           "lane": "team",
           "channel": "service",
           "actor": "Split ledger in the core API",
-          "action": "Removes a leaving or erased member's identifiers and keeps the financial facts others depend on",
+          "action": "Ends a leaving or removed member's seat by setting its left date; user and alias stay as the group's record",
           "system": "api-split-ledger",
           "flow_id": null,
           "screen_ids": [],
           "data_class": "confidential",
-          "authorization": "Member exit or erasure request",
+          "authorization": "The leaving member, or an authorised member per the T-SPL-03 authorization matrix",
           "event_refs": [
             "pending:PenniLogic/contracts#8"
           ],
@@ -3120,10 +3126,10 @@
           "telemetry": null,
           "handoff": null,
           "controls": {
-            "clock": "Erasure follows the rights clock owned by the compliance pack; value pending",
-            "audit": "The exit and any anonymisation are audited as append-only events",
-            "notification": "Remaining members see that a member left, never why",
-            "reversal": "Leaving is final for that member; amounts owed stay attached to a placeholder"
+            "clock": "Access ends within the published online revocation bound of T-CON-04; value pending",
+            "audit": "The membership end is journaled and audited as an append-only event",
+            "notification": "Quiet by design: no notification describes the leave or removal, per ADR-021 section 2.2",
+            "reversal": "Leaving does not erase: user and alias stay until the member's own erasure; rejoining needs a fresh invite and acceptance"
           },
           "boundary": {
             "raw_message_egress": false,
@@ -3134,8 +3140,50 @@
             {
               "kind": "rollback",
               "to": null,
-              "recovery": "A removal made in error is undone by a fresh invite; placeholder history stays",
+              "recovery": "A removal made in error is recovered only by a fresh invite and acceptance; the ended seat keeps its user and alias as the group's record",
               "recovery_owner": "sharing_team"
+            }
+          ],
+          "next": []
+        },
+        {
+          "id": "J06.T.05",
+          "lane": "team",
+          "channel": "service",
+          "actor": "Split ledger in the core API",
+          "action": "On the member's own erasure, turns the seat into an unclaimable placeholder and severs or pseudonymises its identifiers; shares and settlements others depend on stay",
+          "system": "api-split-ledger",
+          "flow_id": null,
+          "screen_ids": [],
+          "data_class": "confidential",
+          "authorization": "Erasure job for the member's own validated rights request, made under ADR-019 step-up",
+          "event_refs": [
+            "pending:PenniLogic/contracts#8"
+          ],
+          "policy_refs": [
+            "ADR-006",
+            "ADR-019",
+            "ADR-021"
+          ],
+          "telemetry": null,
+          "handoff": null,
+          "controls": {
+            "clock": "Erasure follows the rights clock owned by the compliance pack; value pending",
+            "audit": "The erasure is journaled in the erasure register and audited as append-only events",
+            "notification": "No notification describes the erasure; counterparties see the seat as a former member",
+            "reversal": "Cancellable until the shred phase starts, as in J10; afterwards the placeholder is final and can never be claimed"
+          },
+          "boundary": {
+            "raw_message_egress": false,
+            "client_money_arithmetic": false,
+            "unauthorized_detail_access": false
+          },
+          "branches": [
+            {
+              "kind": "partial",
+              "to": null,
+              "recovery": "Descriptions the member authored are redacted while every balance stays identical for the remaining members",
+              "recovery_owner": "privacy_team"
             }
           ],
           "next": []
@@ -3275,7 +3323,7 @@
           "controls": {
             "clock": "Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending",
             "audit": "Every grant change is audited and detail reads are visible to the data owner",
-            "notification": "Both people are told when a grant is offered, accepted or narrowed",
+            "notification": "Both people are told when a grant is offered or accepted; a narrowing or revocation sends nothing beyond a content-free pointer, per ADR-021 section 2.1",
             "reversal": "Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite"
           },
           "boundary": {
@@ -3363,7 +3411,7 @@
           "controls": {
             "clock": "Invite expiry and the online and offline revocation bounds are published by the sharing contract owner; values pending",
             "audit": "Every grant change is audited and detail reads are visible to the data owner",
-            "notification": "Both people are told when a grant is offered, accepted or narrowed",
+            "notification": "Both people are told when a grant is offered or accepted; a narrowing or revocation sends nothing beyond a content-free pointer, per ADR-021 section 2.1",
             "reversal": "Revocation is unilateral and takes effect within the published online revocation bound; sharing again needs a new invite"
           },
           "boundary": {

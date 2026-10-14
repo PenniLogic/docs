@@ -978,7 +978,7 @@ PUBLISHED_READINESS = {
     "readiness.metric_pending": _ids("J", 12),
     "readiness.event_pending": [
         "J01.T.02", "J01.T.03", "J03.T.02", "J03.T.03", "J03.T.04", "J03.T.05", "J04.T.01", "J04.T.02", "J05.T.01",
-        "J05.T.02", "J05.T.03", "J06.T.01", "J06.T.02", "J06.T.03", "J06.T.04", "J07.T.01", "J07.T.02", "J07.T.03",
+        "J05.T.02", "J05.T.03", "J06.T.01", "J06.T.02", "J06.T.03", "J06.T.04", "J06.T.05", "J07.T.01", "J07.T.02", "J07.T.03",
         "J07.T.04", "J08.C.04", "J08.T.01", "J08.T.03", "J09.T.01", "J09.T.02", "J09.T.03", "J10.T.01", "J10.T.04",
         "J10.T.06", "J10.T.08", "J11.T.04", "J11.T.06", "J12.T.02"],
     "readiness.gap_open": PUBLISHED_GAPS,
@@ -1002,7 +1002,7 @@ class PublishedDataTests(unittest.TestCase):
     def test_structure_line_is_exact(self):
         self.assertEqual(
             module.structure_line(self.model),
-            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 126 steps (69 customer, 57 team), 95 branches, "
+            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 127 steps (69 customer, 58 team), 97 branches, "
             "28 abuse paths, 18 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
@@ -1130,6 +1130,25 @@ class PublishedDataTests(unittest.TestCase):
         after = [step for step in blueprint["steps"] if step["id"] not in reached or step["id"] == "J07.C.05"]
         self.assertEqual([step["id"] for step in after], ["J07.C.05", "J07.T.04", "J07.C.06"])
         self.assertEqual([step["telemetry"] for step in after], [None, None, None])
+
+    def test_group_leave_and_grant_narrowing_follow_adr021(self):
+        # ADR-021 section 2.2: a member who left is not a placeholder, user and alias stay until the member's own
+        # erasure, and leaving is quiet; section 3.3: only erasure makes the seat a placeholder. Section 2.1: a
+        # narrowing or revocation carries no notification content beyond a pointer.
+        leave, erasure = self.model.steps["J06.T.04"], self.model.steps["J06.T.05"]
+        leave_texts = [leave["action"], leave["authorization"], *leave["controls"].values(),
+                       *(branch["recovery"] for branch in leave["branches"])]
+        self.assertEqual([text for text in leave_texts if re.search(r"placeholder|erase[sd]|never why", text)], [])
+        self.assertIn("no notification describes", leave["controls"]["notification"])
+        self.assertIn("user and alias stay", leave["action"])
+        self.assertIn("placeholder", erasure["action"])
+        self.assertIn("ADR-019 step-up", erasure["authorization"])
+        notices = [step["controls"]["notification"] for journey_id in ("J06", "J07")
+                   for step in self.model.blueprints[journey_id]["steps"] if step["controls"] is not None]
+        self.assertTrue(notices)
+        for notice in notices:
+            if re.search(r"narrow|revo|left|leave", notice):
+                self.assertRegex(notice, r"pointer|[Nn]o notification describes")
 
     def test_stories_outside_their_journey_personas_are_recorded_gaps(self):
         # TS-M1: the registry's own stories name personas their journey lacks; each one is a visible gap.
