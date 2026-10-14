@@ -51,7 +51,7 @@
           "purpose_ref": "Recovery of the primary stores under PenniLogic/infra#26; restore-safe erasure is owned by PenniLogic/infra#33 and the retention basis by the PenniLogic/docs#44 India jurisdiction profile (not yet published)",
           "retention": "The infra#26 backup retention, which ADR-021 and ADR-018 section 6.7 make the published erasure-completeness bound; no value is set yet and docs#44 must supply it before real data exists",
           "erasure_path": "Crypto-shredding (ADR-006, ADR-021) leaves pre-erasure ciphertext unreadable once keys are destroyed; a restore must replay the infra#33 tombstone journal before readiness, and backups expire at the infra#26 retention bound",
-          "children": "Adult-only launch scope under the docs#44 age-eligibility policy; backups copy whatever the primary stores hold, so the age gate upstream (android#17) is the only condition and no separate rule exists here",
+          "children": "Adult-only launch scope that the docs#44 age-eligibility policy must publish; backups copy whatever the primary stores hold, so the age gate upstream (android#17) is the only condition and no separate rule exists here",
           "processors": [
             "Hosting provider of the runtime hosts and backup storage (not chosen; ADR-022 requires the counsel-approved India residency profile before provisioning)",
             "Secondary-region storage for disaster recovery (region not chosen; infra#25 residency policy must allow it)"
@@ -66,9 +66,10 @@
           "purpose_ref": "Observability and security-log retention under PenniLogic/infra#27 and log scrubbing under PenniLogic/api#21; the retention period and legal basis come from the PenniLogic/docs#44 jurisdiction profile (compliance O-9)",
           "retention": "Security logs: the CERT-In period from the docs#44 India profile, append-only with deletion refused before expiry (infra#27); operational logs, traces and metrics: not yet published",
           "erasure_path": "Telemetry carries no account identity by construction (api#21 correlation identifiers are not derived from user identity); retained security logs expire at the profile period and are not erased early; the ADR-020 audit streams follow ADR-020 section 8.7",
-          "children": "Adult-only launch scope (docs#44 age policy); telemetry is not conditioned per user because it must hold no personal content",
+          "children": "Adult-only launch scope (docs#44 age policy, not yet published); telemetry is not conditioned per user because it must hold no personal content",
           "processors": [
-            "Telemetry, crash-reporting and uptime or paging services (research candidates in architecture/03-stack-and-monetization.md section 15 are hosted services; none chosen, residency unproven)"
+            "Telemetry, crash-reporting and uptime or paging services (research candidates in architecture/03-stack-and-monetization.md section 15 are hosted services; none chosen, residency unproven)",
+            "Google Play Console: Android Vitals crash and ANR data read as the android#37 rollout gate"
           ]
         },
         {
@@ -79,7 +80,7 @@
           "purpose_ref": "PenniLogic/contracts#15 messaging contract and PenniLogic/api#56 outbox; per-class consent recording through the PenniLogic/api#24 consent ledger and purpose registry",
           "retention": "Not yet published: api#56 keeps recipients until account erasure; provider-side logs and suppression lists follow processor terms that docs#44 must record",
           "erasure_path": "Recipient addresses and device tokens are deleted on account erasure through the T-SEC-02 path (PenniLogic/api#38) as api#56 states; copies held by push and e-mail providers are not yet covered (finding E24-F08)",
-          "children": "Adult-only launch scope (docs#44 age policy, android#17 age gate); no messaging class targets a minor",
+          "children": "Adult-only launch scope (docs#44 age policy and android#17 age gate, neither delivered yet); no messaging class targets a minor",
           "processors": [
             "Push notification provider (research candidate in architecture/03-stack-and-monetization.md section 16; not chosen)",
             "Transactional e-mail provider (not chosen; api#56 requires a second provider path)"
@@ -93,7 +94,7 @@
           "purpose_ref": "PenniLogic/android#56 and PenniLogic/web#21 against the PenniLogic/contracts#15 preference shapes; analytics purpose from the PenniLogic/api#24 purpose registry",
           "retention": "Preferences live with the account; outcome analytics follow the analytics pipeline retention owned by PenniLogic/api#82 (not yet published)",
           "erasure_path": "Preferences are erased with the account through PenniLogic/api#38; outcome analytics carry no recipient identity",
-          "children": "Adult-only launch scope (docs#44 age policy)",
+          "children": "Adult-only launch scope (docs#44 age policy, not yet published); the editors serve only signed-in account holders",
           "processors": []
         },
         {
@@ -409,7 +410,7 @@
           "category": "elevation_of_privilege",
           "severity": "high",
           "title": "The production KEK custodian assigned to T-PLT-03 is not listed in infra#27's scope",
-          "attack_path": "No ticket body lists selecting the custodian, so real data could be admitted under a file-held software root or an exportable key on the database hosts; a host or account compromise then yields the KEK and every wrapped user key (baseline T-11).",
+          "attack_path": "An attacker who compromises a database host or the hosting account finds the KEK under a file-held software root or as an exportable key beside the data, because no ticket body lists selecting a non-exportable custodian, and unwraps every wrapped user key (baseline T-11).",
           "recommended_control": "Record on infra#27 the obligation ADR-018 section 6.1.1 and ADR-022 section 3.3 place on T-PLT-03: select and prove an India-resident, non-exportable custodian administratively separate from the database hosts and backups, with every unwrap logged to alerting, and keep real data refused until it passes.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/infra#27",
