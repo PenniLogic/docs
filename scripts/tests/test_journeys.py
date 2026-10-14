@@ -413,6 +413,20 @@ class HeaderTests(JourneyCase):
                            lambda r: r["diagrams"][2].update(owner_ticket="T-UXR-05"), "registry")
 
 
+    def test_docs75_shaped_pin_passes_and_its_owner_is_checked(self):
+        # Review round 2 SR-03: re-pinning to docs#75's canonical file stays a one-field change.
+        self.run_check(copy.deepcopy(DOCUMENT), registry=docs75_shaped(REGISTRY))
+        registry = docs75_shaped(REGISTRY)
+        registry["diagrams"][2]["owner_ticket"]["plan_id"] = "T-UXR-05"
+        with self.assertRaises(module.Refused) as caught:
+            self.run_check(copy.deepcopy(DOCUMENT), registry=registry)
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("diagram.registry_mismatch", "D04"))
+
+    def test_owner_object_without_issue_is_invalid(self):
+        self.assertRefused("registry.invalid", None,
+                           lambda r: r["diagrams"][2].update(owner_ticket={"plan_id": "T-UXR-04"}), "registry")
+
+
 class BlueprintTests(JourneyCase):
     def test_blueprint_id_must_name_its_journey(self):
         self.assertRefused("blueprint.journey_mismatch", "BP-J02", setter(("BP-J01", "id"), "BP-J02"))
@@ -731,6 +745,16 @@ def drifted_registry():
     return registry
 
 
+def docs75_shaped(registry):
+    """The registry in docs#75's canonical shape: {plan_id, issue} owners and extra flow fields (review round 2 SR-03)."""
+    registry = copy.deepcopy(registry)
+    for diagram in registry["diagrams"]:
+        diagram["owner_ticket"] = {"plan_id": diagram["owner_ticket"], "issue": "PenniLogic/docs#67"}
+    for flow in registry["flows"]:
+        flow["qa_independence"] = "independent"
+    return registry
+
+
 class ReadinessTests(JourneyCase):
     def drift(self, registry):
         result = module.readiness(self.run_check(), module.index_registry(registry))
@@ -769,6 +793,9 @@ class ReadinessTests(JourneyCase):
         registry = copy.deepcopy(REGISTRY)
         registry["diagrams"].pop()
         self.assertEqual(self.drift(registry), [[], ["D02"], []])
+
+    def test_docs75_shaped_registry_has_no_drift(self):
+        self.assertEqual(self.drift(docs75_shaped(REGISTRY)), [[], [], []])
 
     def test_critical_flag_change_is_drift(self):
         registry = copy.deepcopy(REGISTRY)
@@ -946,6 +973,15 @@ class SummaryAndCliTests(JourneyCase):
         self.assertEqual(code, 1)
         self.assertIn("readiness.registry_id_added: 1", out.splitlines())
         self.assertIn("readiness.registry_record_changed: 1", out.splitlines())
+
+    def test_docs75_canonical_registry_reports_not_green_without_refusal(self):
+        self.assertEqual(self.main("--write-summary")[0], 0)
+        (self.root / module.CANONICAL_REGISTRY).write_bytes(encode(docs75_shaped(REGISTRY)))
+        code, out, err = self.main()
+        self.assertEqual((code, err), (1, ""))
+        self.assertEqual(out.splitlines()[0], module.NOT_GREEN)
+        for rule in module.DRIFT_RULES:
+            self.assertIn(rule + ": 0", out.splitlines())
 
     def test_unreadable_live_registry_refused(self):
         self.assertEqual(self.main("--write-summary")[0], 0)

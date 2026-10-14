@@ -398,6 +398,16 @@ def read_registry(document, sources, pin):
     return index_registry(registry)
 
 
+def _plan_id(owner_ticket):
+    """A diagram owner as a plan ID: the planning import's string or docs#75's {plan_id, issue} object (TS-M8)."""
+    if isinstance(owner_ticket, dict):
+        require(set(owner_ticket) == {"plan_id", "issue"} and isinstance(owner_ticket["issue"], str),
+                "registry.invalid")
+        owner_ticket = owner_ticket["plan_id"]
+    require(isinstance(owner_ticket, str) and owner_ticket != "", "registry.invalid")
+    return owner_ticket
+
+
 def index_registry(registry):
     """Personas, journeys, flows, screens and diagrams by ID, with their joins checked (registry.invalid)."""
     personas = _records(registry, "personas", "persona")
@@ -413,8 +423,8 @@ def index_registry(registry):
         require(set(_identifiers(flow, "screen_ids", "screen")) <= set(screens), "registry.invalid")
         require(set(_identifiers(flow, "journey_ids", "journey")) <= set(journeys), "registry.invalid")
         require(isinstance(flow.get("critical"), bool), "registry.invalid")
-    for diagram in diagrams.values():
-        require(isinstance(diagram.get("owner_ticket"), str), "registry.invalid")
+    for identifier, diagram in diagrams.items():
+        diagrams[identifier] = dict(diagram, owner_ticket=_plan_id(diagram.get("owner_ticket")))
         require(isinstance(diagram.get("artifact_path"), str), "registry.invalid")
     return {"personas": personas, "journeys": journeys, "flows": flows, "screens": screens, "diagrams": diagrams}
 
