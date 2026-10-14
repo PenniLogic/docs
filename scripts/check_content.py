@@ -32,7 +32,6 @@ import re
 import subprocess
 import sys
 import tempfile
-import unicodedata
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -124,7 +123,7 @@ VOICE_ID = {
 STRUCTURE_RULES = (
     "input.unreadable_or_invalid", "schema.invalid", "taxonomy.unreadable", "roles.unreadable",
     "content.too_long", "content.blank_or_padded", "content.unprintable_character", "content.secret_shape",
-    "content.non_ascii_word_character", "content.url_shape", "content.email_shape", "content.number_shape",
+    "content.non_ascii_character", "content.url_shape", "content.email_shape", "content.number_shape",
     "version.grammar", "owner.unknown_role",
     "term.id_grammar", "term.duplicate_id", "term.duplicate_label", "term.alias_is_label", "term.alias_collision",
     "term.forbidden_term", "term.banned_pattern", "term.forbidden_alias", "term.contract_field_grammar",
@@ -220,6 +219,8 @@ CONTENT_SHAPES = (
         r"|\b(?:INR|USD|EUR|GBP|Rs)\.?\s?[0-9]|[0-9]\s?(?:INR|USD|EUR|GBP)\b"
     )),
 )
+# Curly quotes and apostrophes, en and em dashes, and the ellipsis: the only non-ASCII characters in content text.
+TYPOGRAPHIC_PUNCTUATION = "\u2018\u2019\u201c\u201d\u2013\u2014\u2026"
 SECRET_RUN = re.compile(r"[A-Za-z0-9+/=_-]{24,}")
 HEX_RUN = re.compile(r"[0-9a-fA-F]{24,}")
 
@@ -240,10 +241,12 @@ def scan_text(text, subject):
     require(text != "" and text.strip() == text, "content.blank_or_padded", *subject)
     require(len(text) <= TEXT_LIMIT, "content.too_long", *subject)
     require(all(character.isprintable() for character in text), "content.unprintable_character", *subject)
-    # Source copy is English: a non-ASCII letter, mark or digit (a homoglyph, a combining mark, a native-script digit)
-    # would slip past the word-bounded ASCII lints, so only ASCII ones are accepted; symbols such as an apostrophe stay.
-    require(all(character.isascii() or unicodedata.category(character)[0] not in "LMN" for character in text),
-            "content.non_ascii_word_character", *subject)
+    # Source copy is English: any other non-ASCII character (a homoglyph letter, a combining mark, a native-script
+    # digit, a circled letter, fullwidth or variant punctuation, a currency sign) could slip past the ASCII lints, so
+    # only ASCII and the explicit typographic punctuation allow-list are accepted (none of those has an NFKC form
+    # that a lint matches).
+    require(all(character.isascii() or character in TYPOGRAPHIC_PUNCTUATION for character in text),
+            "content.non_ascii_character", *subject)
     require(not _secret_shape(text), "content.secret_shape", *subject)
     for rule, pattern in CONTENT_SHAPES:
         require(pattern.search(text) is None, rule, *subject)

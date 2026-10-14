@@ -760,20 +760,51 @@ class ContentGuardTests(Harness):
 
     def test_homoglyph_letter_cannot_hide_a_forbidden_term(self):
         # Greek omicron in "oops": the ASCII lints would not see the taxonomy's forbidden term.
-        self.assertRefused(self.mutate_copy("οops, review {item}"), "content.non_ascii_word_character",
+        self.assertRefused(self.mutate_copy("οops, review {item}"), "content.non_ascii_character",
                            "debt.delete.next")
 
     def test_fullwidth_letters_are_refused(self):
-        self.assertRefused(self.mutate_copy("Review ｉｔｅｍ"), "content.non_ascii_word_character",
+        self.assertRefused(self.mutate_copy("Review ｉｔｅｍ"), "content.non_ascii_character",
                            "debt.delete.next")
 
     def test_combining_mark_is_refused(self):
-        self.assertRefused(self.mutate_copy("Reviéw {item}"), "content.non_ascii_word_character",
+        self.assertRefused(self.mutate_copy("Reviéw {item}"), "content.non_ascii_character",
                            "debt.delete.next")
 
     def test_native_script_digits_cannot_hide_a_number(self):
         self.assertRefused(lambda d: terms_of(d)["term.debt"].update(definition="Owed १२३४५."),
-                           "content.non_ascii_word_character", "term.debt")
+                           "content.non_ascii_character", "term.debt")
+
+    def test_lookalike_symbols_are_refused(self):
+        # Symbol and punctuation lookalikes (Unicode S*/P*) that NFKC maps to ASCII would slip past the ASCII lints:
+        # the forbidden "!", the banned "guarantee", the forbidden "oops", and the email, URL and amount shapes.
+        lookalikes = {
+            "fullwidth_exclamation": "Done\uff01", "double_exclamation": "Done \u203c",
+            "small_exclamation": "Done\ufe57", "circled_letter_banned": "We \u24d6uaranteed it",
+            "circled_letter_forbidden": "\u24deops, review {item}", "fullwidth_at": "Write to a\uff20b.c",
+            "fullwidth_full_stop": "Visit pennilogic\uff0ecom", "fullwidth_dollar": "Pay \uff045",
+            "rupee_sign": "Pay \u20a850", "indian_rupee_sign": "Pay \u20b950",
+        }
+        for case, text in lookalikes.items():
+            with self.subTest(case=case):
+                self.assertRefused(self.mutate_copy(text), "content.non_ascii_character", "debt.delete.next")
+
+    def test_ascii_forms_of_the_lookalikes_meet_their_own_lints(self):
+        # The controls: each lookalike's ASCII form is refused by the lint the lookalike would have bypassed.
+        ascii_forms = {
+            "Done!": "key.forbidden_term", "We guaranteed it": "key.banned_pattern",
+            "oops, review {item}": "key.forbidden_term", "Write to a@b.c": "content.email_shape",
+            "Visit pennilogic.com": "content.url_shape", "Pay $5": "content.number_shape",
+        }
+        for text, rule in ascii_forms.items():
+            with self.subTest(text=text):
+                self.assertRefused(self.mutate_copy(text), rule, "debt.delete.next")
+
+    def test_allowed_typographic_punctuation_is_exactly_the_allow_list(self):
+        self.assertEqual(content.TYPOGRAPHIC_PUNCTUATION, "\u2018\u2019\u201c\u201d\u2013\u2014\u2026")
+        docs = documents()
+        keys_of(docs)["debt.delete.next"]["copy"] = "\u201cReview\u201d \u2018{item}\u2019 \u2014 now\u2026"
+        self.run_check(docs)
 
     def test_typographic_punctuation_passes(self):
         docs = documents()
