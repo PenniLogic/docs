@@ -52,7 +52,7 @@
           ],
           "purpose_ref": "Purpose-registry entries to be created by PenniLogic/api#24 (compliance O-1); the encryption scope itself is ADR-018 and the floor is built by PenniLogic/api#37",
           "retention": "Account lifetime in the live database; ciphertext and wrapped keys persist in backups until the backup retention PenniLogic/infra#26 publishes, which ADR-018 section 6.7 names as the erasure-completeness bound published to the PenniLogic/docs#44 profile (O-4)",
-          "erasure_path": "Erasure destroys the DEK, IK and AK rows (PenniLogic/api#38); group-scoped rows are redacted or left to surviving members per ADR-021; restore replays the key journal and tombstones before readiness (PenniLogic/infra#33); key rotation never restores readability of a destroyed key (PenniLogic/api#53)",
+          "erasure_path": "Erasure destroys the DEK, IK and AK rows (PenniLogic/api#38), and destroying the per-user analytics pseudonym key AK unlinks every analytics event of the subject (test erasure_unlinks_analytics_pseudonym on PenniLogic/api#38); group-scoped rows are redacted or left to surviving members per ADR-021; restore replays the key journal and tombstones before readiness (PenniLogic/infra#33); key rotation never restores readability of a destroyed key (PenniLogic/api#53)",
           "children": "Conditioned on the age gate built by PenniLogic/android#17 (compliance O-6); this epic stores no age attribute and adds no route around the gate",
           "processors": [
             "Production KEK custodian (wraps and unwraps DEKs, sees key identifiers and caller identity, never plaintext data); not yet selected, India residency where the PenniLogic/docs#44 profile requires it, selection owned by PenniLogic/infra#27"
@@ -72,13 +72,13 @@
           "processors": []
         },
         {
-          "data_class": "Per-tenant blind-index values and the global identity index and channel ciphertext for e-mail and phone (ADR-018 sections 3.2 and 6.1)",
+          "data_class": "Per-tenant blind-index values, the global identity index and channel ciphertext for e-mail and phone, and push tokens encrypted under a platform key (ADR-018 sections 1.2, 3.2 and 6.1)",
           "subjects": [
             "users"
           ],
           "purpose_ref": "ADR-018 section 3.3 permitted equality query shapes; channel purposes registered by PenniLogic/api#24 per ADR-019 section 16",
           "retention": "Account lifetime; index values re-randomised on index-key rotation (PenniLogic/api#53)",
-          "erasure_path": "Index key destroyed on erasure and residual index rows physically rewritten or destroyed (PenniLogic/api#53); channel rows physically cleared because they sit under platform keys (PenniLogic/api#38)",
+          "erasure_path": "Index key destroyed on erasure and residual index rows physically rewritten or destroyed (PenniLogic/api#53); channel rows and push tokens physically cleared because they sit under platform keys, which DEK destruction does not reach (PenniLogic/api#38, ADR-018 section 6.7)",
           "children": "Conditioned on the age gate built by PenniLogic/android#17 (compliance O-6)",
           "processors": []
         },
@@ -162,10 +162,11 @@
         {
           "id": "spoofing",
           "disposition": "finding",
-          "analysis": "Parties that must prove identity in this epic: the installed app and device towards the api (Play Integrity standard verdicts bound to the request, verified only by the server in api#86, and the attested DPoP key of ADR-019 consumed by android#27), the account holder at the moment of a sensitive operation (step-up in api#40), and the key-operations worker towards the KEK custodian. Passwords no longer exist (ADR-019 removed breached-credential checking from api#40), so baseline T-01 credential stuffing becomes assertion and recovery flooding, bounded under denial_of_service (E19-F15); T-02 refresh replay is api#5's DPoP binding outside this epic. The trust roots are the server-held verification material, the expected package and signing-certificate digest, and the step-up binding; sideloaded QA cohorts are explicit test identities that must never be accepted by a production profile (architecture section 5.3), which is E19-F01. A stolen session reaching export or credential change is E19-F02.",
+          "analysis": "Parties that must prove identity in this epic: the installed app and device towards the api (Play Integrity standard verdicts bound to the request, verified only by the server in api#86, and the attested DPoP key of ADR-019 consumed by android#27), the account holder at the moment of a sensitive operation (step-up in api#40), and the key-operations worker towards the KEK custodian. Passwords no longer exist (ADR-019 removed breached-credential checking from api#40), so baseline T-01 credential stuffing becomes assertion and recovery flooding, bounded under denial_of_service (E19-F15); T-02 refresh replay is api#5's DPoP binding outside this epic. The trust roots are the server-held verification material, the expected package and signing-certificate digest, and the step-up binding; sideloaded QA cohorts are explicit test identities that must never be accepted by a production profile (architecture section 5.3), which is E19-F01. A stolen session reaching export or credential change is E19-F02. The epic's exit criterion that CI authenticates by federation with no long-lived cloud credential is not built by any ticket here; it depends on infra#25 in E24, and no ticket of this epic adds a pipeline credential.",
           "evidence": [
             "ADR-019: passkeys only, step-up freshness and target binding, key attestation consumed by PenniLogic/android#27",
-            "architecture/02-security-architecture.md section 5.3: verdicts validated on the backend only; test cohorts never weaken production policy"
+            "architecture/02-security-architecture.md section 5.3: verdicts validated on the backend only; test cohorts never weaken production policy",
+            "PenniLogic/infra#25: pipelines authenticate with short-lived federated credentials and a test proves no static cloud key exists (dependency, not a control today)"
           ],
           "findings": [
             "E19-F01",
@@ -175,10 +176,12 @@
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "Modifiable assets: ciphertext rows and their headers, the wrapped key rows, the key journal and the erasure tombstone journal, rotation progress state, the audit trail, the device database and the pin set delivered over the air. The ledger's append-only and zero-sum integrity (baseline T-12) is ADR-002 and api#2's, preserved unchanged by ADR-018 section 1.3. Detection here rests on authenticated encryption with row, column and owner bound in the additional data (E19-F04), write-once journals outside the backup set (infra#33, ADR-018 section 6.6), and resumable rotation that never re-encrypts a row twice (api#53 acceptance). Ingestion boundary: this epic parses nothing; it protects the device store that holds raw messages at rest (E19-F07) and adds no path that moves raw content. Parser-config signing chain: no parser rule or template channel is built or consumed here; that chain is reviewed in E09 (PenniLogic/docs#10). The over-the-air pin set is the one remotely updatable security configuration this epic introduces, and its signing chain is E19-F03; overlay tampering (T-14) is covered by the obscured-touch control in E19-F07.",
+          "analysis": "Modifiable assets: ciphertext rows and their headers, the wrapped key rows, the key journal and the erasure tombstone journal, rotation progress state, the audit trail, the device database and the pin set delivered over the air. The ledger's append-only and zero-sum integrity (baseline T-12) is ADR-002 and api#2's, preserved unchanged by ADR-018 section 1.3. Detection here rests on authenticated encryption with row, column and owner bound in the additional data (E19-F04), write-once journals outside the backup set (infra#33, ADR-018 section 6.6), and resumable rotation that never re-encrypts a row twice (api#53 acceptance). Ingestion boundary: this epic parses nothing; it protects the device store that holds raw messages at rest (E19-F07) and adds no path that moves raw content. Parser-config signing chain: no parser rule or template channel is built or consumed here; that chain is reviewed in E09 (PenniLogic/docs#10). The over-the-air pin set is the one remotely updatable security configuration this epic introduces, and its signing chain is E19-F03; overlay tampering (T-14) is covered by the obscured-touch control in E19-F07. The epic's supply-chain and secret exit criteria (SBOM, pinned actions, no secret in any repository history) are dependencies on infra#31 and infra#23, reviewed in their own epics.",
           "evidence": [
             "ADR-018 section 2: AES-256-GCM with row, column and owner in the additional authenticated data and a versioned key identifier",
-            "ADR-018 section 6.6: key journal and tombstone journal are append-only and outside the database backup set"
+            "ADR-018 section 6.6: key journal and tombstone journal are append-only and outside the database backup set",
+            "PenniLogic/infra#23: secret scanning covers full repository history (dependency for the exit criterion, not a control today)",
+            "PenniLogic/infra#31: IaC, container, mobile binary, SBOM and signed-provenance verification (dependency)"
           ],
           "findings": [
             "E19-F03",
@@ -188,7 +191,7 @@
         {
           "id": "repudiation",
           "disposition": "finding",
-          "analysis": "Actions that must be attributable later: every authentication, step-up, lockout, consent, sharing and administrative action (api#39 is the single trail all of them write to, ADR-020 section 8), every key creation, rotation, retirement and destruction with its approver (key journal, ADR-018 section 6.6), and every erasure with its signed receipt and barrier (api#38, ADR-021). Baseline T-03 asked for an append-only log with chained integrity; ADR-020 splits that into the transactional trail built here and the chained administrative log built by api#27 in E13, so this epic owns transactional completeness and immutability of the trail (E19-F05) but not the hash chain. The erasure receipt is the subject's proof of erasure and the operator's defence against a false claim, yet its signing key has no class or custody (E19-F06). All repository actions are by one account; the procedural separation of authoring and review sessions is the delivery policy, not a cryptographic identity.",
+          "analysis": "Actions that must be attributable later: every authentication, step-up, lockout, consent, sharing and administrative action (api#39 is the single trail all of them write to, ADR-020 section 8), every key creation, rotation, retirement and destruction with its approver (key journal, ADR-018 section 6.6), and every erasure with its signed receipt and barrier (api#38, ADR-021). Baseline T-03 asked for an append-only log with chained integrity; ADR-020 splits that into the transactional trail built here and the chained administrative log built by api#27 in E13, so this epic owns transactional completeness and immutability of the trail (E19-F05) but not the hash chain. The erasure receipt is the subject's proof of erasure and the operator's defence against a false claim, yet its signing key has no class or custody (E19-F06). Trail ordering relies on clock synchronisation configured and monitored for drift by infra#27 in E24. All repository actions are by one account; the procedural separation of authoring and review sessions is the delivery policy, not a cryptographic identity.",
           "evidence": [
             "ADR-020 section 8.1: one transactional write into the foundational trail, projected to the chain and transparency streams",
             "governance/DELIVERY.md: one GitHub user; independent review is recorded procedurally by non-author sessions and is not cryptographic identity"
