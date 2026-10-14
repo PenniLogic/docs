@@ -328,7 +328,7 @@ flowchart LR
 | J02.C.04 | customer | notification | notification-outbox | Account owner on every enrolled device | Receives a recovery notice with a cancel action | none | none | internal | Delivery to enrolled devices and verified channels only | none | none | none |
 | J02.T.03 | team | service | api-identity | Identity service in the core API | Completes recovery, revokes old credentials and applies the restricted period | none | none | restricted | Cooling off elapsed without cancellation | none | ADR-019 | none |
 | J02.C.05 | customer | android | android-app | Customer (provisional persona) | Enrolls a new passkey on the recovered account | F-AND-02 | S-AND-008 | confidential | Recovered session in its restricted period | none | none | recovery |
-| J02.C.06 | customer | android | android-app | Customer (provisional persona) | Reviews active sessions and revokes an unknown device | F-AND-02 | S-AND-064 | confidential | Signed-in owner on a device-bound session | none | none | none |
+| J02.C.06 | customer | android | android-app | Customer (provisional persona) | Reviews active sessions and revokes an unknown device | F-AND-02 | S-AND-064 | confidential | Signed-in owner on a device-bound session with ADR-019 step-up bound to the device removed | none | ADR-019 | none |
 | J02.C.07 | customer | web | web-app | Customer (provisional persona) | Signs in or recovers on web with the same routes | F-WEB-01 | S-WEB-001, S-WEB-002 | confidential | Passkey assertion on the web origin | none | ADR-019 | none |
 | J02.C.08 | customer | web | web-app | Customer (provisional persona) | Returns to the web shell and reviews profile security | F-WEB-01 | S-WEB-003, S-WEB-044 | confidential | Signed-in owner on a device-bound session | none | none | completion |
 
@@ -680,10 +680,10 @@ flowchart LR
 
 | Step | Lane | Channel | System | Actor | Action | Flow | Screens | Data | Authorization | Events | Policies | Signal |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| J06.C.01 | customer | android | android-app | Split organiser or participant (provisional persona) | Creates a split group and invites a participant | F-AND-11 | S-AND-042 | confidential | Signed-in owner on a device-bound session | none | none | abandonment |
-| J06.T.01 | team | service | api-sharing | Sharing service in the core API | Creates the group relation and a single-use invite bound to the invited contact | none | none | confidential | Organiser relation; default deny | pending:PenniLogic/contracts#8 | ADR-005 | none |
+| J06.C.01 | customer | android | android-app | Split organiser or participant (provisional persona) | Creates a split group and invites a participant | F-AND-11 | S-AND-042 | confidential | Signed-in owner on a device-bound session with ADR-019 step-up | none | ADR-019 | abandonment |
+| J06.T.01 | team | service | api-sharing | Sharing service in the core API | Creates the group relation and a single-use invite bound to the invited contact | none | none | confidential | Organiser relation; default deny; ADR-019 step-up token verified at execution | pending:PenniLogic/contracts#8 | ADR-005, ADR-019 | none |
 | J06.C.02 | customer | notification | notification-outbox | Invitee | Receives the invitation | none | none | internal | Delivery to the invited contact only | none | none | none |
-| J06.C.03 | customer | web | web-app | Invitee, possibly not yet a customer | Reviews and accepts the invitation on web | F-WEB-07 | S-WEB-040 | confidential | Signed-in invitee holding the single-use invite | none | none | none |
+| J06.C.03 | customer | web | web-app | Invitee, possibly not yet a customer | Reviews and accepts the invitation on web | F-WEB-07 | S-WEB-040 | confidential | Signed-in invitee holding the single-use invite, with ADR-019 step-up | none | ADR-019 | none |
 | J06.T.02 | team | service | api-split-ledger | Split ledger in the core API | Allocates expenses by share type with a deterministic remainder | none | none | confidential | Member relation on the group | pending:PenniLogic/contracts#8 | ADR-001, ADR-005, ADR-015 | none |
 | J06.C.04 | customer | android | android-app | Split organiser or participant (provisional persona) | Adds an itemised expense and records a settlement | F-AND-11 | S-AND-043, S-AND-044 | confidential | Member relation on the group | none | none | completion |
 | J06.T.03 | team | service | api-split-ledger | Split ledger in the core API | Records the settlement with its payment-proof reference and updates balances | none | none | confidential | Member relation on the group | pending:PenniLogic/contracts#8 | ADR-002, ADR-015 | none |
@@ -776,16 +776,16 @@ flowchart LR
 
 | Step | Lane | Channel | System | Actor | Action | Flow | Screens | Data | Authorization | Events | Policies | Signal |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| J07.C.01 | customer | android | android-app | Household owner (provisional persona) | Invites an eligible person and chooses aggregate categories to offer | F-AND-12 | S-AND-046 | confidential | Signed-in owner on a device-bound session | none | none | abandonment |
-| J07.T.01 | team | service | api-sharing | Sharing service in the core API | Creates a pending invite; nothing is shared before explicit acceptance | none | none | confidential | Owner relation; default deny | pending:PenniLogic/contracts#8 | ADR-005 | none |
-| J07.C.02 | customer | web | web-app | Household member (provisional persona) | Reviews what would be shared and accepts aggregate-only access | F-WEB-08 | S-WEB-041 | confidential | Signed-in invitee holding the invite | none | none | none |
-| J07.T.02 | team | service | api-sharing | Sharing service in the core API | Activates the aggregate-only grant; detail access needs a separate consent | none | none | confidential | Member acceptance recorded per category and level | pending:PenniLogic/contracts#8 | ADR-005, ADR-018, ADR-021 | none |
+| J07.C.01 | customer | android | android-app | Household owner (provisional persona) | Invites an eligible person and chooses aggregate categories to offer | F-AND-12 | S-AND-046 | confidential | Signed-in owner on a device-bound session with ADR-019 step-up | none | ADR-019 | abandonment |
+| J07.T.01 | team | service | api-sharing | Sharing service in the core API | Creates a pending invite; nothing is shared before explicit acceptance | none | none | confidential | Owner relation; default deny; ADR-019 step-up token verified at execution | pending:PenniLogic/contracts#8 | ADR-005, ADR-019 | none |
+| J07.C.02 | customer | web | web-app | Household member (provisional persona) | Reviews what would be shared and accepts aggregate-only access | F-WEB-08 | S-WEB-041 | confidential | Signed-in invitee holding the invite, with ADR-019 step-up | none | ADR-019 | none |
+| J07.T.02 | team | service | api-sharing | Sharing service in the core API | Activates the aggregate-only grant; detail access needs a separate consent | none | none | confidential | Member acceptance recorded per category and level; ADR-019 step-up token verified at execution | pending:PenniLogic/contracts#8 | ADR-005, ADR-018, ADR-019, ADR-021 | none |
 | J07.T.03 | team | service | api-household | Household service in the core API | Computes household aggregates and joint-goal progress under the active grants | none | none | confidential | Server-mediated read under the grant predicate | pending:PenniLogic/contracts#8 | ADR-005, ADR-021 | none |
 | J07.C.03 | customer | android | android-app | Household owner or member | Views the household dashboard and joint goal | F-AND-12 | S-AND-047 | confidential | Active grant for each shared category | none | none | completion |
 | J07.C.04 | customer | android | android-app | Household member (provisional persona) | Reviews the cross-user access log | F-AND-12 | S-AND-048 | confidential | Signed-in owner on a device-bound session | none | none | none |
 | J07.C.05 | customer | android | android-app | Household member (provisional persona) | Uses safe exit to leave and conceal the household view | F-AND-12 | S-AND-049 | confidential | Signed-in member on a device-bound session with ADR-019 step-up | none | ADR-019, ADR-021 | none |
 | J07.T.04 | team | service | api-sharing | Sharing service in the core API | Revokes the grants, denies further reads and starts client purge | none | none | restricted | Unilateral revocation by either party in one request under ADR-019 step-up | pending:PenniLogic/contracts#8 | ADR-005, ADR-019, ADR-021 | none |
-| J07.C.06 | customer | web | web-app | Former household member | Confirms access ended and manages own grants on web | F-WEB-08 | S-WEB-025, S-WEB-026, S-WEB-027 | confidential | Signed-in owner on a device-bound session | none | none | none |
+| J07.C.06 | customer | web | web-app | Former household member | Confirms access ended and manages own grants on web | F-WEB-08 | S-WEB-025, S-WEB-026, S-WEB-027 | confidential | Signed-in owner on a device-bound session; each grant change needs ADR-019 step-up | none | ADR-019 | none |
 
 | Step | Branch | To | Recovery | Recovery owner |
 |---|---|---|---|---|
@@ -870,7 +870,7 @@ flowchart LR
 | J08.C.03 | customer | android | android-app | AI-assisted customer (provisional persona) | Reviews an AI transaction draft and confirms, edits or discards it | F-AND-13 | S-AND-051 | confidential | Signed-in owner on a device-bound session | none | none | correction |
 | J08.T.03 | team | service | api-ledger | Ledger in the core API | Posts the confirmed draft as a normal transaction with AI provenance | none | none | confidential | Owner confirmation of the draft | pending:PenniLogic/contracts#20 | ADR-002, ADR-016 | none |
 | J08.C.04 | customer | android | android-app | AI-assisted customer (provisional persona) | Reviews AI history and provider settings and can turn history off or erase it | F-AND-13 | S-AND-052 | confidential | Signed-in owner on a device-bound session | pending:PenniLogic/contracts#18 | none | none |
-| J08.C.05 | customer | web | web-app | AI-assisted customer (provisional persona) | Uses the web assistant and manages a personal key or custom endpoint | F-WEB-09 | S-WEB-028, S-WEB-029, S-WEB-030 | confidential | Signed-in owner on a device-bound session | none | none | completion |
+| J08.C.05 | customer | web | web-app | AI-assisted customer (provisional persona) | Uses the web assistant and manages a personal key or custom endpoint | F-WEB-09 | S-WEB-028, S-WEB-029, S-WEB-030 | confidential | Signed-in owner on a device-bound session; adding or replacing a key or endpoint needs ADR-019 step-up | none | ADR-019 | completion |
 
 | Step | Branch | To | Recovery | Recovery owner |
 |---|---|---|---|---|
@@ -1036,8 +1036,8 @@ flowchart LR
 | Step | Lane | Channel | System | Actor | Action | Flow | Screens | Data | Authorization | Events | Policies | Signal |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | J10.C.01 | customer | android | android-app | Customer (provisional persona) | Reviews the trust centre and preferences and can open a support request | F-AND-15 | S-AND-056, S-AND-058, S-AND-063 | confidential | Signed-in owner on a device-bound session | none | none | none |
-| J10.C.02 | customer | android | android-app | Customer (provisional persona) | Requests an export or deletion of own data | F-AND-15 | S-AND-057 | confidential | Signed-in owner on a device-bound session | none | ADR-006 | abandonment |
-| J10.T.01 | team | service | api-rights | Rights service in the core API | Acknowledges the request, starts its response clock and validates identity and scope | none | none | restricted | Signed-in data principal; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006 | none |
+| J10.C.02 | customer | android | android-app | Customer (provisional persona) | Requests an export or deletion of own data | F-AND-15 | S-AND-057 | confidential | Signed-in owner on a device-bound session with ADR-019 step-up | none | ADR-006, ADR-019 | abandonment |
+| J10.T.01 | team | service | api-rights | Rights service in the core API | Acknowledges the request, starts its response clock and validates identity and scope | none | none | restricted | Signed-in data principal with ADR-019 step-up; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006, ADR-019 | none |
 | J10.T.02 | team | admin | admin-console | Support and privacy operator (provisional persona) | Picks the request from the redacted rights queue | F-ADM-07 | S-ADM-018 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.03 | team | admin | admin-console | Support and privacy operator (provisional persona) | Performs the bounded action, with independent approval when access is required | F-ADM-07 | S-ADM-019 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.04 | team | service | api-rights | Rights service in the core API | Executes the export or the crypto-shredding erasure and records evidence | none | none | restricted | Approved rights action | pending:PenniLogic/contracts#14 | ADR-006, ADR-021 | none |
@@ -1080,7 +1080,7 @@ flowchart LR
 | Abuse path | Step | Actor | Threat | Safe failure |
 |---|---|---|---|---|
 | AB-J10-01 | J10.T.03 | Curious or bribed operator | Uses a rights case to view customer financial detail | Detail access needs independent approval, is purpose-bound, expires and is audited |
-| AB-J10-02 | J10.C.02 | Impersonator | Requests an export of someone else's data | Identity and scope are validated first and the export is delivered only to the authenticated account |
+| AB-J10-02 | J10.C.02 | Impersonator | Requests an export of someone else's data | The request needs ADR-019 step-up, identity and scope are validated, and the export is delivered only to the authenticated account |
 | AB-J10-03 | J10.C.05 | Unauthenticated requester | Probes support status for other people's cases | Status needs a verified ticket and reveals no account data |
 
 | Not applicable | Kind | Reason |
@@ -1325,7 +1325,7 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | policy | ADR-016 | BP-J03, BP-J05, BP-J08 |
 | policy | ADR-017 | BP-J01, BP-J03, BP-J04, BP-J05 |
 | policy | ADR-018 | BP-J03, BP-J07 |
-| policy | ADR-019 | BP-J01, BP-J02, BP-J06, BP-J07 |
+| policy | ADR-019 | BP-J01, BP-J02, BP-J06, BP-J07, BP-J08, BP-J10 |
 | policy | ADR-020 | BP-J10, BP-J11, BP-J12 |
 | policy | ADR-021 | BP-J06, BP-J07, BP-J10 |
 | policy | ADR-022 | BP-J08, BP-J12 |

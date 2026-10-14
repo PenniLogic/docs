@@ -1150,6 +1150,26 @@ class PublishedDataTests(unittest.TestCase):
             if re.search(r"narrow|revo|left|leave", notice):
                 self.assertRegex(notice, r"pointer|[Nn]o notification describes")
 
+    def test_adr019_step_up_operations_name_step_up(self):
+        # ADR-019 section 9 step-up operations (data export, account deletion, sharing invitations, acceptances
+        # and grant changes, adding or replacing an AI key or endpoint, removing a device) and ADR-021 Phase 0
+        # rights intake: each step that performs or executes one names the step-up and cites ADR-019.
+        operations = {
+            "removing a device": ("J02.C.06",),
+            "sharing invitation": ("J06.C.01", "J06.T.01", "J07.C.01", "J07.T.01"),
+            "sharing acceptance": ("J06.C.03", "J07.C.02", "J07.T.02"),
+            "grant change": ("J07.C.05", "J07.T.04", "J07.C.06"),
+            "AI provider key or custom endpoint": ("J08.C.05",),
+            "data export or account deletion": ("J10.C.02", "J10.T.01"),
+            "member erasure": ("J06.T.05",),
+        }
+        missing = [(operation, step_id) for operation, step_ids in operations.items() for step_id in step_ids
+                   if "ADR-019 step-up" not in self.model.steps[step_id]["authorization"]
+                   or "ADR-019" not in self.model.steps[step_id]["policy_refs"]]
+        self.assertEqual(missing, [])
+        abuse = {path["id"]: path for path in self.model.blueprints["J10"]["abuse_paths"]}
+        self.assertIn("ADR-019 step-up", abuse["AB-J10-02"]["safe_failure"])
+
     def test_stories_outside_their_journey_personas_are_recorded_gaps(self):
         # TS-M1: the registry's own stories name personas their journey lacks; each one is a visible gap.
         registry = module.loads(module.GitSources(ROOT).blob(module.REGISTRY_PIN["commit"], module.REGISTRY_PIN["path"]))

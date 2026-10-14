@@ -978,9 +978,11 @@
             "S-AND-064"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in owner on a device-bound session",
+          "authorization": "Signed-in owner on a device-bound session with ADR-019 step-up bound to the device removed",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": null,
           "handoff": {
             "authoritative_service": "api-identity",
@@ -2737,9 +2739,11 @@
             "S-AND-042"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in owner on a device-bound session",
+          "authorization": "Signed-in owner on a device-bound session with ADR-019 step-up",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": {
             "signal": "abandonment",
             "fields": [
@@ -2773,12 +2777,13 @@
           "flow_id": null,
           "screen_ids": [],
           "data_class": "confidential",
-          "authorization": "Organiser relation; default deny",
+          "authorization": "Organiser relation; default deny; ADR-019 step-up token verified at execution",
           "event_refs": [
             "pending:PenniLogic/contracts#8"
           ],
           "policy_refs": [
-            "ADR-005"
+            "ADR-005",
+            "ADR-019"
           ],
           "telemetry": null,
           "handoff": null,
@@ -2848,9 +2853,11 @@
             "S-WEB-040"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in invitee holding the single-use invite",
+          "authorization": "Signed-in invitee holding the single-use invite, with ADR-019 step-up",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": null,
           "handoff": {
             "authoritative_service": "api-sharing",
@@ -3275,9 +3282,11 @@
             "S-AND-046"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in owner on a device-bound session",
+          "authorization": "Signed-in owner on a device-bound session with ADR-019 step-up",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": {
             "signal": "abandonment",
             "fields": [
@@ -3311,12 +3320,13 @@
           "flow_id": null,
           "screen_ids": [],
           "data_class": "confidential",
-          "authorization": "Owner relation; default deny",
+          "authorization": "Owner relation; default deny; ADR-019 step-up token verified at execution",
           "event_refs": [
             "pending:PenniLogic/contracts#8"
           ],
           "policy_refs": [
-            "ADR-005"
+            "ADR-005",
+            "ADR-019"
           ],
           "telemetry": null,
           "handoff": null,
@@ -3361,9 +3371,11 @@
             "S-WEB-041"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in invitee holding the invite",
+          "authorization": "Signed-in invitee holding the invite, with ADR-019 step-up",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": null,
           "handoff": {
             "authoritative_service": "api-sharing",
@@ -3397,13 +3409,14 @@
           "flow_id": null,
           "screen_ids": [],
           "data_class": "confidential",
-          "authorization": "Member acceptance recorded per category and level",
+          "authorization": "Member acceptance recorded per category and level; ADR-019 step-up token verified at execution",
           "event_refs": [
             "pending:PenniLogic/contracts#8"
           ],
           "policy_refs": [
             "ADR-005",
             "ADR-018",
+            "ADR-019",
             "ADR-021"
           ],
           "telemetry": null,
@@ -3640,9 +3653,11 @@
             "S-WEB-027"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in owner on a device-bound session",
+          "authorization": "Signed-in owner on a device-bound session; each grant change needs ADR-019 step-up",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": null,
           "handoff": {
             "authoritative_service": "api-sharing",
@@ -4062,9 +4077,11 @@
             "S-WEB-030"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in owner on a device-bound session",
+          "authorization": "Signed-in owner on a device-bound session; adding or replacing a key or endpoint needs ADR-019 step-up",
           "event_refs": [],
-          "policy_refs": [],
+          "policy_refs": [
+            "ADR-019"
+          ],
           "telemetry": {
             "signal": "completion",
             "fields": [
@@ -4673,10 +4690,11 @@
             "S-AND-057"
           ],
           "data_class": "confidential",
-          "authorization": "Signed-in owner on a device-bound session",
+          "authorization": "Signed-in owner on a device-bound session with ADR-019 step-up",
           "event_refs": [],
           "policy_refs": [
-            "ADR-006"
+            "ADR-006",
+            "ADR-019"
           ],
           "telemetry": {
             "signal": "abandonment",
@@ -4711,12 +4729,13 @@
           "flow_id": null,
           "screen_ids": [],
           "data_class": "restricted",
-          "authorization": "Signed-in data principal; scope limited to own data",
+          "authorization": "Signed-in data principal with ADR-019 step-up; scope limited to own data",
           "event_refs": [
             "pending:PenniLogic/contracts#14"
           ],
           "policy_refs": [
-            "ADR-006"
+            "ADR-006",
+            "ADR-019"
           ],
           "telemetry": null,
           "handoff": null,
@@ -5155,7 +5174,7 @@
           "step_id": "J10.C.02",
           "actor": "Impersonator",
           "threat": "Requests an export of someone else's data",
-          "safe_failure": "Identity and scope are validated first and the export is delivered only to the authenticated account"
+          "safe_failure": "The request needs ADR-019 step-up, identity and scope are validated, and the export is delivered only to the authenticated account"
         },
         {
           "id": "AB-J10-03",
