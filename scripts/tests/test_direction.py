@@ -968,6 +968,20 @@ class GitTests(FilesCase):
         self.assertEqual(self.run_git(root, "--structure"),
                          (1, "", "Direction check refused: grounding.not_accepted DIR-01\n"))
 
+    def test_shallow_clone_is_reported_as_truncated_history(self):
+        # A --depth 1 clone lacks the pinned base commit: refuse as truncated history, not as a bad pin.
+        root, _ = self.repository(Fixture())
+        git(root, "add", "-A")
+        git(root, "commit", "-q", "-m", "synthetic direction change")
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        git(folder.name, "clone", "-q", "--depth", "1", root.as_uri(), "shallow")
+        clone = Path(folder.name) / "shallow"
+        self.assertEqual((module.GitSources(root).shallow(), module.GitSources(clone).shallow()), (False, True))
+        self.assertEqual(self.run_git(root, "--structure")[0], 0)
+        self.assertEqual(self.run_git(clone, "--structure"),
+                         (1, "", "Direction check refused: grounding.shallow_history DIR-01\n"))
+
     def test_unknown_commit_or_path_is_unavailable(self):
         root, commit = self.repository(Fixture())
         sources = module.GitSources(root)

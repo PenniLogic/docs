@@ -9,7 +9,8 @@ direction_record).
 Candidates span distinct material and graphic traditions and cite product truth by {commit, path, sha256}: a
 Markdown or JSON document (never a schema, script or spike) under a product-truth root (product/, adr/, research/,
 governance/, architecture/; never product/direction/) at a commit reachable from the accepted base ACCEPTED_BASE,
-whose blob digest is checked in the local Git object store. The check proves the cited bytes exist on accepted main;
+whose blob digest is checked in the local Git object store, so it needs a full-depth clone (a shallow clone is
+refused as grounding.shallow_history). The check proves the cited bytes exist on accepted main;
 it does not prove that the cited text supports the candidate.
 Each candidate may carry non-binding, candidate-scoped illustrative sRGB values; they exist only to compute WCAG 2.x
 contrast feasibility (relative luminance) per text and UI pair, and every claimed pass/fail must equal the computed
@@ -177,7 +178,7 @@ STRUCTURE_RULES = (
     "candidate.material_not_distinct", "candidate.graphic_not_distinct", "candidate.category_default",
     "candidate.binding_values", "candidate.raw_value", "held.persona_validation",
     "grounding.missing", "grounding.path_not_canonical", "grounding.self_reference", "grounding.not_product_truth",
-    "grounding.not_accepted", "grounding.unavailable", "grounding.digest_mismatch",
+    "grounding.not_accepted", "grounding.unavailable", "grounding.shallow_history", "grounding.digest_mismatch",
     "contrast.duplicate_role", "contrast.unknown_role", "contrast.duplicate_pair", "contrast.required_pair_missing",
     "contrast.result_mismatch", "contrast.unused_role",
     "probe.count", "probe.topic_mismatch", "probe.markup", "probe.external_asset", "probe.raw_value", "probe.not_synthetic",
@@ -424,6 +425,11 @@ class GitSources:
             raise LookupError("ancestry unavailable")
         return result.returncode == 0
 
+    def shallow(self):
+        """True when this checkout's history is truncated (a shallow clone), so older pins may be absent."""
+        result = self._git("rev-parse", "--is-shallow-repository")
+        return result.returncode == 0 and result.stdout.strip() == b"true"
+
     def _git(self, *args):
         self.executable = self.executable or trusted_git(self.root)
         env = {key: value for key, value in os.environ.items() if key not in SCRUBBED_GIT_VARIABLES}
@@ -500,6 +506,14 @@ def check_contrast(candidate):
     return failing
 
 
+def history_truncated(sources):
+    """True only when the source port positively reports a shallow history; any doubt keeps the original rule."""
+    try:
+        return getattr(sources, "shallow", lambda: False)() is True
+    except LookupError:
+        return False
+
+
 def check_grounding(candidate, sources, verified):
     """Each candidate cites product truth by {commit, path, sha256}: a canonical path under a product-truth root
     (never this source's own directory) at a commit reachable from the accepted base, whose blob digest matches."""
@@ -515,11 +529,18 @@ def check_grounding(candidate, sources, verified):
                 "grounding.not_product_truth", identifier)
         key = (pin["commit"], pin["path"])
         if key not in verified:
+            accepted = None
             try:
-                require(sources.accepted(pin["commit"]), "grounding.not_accepted", identifier)
-                verified[key] = sha256(sources.blob(*key))
+                accepted = sources.accepted(pin["commit"])
+                if accepted:
+                    verified[key] = sha256(sources.blob(*key))
             except LookupError:
-                raise Refused("grounding.unavailable", identifier) from None
+                pass
+            if key not in verified:
+                # A shallow clone cannot prove ancestry or hold older blobs: name the truncated history, not the pin.
+                require(not history_truncated(sources), "grounding.shallow_history", identifier)
+                require(accepted is not False, "grounding.not_accepted", identifier)
+                raise Refused("grounding.unavailable", identifier)
         require(verified[key] == pin["sha256"], "grounding.digest_mismatch", identifier)
 
 
