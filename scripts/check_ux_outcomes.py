@@ -452,6 +452,10 @@ GUARDRAIL_CLASSES = frozenset({"permission_coercion", "harmful_sharing", "suppor
 # A primary outcome is a user outcome; time, error and abandonment are diagnostics, never the primary.
 OUTCOME_KINDS = frozenset({"task_success", "comprehension", "correction", "recovery", "trust",
                            "sustained_progress"})
+# Review round 1 (spec-and-safety.-r1-F7): the ticket scope names per-journey task success, time, error, correction,
+# abandonment, comprehension and recovery measures; every critical journey carries each kind (proposed, unvalidated).
+MEASURE_KINDS = frozenset({"task_success", "time_on_task", "error", "correction", "abandonment", "comprehension",
+                           "recovery"})
 # Allowlisted payload shapes: coarsened, enumerated values only; no free text, number or identifier kind exists.
 FIELD_KINDS = frozenset({"boolean", "enum", "count_bucket", "duration_bucket"})
 BUDGET_CAPS = {"max_fields_per_event": (1, 8), "max_values_per_field": (2, 12)}
@@ -748,7 +752,8 @@ def check_metric(metric, indexed):
 
 
 def check_coverage(indexed, pinned):
-    """Every pinned critical journey: one primary outcome, a trust or harm guardrail and one benchmark."""
+    """Every pinned critical journey: one primary outcome, a trust or harm guardrail, one benchmark and a measure of
+    each kind the ticket scope names."""
     for journey, critical in sorted(pinned.items()):
         if not critical:
             continue
@@ -758,6 +763,8 @@ def check_coverage(indexed, pinned):
         require(any(g["journey_id"] == journey for g in indexed["guardrails"].values()),
                 "coverage.guardrail_missing", journey)
         require(f"BM-{journey}" in indexed["benchmarks"], "coverage.benchmark_missing", journey)
+        kinds = {m["kind"] for m in indexed["metrics"].values() if m["journey_id"] == journey}
+        require(kinds >= MEASURE_KINDS, "coverage.measure_kind_missing", journey)
     covered = {guardrail["class"] for guardrail in indexed["guardrails"].values()}
     require(covered >= GUARDRAIL_CLASSES, "coverage.guardrail_class_missing")
     used = {event_id for collection in ("metrics", "guardrails") for record in indexed[collection].values()

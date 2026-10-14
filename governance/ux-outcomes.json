@@ -882,6 +882,246 @@
       "status": "unvalidated"
     },
     {
+      "id": "M-J01-06",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "task_success",
+      "statement": "Completed J01 confirmation steps per J01 entry step shown",
+      "numerator": {
+        "event_ids": [
+          "EV-002"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J01 confirmation steps ending completed"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-001"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J01 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-07",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J01 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J01 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "Ended J01 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-08",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J01 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J01 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "J01 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J01-09",
+      "journey_id": "J01",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J01 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J01 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j01"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J01 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
       "id": "M-J02-01",
       "journey_id": "J02",
       "role": "primary",
@@ -1091,6 +1331,189 @@
       },
       "unit": "proportion",
       "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-06",
+      "journey_id": "J02",
+      "role": "secondary",
+      "kind": "task_success",
+      "statement": "Completed J02 confirmation steps per J02 entry step shown",
+      "numerator": {
+        "event_ids": [
+          "EV-002"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J02 confirmation steps ending completed"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-001"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J02 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-07",
+      "journey_id": "J02",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J02 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J02 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "Ended J02 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J02-08",
+      "journey_id": "J02",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J02 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J02 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j02"
+            ]
+          }
+        ],
+        "eligibility": "J02 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [],
       "baseline": {
@@ -1330,6 +1753,189 @@
       "status": "unvalidated"
     },
     {
+      "id": "M-J03-06",
+      "journey_id": "J03",
+      "role": "secondary",
+      "kind": "task_success",
+      "statement": "Completed J03 confirmation steps per J03 entry step shown",
+      "numerator": {
+        "event_ids": [
+          "EV-002"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J03 confirmation steps ending completed"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-001"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J03 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J03-08",
+      "journey_id": "J03",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J03 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J03 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "eligibility": "J03 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J03-09",
+      "journey_id": "J03",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J03 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J03 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j03"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J03 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
       "id": "M-J04-01",
       "journey_id": "J04",
       "role": "primary",
@@ -1539,6 +2145,189 @@
       },
       "unit": "proportion",
       "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-06",
+      "journey_id": "J04",
+      "role": "secondary",
+      "kind": "task_success",
+      "statement": "Completed J04 confirmation steps per J04 entry step shown",
+      "numerator": {
+        "event_ids": [
+          "EV-002"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J04 confirmation steps ending completed"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-001"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J04 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-07",
+      "journey_id": "J04",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J04 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J04 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "eligibility": "Ended J04 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J04-09",
+      "journey_id": "J04",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J04 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J04 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j04"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J04 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [],
       "baseline": {
@@ -1775,6 +2564,177 @@
       },
       "unit": "proportion",
       "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-07",
+      "journey_id": "J05",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J05 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J05 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "eligibility": "Ended J05 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-08",
+      "journey_id": "J05",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J05 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J05 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "eligibility": "J05 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J05-09",
+      "journey_id": "J05",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J05 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J05 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j05"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J05 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [],
       "baseline": {
@@ -2085,6 +3045,177 @@
       "status": "unvalidated"
     },
     {
+      "id": "M-J06-07",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J06 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J06 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Ended J06 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-08",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J06 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J06 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "J06 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J06-09",
+      "journey_id": "J06",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J06 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J06 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j06"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J06 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
       "id": "M-J07-01",
       "journey_id": "J07",
       "role": "primary",
@@ -2321,6 +3452,177 @@
       "status": "unvalidated"
     },
     {
+      "id": "M-J07-07",
+      "journey_id": "J07",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J07 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J07 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "Ended J07 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J07-08",
+      "journey_id": "J07",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J07 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J07 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "J07 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J07-09",
+      "journey_id": "J07",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J07 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J07 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j07"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J07 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
       "id": "M-J08-01",
       "journey_id": "J08",
       "role": "primary",
@@ -2530,6 +3832,189 @@
       },
       "unit": "proportion",
       "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-06",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "task_success",
+      "statement": "Completed J08 confirmation steps per J08 entry step shown",
+      "numerator": {
+        "event_ids": [
+          "EV-002"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "confirmation"
+            ]
+          },
+          {
+            "field": "step_outcome",
+            "values": [
+              "completed"
+            ]
+          }
+        ],
+        "definition": "J08 confirmation steps ending completed"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-001"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "stage",
+            "values": [
+              "entry"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions shown a J08 entry step; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-07",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J08 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J08 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "eligibility": "Ended J08 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J08-09",
+      "journey_id": "J08",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J08 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J08 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j08"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J08 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [],
       "baseline": {
@@ -2834,6 +4319,177 @@
       "status": "unvalidated"
     },
     {
+      "id": "M-J09-07",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J09 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J09 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "eligibility": "Ended J09 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-08",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J09 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J09 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "eligibility": "J09 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J09-09",
+      "journey_id": "J09",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J09 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J09 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j09"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J09 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
       "id": "M-J10-01",
       "journey_id": "J10",
       "role": "primary",
@@ -3055,6 +4711,177 @@
       },
       "unit": "proportion",
       "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-07",
+      "journey_id": "J10",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J10 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J10 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "eligibility": "Ended J10 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-08",
+      "journey_id": "J10",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J10 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J10 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "eligibility": "J10 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J10-09",
+      "journey_id": "J10",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J10 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J10 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j10"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J10 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [],
       "baseline": {
@@ -3306,6 +5133,177 @@
       "status": "unvalidated"
     },
     {
+      "id": "M-J11-07",
+      "journey_id": "J11",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J11 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J11 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "eligibility": "Ended J11 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J11-08",
+      "journey_id": "J11",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J11 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J11 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "eligibility": "J11 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J11-09",
+      "journey_id": "J11",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J11 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J11 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j11"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J11 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
       "id": "M-J12-01",
       "journey_id": "J12",
       "role": "primary",
@@ -3527,6 +5525,177 @@
       },
       "unit": "proportion",
       "direction": "decrease",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-07",
+      "journey_id": "J12",
+      "role": "secondary",
+      "kind": "correction",
+      "statement": "Share of ended J12 corrections that are saved",
+      "numerator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "correction_outcome",
+            "values": [
+              "saved"
+            ]
+          }
+        ],
+        "definition": "J12 corrections ending saved"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-005"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "eligibility": "Ended J12 corrections; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-08",
+      "journey_id": "J12",
+      "role": "secondary",
+      "kind": "comprehension",
+      "statement": "Share of J12 comprehension checks answered understood",
+      "numerator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "check_result",
+            "values": [
+              "understood"
+            ]
+          }
+        ],
+        "definition": "J12 checks answered understood"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-008"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "eligibility": "J12 comprehension checks answered; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "proportion",
+      "direction": "increase",
+      "benefit_context": null,
+      "guardrail_ids": [],
+      "baseline": {
+        "value": null,
+        "source": "unmeasured"
+      },
+      "target": {
+        "value": null,
+        "source": "unset"
+      },
+      "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
+      "threshold_id": "TH-002",
+      "status": "unvalidated"
+    },
+    {
+      "id": "M-J12-09",
+      "journey_id": "J12",
+      "role": "secondary",
+      "kind": "recovery",
+      "statement": "Recovery paths ending restored per J12 recovery path entered",
+      "numerator": {
+        "event_ids": [
+          "EV-007"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          },
+          {
+            "field": "recovery_outcome",
+            "values": [
+              "restored"
+            ]
+          }
+        ],
+        "definition": "J12 recovery paths ending restored"
+      },
+      "denominator": {
+        "event_ids": [
+          "EV-006"
+        ],
+        "filters": [
+          {
+            "field": "journey",
+            "values": [
+              "j12"
+            ]
+          }
+        ],
+        "eligibility": "Opted-in sessions that entered a J12 recovery path; opted-out sessions excluded",
+        "excludes_opted_out": true
+      },
+      "unit": "rate_per_eligible",
+      "direction": "increase",
       "benefit_context": null,
       "guardrail_ids": [],
       "baseline": {

@@ -143,6 +143,14 @@ def exception(recorded="2026-10-01", expires="2026-11-01", role="decision_coordi
             "reason": "Synthetic dated exception"}
 
 
+def fill_kinds(journey, present, start):
+    """Secondary measures for the scope kinds a synthetic journey lacks (review round 1, F7), numbered from start."""
+    missing = [kind for kind in ("task_success", "time_on_task", "error", "correction", "abandonment",
+                                 "comprehension", "recovery") if kind not in present]
+    return [metric(f"M-{journey}-{number:02d}", journey, "secondary", kind, "TH-001", [])
+            for number, kind in enumerate(missing, start=start)]
+
+
 def catalogue(pin):
     """A synthetic catalogue that passes every structure rule against the synthetic registry (J01, J02 critical)."""
     classes = ("permission_coercion", "harmful_sharing", "support_demand", "accessibility", "dark_pattern")
@@ -174,7 +182,9 @@ def catalogue(pin):
                     metric("M-J02-01", "J02", "primary", "comprehension", "TH-001", ["G-J02-01"]),
                     # An incentive event counted as a secondary signal, with benefit and safety context (criterion 2).
                     dict(metric("M-J01-03", "J01", "secondary", "trust", "TH-001", ["G-J01-02"], ("EV-004",)),
-                         benefit_context="Sharing completes a split the user started")],
+                         benefit_context="Sharing completes a split the user started"),
+                    *fill_kinds("J01", ("task_success", "time_on_task"), 4),
+                    *fill_kinds("J02", ("comprehension",), 2)],
         "guardrails": guardrails,
         "thresholds": [threshold("TH-001"), threshold("TH-002")],
         "research_triggers": [
@@ -231,7 +241,7 @@ class ControlTests(CatalogueCase):
     def test_synthetic_catalogue_passes(self):
         model = self.run_check()
         self.assertEqual(sorted(model["pinned"]), ["J01", "J02", "J03"])
-        self.assertEqual(len(model["indexed"]["metrics"]), 4)
+        self.assertEqual(len(model["indexed"]["metrics"]), 15)
 
 
 
@@ -691,11 +701,18 @@ class CoverageTests(CatalogueCase):
         self.pin = pin_for(blob)
         document = mutate(catalogue(self.pin), lambda d: (
             d["metrics"].append(metric("M-J03-01", "J03", "primary", "recovery", "TH-001", [])),
+            d["metrics"].extend(fill_kinds("J03", ("recovery",), 2)),
             d["guardrails"].append(guardrail("G-J03-01", "J03", "accessibility", "trust", "TH-002")),
             d["benchmarks"].append(benchmark("J03"))))
         self.run_check(document, sources=Sources(blob))
         self.assertRefused("coverage.guardrail_missing", "J03",
                            mutate(document, lambda d: d["guardrails"].pop()), sources=Sources(blob))
+
+    def test_measure_kind_missing(self):
+        # Review round 1 (spec-and-safety.-r1-F7): the scope's seven measure kinds were narrowed without a hold.
+        self.assertRefused("coverage.measure_kind_missing", "J02", mutate(
+            self.document, lambda d: d["metrics"].remove(next(m for m in d["metrics"]
+                                                              if m["journey_id"] == "J02" and m["kind"] == "recovery"))))
 
     def test_benchmark_missing(self):
         self.assertRefused("coverage.benchmark_missing", "J02", mutate(
@@ -956,9 +973,9 @@ class ReadinessTests(CatalogueCase):
         self.assertEqual(gaps["readiness.pending_reference"], [f"pending:PenniLogic/{issue}" for issue in (
             "android#7", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#129", "docs#130", "docs#131",
             "infra#27")])
-        self.assertEqual(len(gaps["readiness.baseline_unmeasured"]), 11)
+        self.assertEqual(len(gaps["readiness.baseline_unmeasured"]), 22)
         self.assertEqual(gaps["readiness.threshold_unset"], ["TH-001", "TH-002"])
-        self.assertEqual(len(gaps["readiness.measure_unvalidated"]), 9)
+        self.assertEqual(len(gaps["readiness.measure_unvalidated"]), 20)
         self.assertEqual(gaps["readiness.benchmark_unrun"], ["BM-J01", "BM-J02"])
         self.assertEqual(gaps["readiness.longitudinal_unrun"], ["longitudinal_plan"])
         self.assertEqual(gaps["readiness.journey_outside_pin"], [])
@@ -1000,7 +1017,7 @@ class CliTests(CatalogueCase):
         lines = out.splitlines()
         self.assertEqual(lines[0], module.NOT_GREEN)
         self.assertIn("readiness.approval_pending: 4", lines)
-        self.assertIn("readiness.baseline_unmeasured: 11", lines)
+        self.assertIn("readiness.baseline_unmeasured: 22", lines)
         self.assertIn("readiness.d8_blocking_debt: 0", lines)
 
     def test_summary_round_trip_and_drift(self):
@@ -1263,6 +1280,10 @@ class SummaryTextTests(CatalogueCase):
 
 JOURNEYS = [f"J{number:02d}" for number in range(1, 13)]
 INCENTIVE_JOURNEYS = ("J01", "J06", "J09")
+# Review round 1 (F7): slots 06-09 hold task success, correction, comprehension and recovery, except the slot of the
+# journey's own primary kind.
+PRIMARY_SLOT = {"J02": 9, "J03": 7, "J04": 8, "J05": 6, "J06": 6, "J07": 6, "J08": 8, "J09": 6, "J10": 6, "J11": 6,
+                "J12": 6}
 # EV-011 (the raw AI-use event behind M-J08-05) is retired in review round 1; EV-016 starts a subscription change.
 EVENTS = [f"EV-{number:03d}" for number in range(1, 17) if number != 11]
 
@@ -1291,9 +1312,17 @@ class PublishedCatalogueTests(unittest.TestCase):
                 self.assertIn(indexed["guardrails"][f"G-{journey}-01"]["concern"], ("trust", "harm"))
                 self.assertIsNone(indexed["benchmarks"][f"BM-{journey}"]["results"])
 
+    def test_every_journey_has_each_scope_measure_kind(self):
+        for journey in JOURNEYS:
+            with self.subTest(journey=journey):
+                kinds = {m["kind"] for m in self.model["indexed"]["metrics"].values() if m["journey_id"] == journey}
+                self.assertLessEqual(module.MEASURE_KINDS, kinds)
+
     def test_exact_readiness_gaps(self):
         measures = sorted([*(f"M-{j}-0{n}" for j in JOURNEYS for n in range(1, 5)),
-                           *(f"M-{j}-05" for j in INCENTIVE_JOURNEYS), *(f"G-{j}-01" for j in JOURNEYS)],
+                           *(f"M-{j}-05" for j in INCENTIVE_JOURNEYS),
+                           *(f"M-{j}-0{n}" for j in JOURNEYS for n in range(6, 10) if n != PRIMARY_SLOT.get(j)),
+                           *(f"G-{j}-01" for j in JOURNEYS)],
                           key=lambda identifier: (identifier[2:5], identifier))
         benchmarks = [f"BM-{journey}" for journey in JOURNEYS]
         expected = {
@@ -1318,8 +1347,8 @@ class PublishedCatalogueTests(unittest.TestCase):
         self.assertEqual({rule: len(items) for rule, items in self.gaps.items()}, {
             "readiness.approval_pending": 4, "readiness.collection_disabled": 1,
             "readiness.payload_review_pending": 15, "readiness.pending_reference": 10,
-            "readiness.baseline_unmeasured": 75, "readiness.threshold_unset": 8,
-            "readiness.measure_unvalidated": 63, "readiness.benchmark_unrun": 12,
+            "readiness.baseline_unmeasured": 112, "readiness.threshold_unset": 8,
+            "readiness.measure_unvalidated": 100, "readiness.benchmark_unrun": 12,
             "readiness.longitudinal_unrun": 1, "readiness.journey_outside_pin": 0,
             "readiness.registry_import_pin": 1, "readiness.d8_blocking_debt": 0})
 
@@ -1384,7 +1413,7 @@ class PublishedCatalogueTests(unittest.TestCase):
         self.assertEqual((code, err.getvalue()), (1, ""))
         lines = out.getvalue().splitlines()
         self.assertEqual(lines[0], module.NOT_GREEN)
-        self.assertIn("readiness.measure_unvalidated: 63", lines)
+        self.assertIn("readiness.measure_unvalidated: 100", lines)
         self.assertIn("readiness.d8_blocking_debt: 0", lines)
         self.assertEqual(len(lines), 1 + len(module.READINESS_RULES))
 
