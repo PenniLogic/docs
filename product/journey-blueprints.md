@@ -1014,7 +1014,7 @@ flowchart LR
         J10_T_01["J10.T.01 service: Acknowledges the request, starts its response clock and validates identity and scope"]
         J10_T_02["J10.T.02 admin: Picks the request from the redacted rights queue"]
         J10_T_03["J10.T.03 admin: Performs the bounded action, with independent approval when access is required"]
-        J10_T_04["J10.T.04 service: Executes the export or the crypto-shredding erasure and records evidence"]
+        J10_T_04["J10.T.04 service: Executes the export, or runs the erasure as a reversible freeze that revokes sessions and grants and starts the cancellation window and statutory hold, then the irreversible crypto-shred, and records evidence"]
         J10_T_05["J10.T.05 admin: Records completion or refusal evidence"]
         J10_T_06["J10.T.06 service: Opens a support case with a coded topic and redacted account context"]
         J10_T_07["J10.T.07 admin: Works the case with redacted account status"]
@@ -1042,7 +1042,7 @@ flowchart LR
 | J10.T.01 | team | service | api-rights | Rights service in the core API | Acknowledges the request, starts its response clock and validates identity and scope | none | none | restricted | Signed-in data principal with ADR-019 step-up; scope limited to own data | pending:PenniLogic/contracts#14 | ADR-006, ADR-019 | none |
 | J10.T.02 | team | admin | admin-console | Support and privacy operator (provisional persona) | Picks the request from the redacted rights queue | F-ADM-07 | S-ADM-018 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
 | J10.T.03 | team | admin | admin-console | Support and privacy operator (provisional persona) | Performs the bounded action, with independent approval when access is required | F-ADM-07 | S-ADM-019 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | ADR-020 | none |
-| J10.T.04 | team | service | api-rights | Rights service in the core API | Executes the export or the crypto-shredding erasure and records evidence | none | none | restricted | Approved rights action | pending:PenniLogic/contracts#14 | ADR-006, ADR-021 | none |
+| J10.T.04 | team | service | api-rights | Rights service in the core API | Executes the export, or runs the erasure as a reversible freeze that revokes sessions and grants and starts the cancellation window and statutory hold, then the irreversible crypto-shred, and records evidence | none | none | restricted | Approved rights action | pending:PenniLogic/contracts#14 | ADR-006, ADR-021 | none |
 | J10.T.05 | team | admin | admin-console | Support and privacy operator (provisional persona) | Records completion or refusal evidence | F-ADM-07 | S-ADM-020 | confidential | Qualified operator role through the default-deny policy point; redacted by default | none | none | none |
 | J10.C.03 | customer | notification | notification-outbox | Customer (provisional persona) | Receives the outcome or the refusal with reasons | none | none | internal | Delivery to the requesting account's channels only | none | none | none |
 | J10.C.04 | customer | web | web-app | Customer (provisional persona) | Downloads the export or reviews the outcome on web | F-WEB-11 | S-WEB-034, S-WEB-035 | restricted | Signed-in owner on a device-bound session | none | none | completion |
@@ -1059,6 +1059,7 @@ flowchart LR
 | J10.T.02 | escalation | terminal | A request nearing its clock is escalated before breach | privacy_lead |
 | J10.T.03 | permission_denied | terminal | Access beyond the redacted view without independent approval is denied | security_team |
 | J10.T.04 | partial | J10.T.05 | Shared records keep placeholder facts others depend on; the response explains what was retained and why | rights_team |
+| J10.T.04 | rollback | terminal | A cancellation before the shred records the erasure as cancelled; grants stay revoked and memberships ended until the person re-creates them | rights_team |
 | J10.C.03 | timeout | terminal | An undeliverable notice is retried and the outcome stays in the trust centre | messaging_team |
 | J10.T.06 | failure | terminal | An intake failure keeps the draft on the device and retries | support_team |
 | J10.T.08 | rollback | terminal | A mistaken refund is corrected by a new audited entry | billing_team |
@@ -1074,9 +1075,9 @@ flowchart LR
 
 | Step | Clock | Audit | Notification | Reversal |
 |---|---|---|---|---|
-| J10.T.01 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
-| J10.T.03 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
-| J10.T.04 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
+| J10.T.01 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design |
+| J10.T.03 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design |
+| J10.T.04 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design |
 | J10.T.08 | Refund windows follow the store and the pinned plan version; values pending | Every refund is one audited write and unwinds entitlement and quota | The customer is told of the refund and any plan change | A refund is reversed only by a new audited correction, never an edit |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
@@ -1163,7 +1164,7 @@ flowchart LR
 |---|---|---|---|---|
 | J11.T.04 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation ends at its ADR-020 section 16 limit or on revocation and the next request is denied; access already used is reported, never hidden |
 | J11.T.05 | Elevation, unmask and break-glass limits are the ADR-020 section 16 values; the expiry of an unapproved request is pending | One transactional audit write per action before any data leaves the database | Requester and approver are notified of each decision | Elevation ends at its ADR-020 section 16 limit or on revocation and the next request is denied; access already used is reported, never hidden |
-| J11.T.06 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; a completed erasure is final by design |
+| J11.T.06 | The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending | Every action on the request is one audited write | The customer is told of receipt, progress, completion or refusal with reasons | A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design |
 
 | Abuse path | Step | Actor | Threat | Safe failure |
 |---|---|---|---|---|

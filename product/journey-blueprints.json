@@ -4743,7 +4743,7 @@
             "clock": "The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending",
             "audit": "Every action on the request is one audited write",
             "notification": "The customer is told of receipt, progress, completion or refusal with reasons",
-            "reversal": "A refusal can be contested by a new request; a completed erasure is final by design"
+            "reversal": "A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design"
           },
           "boundary": {
             "raw_message_egress": false,
@@ -4825,7 +4825,7 @@
             "clock": "The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending",
             "audit": "Every action on the request is one audited write",
             "notification": "The customer is told of receipt, progress, completion or refusal with reasons",
-            "reversal": "A refusal can be contested by a new request; a completed erasure is final by design"
+            "reversal": "A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design"
           },
           "boundary": {
             "raw_message_egress": false,
@@ -4849,7 +4849,7 @@
           "lane": "team",
           "channel": "service",
           "actor": "Rights service in the core API",
-          "action": "Executes the export or the crypto-shredding erasure and records evidence",
+          "action": "Executes the export, or runs the erasure as a reversible freeze that revokes sessions and grants and starts the cancellation window and statutory hold, then the irreversible crypto-shred, and records evidence",
           "system": "api-rights",
           "flow_id": null,
           "screen_ids": [],
@@ -4868,7 +4868,7 @@
             "clock": "The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending",
             "audit": "Every action on the request is one audited write",
             "notification": "The customer is told of receipt, progress, completion or refusal with reasons",
-            "reversal": "A refusal can be contested by a new request; a completed erasure is final by design"
+            "reversal": "A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design"
           },
           "boundary": {
             "raw_message_egress": false,
@@ -4880,6 +4880,12 @@
               "kind": "partial",
               "to": "J10.T.05",
               "recovery": "Shared records keep placeholder facts others depend on; the response explains what was retained and why",
+              "recovery_owner": "rights_team"
+            },
+            {
+              "kind": "rollback",
+              "to": null,
+              "recovery": "A cancellation before the shred records the erasure as cancelled; grants stay revoked and memberships ended until the person re-creates them",
               "recovery_owner": "rights_team"
             }
           ],
@@ -5490,7 +5496,7 @@
             "clock": "The response clock starts at acknowledgement of every request or grievance, per T-CMP-01; its values come from the compliance floor profile and are pending",
             "audit": "Every action on the request is one audited write",
             "notification": "The customer is told of receipt, progress, completion or refusal with reasons",
-            "reversal": "A refusal can be contested by a new request; a completed erasure is final by design"
+            "reversal": "A refusal can be contested by a new request; an erasure can be cancelled with the same proof as intake from the freeze until the shred starts (ADR-021 Phase 1), and the shred is final by design"
           },
           "boundary": {
             "raw_message_egress": false,

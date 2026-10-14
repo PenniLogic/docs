@@ -1091,7 +1091,7 @@ class PublishedDataTests(unittest.TestCase):
     def test_structure_line_is_exact(self):
         self.assertEqual(
             module.structure_line(self.model),
-            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 127 steps (69 customer, 58 team), 97 branches, "
+            "Journey blueprints 0.1.0 structure valid: 12 blueprints, 127 steps (69 customer, 58 team), 98 branches, "
             "28 abuse paths, 19 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
@@ -1269,6 +1269,20 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(routed, [("GAP-J10-03", "PenniLogic/docs#44", "policy")])
         summary = module.render_summary(self.model, module.readiness(self.model))
         self.assertIn("provisional scale proposed here", summary)
+
+    def test_erasure_reversal_names_pre_shred_cancellation(self):
+        # Review round 2 SR-09: ADR-021 Phase 1 freeze starts the cancellation window; cancellation is available
+        # until Phase 2 (shred) starts, with the same proof as intake.
+        reversals = {step["id"]: step["controls"]["reversal"] for journey_id in ("J10", "J11")
+                     for step in self.model.blueprints[journey_id]["steps"]
+                     if step["controls"] is not None and re.search(r"erasure|shred", step["controls"]["reversal"])}
+        self.assertEqual(sorted(reversals), ["J10.T.01", "J10.T.03", "J10.T.04", "J11.T.06"])
+        for step_id, reversal in reversals.items():
+            self.assertRegex(reversal, r"cancelled with the same proof as intake from the freeze until the shred",
+                             step_id)
+        shred = self.model.steps["J10.T.04"]
+        self.assertIn("reversible freeze", shred["action"])
+        self.assertEqual([branch["kind"] for branch in shred["branches"]], ["partial", "rollback"])
 
     def test_stories_outside_their_journey_personas_are_recorded_gaps(self):
         # TS-M1: the registry's own stories name personas their journey lacks; each one is a visible gap.
