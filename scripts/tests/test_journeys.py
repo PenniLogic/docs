@@ -559,6 +559,15 @@ class StepTests(JourneyCase):
         self.assertRefused("handoff.unknown_service", "J01.C.02",
                            setter(("J01.C.02", "handoff", "authoritative_service"), "made-up-service"))
 
+    def test_handoff_names_the_receiving_surface_itself(self):
+        # Review round 2 SR-05: a surface naming its own client is not an authoritative service.
+        self.assertRefused("handoff.unknown_service", "J01.C.02",
+                           setter(("J01.C.02", "handoff", "authoritative_service"), "web-client"))
+
+    def test_handoff_names_another_client_surface(self):
+        self.assertRefused("handoff.unknown_service", "J01.C.02",
+                           setter(("J01.C.02", "handoff", "authoritative_service"), "android-client"))
+
     def test_handoff_without_channel_change(self):
         self.assertRefused("handoff.unexpected", "J01.C.01", setter(
             ("J01.C.01", "handoff"), {"authoritative_service": "sync-api", "may_show": "Status only"}))
@@ -1139,10 +1148,10 @@ class PublishedDataTests(unittest.TestCase):
 
     def test_every_handoff_names_a_modelled_service(self):
         for blueprint in self.document["blueprints"]:
-            systems = {step["system"] for step in blueprint["steps"]}
+            services = {step["system"] for step in blueprint["steps"] if step["channel"] == "service"}
             for step in blueprint["steps"]:
                 if step["handoff"] is not None:
-                    self.assertIn(step["handoff"]["authoritative_service"], systems, step["id"])
+                    self.assertIn(step["handoff"]["authoritative_service"], services, step["id"])
 
     def test_plan_migration_carries_a_pending_advance_notice_clock(self):
         # Obligation O-21 (T-BIL-10 = PenniLogic/api#60): advance notice on a price or entitlement change.

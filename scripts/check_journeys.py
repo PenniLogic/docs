@@ -647,15 +647,17 @@ def check_graph(blueprint):
     for identifier in steps:
         require(identifier in reached, "step.unreachable", identifier)
     require(any(not step["next"] for step in blueprint["steps"]), "step.no_terminal", blueprint["id"])
-    systems = {step["system"] for step in blueprint["steps"]}
+    services = {step["system"] for step in blueprint["steps"] if step["channel"] == "service"}
     crossing = {target for source, target in _edges(blueprint)
                 if steps[source]["channel"] != steps[target]["channel"] and steps[target]["channel"] in SURFACES}
     for identifier, step in steps.items():
         # The receiving surface names the authoritative service and what it may safely show.
         require(identifier not in crossing or step["handoff"] is not None, "handoff.missing", identifier)
         require(identifier in crossing or step["handoff"] is None, "handoff.unexpected", identifier)
-        # The authoritative service is one the blueprint models as a step system, so D01 and the reopen index agree.
-        require(step["handoff"] is None or step["handoff"]["authoritative_service"] in systems,
+        # The authoritative service is a backstage system the blueprint models as a service step (so D01 and the
+        # reopen index agree), never a client surface, an outbox or the receiving step's own system (criterion 2).
+        require(step["handoff"] is None or (step["handoff"]["authoritative_service"] in services
+                                            and step["handoff"]["authoritative_service"] != step["system"]),
                 "handoff.unknown_service", identifier)
 
 
