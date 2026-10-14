@@ -179,8 +179,8 @@ migration plan blocks publishing (`release.cdo_pending_published`,
 `release.migration_plan_pending_published`), and a published release must sit on a published previous
 release (`release.previous_unpublished`), so nothing pending lies below a published version. Every
 `pending:` migration plan is a visible gap (`readiness.migration_plan_pending`). No session in this change
-verifies a migration plan, so real data writes only null or `pending:` references (global rule 8,
-`held.migration_plan_ref`); a resolved reference is reported as `readiness.migration_plan_unverified`
+verifies a migration plan, so real data writes only null or `pending:` references
+(`held.migration_plan_ref`); a resolved reference is reported as `readiness.migration_plan_unverified`
 until it can be verified, never as a pass. No session in this change records a CDO decision
 (`held.cdo_recorded`); a recorded decision is reported as `readiness.cdo_decision_unverified` until it
 can be verified, never as a pass.

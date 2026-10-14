@@ -431,7 +431,7 @@ def change_class(current, previous):
 
 
 def check_reference(value, *subjects):
-    """A designated *_ref is null, `PenniLogic/<repo>#N` or `pending:PenniLogic/<repo>#N` (global rule 8)."""
+    """A designated *_ref is null, `PenniLogic/<repo>#N` or `pending:PenniLogic/<repo>#N`."""
     if value is not None:
         require(ISSUE_REF.fullmatch(value.removeprefix("pending:")) is not None, "reference.invalid", *subjects)
 
@@ -459,7 +459,7 @@ def check_releases(document, schema, fixture):
         require(change_class(version(current), None if previous is None else version(previous))
                 == release["change_class"], "release.class_mismatch", name)
         check_reference(release["migration_plan_ref"], name)
-        # Global rule 8: no session in this change verifies a migration plan, so real data writes null or `pending:`
+        # No session in this change verifies a migration plan, so real data writes null or `pending:`
         # only; like a recorded CDO decision, a resolved reference stays an unverified gap even in fixture mode.
         require(fixture or (release["migration_plan_ref"] or "pending:").startswith("pending:"),
                 "held.migration_plan_ref", name)
@@ -874,7 +874,7 @@ def readiness(model):
             gaps[rule].add(f"{library}@{current}")
         plan = release["migration_plan_ref"]
         if plan is not None:
-            # Global rule 8: a `pending:` reference is a visible gap until the plan exists; a resolved one cannot be
+            # A `pending:` reference is a visible gap until the plan exists; a resolved one cannot be
             # verified offline yet, so it stays a gap rather than a pass.
             rule = "readiness.migration_plan_pending" if plan.startswith("pending:") else \
                 "readiness.migration_plan_unverified"

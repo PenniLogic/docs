@@ -238,6 +238,13 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(len(model.components), 5)
         self.assertEqual(len(run_check(real(), False).releases), 2)
 
+    def test_contract_cites_no_unreachable_rule(self):
+        """Fable r1 F2: the contract and checker cite sources a reader can reach, not a numbered `global rule` of a
+        coordinating brief outside the repository."""
+        for path in ("governance/figma-library-governance.md", "scripts/check_figma_libraries.py"):
+            with self.subTest(path=path):
+                self.assertNotRegex((ROOT / path).read_text(encoding="utf-8"), r"(?i)global\s+rule")
+
     def test_pending_migration_plan_is_a_visible_gap(self):
         document = real()
         self.assertEqual(module.readiness(run_check(copy.deepcopy(document), False))[
@@ -890,7 +897,7 @@ class ReleaseTests(RuleCase):
             role="systems"), "schema.invalid", "LIB-COMPONENTS@2.0.0")
 
     def test_resolved_migration_plan_is_held_in_real_data(self):
-        """R3-AV-6: global rule 8 writes null or `pending:` here; a resolved reference is held, like a recorded CDO
+        """R3-AV-6: real data writes null or `pending:` here; a resolved reference is held, like a recorded CDO
         decision."""
         def base():
             document = real()
