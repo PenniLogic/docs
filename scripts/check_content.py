@@ -13,9 +13,12 @@ unassigned: this validator is never given an assignment from the published data,
 every record stays draft. Approval windows are evaluated with an injected clock; `now == expires_at` is expired.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a term, key,
-regulated-copy, pattern or issue grammar; copy text is never echoed. Readiness gaps (comprehension evidence held by
-PenniLogic/docs#66, the provisional reading level, unapproved terms, keys and regulated copy, the unassigned approver
-and the docs#74 hold on `nav.` labels) are counted, never filled in, and keep the default mode NOT GREEN.
+regulated-copy, pattern or issue grammar; copy text is never echoed. Every JSON input goes through one strict loader
+that refuses nesting deeper than MAX_JSON_DEPTH before parsing and integers longer than MAX_INTEGER_DIGITS before
+conversion, so whether an input parses never depends on the interpreter's recursion, stack or integer-conversion
+limits, and the first fault reported never depends on hash-seeded set order. Readiness gaps (comprehension evidence
+held by PenniLogic/docs#66, the provisional reading level, unapproved terms, keys and regulated copy, the unassigned
+approver and the docs#74 hold on `nav.` labels) are counted, never filled in, and keep the default mode NOT GREEN.
 `--write-views` regenerates the Markdown views product/content/{glossary,voice,message-keys,regulated-copy}.md from
 the checked documents and `--check-views` fails when they drift; free text is rendered with Markdown escaped.
 Everything runs offline against local files and the local Git object store: no network, remote action, approval,
@@ -106,6 +109,18 @@ PROHIBITED_PLACEHOLDER_PARTS = (
 )
 # Placeholder sources that carry user data; notifications never echo them (voice.discreet_by_default).
 DATA_PLACEHOLDER_SOURCES = ("client_cache", "service_response")
+# Deepest array/object nesting accepted in any JSON this validator reads: the content documents and their schemas,
+# the taxonomy, the design-gates roles and the base-commit blobs. The deepest of them published today nests 8 levels
+# (glossary.schema.json; the content documents nest 4 and no JSON file in the repository nests more than 9), so 64
+# leaves ample room while the recursion that follows an input's nesting after the scan (the C parser, the content
+# guard, nested comparisons) stays far inside any interpreter's recursion and stack limits. Deeper input is refused
+# before parsing (input.unreadable_or_invalid; base.invalid for a base blob): whether the parser itself overflows
+# first depends on the build's C stack (PenniLogic/docs#84 native CI failure 1).
+MAX_JSON_DEPTH = 64
+# Longest decimal numeral converted to an integer (JSON integers and version components). Every 64-bit value fits,
+# and the interpreter's configurable integer-conversion limit (PYTHONINTMAXSTRDIGITS, -X int_max_str_digits) can never
+# be set below 640 digits, so int() within this bound never depends on it; a longer numeral is refused everywhere.
+MAX_INTEGER_DIGITS = 20
 # Numeric bounds are enforced here, not in the schemas (shared draft-07 subset).
 SENTENCE_WORDS = (8, 40)
 RANGE_LIMIT = 2000
@@ -210,7 +225,9 @@ def shape(value, schema):
 
 def version(value):
     match = SEMVER.fullmatch(value) if isinstance(value, str) else None
-    require(match is not None, "version.grammar")
+    # Bounded before int(), so the interpreter's integer-conversion limit never decides the outcome.
+    require(match is not None and all(len(part) <= MAX_INTEGER_DIGITS for part in match.groups()),
+            "version.grammar")
     return tuple(int(part) for part in match.groups())
 
 
@@ -466,9 +483,11 @@ def banned_in(text, phrases):
 
 def check_placeholders(catalogue, facts):
     """Catalogue placeholders add to the taxonomy's; none may shadow one or carry content, credentials or identity."""
-    own = _unique([item["id"] for item in catalogue["placeholders"]], SNAKE, "placeholder.grammar",
-                  "placeholder.duplicate")
-    for identifier in own:
+    identifiers = [item["id"] for item in catalogue["placeholders"]]
+    own = _unique(identifiers, SNAKE, "placeholder.grammar", "placeholder.duplicate")
+    # Document order, never the set's: with two different faults, set order (and so the rule reported) would follow
+    # the per-process hash seed.
+    for identifier in identifiers:
         require(identifier not in facts["placeholders"], "placeholder.shadows_taxonomy")
         joined = identifier.replace("_", "")
         require(not any(part in joined for part in PROHIBITED_PLACEHOLDER_PARTS), "placeholder.prohibited")
@@ -810,8 +829,43 @@ class GitSources:
         return result.stdout
 
 
+QUOTE, BACKSLASH, OPENERS, CLOSERS = ord('"'), ord("\\"), b"[{", b"]}"
+
+
+def nesting_depth(raw, limit=MAX_JSON_DEPTH):
+    """The deepest array/object nesting of JSON bytes, from one iterative pass that skips string contents (escapes
+    included) and stops at limit + 1. UTF-8 multi-byte sequences never contain these ASCII bytes, so the scan needs
+    no decoding. Exact (up to limit + 1) for well-formed JSON; for malformed JSON never below the depth a parser
+    reaches before rejecting it, since the parser reads the same valid prefix."""
+    depth = deepest = 0
+    in_string = escaped = False
+    for byte in raw:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif byte == BACKSLASH:
+                escaped = True
+            elif byte == QUOTE:
+                in_string = False
+        elif byte == QUOTE:
+            in_string = True
+        elif byte in OPENERS:
+            depth += 1
+            if depth > deepest:
+                deepest = depth
+                if deepest > limit:
+                    break
+        elif byte in CLOSERS:
+            depth -= 1
+    return deepest
+
+
 def loads(raw):
-    """Strict JSON from bytes: UTF-8 and no duplicate keys, like check_client_states.load_json."""
+    """Strict JSON from bytes, like check_client_states.load_json (UTF-8, no duplicate keys), with two bounds checked
+    before the interpreter could decide the outcome: nesting deeper than MAX_JSON_DEPTH is refused before parsing
+    starts, and an integer longer than MAX_INTEGER_DIGITS before it is converted."""
+    require(nesting_depth(raw) <= MAX_JSON_DEPTH, "input.unreadable_or_invalid")
+
     def unique(pairs):
         value = {}
         for key, item in pairs:
@@ -819,7 +873,17 @@ def loads(raw):
                 raise ValueError("duplicate JSON key")
             value[key] = item
         return value
-    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
+
+    def integer(numeral):
+        require(len(numeral.lstrip("-")) <= MAX_INTEGER_DIGITS, "input.unreadable_or_invalid")
+        return int(numeral)
+
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique, parse_int=integer)
+
+
+def read_json(path):
+    """A JSON input file through the bounded loader above, never the sibling's unbounded load_json."""
+    return loads(Path(path).read_bytes())
 
 
 def document_path(name):
@@ -1217,8 +1281,8 @@ def write_views(root, views):
 
 def load_documents(root):
     root = Path(root)
-    documents = {name: support.load_json(root / document_path(name)) for name in DOCUMENTS}
-    schemas = {name: support.load_json(root / schema_path(name)) for name in DOCUMENTS}
+    documents = {name: read_json(root / document_path(name)) for name in DOCUMENTS}
+    schemas = {name: read_json(root / schema_path(name)) for name in DOCUMENTS}
     return documents, schemas
 
 
@@ -1226,8 +1290,7 @@ def load_and_check(root, now, base=None):
     root = Path(root)
     documents, schemas = load_documents(root)
     return check(
-        documents, schemas, support.load_json(root / TAXONOMY), support.load_json(root / GATES), now,
-        GitSources(root, base),
+        documents, schemas, read_json(root / TAXONOMY), read_json(root / GATES), now, GitSources(root, base),
     )
 
 

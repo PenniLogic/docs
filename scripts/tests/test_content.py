@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -239,6 +240,11 @@ def keys_of(docs):
 
 def records_of(docs):
     return {item["id"]: item for item in docs["regulated-copy"]["records"]}
+
+
+def nested(depth):
+    """JSON bytes nesting exactly `depth` arrays and objects: an object holding depth - 1 nested arrays."""
+    return b'{"schema_version": ' + b"[" * (depth - 1) + b"]" * (depth - 1) + b"}\n"
 
 
 class ControlTests(Harness):
@@ -702,6 +708,16 @@ class PlaceholderTests(Harness):
 
     def test_placeholder_shadowing_the_taxonomy(self):
         self.assertRefused(lambda d: self.placeholders(d)[0].update(id="item"), "placeholder.shadows_taxonomy")
+
+    def test_two_placeholder_faults_report_the_first_in_document_order(self):
+        # Set order follows the per-process hash seed, so the rule reported for a catalogue with two different faults
+        # used to vary between runs (PYTHONHASHSEED 0 and 1 disagreed); document order is the same everywhere.
+        shadowing = {"id": "item", "description": "Synthetic.", "source": "surface_registration"}
+        prohibited = {"id": "user_label", "description": "Synthetic.", "source": "surface_registration"}
+        for faults, rule in (((shadowing, prohibited), "placeholder.shadows_taxonomy"),
+                             ((prohibited, shadowing), "placeholder.prohibited")):
+            with self.subTest(rule=rule):
+                self.assertRefused(lambda d: d["message-keys"].update(placeholders=copy.deepcopy(list(faults))), rule)
 
     def test_placeholders_that_would_echo_content_credentials_or_identity(self):
         for identifier in ("payee_name", "otp", "operator_id", "raw_text", "account_ref", "member_alias"):
@@ -1341,6 +1357,20 @@ class BaseVersioningTests(Harness):
             self.run_check(sources=Broken())
         self.assertEqual(caught.exception.rule, "base.invalid")
 
+    def test_over_deep_base_blob_is_refused_before_parsing(self):
+        class Deep(FakeSources):
+            def base_file(self, path):
+                deep = nested(content.MAX_JSON_DEPTH + 1)
+                return deep if path == content.document_path("voice") else super().base_file(path)
+        # Control: the same base at its real depth.
+        self.run_check(sources=FakeSources({"voice": voice()}, base_schemas=self.schemas))
+        # The parser is never reached, so the refusal cannot depend on its recursion or stack limits (the base
+        # schema is serialised from the already loaded schemas, so the patch sees only the validator's parsing).
+        with mock.patch.object(content.json, "loads", side_effect=AssertionError("parser reached")):
+            with self.assertRaises(content.Refused) as caught:
+                self.run_check(sources=Deep({"voice": voice()}, base_schemas=self.schemas))
+        self.assertEqual(caught.exception.rule, "base.invalid")
+
     def test_version_regression(self):
         base = documents()
         base["voice"]["voice_version"] = "0.2.0"
@@ -1706,11 +1736,40 @@ class CommandLineTests(unittest.TestCase):
             "invalid UTF-8": original.replace(b'"voice_version"', b'"voice_\xff_version"', 1),
             "byte order mark": b"\xef\xbb\xbf" + original,
             "deep nesting": b'{"schema_version": ' + b"[" * 100000 + b"]" * 100000 + b"}\n",
+            # One level past the bound: refused by the scan before parsing, on every interpreter and stack size.
+            "one level too deep": nested(content.MAX_JSON_DEPTH + 1),
         }
         for label, raw in cases.items():
             with self.subTest(case=label):
                 target.write_bytes(raw)
                 self.assertEqual(self.main(), (1, "", "Content check refused: input.unreadable_or_invalid\n"))
+        target.write_bytes(original)
+
+    def test_nesting_exactly_at_the_bound_is_parsed_and_meets_the_next_rule(self):
+        # Whether 100000 levels parse depends on the build and its C stack (native CI run 38526613995 parsed them and
+        # reported schema.invalid; locally they overflowed). The bound makes the boundary explicit instead: exactly
+        # MAX_JSON_DEPTH levels parse everywhere, so the voice document reaches its schema, while one level more is
+        # refused before parsing (previous test).
+        target = self.repository.root / content.document_path("voice")
+        target.write_bytes(nested(content.MAX_JSON_DEPTH))
+        self.assertEqual(content.nesting_depth(target.read_bytes()), content.MAX_JSON_DEPTH)
+        self.assertEqual(self.main(), (1, "", "Content check refused: schema.invalid\n"))
+
+    def test_nesting_bound_covers_every_json_input_and_success_at_the_bound(self):
+        # The taxonomy is read only for the members it imports, so an extra member nested to exactly the bound
+        # leaves the outcome identical to the control; one level more is refused before parsing.
+        control = self.main()
+        self.assertEqual(control[:1] + control[2:], (1, ""))
+        target = self.repository.root / content.TAXONOMY
+        original = target.read_bytes()
+        for depth, expected in ((content.MAX_JSON_DEPTH, control),
+                                (content.MAX_JSON_DEPTH + 1,
+                                 (1, "", "Content check refused: input.unreadable_or_invalid\n"))):
+            with self.subTest(depth=depth):
+                extra = b"[" * (depth - 1) + b"]" * (depth - 1)
+                target.write_bytes(original.rstrip()[:-1] + b', "extra": ' + extra + b"}\n")
+                self.assertEqual(content.nesting_depth(target.read_bytes()), depth)
+                self.assertEqual(self.main(), expected)
         target.write_bytes(original)
 
     def test_git_inside_the_checked_repository_is_never_used(self):
@@ -1726,6 +1785,79 @@ class CommandLineTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {"PATH": os.pathsep.join(("bin", str(planted)))}):
             with self.assertRaises(LookupError):
                 content.trusted_git(self.repository.root)
+
+
+class JsonBoundTests(unittest.TestCase):
+    """The strict loader's bounds are checked before the interpreter-dependent parts of parsing (CI failure 1)."""
+
+    def test_depth_counts_arrays_and_objects_outside_strings_only(self):
+        cases = {
+            b"0": 0, b"[]": 1, b'{"a": [{}]}': 3, b'"[[{{"': 0, b'{"a": "]]]]", "b": [[]]}': 3,
+            b'["\\"[[[", []]': 2,  # an escaped quote does not end the string
+            b'["\\\\", [[]]]': 3,  # an escaped backslash does, so the brackets after it count
+            "[\"é[\", []]".encode("utf-8"): 2,  # multi-byte UTF-8 never hides a structural byte
+        }
+        for raw, depth in cases.items():
+            with self.subTest(raw=raw):
+                self.assertEqual(content.nesting_depth(raw), depth)
+                self.assertEqual(content.nesting_depth(raw), self.parsed_depth(json.loads(raw)))
+
+    @staticmethod
+    def parsed_depth(value):
+        deepest, stack = 0, [(value, 1)]
+        while stack:
+            node, level = stack.pop()
+            if isinstance(node, (dict, list)):
+                deepest = max(deepest, level)
+                stack.extend((child, level + 1) for child in (node.values() if isinstance(node, dict) else node))
+        return deepest
+
+    def test_scan_stops_just_past_the_bound(self):
+        self.assertEqual(content.nesting_depth(b"[" * 1_000_000), content.MAX_JSON_DEPTH + 1)
+
+    def test_bound_is_inclusive_and_refusal_is_static(self):
+        self.assertEqual(content.loads(nested(content.MAX_JSON_DEPTH))["schema_version"],
+                         json.loads(nested(content.MAX_JSON_DEPTH))["schema_version"])
+        with self.assertRaises(content.Refused) as caught:
+            content.loads(nested(content.MAX_JSON_DEPTH + 1))
+        self.assertEqual((caught.exception.rule, caught.exception.subject), ("input.unreadable_or_invalid", None))
+
+    def test_over_deep_input_never_reaches_the_parser(self):
+        with mock.patch.object(content.json, "loads", side_effect=AssertionError("parser reached")):
+            for raw in (nested(content.MAX_JSON_DEPTH + 1), b"[" * 100000):
+                with self.subTest(size=len(raw)), self.assertRaises(content.Refused):
+                    content.loads(raw)
+
+    def test_brackets_inside_strings_never_count(self):
+        raw = b'{"a": "' + b"[" * 1000 + b'\\"' + b"{" * 1000 + b'"}'
+        self.assertEqual(content.loads(raw), {"a": "[" * 1000 + '"' + "{" * 1000})
+
+    def test_published_inputs_are_far_inside_the_bound(self):
+        paths = [ROOT / content.document_path(name) for name in content.DOCUMENTS]
+        paths += [ROOT / content.schema_path(name) for name in content.DOCUMENTS]
+        paths += [ROOT / content.TAXONOMY, ROOT / content.GATES]
+        deepest = max(content.nesting_depth(path.read_bytes()) for path in paths)
+        self.assertEqual(deepest, 8)  # glossary.schema.json; the documented headroom is eightfold
+        self.assertLessEqual(deepest * 8, content.MAX_JSON_DEPTH)
+
+    def test_integer_bound_holds_whatever_the_interpreter_digit_limit(self):
+        # PYTHONINTMAXSTRDIGITS used to decide this: a 700-digit integer parsed under the default limit and was
+        # unreadable under 640. Every setting now gives the same outcome.
+        self.addCleanup(sys.set_int_max_str_digits, sys.get_int_max_str_digits())
+        longest, signed = "9" * content.MAX_INTEGER_DIGITS, "-" + "9" * content.MAX_INTEGER_DIGITS
+        for limit in (0, 640, 4300):
+            sys.set_int_max_str_digits(limit)
+            with self.subTest(limit=limit):
+                self.assertEqual(content.loads(f"[{longest}, {signed}]".encode()), [int(longest), int(signed)])
+                for numeral in ("9" * (content.MAX_INTEGER_DIGITS + 1), "9" * 700, "-" + "9" * 5000):
+                    with self.assertRaises(content.Refused) as caught:
+                        content.loads(f"[{numeral}]".encode())
+                    self.assertEqual(caught.exception.rule, "input.unreadable_or_invalid")
+                self.assertEqual(content.version(f"1.0.{longest}"), (1, 0, int(longest)))
+                for part in ("9" * (content.MAX_INTEGER_DIGITS + 1), "9" * 700):
+                    with self.assertRaises(content.Refused) as caught:
+                        content.version(f"1.0.{part}")
+                    self.assertEqual(caught.exception.rule, "version.grammar")
 
 
 class SchemaTests(unittest.TestCase):
