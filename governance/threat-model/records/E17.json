@@ -503,8 +503,8 @@
           "title": "No ticket owns rotation, revocation or a compromise drill for the Mode A platform provider credential",
           "attack_path": "The server-held platform key leaks from the gateway host, the secret store, a deploy artefact or a provider dashboard session; with no rotation schedule, revocation procedure or drill, it stays valid and the attacker spends against PenniLogic's account or uses it to read provider-side data.",
           "recommended_control": "Assign an owner for the platform credential lifecycle: a scoped key per environment resolved at runtime from the secret store, scheduled and on-suspicion rotation, a rehearsed revocation that takes effect without a deploy, and provider-side spend limits as a backstop. PenniLogic/infra#25 provisions the secret store and PenniLogic/infra#32 governs human key access, but neither scope covers this credential's rotation or revocation; ai-service#2 says 'Gateway credentials are short lived, audience bound and rotated independently of user provider keys', which this refresh reads as the gateway's own workload credentials rather than a provider API key (the coordinator should judge that reading), PenniLogic/api#53 rotates the encryption keys and PenniLogic/infra#23 rotates only secrets found in repositories, so the coordinator must place it.",
-          "status": "open",
-          "owner_ticket": null,
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#92",
           "resolution": null
         },
         {
@@ -547,8 +547,8 @@
           "title": "No ticket requires model output to be rendered as inert text with remote references removed",
           "attack_path": "Injected text makes the model emit a markdown image or link whose address embeds the user's balances or debts; an assistant surface renders it, the client or a link preview fetches it, and the figures reach an attacker's server without any tool misuse.",
           "recommended_control": "Before a response leaves the AI service, strip or neutralise links, images and other remote references the tools did not produce, and require every assistant surface to render model output as inert text with no automatic fetch or preview, proven by an adversarial case. ai-service#6 checks figures and citations, PenniLogic/web#15 presents answers on the web and PenniLogic/android#26 builds the Android assistant surfaces with disclosure, override, refusal and advice-boundary guardrails, but none of these scopes covers this; the coordinator must place it.",
-          "status": "open",
-          "owner_ticket": null,
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#22",
           "resolution": null
         },
         {
