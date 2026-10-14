@@ -567,7 +567,7 @@ def check_patterns(voice, keys):
 
     A taxonomy pattern maps each slot to one of its own state's derived keys (headline, body or action) or leaves it
     null: the taxonomy does not state that slot, which readiness counts as a gap for the taxonomy owner. The other
-    patterns fill every slot with a distinct key of the pattern's own category that carries copy.
+    patterns fill every slot with a key of the pattern's own category that carries copy. No key fills two slots.
     """
     seen = set()
     for pattern in voice["patterns"]:
@@ -587,8 +587,9 @@ def check_patterns(voice, keys):
             require(value in keys, "pattern.unknown_key", identifier)
             require(keys[value]["copy"] is not None, "pattern.unknown_key", identifier)
             require(keys[value]["category"] == identifier, "pattern.slot_category", identifier)
-        if state is None:
-            require(len(set(values)) == len(SLOTS), "pattern.slot_reused", identifier)
+        # Every stated slot names a distinct key: one string in two slots would hide a criterion-2 gap.
+        stated = [value for value in values if value is not None]
+        require(len(set(stated)) == len(stated), "pattern.slot_reused", identifier)
     require(seen == set(PATTERN_STATES), "pattern.missing")
 
 

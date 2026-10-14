@@ -454,6 +454,12 @@ class PatternTests(Harness):
         self.assertNotIn("pattern.empty.status", gaps["readiness.pattern_slot_unstated"])
         self.assertEqual(len(gaps["readiness.pattern_slot_unstated"]), 24)
 
+    def test_taxonomy_slots_may_not_reuse_one_state_key(self):
+        # Review round 2 SS-05: one taxonomy string in two slots would hide a criterion-2 gap.
+        self.assertRefused(lambda d: pattern(d, "empty")["slots"].update(source="state.empty.headline",
+                                                                       status="state.empty.headline"),
+                           "pattern.slot_reused", "empty")
+
     def test_taxonomy_slot_may_not_name_another_states_copy(self):
         self.assertRefused(lambda d: pattern(d, "loading")["slots"].update(status="state.empty.headline"),
                            "pattern.state_copy_forked", "loading")
