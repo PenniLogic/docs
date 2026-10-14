@@ -971,6 +971,11 @@ class PublishedSchemaTests(unittest.TestCase):
         raw = (ROOT / module.SCHEMA).read_bytes()
         self.assertEqual(raw, (json.dumps(SCHEMA, indent=2, ensure_ascii=True) + "\n").encode("ascii"))
 
+    def test_catalogue_file_is_canonical(self):
+        # Review round 1 (final plan rule 2.5): the catalogue is written by json.dumps(indent=2, ensure_ascii=True).
+        raw = (ROOT / module.DATA).read_bytes()
+        self.assertEqual(raw, (json.dumps(module.loads(raw), indent=2, ensure_ascii=True) + "\n").encode("ascii"))
+
     def test_schema_patterns_are_anchored(self):
         patterns = []
 
