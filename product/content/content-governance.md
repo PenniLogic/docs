@@ -40,7 +40,9 @@ change the result; a fragment shorter than a complete sentence is not a restatem
 Versions are compared with the merge base of `HEAD` and `origin/main`. Adding a term or key, or changing what
 consumers read (a term's label, definition, surfaces, forbidden aliases or contract field names; a key's category,
 copy, range, platforms, term references, safe-exit flag or regulated record binding), needs at least a minor bump;
-removing or renaming one needs a major bump. Each base document is validated against the schema of its own base
+removing or renaming one needs a major bump. Any change to `voice.json` other than its `voice_version` (patterns and
+their slot keys, banned patterns, sentence limit, reading level, principles, conventions, imported rule list) needs
+at least a minor `voice_version` bump. Each base document is validated against the schema of its own base
 commit, and a base the comparison cannot read fails closed.
 
 ## Regulated-copy workflow
@@ -59,8 +61,9 @@ commit, and a base the comparison cannot read fails closed.
 5. Changing a record's copy, fail-closed key or category means a new version; the superseded version moves into
    `history` with its own text, key binding, status and approval. A record is never rebound to another `reg.` key,
    with or without a new version: every version keeps the record's key, so a new binding is a new record. History
-   is append-only against the base: earlier entries stay byte-identical, an approval is never re-dated or invented,
-   and expired or withdrawn copy never returns without a new version.
+   is append-only against the base: earlier entries stay byte-identical, an approval is never re-dated, invented or
+   dropped (a superseded or withdrawn version that was approved keeps its approval as the audit trail), and expired
+   or withdrawn copy never returns without a new version.
 6. Withdrawal sets `withdrawn`; records are never deleted.
 
 **Fail closed.** A consumer that finds a record missing, draft, in review, not yet effective, expired or withdrawn

@@ -1624,6 +1624,129 @@ class BaseVersioningTests(Harness):
         self.assertEqual((caught.exception.rule, caught.exception.subject), ("version.regressed", "RC-001"))
 
 
+class VersionedFieldTests(Harness):
+    """Independent review F8, F5, F9 and F3: every documented versioned field, the voice document, status reversal
+    of expired copy, a not-yet-effective rollback target and a kept approval each have a test that fails if the
+    rule is removed."""
+
+    def refused_against(self, base, docs):
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, sources=FakeSources(base))
+        return caught.exception.rule, caught.exception.subject
+
+    def test_documented_versioned_fields_are_exactly_these(self):
+        self.assertEqual(content.VERSIONED_FIELDS, {
+            "glossary": ("preferred_label", "definition", "surfaces", "forbidden_aliases", "contract_field_names"),
+            "message-keys": ("category", "copy", "range", "platforms", "term_refs", "neutral_safe_exit",
+                             "regulated_ref"),
+        })
+        self.assertEqual(content.RECORD_VERSIONED_FIELDS, ("copy", "key", "fail_closed_key", "category"))
+
+    def test_each_term_field_change_needs_a_minor_bump(self):
+        changes = {
+            "preferred_label": ("term.pending", "awaiting"),
+            "definition": ("term.debt", "Synthetic revised definition of debt."),
+            "surfaces": ("term.pending", ["android", "web", "admin", "contracts"]),
+            "forbidden_aliases": ("term.debt", ["loan burden", "loan load"]),
+            "contract_field_names": ("term.debt", ["debt_id", "debt_ref"]),
+        }
+        for field, (subject, value) in changes.items():
+            with self.subTest(field=field):
+                docs = documents()
+                terms_of(docs)[subject][field] = value
+                self.assertEqual(self.refused_against(documents(), docs),
+                                 ("glossary.changed_without_minor", subject))
+                docs["glossary"]["glossary_version"] = "0.2.0"
+                self.run_check(docs, sources=FakeSources(documents()))  # control: the change ships with a minor bump
+
+    def test_each_key_field_change_needs_a_minor_bump(self):
+        def base():
+            docs = documents()
+            add_key(docs, key("debt.edit.title", "Edit debt"))
+            return docs
+        changes = {
+            "category": "action", "copy": "Edit this debt", "range": {"min": 1, "typical": 20, "max": 50},
+            "platforms": ["android", "web"], "term_refs": ["term.debt"], "neutral_safe_exit": True,
+        }
+        for field, value in changes.items():
+            with self.subTest(field=field):
+                docs = base()
+                keys_of(docs)["debt.edit.title"][field] = value
+                self.assertEqual(self.refused_against(base(), docs),
+                                 ("catalogue.changed_without_minor", "debt.edit.title"))
+                docs["message-keys"]["catalogue_version"] = "0.2.0"
+                self.run_check(docs, sources=FakeSources(base()))  # control
+
+    def test_each_voice_change_needs_a_minor_bump(self):
+        def swap(d):
+            slots = pattern(d, "destructive")["slots"]
+            slots["source"], slots["status"] = slots["status"], slots["source"]
+        changes = {
+            "max_sentence_words": lambda d: d["voice"].update(max_sentence_words=13),
+            "banned_patterns": lambda d: d["voice"]["banned_patterns"].append(
+                {"id": "banned.reckless", "category": "shame", "phrase": "reckless"}),
+            "patterns": swap,
+            "principles": lambda d: d["voice"]["principles"].append({"id": "voice.kind", "rule": "Kind."}),
+            "conventions": lambda d: d["voice"]["conventions"][0].update(rule="Amounts are minor units."),
+            "reading_level": lambda d: d["voice"]["reading_level"].update(target="Synthetic other target"),
+        }
+        for field, mutate in changes.items():
+            with self.subTest(field=field):
+                docs = documents()
+                mutate(docs)
+                docs["voice"]["voice_version"] = "0.1.1"  # a patch bump is not enough
+                self.assertEqual(self.refused_against(documents(), docs), ("voice.changed_without_minor", None))
+                docs["voice"]["voice_version"] = "0.2.0"
+                self.run_check(docs, sources=FakeSources(documents()))  # control
+
+    def test_expired_copy_never_returns_to_review_or_draft_at_the_same_version(self):
+        base = documents()
+        approve(first(base), "expired", start=NOW - timedelta(days=20), end=NOW - timedelta(days=1))
+        self.run_check(base, owner=OWNER, sources=FakeSources(copy.deepcopy(base)))  # control
+        for status in ("in_review", "draft"):
+            with self.subTest(status=status):
+                docs = documents()
+                first(docs)["status"] = status
+                with self.assertRaises(content.Refused) as caught:
+                    self.run_check(docs, owner=OWNER, sources=FakeSources(base))
+                self.assertEqual((caught.exception.rule, caught.exception.subject),
+                                 ("regulated.status_reverted", "RC-001"))
+
+    def test_rollback_target_not_yet_effective_is_refused(self):
+        def mutate(docs):
+            record = first(docs)
+            record["version"] = "2.0.0"
+            record["history"] = [prior("1.0.0", "approved", approval(start=NOW + timedelta(seconds=1)))]
+            record["rollback_version"] = "1.0.0"
+        self.assertRefused(mutate, "regulated.rollback_target_unapproved", "RC-001", owner=OWNER)
+
+    def test_withdrawn_copy_keeps_its_approval(self):
+        base = documents()
+        approve(first(base))
+        docs = copy.deepcopy(base)
+        first(docs)["status"] = "withdrawn"
+        self.run_check(docs, owner=OWNER, sources=FakeSources(base))  # the approval stays on record
+        first(docs)["approval"] = None
+        self.assertEqual(self.refused_against_owner(base, docs), ("regulated.approval_rewritten", "RC-001"))
+
+    def test_superseded_approved_version_keeps_its_approval_in_history(self):
+        base = documents()
+        approve(first(base))
+        docs = copy.deepcopy(base)
+        record = first(docs)
+        record["history"] = [{"version": "0.1.0", "key": record["key"], "status": "withdrawn",
+                              "copy": record["copy"], "approval": record["approval"]}]
+        record.update(version="0.2.0", status="draft", approval=None, copy="Synthetic newer text for review.")
+        self.run_check(docs, owner=OWNER, sources=FakeSources(base))  # the superseded approval is kept
+        record["history"][0]["approval"] = None
+        self.assertEqual(self.refused_against_owner(base, docs), ("regulated.approval_rewritten", "RC-001"))
+
+    def refused_against_owner(self, base, docs):
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, owner=OWNER, sources=FakeSources(base))
+        return caught.exception.rule, caught.exception.subject
+
+
 class TaxonomyImportTests(unittest.TestCase):
     def test_published_taxonomy_is_imported_by_reference(self):
         published = content.support.load_json(ROOT / content.TAXONOMY)

@@ -178,7 +178,7 @@ STRUCTURE_RULES = (
     "regulated.rollback_with_usable_approval",
     "base.unavailable", "base.invalid", "version.regressed", "regulated.history_rewritten", "regulated.status_reverted",
     "regulated.approval_rewritten", "regulated.prior_version_not_kept", "glossary.term_removed_without_major",
-    "glossary.changed_without_minor", "catalogue.changed_without_minor",
+    "glossary.changed_without_minor", "catalogue.changed_without_minor", "voice.changed_without_minor",
     "catalogue.key_removed_without_major", "regulated.record_removed", "regulated.changed_without_version",
     "views.unsafe_path", "views.missing", "views.drift",
 )
@@ -648,12 +648,15 @@ def trusted_clock(now):
 
 
 def check_approval(item, approver_role, owner, subject):
-    """An approval exists exactly for approved or expired copy and comes from the assigned qualified owner.
+    """An approval exists for approved or expired copy, may stay on withdrawn copy that was approved (the audit
+    trail is kept), and comes from the assigned qualified owner.
 
     Returns the (effective, expires) window, or None when the item carries no approval.
     """
     approval = item["approval"]
-    if item["status"] not in ("approved", "expired"):
+    if item["status"] == "withdrawn" and approval is None:
+        return None
+    if item["status"] not in ("approved", "expired", "withdrawn"):
         require(approval is None, "regulated.approval_unexpected", subject)
         return None
     require(approval is not None, "regulated.approval_missing", subject)
@@ -954,7 +957,8 @@ def check_record_history(before, after):
     require(kept == before["history"], "regulated.history_rewritten", identifier)
     if after["version"] == before["version"]:
         require(after["status"] in STATUS_SUCCESSORS[before["status"]], "regulated.status_reverted", identifier)
-        if before["approval"] is not None and after["approval"] is not None:
+        # An approval on record is never re-dated or dropped (withdrawn copy keeps it); none is invented on withdrawal.
+        if before["approval"] is not None or after["status"] == "withdrawn":
             require(after["approval"] == before["approval"], "regulated.approval_rewritten", identifier)
         return
     entry = next((prior for prior in after["history"] if prior["version"] == before["version"]), None)
@@ -962,8 +966,8 @@ def check_record_history(before, after):
             "regulated.prior_version_not_kept", identifier)
     allowed = {before["status"], "withdrawn"} | ({"expired"} if before["status"] == "approved" else set())
     require(entry["status"] in allowed, "regulated.history_rewritten", identifier)
-    require(entry["approval"] is None or entry["approval"] == before["approval"], "regulated.approval_rewritten",
-            identifier)
+    # The superseded version keeps exactly the approval it had: never dropped, re-dated or invented.
+    require(entry["approval"] == before["approval"], "regulated.approval_rewritten", identifier)
 
 
 # What consumers read from a term or key: changing any of these, or adding an item, needs at least a minor bump.
@@ -994,6 +998,10 @@ def check_base(documents, base):
         old, new = version(before[version_field]), version(documents[name][version_field])
         require(new >= old, "version.regressed")
         if items is None:
+            # Voice: any change to what consumers read (patterns, banned list, sentence limit, rules) needs a minor.
+            unchanged = all(documents[name][field] == before[field] for field in documents[name]
+                            if field != version_field) and set(before) == set(documents[name])
+            require(unchanged or new[:2] > old[:2], "voice.changed_without_minor")
             continue
         current = {item[identity]: item for item in documents[name][items]}
         for item in before[items]:
