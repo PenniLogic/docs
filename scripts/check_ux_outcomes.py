@@ -514,6 +514,27 @@ EVENT_VOCABULARY = frozenset("""
 """.split())
 
 
+# Review round 1 (spec-and-safety.-r1-F3): an event whose words name an incentive must carry that incentive tag, so
+# the perverse-incentive rule cannot be bypassed by leaving the tag null. Short words match a whole segment only.
+INCENTIVE_WORDS = {
+    "permission_grant": ("permission", "grant", "consent"),
+    "ai_use": ("assistant", "ai", "llm", "chatbot", "copilot"),
+    "subscription": ("subscri", "upgrade", "premium", "paywall", "renew"),
+    "sharing": ("share", "sharing", "invit", "referr"),
+}
+
+
+def incentive_classes(tokens):
+    """The incentive classes whose words appear in any of the snake-case tokens."""
+    found = set()
+    for token in tokens:
+        segments, compact = token.split("_"), token.replace("_", "")
+        for klass, words in INCENTIVE_WORDS.items():
+            if any(word in segments if len(word) <= 3 else word in compact for word in words):
+                found.add(klass)
+    return found
+
+
 def look_alikes(token):
     """The token and its look-alike readings, so am0unt, ba1ance, arnount and h0usehold read as the words they
     imitate."""
@@ -633,6 +654,10 @@ def check_event(event, budget):
     for token, is_value in tokens:
         code = is_value and JOURNEY_VALUE.fullmatch(token) is not None
         require(code or set(token.split("_")) <= EVENT_VOCABULARY, "event.vocabulary", identifier)
+    classes = incentive_classes(token for token, _ in tokens)
+    if classes:
+        require(event["incentive"] is not None, "incentive.untagged", identifier)
+        require(event["incentive"] in classes, "incentive.tag_mismatch", identifier)
     require(event["opt_out_honoured"] is True, "event.opt_out_not_honoured", identifier)
     require(event["enabled"] is False, "collection.enabled", identifier)
 
@@ -703,8 +728,8 @@ def check_measure(record, indexed):
 
 
 def check_metric(metric, indexed):
-    """Outcome metrics; an incentive event (permission grant, AI use, subscription, sharing) never counts as
-    success on its own (ticket criterion 2)."""
+    """Outcome metrics; an incentive event (permission grant, AI use, subscription, sharing) is never rewarded by a
+    primary, and a secondary that rewards one carries benefit context and a guardrail (ticket criterion 2)."""
     identifier = metric["id"]
     check_measure(metric, indexed)
     if metric["role"] == "primary":
@@ -713,9 +738,10 @@ def check_metric(metric, indexed):
         guardrail = indexed["guardrails"].get(guardrail_id)
         require(guardrail is not None, "reference.dangling", identifier)
         require(guardrail["journey_id"] == metric["journey_id"], "metric.guardrail_other_journey", identifier)
-    incentive = any(indexed["events"][event_id]["incentive"] is not None
-                    for event_id in metric["numerator"]["event_ids"])
-    if incentive:
+    # A ratio rewards an incentive event in its numerator when it should increase, and in its denominator when it
+    # should decrease (review round 1, spec-and-safety.-r1-F3).
+    rewarded = metric["numerator"] if metric["direction"] == "increase" else metric["denominator"]
+    if any(indexed["events"][event_id]["incentive"] is not None for event_id in rewarded["event_ids"]):
         require(metric["role"] != "primary", "incentive.primary", identifier)
         require(metric["benefit_context"] is not None and metric["guardrail_ids"] != [],
                 "incentive.without_safety_context", identifier)

@@ -632,6 +632,41 @@ class IncentiveTests(CatalogueCase):
         self.assertRefused("incentive.primary", "M-J01-03", mutate(
             self.document, lambda d: d["metrics"][3].update(role="primary")))
 
+    def test_incentive_in_the_denominator_of_a_decrease_metric_is_rewarded(self):
+        # Review round 1 (spec-and-safety.-r1-F3): only numerators were inspected. Control: the incentive event in the
+        # denominator of an increase primary penalises it, so it passes; the mutation flips the direction.
+        def primary(direction):
+            return mutate(self.document, lambda d: (d["metrics"][0]["denominator"].update(event_ids=["EV-004"]),
+                                                    d["metrics"][0].update(direction=direction)))
+        self.run_check(primary("increase"))
+        self.assertRefused("incentive.primary", "M-J01-01", primary("decrease"))
+
+    def test_incentive_in_the_numerator_of_a_decrease_metric_is_not_rewarded(self):
+        self.run_check(mutate(self.document, lambda d: (d["metrics"][0]["numerator"].update(event_ids=["EV-004"]),
+                                                        d["metrics"][0].update(direction="decrease"))))
+
+    def test_untagged_incentive_event_is_refused(self):
+        def plant(name, field=None):
+            planted = event("EV-005", name)
+            if field is not None:
+                planted["fields"].append(field)
+            return mutate(self.document, lambda d: d["events"].append(planted))
+        cases = (
+            (mutate(self.document, lambda d: d["events"][3].update(incentive=None)), "EV-004"),
+            (plant("permission_request_answered",
+                   {"name": "answer", "kind": "enum", "values": ["granted", "deferred"]}), "EV-005"),
+            (plant("assistant_explanation_opened"), "EV-005"), (plant("subscription_change_started"), "EV-005"),
+        )
+        for document, subject in cases:
+            with self.subTest(subject=subject):
+                self.assertRefused("incentive.untagged", subject, document)
+        # The finding's grant_invite_sent is refused earlier: grant and invite are not reviewed event words.
+        self.assertRefused("event.vocabulary", "EV-005", plant("grant_invite_sent"))
+
+    def test_incentive_tag_must_match_the_event_words(self):
+        self.assertRefused("incentive.tag_mismatch", "EV-004", mutate(
+            self.document, lambda d: d["events"][3].update(incentive="ai_use")))
+
     def test_every_incentive_class_is_caught(self):
         for incentive in ("permission_grant", "ai_use", "subscription", "sharing"):
             with self.subTest(incentive=incentive):
@@ -1323,7 +1358,7 @@ class PublishedCatalogueTests(unittest.TestCase):
         # through its denominator when it should decrease.
         indexed = self.model["indexed"]
         incentives = {identifier for identifier, event in indexed["events"].items() if event["incentive"]}
-        self.assertEqual(incentives, {"EV-010", "EV-012", "EV-013", "EV-016"})
+        self.assertEqual(incentives, {"EV-010", "EV-012", "EV-013", "EV-014", "EV-016"})
         users = sorted(m["id"] for m in indexed["metrics"].values()
                        if set(m["numerator" if m["direction"] == "increase" else "denominator"]["event_ids"])
                        & incentives)

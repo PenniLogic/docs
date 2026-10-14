@@ -532,7 +532,7 @@
           ]
         }
       ],
-      "incentive": null,
+      "incentive": "sharing",
       "opt_out_honoured": true,
       "enabled": false,
       "payload_review": "pending"

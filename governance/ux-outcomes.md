@@ -47,7 +47,7 @@ Readiness: **NOT GREEN: readiness incomplete**.
 | `EV-010` | `permission_request_answered` | `journey` (enum), `answer` (enum), `times_shown` (count_bucket) | permission_grant | A system permission request was answered |
 | `EV-012` | `subscription_change_confirmed` | `change_kind` (enum) | subscription | A subscription change was confirmed, by change kind only |
 | `EV-013` | `share_offer_accepted` | `journey` (enum), `share_scope` (enum) | sharing | A sharing or access grant offer was accepted, by scope only |
-| `EV-014` | `shared_access_revoked` | `journey` (enum), `elapsed` (duration_bucket) | none | A sharing or access grant was revoked, coarsened to how soon |
+| `EV-014` | `shared_access_revoked` | `journey` (enum), `elapsed` (duration_bucket) | sharing | A sharing or access grant was revoked, coarsened to how soon |
 | `EV-015` | `support_route_opened` | `journey` (enum), `route` (enum) | none | A help or support route was opened from a journey |
 | `EV-016` | `subscription_change_started` | `change_kind` (enum) | subscription | A subscription change was started, by change kind only |
 
