@@ -116,6 +116,9 @@ amounts or identity.
 - Comprehension evidence for payoff, projected, available, pending, reversed, aggregate and revoked
   (PenniLogic/docs#66); the reading-level target stays provisional until then.
 - Qualified legal/compliance approval of every regulated record; the approver role is unassigned.
+- The approval shape records role, decision reference and window but no reviewer identity, `decision_ref` is free
+  text, and the approver seam checks the injected assignment's role only. The legal/compliance owner decides the
+  reviewer-identity form and the decision-reference grammar before any approval is injected (independent review F2).
 - Content, Compliance, Accessibility and CDO approvals; independent Core, QA, Compliance and Accessibility review.
 - `nav.` labels from PenniLogic/docs#74; infra#22 conformance; current-head CI on the pull request.
 - Definition of Done item 4 (declared dependencies mirrored as native GitHub blockedBy edges) is unmet: the

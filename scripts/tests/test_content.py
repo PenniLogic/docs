@@ -2199,7 +2199,9 @@ class PublishedContentTests(unittest.TestCase):
         held = " ".join(page.split("## Held gates (never filled in here)", 1)[1].split())
         for gate in ("Definition of Done item 4", "native GitHub blockedBy edges", "no-blame and uncertainty review",
                      "disguises uncertainty", "contract field names", "PenniLogic/contracts", "ADR-017 section 2.6",
-                     "RC-005", "generic `pattern.` keys", "`pattern.destructive.consequence`"):
+                     "RC-005", "generic `pattern.` keys", "`pattern.destructive.consequence`",
+                     # Independent review F2: the approval's reviewer identity and decision-reference grammar.
+                     "no reviewer identity", "`decision_ref` is free text"):
             with self.subTest(gate=gate):
                 self.assertIn(gate, held)
 
