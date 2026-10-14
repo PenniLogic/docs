@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/PenniLogic/docs/blob/main/product/navigation/routes.schema.json",
   "title": "Provisional route topology, screen placements and deep-link compatibility",
-  "description": "T-UXR-05 (PenniLogic/docs#74) source contract for the Android, customer-web and admin route trees. Uses the strict draft-07 subset of scripts/check_client_states.py; identifiers, grammars, references, counts, reachability, role absence, deep-link compatibility and the held approval, research and message-key fields are checked by scripts/check_navigation.py. Values recognised here but refused there (unauthorized \"disabled\", \"greyed\" or \"hidden\"; narrow \"hidden\"; entry \"global_search\"; any approval, completed research or message key) exist only so the refusal carries its own rule. No approval is recorded.",
+  "description": "T-UXR-05 (PenniLogic/docs#74) source contract for the Android, customer-web and admin route trees. Uses the strict draft-07 subset of scripts/check_client_states.py; identifiers, grammars, references, counts, reachability, role absence, deep-link compatibility and the held approval, research and message-key fields are checked by scripts/check_navigation.py. Values recognised here but refused there (unauthorized \"disabled\", \"greyed\" or \"hidden\"; narrow \"hidden\"; entry \"global_search\"; any approval, completed research or message key) exist only so the refusal carries its own rule. No approval is recorded. Route IDs, published route and external-entry patterns and redirects are never dropped, so a rollback is a roll-forward: restore the earlier routes, labels and placements, retire the route IDs added since and keep every redirect and published pattern.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -525,7 +525,8 @@
       "required": [
         "platform",
         "tree_test",
-        "card_sort"
+        "card_sort",
+        "walkthrough"
       ],
       "properties": {
         "platform": {
@@ -535,6 +536,9 @@
           "$ref": "#/definitions/tree_test"
         },
         "card_sort": {
+          "$ref": "#/definitions/evidence"
+        },
+        "walkthrough": {
           "$ref": "#/definitions/evidence"
         }
       }

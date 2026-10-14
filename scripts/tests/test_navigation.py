@@ -139,7 +139,8 @@ ROUTE_MAP = {
         {"platform": platform,
          "tree_test": {"status": "not_run", "evidence_ref": None,
                        "metrics": {"task_success": None, "first_click_correctness": None, "backtrack_rate": None}},
-         "card_sort": {"status": "not_run", "evidence_ref": None}}
+         "card_sort": {"status": "not_run", "evidence_ref": None},
+         "walkthrough": {"status": "not_run", "evidence_ref": None}}
         for platform in module.PLATFORMS
     ],
     "decisions": [{"decision": name, "status": "pending", "ref": None} for name in module.DECISIONS],
@@ -511,6 +512,13 @@ class RoleDenialTests(NavigationCase):
                      "admin.external_entry", "S-ADM-004")
 
 
+def empty_debts_container(fixture):
+    """Debts becomes a screenless container: its screen and pattern move to Debt detail, entered as a list item."""
+    fixture.placement("S-AND-003")["host_route_id"] = "R-AND-004"
+    fixture.route("R-AND-003")["patterns"] = []
+    fixture.route("R-AND-004")["patterns"].append("android://debts")
+
+
 class PlacementTests(NavigationCase):
     """Exactly one placement per registry screen: orphan, duplicate and dangling placements fail."""
 
@@ -568,11 +576,7 @@ class PlacementTests(NavigationCase):
         self.refused(lambda fixture: fixture.set_registry({**REGISTRY, "screens": screens}), "registry.invalid")
 
     def test_container_route_with_children_needs_no_screen(self):
-        def mutate(fixture):
-            fixture.placement("S-AND-003")["host_route_id"] = "R-AND-004"
-            fixture.route("R-AND-003")["patterns"] = []
-            fixture.route("R-AND-004")["patterns"].append("android://debts")
-        model = self.passes(mutate)
+        model = self.passes(empty_debts_container)
         self.assertEqual((model.hosted["R-AND-003"], model.children["R-AND-003"]), ([], ["R-AND-004"]))
 
 
@@ -810,6 +814,8 @@ class ResearchAndDecisionTests(NavigationCase):
             "tree test metric": lambda item: item["tree_test"]["metrics"].update(task_success=0.8),
             "card sort completed": lambda item: item["card_sort"].update(status="completed"),
             "card sort evidence": lambda item: item["card_sort"].update(evidence_ref="synthetic-report"),
+            "walkthrough completed": lambda item: item["walkthrough"].update(status="completed"),
+            "walkthrough evidence": lambda item: item["walkthrough"].update(evidence_ref="synthetic-report"),
         }
         for name, change in mutations.items():
             with self.subTest(name):
@@ -987,11 +993,13 @@ ROUTE_IDS = [item["id"] for item in ROUTES]
 BASELINE_GAPS = {
     "readiness.tree_test_not_run": ["android", "web", "admin"],
     "readiness.card_sort_not_run": ["android", "web", "admin"],
+    "readiness.walkthrough_not_run": ["android", "web", "admin"],
     "readiness.decision_pending": ["accessibility", "information_architecture", "security"],
     "readiness.cdo_approval_pending": ["CAP-001", "CAP-002"],
     "readiness.assumption_provisional": ["CAP-001", "CAP-002", "CAP-003"],
     "readiness.label_provisional": ROUTE_IDS,
     "readiness.role_provisional": ["ROLE-SYN-01", "ROLE-SYN-02"],
+    "readiness.list_screen_missing": [],
     "readiness.registry_not_canonical": ["PenniLogic/docs#75"],
     "readiness.registry_id_added": [],
     "readiness.registry_id_retired": [],
@@ -1000,6 +1008,8 @@ BASELINE_GAPS = {
 RESOLUTIONS = {
     "readiness.tree_test_not_run": ("web", lambda m: m.document["research"][1]["tree_test"].update(status="completed")),
     "readiness.card_sort_not_run": ("admin", lambda m: m.document["research"][2]["card_sort"].update(
+        status="completed")),
+    "readiness.walkthrough_not_run": ("android", lambda m: m.document["research"][0]["walkthrough"].update(
         status="completed")),
     "readiness.decision_pending": ("security", lambda m: m.document["decisions"][1].update(status="approved")),
     "readiness.cdo_approval_pending": ("CAP-002", lambda m: m.capabilities["CAP-002"]["cdo_approval"].update(
@@ -1038,7 +1048,8 @@ class ReadinessTests(NavigationCase):
     def test_green_only_when_every_gap_resolves(self):
         model = Fixture().check()
         for research in model.document["research"]:
-            research["tree_test"]["status"] = research["card_sort"]["status"] = "completed"
+            for name in ("tree_test", "card_sort", "walkthrough"):
+                research[name]["status"] = "completed"
         for decision in model.document["decisions"]:
             decision["status"] = "approved"
         for capability in model.capabilities.values():
@@ -1054,6 +1065,11 @@ class ReadinessTests(NavigationCase):
         self.assertEqual(module.status_line(gaps), module.GREEN)
         retired = current_registry(screens=SCREENS[:-1])
         self.assertEqual(module.status_line(module.readiness(model, retired)), module.NOT_GREEN)
+
+    def test_list_item_without_a_list_screen_is_a_gap(self):
+        # Debt detail stays a list item of Debts, which now hosts no screen: the list is missing, not invented.
+        model = self.passes(empty_debts_container)
+        self.assertEqual(module.readiness(model), {**BASELINE_GAPS, "readiness.list_screen_missing": ["R-AND-003"]})
 
     def test_live_registry_changes_are_gaps_not_structure_failures(self):
         model = Fixture().check()
@@ -1102,6 +1118,15 @@ class SitemapTests(NavigationCase):
         rendered = module.render_sitemaps(Fixture().check())
         self.assertIn("| S-AND-007 | widget | `android-widget://debt-progress` | Synthetic fixture: a home-screen "
                       "widget outside the app tree. |", rendered)
+
+    def test_rendering_states_held_items_and_roll_forward(self):
+        rendered = module.render_sitemaps(Fixture().check())
+        for text in ("narrow-width navigation walkthroughs are not run", "no search or discovery surface is designed",
+                     "the runtime test that an unauthorized or unknown operator path is absent",
+                     "hosts no screen (none)", "as a native GitHub blockedBy edge", "a rollback is a roll-forward"):
+            self.assertIn(text, rendered)
+        model = self.passes(empty_debts_container)
+        self.assertIn("hosts no screen (`R-AND-003`), missing from the pinned registry", module.render_sitemaps(model))
 
     def test_data_text_cannot_break_the_markdown(self):
         fixture = Fixture()
@@ -1195,10 +1220,10 @@ STRUCTURE_LINE = (
     "divergence) allocating 3 registry flows; registry pinned at planning/source/evidence/experience-coverage.json"
 )
 GAP_COUNTS = [
-    "readiness.tree_test_not_run: 3", "readiness.card_sort_not_run: 3", "readiness.decision_pending: 3",
-    "readiness.cdo_approval_pending: 2", "readiness.assumption_provisional: 3", "readiness.label_provisional: 14",
-    "readiness.role_provisional: 2", "readiness.registry_not_canonical: 1", "readiness.registry_id_added: 0",
-    "readiness.registry_id_retired: 0",
+    "readiness.tree_test_not_run: 3", "readiness.card_sort_not_run: 3", "readiness.walkthrough_not_run: 3",
+    "readiness.decision_pending: 3", "readiness.cdo_approval_pending: 2", "readiness.assumption_provisional: 3",
+    "readiness.label_provisional: 14", "readiness.role_provisional: 2", "readiness.list_screen_missing: 0",
+    "readiness.registry_not_canonical: 1", "readiness.registry_id_added: 0", "readiness.registry_id_retired: 0",
 ]
 
 
@@ -1383,10 +1408,10 @@ PUBLISHED_STRUCTURE = (
 )
 # The recorded readiness gaps of the published route map and allocation against their pinned registry.
 PUBLISHED_GAP_COUNTS = {
-    "readiness.tree_test_not_run": 3, "readiness.card_sort_not_run": 3, "readiness.decision_pending": 3,
-    "readiness.cdo_approval_pending": 16, "readiness.assumption_provisional": 16, "readiness.label_provisional": 123,
-    "readiness.role_provisional": 3, "readiness.registry_not_canonical": 1, "readiness.registry_id_added": 0,
-    "readiness.registry_id_retired": 0,
+    "readiness.tree_test_not_run": 3, "readiness.card_sort_not_run": 3, "readiness.walkthrough_not_run": 3,
+    "readiness.decision_pending": 3, "readiness.cdo_approval_pending": 16, "readiness.assumption_provisional": 16,
+    "readiness.label_provisional": 123, "readiness.role_provisional": 3, "readiness.list_screen_missing": 1,
+    "readiness.registry_not_canonical": 1, "readiness.registry_id_added": 0, "readiness.registry_id_retired": 0,
 }
 LIVE_REGISTRY_RULES = ("readiness.registry_id_added", "readiness.registry_id_retired")
 
@@ -1432,10 +1457,13 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(gaps, {
             "readiness.tree_test_not_run": ["android", "web", "admin"],
             "readiness.card_sort_not_run": ["android", "web", "admin"],
+            "readiness.walkthrough_not_run": ["android", "web", "admin"],
             "readiness.decision_pending": ["accessibility", "information_architecture", "security"],
             "readiness.cdo_approval_pending": capabilities, "readiness.assumption_provisional": capabilities,
             "readiness.label_provisional": list(model.routes),
             "readiness.role_provisional": ["ROLE-01", "ROLE-02", "ROLE-03"],
+            # Incident actions are list items of the screenless Incidents and break-glass section (docs#75 gap).
+            "readiness.list_screen_missing": ["R-ADM-027"],
             "readiness.registry_not_canonical": ["PenniLogic/docs#75"],
             "readiness.registry_id_added": [], "readiness.registry_id_retired": [],
         })

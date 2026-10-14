@@ -13,10 +13,11 @@ registry are readiness gaps, and moving the pin is this ticket's own change.
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a known
 grammar (route, screen, flow, journey, capability or role IDs, docs issue references) or the fixed platform
 and decision vocabulary; input text is never echoed. Values that need a human or another ticket (IA, Security,
-Accessibility and CDO decisions, tree-test and card-sort evidence, H04 `nav.` message keys, an accepted operator-role
-vocabulary, docs#66/docs#67 persona and blueprint validation) are refused when filled in (`held.*`) and counted as
-readiness gaps while empty, so the default mode stays NOT GREEN. Everything runs offline against local files and the
-local Git object store: no network, remote action, approval, research or review is made or implied.
+Accessibility and CDO decisions, tree-test, card-sort and walkthrough evidence, H04 `nav.` message keys, an accepted
+operator-role vocabulary, docs#66/docs#67 persona and blueprint validation, docs#75 list screens) are refused when
+filled in (`held.*`) or counted as readiness gaps while missing, so the default mode stays NOT GREEN. Everything
+runs offline against local files and the local Git object store: no network, remote action, approval, research or
+review is made or implied.
 """
 
 import argparse
@@ -137,10 +138,10 @@ STRUCTURE_RULES = (
     "sitemaps.drift",
 )
 READINESS_RULES = (
-    "readiness.tree_test_not_run", "readiness.card_sort_not_run", "readiness.decision_pending",
-    "readiness.cdo_approval_pending", "readiness.assumption_provisional", "readiness.label_provisional",
-    "readiness.role_provisional", "readiness.registry_not_canonical", "readiness.registry_id_added",
-    "readiness.registry_id_retired",
+    "readiness.tree_test_not_run", "readiness.card_sort_not_run", "readiness.walkthrough_not_run",
+    "readiness.decision_pending", "readiness.cdo_approval_pending", "readiness.assumption_provisional",
+    "readiness.label_provisional", "readiness.role_provisional", "readiness.list_screen_missing",
+    "readiness.registry_not_canonical", "readiness.registry_id_added", "readiness.registry_id_retired",
 )
 
 
@@ -739,15 +740,17 @@ def check_compatibility(model, base):
 
 
 def check_research_and_decisions(model):
-    """Tree tests, card sorts and the IA, Security and Accessibility decisions are held inputs this session cannot
-    produce: one record each, kept not_run or pending with no evidence, metric, reference or approval filled in."""
+    """Tree tests, card sorts, the compact, expanded and narrow navigation walkthroughs and the IA, Security and
+    Accessibility decisions are held inputs this session cannot produce: one record each, kept not_run or pending
+    with no evidence, metric, reference or approval filled in."""
     research = model.document["research"]
     require(sorted(item["platform"] for item in research) == sorted(PLATFORMS), "research.platform_set")
     for item in research:
-        tree, card_sort = item["tree_test"], item["card_sort"]
+        tree = item["tree_test"]
         require(tree["status"] == "not_run" and tree["evidence_ref"] is None
                 and all(value is None for value in tree["metrics"].values())
-                and card_sort["status"] == "not_run" and card_sort["evidence_ref"] is None,
+                and all(item[name]["status"] == "not_run" and item[name]["evidence_ref"] is None
+                        for name in ("card_sort", "walkthrough")),
                 "held.research_evidence", item["platform"])
     decisions = model.document["decisions"]
     require(sorted(item["decision"] for item in decisions) == sorted(DECISIONS), "decision.set_mismatch")
@@ -823,6 +826,14 @@ def read_current(root):
     raise Refused("registry.current_invalid")
 
 
+def missing_lists(model):
+    """Parents whose children are entered as list items but which host no screen: the list is missing from the pinned
+    registry until PenniLogic/docs#75 registers one (and the pin moves) or an IA decision changes the entry."""
+    return sorted({route["parent_route_id"] for route in model.routes.values()
+                   if route["entry_from_parent"] == "list_item" and not model.hosted[route["parent_route_id"]]},
+                  key=natural_key)
+
+
 def readiness(model, current=None):
     """Every visible gap by static rule, with sorted subjects; never filled in or waived. Each condition names the
     resolved state that would clear it, although the structure rules refuse every resolved value today (held.*)."""
@@ -832,6 +843,8 @@ def readiness(model, current=None):
             gaps["readiness.tree_test_not_run"].add(item["platform"])
         if item["card_sort"]["status"] != "completed":
             gaps["readiness.card_sort_not_run"].add(item["platform"])
+        if item["walkthrough"]["status"] != "completed":
+            gaps["readiness.walkthrough_not_run"].add(item["platform"])
     for item in model.document["decisions"]:
         if item["status"] != "approved":
             gaps["readiness.decision_pending"].add(item["decision"])
@@ -844,6 +857,7 @@ def readiness(model, current=None):
     for identifier, route in model.routes.items():
         if route["label"]["status"] != "approved" or route["label"]["message_key"] is None:
             gaps["readiness.label_provisional"].add(identifier)
+    gaps["readiness.list_screen_missing"].update(missing_lists(model))
     for identifier, role in model.roles.items():
         if role["status"] != "accepted":
             gaps["readiness.role_provisional"].add(identifier)
@@ -970,9 +984,23 @@ def render_sitemaps(model):
         "any difference from this rendering.",
         "",
         "Every label is provisional text without a message key (PenniLogic/docs#84 owns the `nav.` key root). Tree "
-        "tests and card sorts are not run; persona and journey assumptions wait for PenniLogic/docs#66 and "
-        "PenniLogic/docs#67; the IA, Security, Accessibility and CDO decisions are pending. Nothing here is D1 "
-        "approval, research evidence, a review or permission to build navigation.",
+        "tests, card sorts and the compact, expanded and narrow-width navigation walkthroughs are not run; persona "
+        "and journey assumptions wait for PenniLogic/docs#66 and PenniLogic/docs#67; the IA, Security, Accessibility "
+        "and CDO decisions are pending. Nothing here is D1 approval, research evidence, a review or permission to "
+        "build navigation.",
+        "",
+        "Also not claimed: a search and discovery design (every destination is reachable without search, but no "
+        "search or discovery surface is designed here); the runtime test that an unauthorized or unknown operator "
+        "path is absent, owned by the admin and api implementers (admin absence is a data rule here); the list "
+        "screen of each route whose children are list items but which hosts no screen ("
+        + (", ".join(f"`{identifier}`" for identifier in missing_lists(model)) or "none") + "), missing from the "
+        "pinned registry until PenniLogic/docs#75 registers it; and mirroring the declared dependency "
+        "PenniLogic/docs#67 as a native GitHub blockedBy edge.",
+        "",
+        "Route IDs, published route and external-entry patterns and redirects are never dropped (checked against the "
+        "route map at the merge base with main), so a rollback is a roll-forward: a new IA version restores the "
+        "earlier routes, labels and placements, retires the route IDs added since and keeps every redirect and "
+        "published pattern.",
     ]
     for platform, title in (("android", "Android"), ("web", "Customer web"), ("admin", "Admin and operator")):
         lines += _platform_section(model, platform, title)

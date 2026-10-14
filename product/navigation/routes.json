@@ -3781,6 +3781,10 @@
       "card_sort": {
         "status": "not_run",
         "evidence_ref": null
+      },
+      "walkthrough": {
+        "status": "not_run",
+        "evidence_ref": null
       }
     },
     {
@@ -3797,6 +3801,10 @@
       "card_sort": {
         "status": "not_run",
         "evidence_ref": null
+      },
+      "walkthrough": {
+        "status": "not_run",
+        "evidence_ref": null
       }
     },
     {
@@ -3811,6 +3819,10 @@
         }
       },
       "card_sort": {
+        "status": "not_run",
+        "evidence_ref": null
+      },
+      "walkthrough": {
         "status": "not_run",
         "evidence_ref": null
       }

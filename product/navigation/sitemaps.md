@@ -4,7 +4,11 @@
 
 Generated from `product/navigation/routes.json` (IA version 0.1.0, provisional) and `product/navigation/platform-allocation.json` against the experience-coverage registry pinned at `planning/source/evidence/experience-coverage.json`, commit `1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4`, `sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a`. The default mode and `--check-sitemaps` of `scripts/check_navigation.py` refuse any difference from this rendering.
 
-Every label is provisional text without a message key (PenniLogic/docs#84 owns the `nav.` key root). Tree tests and card sorts are not run; persona and journey assumptions wait for PenniLogic/docs#66 and PenniLogic/docs#67; the IA, Security, Accessibility and CDO decisions are pending. Nothing here is D1 approval, research evidence, a review or permission to build navigation.
+Every label is provisional text without a message key (PenniLogic/docs#84 owns the `nav.` key root). Tree tests, card sorts and the compact, expanded and narrow-width navigation walkthroughs are not run; persona and journey assumptions wait for PenniLogic/docs#66 and PenniLogic/docs#67; the IA, Security, Accessibility and CDO decisions are pending. Nothing here is D1 approval, research evidence, a review or permission to build navigation.
+
+Also not claimed: a search and discovery design (every destination is reachable without search, but no search or discovery surface is designed here); the runtime test that an unauthorized or unknown operator path is absent, owned by the admin and api implementers (admin absence is a data rule here); the list screen of each route whose children are list items but which hosts no screen (`R-ADM-027`), missing from the pinned registry until PenniLogic/docs#75 registers it; and mirroring the declared dependency PenniLogic/docs#67 as a native GitHub blockedBy edge.
+
+Route IDs, published route and external-entry patterns and redirects are never dropped (checked against the route map at the merge base with main), so a rollback is a roll-forward: a new IA version restores the earlier routes, labels and placements, retires the route IDs added since and keeps every redirect and published pattern.
 
 ## Android
 
