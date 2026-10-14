@@ -111,9 +111,10 @@ def guardrail(identifier, journey, klass, concern, threshold):
     }
 
 
-def threshold(identifier):
+def threshold(identifier, journey="J01"):
     return {
-        "id": identifier, "warn": {"value": None, "source": "unset"}, "kill": {"value": None, "source": "unset"},
+        "id": identifier, "journey_ids": [journey], "warn": {"value": None, "source": "unset"},
+        "kill": {"value": None, "source": "unset"},
         "minimum_sample_ref": module.PLATFORM_REF, "on_cross": "product_decision_review",
         "reviewers": ["product_owner", "research", "privacy"], "decision_record": None,
     }
@@ -151,6 +152,25 @@ def fill_kinds(journey, present, start):
             for number, kind in enumerate(missing, start=start)]
 
 
+def assign_thresholds(document):
+    """One threshold per measure, carrying its journey, each with a threshold_crossed trigger, then the benchmark
+    regression trigger (review round 1, F10): TH-001.. follow the metrics, then the guardrails."""
+    measures = [*document["metrics"], *document["guardrails"]]
+    document["thresholds"], triggers = [], []
+    for number, record in enumerate(measures, start=1):
+        identifier = f"TH-{number:03d}"
+        record["threshold_id"] = identifier
+        document["thresholds"].append(threshold(identifier, record["journey_id"]))
+        triggers.append({"id": f"RT-{number:03d}", "journey_ids": [record["journey_id"]],
+                         "condition": "threshold_crossed", "source_id": identifier, "follow_up": "moderated_study",
+                         "owner_role": "research", "status": "dormant"})
+    triggers.append({"id": f"RT-{len(measures) + 1:03d}", "journey_ids": ["J01"], "condition": "benchmark_regression",
+                     "source_id": "BM-J01", "follow_up": "unmoderated_benchmark", "owner_role": "research",
+                     "status": "dormant"})
+    document["research_triggers"] = triggers
+    return document
+
+
 def catalogue(pin):
     """A synthetic catalogue that passes every structure rule against the synthetic registry (J01, J02 critical)."""
     classes = ("permission_coercion", "harmful_sharing", "support_demand", "accessibility", "dark_pattern")
@@ -159,7 +179,7 @@ def catalogue(pin):
                   guardrail("G-J02-01", "J02", classes[2], "trust", "TH-002"),
                   guardrail("G-J02-02", "J02", classes[3], "trust", "TH-002"),
                   guardrail("G-J02-03", "J02", classes[4], "harm", "TH-002")]
-    return {
+    return assign_thresholds({
         "schema_version": "1.0.0", "catalogue_version": "0.1.0", "source_issue": "PenniLogic/docs#77",
         "plan_id": "T-UXR-08", "status": "proposed", "registry_ref": dict(pin),
         "outcome_validation_refs": ["pending:PenniLogic/docs#65", "pending:PenniLogic/docs#66"],
@@ -186,15 +206,7 @@ def catalogue(pin):
                     *fill_kinds("J01", ("task_success", "time_on_task"), 4),
                     *fill_kinds("J02", ("comprehension",), 2)],
         "guardrails": guardrails,
-        "thresholds": [threshold("TH-001"), threshold("TH-002")],
-        "research_triggers": [
-            {"id": "RT-001", "journey_ids": ["J01", "J02"], "condition": "threshold_crossed", "source_id": "TH-001",
-             "follow_up": "moderated_study", "owner_role": "research", "status": "dormant"},
-            {"id": "RT-002", "journey_ids": ["J01", "J02"], "condition": "threshold_crossed", "source_id": "TH-002",
-             "follow_up": "guardrail_review", "owner_role": "research", "status": "dormant"},
-            {"id": "RT-003", "journey_ids": ["J01"], "condition": "benchmark_regression", "source_id": "BM-J01",
-             "follow_up": "unmoderated_benchmark", "owner_role": "research", "status": "dormant"},
-        ],
+        "thresholds": [], "research_triggers": [],
         "research_calendar": {
             "operations_ref": "pending:PenniLogic/docs#65",
             "cadences": [{"study": study, "cadence": cadence, "journey_ids": ["J01", "J02"], "next_session": None}
@@ -215,7 +227,7 @@ def catalogue(pin):
         "design_debt": [],
         "approvals": [{"role": role, "status": "pending", "decision_ref": None}
                       for role in ("privacy", "product_owner", "research", "decision_coordinator")],
-    }
+    })
 
 
 class CatalogueCase(unittest.TestCase):
@@ -596,7 +608,7 @@ class MeasureTests(CatalogueCase):
 
     def test_dangling_threshold_reference(self):
         self.assertRefused("reference.dangling", "G-J01-01", mutate(
-            self.document, lambda d: d["guardrails"][0].update(threshold_id="TH-009")))
+            self.document, lambda d: d["guardrails"][0].update(threshold_id="TH-099")))
 
     def test_validated_status_is_held(self):
         self.assertRefused("held.validation", "M-J02-01", mutate(
@@ -697,22 +709,26 @@ class CoverageTests(CatalogueCase):
 
     def test_guardrail_missing(self):
         # Control: J03 made critical in the pinned registry, with its own primary, guardrail and benchmark.
+        # The negative differs only by the J03 guardrail (thresholds and triggers are derived per measure).
         blob = registry_bytes((("J01", True), ("J02", True), ("J03", True)))
         self.pin = pin_for(blob)
-        document = mutate(catalogue(self.pin), lambda d: (
-            d["metrics"].append(metric("M-J03-01", "J03", "primary", "recovery", "TH-001", [])),
-            d["metrics"].extend(fill_kinds("J03", ("recovery",), 2)),
-            d["guardrails"].append(guardrail("G-J03-01", "J03", "accessibility", "trust", "TH-002")),
-            d["benchmarks"].append(benchmark("J03"))))
-        self.run_check(document, sources=Sources(blob))
-        self.assertRefused("coverage.guardrail_missing", "J03",
-                           mutate(document, lambda d: d["guardrails"].pop()), sources=Sources(blob))
+
+        def j03(with_guardrail):
+            def change(d):
+                d["metrics"].append(metric("M-J03-01", "J03", "primary", "recovery", "TH-001", []))
+                d["metrics"].extend(fill_kinds("J03", ("recovery",), 2))
+                if with_guardrail:
+                    d["guardrails"].append(guardrail("G-J03-01", "J03", "accessibility", "trust", "TH-002"))
+                d["benchmarks"].append(benchmark("J03"))
+                assign_thresholds(d)
+            return mutate(catalogue(self.pin), change)
+        self.run_check(j03(True), sources=Sources(blob))
+        self.assertRefused("coverage.guardrail_missing", "J03", j03(False), sources=Sources(blob))
 
     def test_measure_kind_missing(self):
         # Review round 1 (spec-and-safety.-r1-F7): the scope's seven measure kinds were narrowed without a hold.
-        self.assertRefused("coverage.measure_kind_missing", "J02", mutate(
-            self.document, lambda d: d["metrics"].remove(next(m for m in d["metrics"]
-                                                              if m["journey_id"] == "J02" and m["kind"] == "recovery"))))
+        self.assertRefused("coverage.measure_kind_missing", "J02", mutate(self.document, lambda d: next(
+            m for m in d["metrics"] if m["journey_id"] == "J02" and m["kind"] == "recovery").update(kind="trust")))
 
     def test_benchmark_missing(self):
         self.assertRefused("coverage.benchmark_missing", "J02", mutate(
@@ -762,16 +778,25 @@ class ThresholdTriggerTests(CatalogueCase):
             self.document, lambda d: d["thresholds"][0].update(decision_record="approved")))
 
     def test_unused_threshold(self):
-        self.assertRefused("threshold.unused", "TH-002", mutate(self.document, lambda d: [
-            g.update(threshold_id="TH-001") for g in d["guardrails"]]))
+        self.assertRefused("threshold.unused", "TH-099", mutate(
+            self.document, lambda d: d["thresholds"].append(threshold("TH-099"))))
+
+    def test_threshold_cannot_be_shared(self):
+        # Review round 1 (spec-and-safety.-r1-F10): one value applied to measures of different journeys and units.
+        self.assertRefused("threshold.shared", "TH-001", mutate(
+            self.document, lambda d: d["guardrails"][0].update(threshold_id="TH-001")))
+
+    def test_threshold_names_its_measures_journey(self):
+        self.assertRefused("threshold.journey_mismatch", "TH-001", mutate(
+            self.document, lambda d: d["thresholds"][0].update(journey_ids=["J02"])))
 
     def test_threshold_without_trigger(self):
         self.assertRefused("threshold.without_trigger", "TH-002", mutate(
             self.document, lambda d: d["research_triggers"][1].update(source_id="TH-001")))
 
     def test_trigger_source_must_match_condition(self):
-        self.assertRefused("trigger.source_mismatch", "RT-003", mutate(
-            self.document, lambda d: d["research_triggers"][2].update(source_id="TH-001")))
+        self.assertRefused("trigger.source_mismatch", "RT-021", mutate(
+            self.document, lambda d: d["research_triggers"][-1].update(source_id="TH-001")))
 
     def test_trigger_owner_is_research(self):
         self.assertRefused("trigger.owner_role", "RT-001", mutate(
@@ -974,7 +999,7 @@ class ReadinessTests(CatalogueCase):
             "android#7", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#129", "docs#130", "docs#131",
             "infra#27")])
         self.assertEqual(len(gaps["readiness.baseline_unmeasured"]), 22)
-        self.assertEqual(gaps["readiness.threshold_unset"], ["TH-001", "TH-002"])
+        self.assertEqual(gaps["readiness.threshold_unset"], [f"TH-{number:03d}" for number in range(1, 21)])
         self.assertEqual(len(gaps["readiness.measure_unvalidated"]), 20)
         self.assertEqual(gaps["readiness.benchmark_unrun"], ["BM-J01", "BM-J02"])
         self.assertEqual(gaps["readiness.longitudinal_unrun"], ["longitudinal_plan"])
@@ -1335,7 +1360,7 @@ class PublishedCatalogueTests(unittest.TestCase):
             "readiness.baseline_unmeasured": sorted([*measures, *benchmarks],
                                                     key=lambda identifier: (module.journey_of(identifier),
                                                                             identifier)),
-            "readiness.threshold_unset": [f"TH-{number:03d}" for number in range(1, 9)],
+            "readiness.threshold_unset": [f"TH-{number:03d}" for number in range(1, 101)],
             "readiness.measure_unvalidated": measures,
             "readiness.benchmark_unrun": benchmarks,
             "readiness.longitudinal_unrun": ["longitudinal_plan"],
@@ -1347,7 +1372,7 @@ class PublishedCatalogueTests(unittest.TestCase):
         self.assertEqual({rule: len(items) for rule, items in self.gaps.items()}, {
             "readiness.approval_pending": 4, "readiness.collection_disabled": 1,
             "readiness.payload_review_pending": 15, "readiness.pending_reference": 10,
-            "readiness.baseline_unmeasured": 112, "readiness.threshold_unset": 8,
+            "readiness.baseline_unmeasured": 112, "readiness.threshold_unset": 100,
             "readiness.measure_unvalidated": 100, "readiness.benchmark_unrun": 12,
             "readiness.longitudinal_unrun": 1, "readiness.journey_outside_pin": 0,
             "readiness.registry_import_pin": 1, "readiness.d8_blocking_debt": 0})

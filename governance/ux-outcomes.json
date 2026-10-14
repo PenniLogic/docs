@@ -762,7 +762,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-003",
       "status": "unvalidated"
     },
     {
@@ -819,7 +819,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-004",
       "status": "unvalidated"
     },
     {
@@ -878,7 +878,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-008",
+      "threshold_id": "TH-005",
       "status": "unvalidated"
     },
     {
@@ -947,7 +947,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-006",
       "status": "unvalidated"
     },
     {
@@ -1004,7 +1004,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-007",
       "status": "unvalidated"
     },
     {
@@ -1061,7 +1061,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-008",
       "status": "unvalidated"
     },
     {
@@ -1118,7 +1118,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-009",
       "status": "unvalidated"
     },
     {
@@ -1177,7 +1177,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-011",
       "status": "unvalidated"
     },
     {
@@ -1234,7 +1234,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-012",
       "status": "unvalidated"
     },
     {
@@ -1285,7 +1285,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-013",
       "status": "unvalidated"
     },
     {
@@ -1342,7 +1342,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-014",
       "status": "unvalidated"
     },
     {
@@ -1411,7 +1411,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-015",
       "status": "unvalidated"
     },
     {
@@ -1468,7 +1468,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-016",
       "status": "unvalidated"
     },
     {
@@ -1525,7 +1525,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-017",
       "status": "unvalidated"
     },
     {
@@ -1584,7 +1584,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-019",
       "status": "unvalidated"
     },
     {
@@ -1641,7 +1641,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-020",
       "status": "unvalidated"
     },
     {
@@ -1692,7 +1692,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-021",
       "status": "unvalidated"
     },
     {
@@ -1749,7 +1749,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-022",
       "status": "unvalidated"
     },
     {
@@ -1818,7 +1818,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-023",
       "status": "unvalidated"
     },
     {
@@ -1875,7 +1875,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-024",
       "status": "unvalidated"
     },
     {
@@ -1932,7 +1932,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-025",
       "status": "unvalidated"
     },
     {
@@ -1991,7 +1991,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-027",
       "status": "unvalidated"
     },
     {
@@ -2048,7 +2048,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-028",
       "status": "unvalidated"
     },
     {
@@ -2099,7 +2099,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-029",
       "status": "unvalidated"
     },
     {
@@ -2156,7 +2156,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-030",
       "status": "unvalidated"
     },
     {
@@ -2225,7 +2225,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-031",
       "status": "unvalidated"
     },
     {
@@ -2282,7 +2282,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-032",
       "status": "unvalidated"
     },
     {
@@ -2339,7 +2339,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-033",
       "status": "unvalidated"
     },
     {
@@ -2410,7 +2410,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-035",
       "status": "unvalidated"
     },
     {
@@ -2467,7 +2467,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-036",
       "status": "unvalidated"
     },
     {
@@ -2518,7 +2518,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-037",
       "status": "unvalidated"
     },
     {
@@ -2575,7 +2575,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-038",
       "status": "unvalidated"
     },
     {
@@ -2632,7 +2632,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-039",
       "status": "unvalidated"
     },
     {
@@ -2689,7 +2689,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-040",
       "status": "unvalidated"
     },
     {
@@ -2746,7 +2746,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-041",
       "status": "unvalidated"
     },
     {
@@ -2817,7 +2817,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-043",
       "status": "unvalidated"
     },
     {
@@ -2874,7 +2874,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-044",
       "status": "unvalidated"
     },
     {
@@ -2925,7 +2925,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-045",
       "status": "unvalidated"
     },
     {
@@ -2982,7 +2982,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-046",
       "status": "unvalidated"
     },
     {
@@ -3041,7 +3041,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-008",
+      "threshold_id": "TH-047",
       "status": "unvalidated"
     },
     {
@@ -3098,7 +3098,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-048",
       "status": "unvalidated"
     },
     {
@@ -3155,7 +3155,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-049",
       "status": "unvalidated"
     },
     {
@@ -3212,7 +3212,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-050",
       "status": "unvalidated"
     },
     {
@@ -3283,7 +3283,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-052",
       "status": "unvalidated"
     },
     {
@@ -3340,7 +3340,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-053",
       "status": "unvalidated"
     },
     {
@@ -3391,7 +3391,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-054",
       "status": "unvalidated"
     },
     {
@@ -3448,7 +3448,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-055",
       "status": "unvalidated"
     },
     {
@@ -3505,7 +3505,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-056",
       "status": "unvalidated"
     },
     {
@@ -3562,7 +3562,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-057",
       "status": "unvalidated"
     },
     {
@@ -3619,7 +3619,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-058",
       "status": "unvalidated"
     },
     {
@@ -3678,7 +3678,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-060",
       "status": "unvalidated"
     },
     {
@@ -3735,7 +3735,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-061",
       "status": "unvalidated"
     },
     {
@@ -3786,7 +3786,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-062",
       "status": "unvalidated"
     },
     {
@@ -3843,7 +3843,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-063",
       "status": "unvalidated"
     },
     {
@@ -3912,7 +3912,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-064",
       "status": "unvalidated"
     },
     {
@@ -3969,7 +3969,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-065",
       "status": "unvalidated"
     },
     {
@@ -4026,7 +4026,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-066",
       "status": "unvalidated"
     },
     {
@@ -4097,7 +4097,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-068",
       "status": "unvalidated"
     },
     {
@@ -4154,7 +4154,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-069",
       "status": "unvalidated"
     },
     {
@@ -4205,7 +4205,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-070",
       "status": "unvalidated"
     },
     {
@@ -4262,7 +4262,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-071",
       "status": "unvalidated"
     },
     {
@@ -4315,7 +4315,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-008",
+      "threshold_id": "TH-072",
       "status": "unvalidated"
     },
     {
@@ -4372,7 +4372,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-073",
       "status": "unvalidated"
     },
     {
@@ -4429,7 +4429,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-074",
       "status": "unvalidated"
     },
     {
@@ -4486,7 +4486,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-075",
       "status": "unvalidated"
     },
     {
@@ -4557,7 +4557,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-077",
       "status": "unvalidated"
     },
     {
@@ -4614,7 +4614,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-078",
       "status": "unvalidated"
     },
     {
@@ -4665,7 +4665,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-079",
       "status": "unvalidated"
     },
     {
@@ -4722,7 +4722,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-080",
       "status": "unvalidated"
     },
     {
@@ -4779,7 +4779,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-081",
       "status": "unvalidated"
     },
     {
@@ -4836,7 +4836,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-082",
       "status": "unvalidated"
     },
     {
@@ -4893,7 +4893,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-083",
       "status": "unvalidated"
     },
     {
@@ -4964,7 +4964,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-085",
       "status": "unvalidated"
     },
     {
@@ -5021,7 +5021,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-086",
       "status": "unvalidated"
     },
     {
@@ -5072,7 +5072,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-087",
       "status": "unvalidated"
     },
     {
@@ -5129,7 +5129,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-088",
       "status": "unvalidated"
     },
     {
@@ -5186,7 +5186,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-089",
       "status": "unvalidated"
     },
     {
@@ -5243,7 +5243,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-090",
       "status": "unvalidated"
     },
     {
@@ -5300,7 +5300,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-091",
       "status": "unvalidated"
     },
     {
@@ -5371,7 +5371,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-001",
+      "threshold_id": "TH-093",
       "status": "unvalidated"
     },
     {
@@ -5428,7 +5428,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-094",
       "status": "unvalidated"
     },
     {
@@ -5479,7 +5479,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-095",
       "status": "unvalidated"
     },
     {
@@ -5536,7 +5536,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-096",
       "status": "unvalidated"
     },
     {
@@ -5593,7 +5593,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-097",
       "status": "unvalidated"
     },
     {
@@ -5650,7 +5650,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-098",
       "status": "unvalidated"
     },
     {
@@ -5707,7 +5707,7 @@
         "source": "unset"
       },
       "sample_limitation": "Proposed definition; no baseline is measured and no cohort size is set until PenniLogic/infra#27",
-      "threshold_id": "TH-002",
+      "threshold_id": "TH-099",
       "status": "unvalidated"
     }
   ],
@@ -5770,7 +5770,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-003",
+      "threshold_id": "TH-010",
       "status": "unvalidated"
     },
     {
@@ -5812,7 +5812,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-005",
+      "threshold_id": "TH-018",
       "status": "unvalidated"
     },
     {
@@ -5872,7 +5872,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-006",
+      "threshold_id": "TH-026",
       "status": "unvalidated"
     },
     {
@@ -5932,7 +5932,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-007",
+      "threshold_id": "TH-034",
       "status": "unvalidated"
     },
     {
@@ -5992,7 +5992,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-006",
+      "threshold_id": "TH-042",
       "status": "unvalidated"
     },
     {
@@ -6040,7 +6040,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-004",
+      "threshold_id": "TH-051",
       "status": "unvalidated"
     },
     {
@@ -6088,7 +6088,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-004",
+      "threshold_id": "TH-059",
       "status": "unvalidated"
     },
     {
@@ -6148,7 +6148,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-007",
+      "threshold_id": "TH-067",
       "status": "unvalidated"
     },
     {
@@ -6208,7 +6208,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-007",
+      "threshold_id": "TH-076",
       "status": "unvalidated"
     },
     {
@@ -6262,7 +6262,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-005",
+      "threshold_id": "TH-084",
       "status": "unvalidated"
     },
     {
@@ -6322,7 +6322,7 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-006",
+      "threshold_id": "TH-092",
       "status": "unvalidated"
     },
     {
@@ -6370,13 +6370,16 @@
         "value": null,
         "source": "unmeasured"
       },
-      "threshold_id": "TH-005",
+      "threshold_id": "TH-100",
       "status": "unvalidated"
     }
   ],
   "thresholds": [
     {
       "id": "TH-001",
+      "journey_ids": [
+        "J01"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6395,6 +6398,9 @@
     },
     {
       "id": "TH-002",
+      "journey_ids": [
+        "J01"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6413,6 +6419,51 @@
     },
     {
       "id": "TH-003",
+      "journey_ids": [
+        "J01"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-004",
+      "journey_ids": [
+        "J01"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-005",
+      "journey_ids": [
+        "J01"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6431,7 +6482,94 @@
       "decision_record": null
     },
     {
-      "id": "TH-004",
+      "id": "TH-006",
+      "journey_ids": [
+        "J01"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-007",
+      "journey_ids": [
+        "J01"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-008",
+      "journey_ids": [
+        "J01"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-009",
+      "journey_ids": [
+        "J01"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-010",
+      "journey_ids": [
+        "J01"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6445,13 +6583,162 @@
       "reviewers": [
         "product_owner",
         "research",
-        "privacy",
-        "security"
+        "privacy"
       ],
       "decision_record": null
     },
     {
-      "id": "TH-005",
+      "id": "TH-011",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-012",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-013",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-014",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-015",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-016",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-017",
+      "journey_ids": [
+        "J02"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-018",
+      "journey_ids": [
+        "J02"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6470,7 +6757,157 @@
       "decision_record": null
     },
     {
-      "id": "TH-006",
+      "id": "TH-019",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-020",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-021",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-022",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-023",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-024",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-025",
+      "journey_ids": [
+        "J03"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-026",
+      "journey_ids": [
+        "J03"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6489,7 +6926,157 @@
       "decision_record": null
     },
     {
-      "id": "TH-007",
+      "id": "TH-027",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-028",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-029",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-030",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-031",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-032",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-033",
+      "journey_ids": [
+        "J04"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-034",
+      "journey_ids": [
+        "J04"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6509,7 +7096,263 @@
       "decision_record": null
     },
     {
-      "id": "TH-008",
+      "id": "TH-035",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-036",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-037",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-038",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-039",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-040",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-041",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-042",
+      "journey_ids": [
+        "J05"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "accessibility"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-043",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-044",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-045",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-046",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-047",
+      "journey_ids": [
+        "J06"
+      ],
       "warn": {
         "value": null,
         "source": "unset"
@@ -6526,24 +7369,1138 @@
         "privacy"
       ],
       "decision_record": null
+    },
+    {
+      "id": "TH-048",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-049",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-050",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-051",
+      "journey_ids": [
+        "J06"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "privacy",
+        "security"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-052",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-053",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-054",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-055",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-056",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-057",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-058",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-059",
+      "journey_ids": [
+        "J07"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "privacy",
+        "security"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-060",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-061",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-062",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-063",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-064",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-065",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-066",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-067",
+      "journey_ids": [
+        "J08"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "content",
+        "legal"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-068",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-069",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-070",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-071",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-072",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "privacy"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-073",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-074",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-075",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-076",
+      "journey_ids": [
+        "J09"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "content",
+        "legal"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-077",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-078",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-079",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-080",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-081",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-082",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-083",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-084",
+      "journey_ids": [
+        "J10"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "service_design"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-085",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-086",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-087",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-088",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-089",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-090",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-091",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-092",
+      "journey_ids": [
+        "J11"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "accessibility"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-093",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-094",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-095",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-096",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-097",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-098",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-099",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research"
+      ],
+      "decision_record": null
+    },
+    {
+      "id": "TH-100",
+      "journey_ids": [
+        "J12"
+      ],
+      "warn": {
+        "value": null,
+        "source": "unset"
+      },
+      "kill": {
+        "value": null,
+        "source": "unset"
+      },
+      "minimum_sample_ref": "pending:PenniLogic/infra#27",
+      "on_cross": "product_decision_review",
+      "reviewers": [
+        "product_owner",
+        "research",
+        "service_design"
+      ],
+      "decision_record": null
     }
   ],
   "research_triggers": [
     {
       "id": "RT-001",
       "journey_ids": [
-        "J01",
-        "J02",
-        "J03",
-        "J04",
-        "J05",
-        "J06",
-        "J07",
-        "J08",
-        "J09",
-        "J10",
-        "J11",
-        "J12"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-001",
@@ -6554,18 +8511,7 @@
     {
       "id": "RT-002",
       "journey_ids": [
-        "J01",
-        "J02",
-        "J03",
-        "J04",
-        "J05",
-        "J06",
-        "J07",
-        "J08",
-        "J09",
-        "J10",
-        "J11",
-        "J12"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-002",
@@ -6580,76 +8526,1079 @@
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-003",
-      "follow_up": "guardrail_review",
+      "follow_up": "moderated_study",
       "owner_role": "research",
       "status": "dormant"
     },
     {
       "id": "RT-004",
       "journey_ids": [
-        "J06",
-        "J07"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-004",
-      "follow_up": "guardrail_review",
+      "follow_up": "moderated_study",
       "owner_role": "research",
       "status": "dormant"
     },
     {
       "id": "RT-005",
       "journey_ids": [
-        "J02",
-        "J10",
-        "J12"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-005",
-      "follow_up": "guardrail_review",
+      "follow_up": "moderated_study",
       "owner_role": "research",
       "status": "dormant"
     },
     {
       "id": "RT-006",
       "journey_ids": [
-        "J03",
-        "J05",
-        "J11"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-006",
-      "follow_up": "guardrail_review",
+      "follow_up": "moderated_study",
       "owner_role": "research",
       "status": "dormant"
     },
     {
       "id": "RT-007",
       "journey_ids": [
-        "J04",
-        "J08",
-        "J09"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-007",
-      "follow_up": "guardrail_review",
+      "follow_up": "moderated_study",
       "owner_role": "research",
       "status": "dormant"
     },
     {
       "id": "RT-008",
       "journey_ids": [
-        "J01",
-        "J06",
-        "J09"
+        "J01"
       ],
       "condition": "threshold_crossed",
       "source_id": "TH-008",
-      "follow_up": "guardrail_review",
+      "follow_up": "moderated_study",
       "owner_role": "research",
       "status": "dormant"
     },
     {
       "id": "RT-009",
+      "journey_ids": [
+        "J01"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-009",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-010",
+      "journey_ids": [
+        "J01"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-010",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-011",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-011",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-012",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-012",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-013",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-013",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-014",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-014",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-015",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-015",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-016",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-016",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-017",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-017",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-018",
+      "journey_ids": [
+        "J02"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-018",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-019",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-019",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-020",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-020",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-021",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-021",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-022",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-022",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-023",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-023",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-024",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-024",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-025",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-025",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-026",
+      "journey_ids": [
+        "J03"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-026",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-027",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-027",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-028",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-028",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-029",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-029",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-030",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-030",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-031",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-031",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-032",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-032",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-033",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-033",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-034",
+      "journey_ids": [
+        "J04"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-034",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-035",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-035",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-036",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-036",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-037",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-037",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-038",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-038",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-039",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-039",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-040",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-040",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-041",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-041",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-042",
+      "journey_ids": [
+        "J05"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-042",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-043",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-043",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-044",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-044",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-045",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-045",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-046",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-046",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-047",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-047",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-048",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-048",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-049",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-049",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-050",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-050",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-051",
+      "journey_ids": [
+        "J06"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-051",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-052",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-052",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-053",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-053",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-054",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-054",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-055",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-055",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-056",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-056",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-057",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-057",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-058",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-058",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-059",
+      "journey_ids": [
+        "J07"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-059",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-060",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-060",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-061",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-061",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-062",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-062",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-063",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-063",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-064",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-064",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-065",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-065",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-066",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-066",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-067",
+      "journey_ids": [
+        "J08"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-067",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-068",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-068",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-069",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-069",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-070",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-070",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-071",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-071",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-072",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-072",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-073",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-073",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-074",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-074",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-075",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-075",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-076",
+      "journey_ids": [
+        "J09"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-076",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-077",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-077",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-078",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-078",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-079",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-079",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-080",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-080",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-081",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-081",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-082",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-082",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-083",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-083",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-084",
+      "journey_ids": [
+        "J10"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-084",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-085",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-085",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-086",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-086",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-087",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-087",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-088",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-088",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-089",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-089",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-090",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-090",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-091",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-091",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-092",
+      "journey_ids": [
+        "J11"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-092",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-093",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-093",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-094",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-094",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-095",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-095",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-096",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-096",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-097",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-097",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-098",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-098",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-099",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-099",
+      "follow_up": "moderated_study",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-100",
+      "journey_ids": [
+        "J12"
+      ],
+      "condition": "threshold_crossed",
+      "source_id": "TH-100",
+      "follow_up": "guardrail_review",
+      "owner_role": "research",
+      "status": "dormant"
+    },
+    {
+      "id": "RT-101",
       "journey_ids": [
         "J01"
       ],
@@ -6660,7 +9609,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-010",
+      "id": "RT-102",
       "journey_ids": [
         "J02"
       ],
@@ -6671,7 +9620,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-011",
+      "id": "RT-103",
       "journey_ids": [
         "J03"
       ],
@@ -6682,7 +9631,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-012",
+      "id": "RT-104",
       "journey_ids": [
         "J04"
       ],
@@ -6693,7 +9642,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-013",
+      "id": "RT-105",
       "journey_ids": [
         "J05"
       ],
@@ -6704,7 +9653,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-014",
+      "id": "RT-106",
       "journey_ids": [
         "J06"
       ],
@@ -6715,7 +9664,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-015",
+      "id": "RT-107",
       "journey_ids": [
         "J07"
       ],
@@ -6726,7 +9675,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-016",
+      "id": "RT-108",
       "journey_ids": [
         "J08"
       ],
@@ -6737,7 +9686,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-017",
+      "id": "RT-109",
       "journey_ids": [
         "J09"
       ],
@@ -6748,7 +9697,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-018",
+      "id": "RT-110",
       "journey_ids": [
         "J10"
       ],
@@ -6759,7 +9708,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-019",
+      "id": "RT-111",
       "journey_ids": [
         "J11"
       ],
@@ -6770,7 +9719,7 @@
       "status": "dormant"
     },
     {
-      "id": "RT-020",
+      "id": "RT-112",
       "journey_ids": [
         "J12"
       ],

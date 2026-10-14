@@ -371,6 +371,14 @@
         "id": {
           "$ref": "#/definitions/id"
         },
+        "journey_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
         "warn": {
           "$ref": "#/definitions/unset"
         },
@@ -397,6 +405,7 @@
       "required": [
         "decision_record",
         "id",
+        "journey_ids",
         "kill",
         "minimum_sample_ref",
         "on_cross",

@@ -774,8 +774,12 @@ def check_coverage(indexed, pinned):
 
 
 def check_thresholds(indexed):
-    """A crossed threshold opens a reviewed product decision (ticket criterion 4); it never acts on its own."""
-    measured = [*indexed["metrics"].values(), *indexed["guardrails"].values()]
+    """A crossed threshold opens a reviewed product decision (ticket criterion 4); it never acts on its own. Each
+    threshold belongs to exactly one measure and names that measure's journey, so no single value is ever applied to
+    measures of different journeys, kinds or units (review round 1, spec-and-safety.-r1-F10)."""
+    users = {}
+    for record in [*indexed["metrics"].values(), *indexed["guardrails"].values()]:
+        users.setdefault(record["threshold_id"], []).append(record)
     triggered = {trigger["source_id"] for trigger in indexed["research_triggers"].values()
                  if trigger["condition"] == "threshold_crossed"}
     for identifier, threshold in indexed["thresholds"].items():
@@ -783,7 +787,10 @@ def check_thresholds(indexed):
         require(set(threshold["reviewers"]) <= ROLES, "threshold.unknown_role", identifier)
         require("product_owner" in threshold["reviewers"], "threshold.review_missing", identifier)
         require(threshold["minimum_sample_ref"] == PLATFORM_REF, "privacy.platform_ref", identifier)
-        require(any(record["threshold_id"] == identifier for record in measured), "threshold.unused", identifier)
+        records = users.get(identifier, [])
+        require(records, "threshold.unused", identifier)
+        require(len(records) == 1, "threshold.shared", identifier)
+        require(threshold["journey_ids"] == [records[0]["journey_id"]], "threshold.journey_mismatch", identifier)
         require(identifier in triggered, "threshold.without_trigger", identifier)
 
 
@@ -1003,6 +1010,7 @@ def render_summary(model, gaps):
     """The generated governance/ux-outcomes.md: LF, deterministic, no timestamps or issue titles (TS-M4). The D8
     check depends on the date it runs, so it is reported by the validator and not written here."""
     document, indexed = model["document"], model["indexed"]
+    measured = [*indexed["metrics"].values(), *indexed["guardrails"].values()]
     privacy, collection = document["privacy"], document["collection"]
     registry = document["registry_ref"]
     budget = privacy["privacy_budget"]
@@ -1062,8 +1070,10 @@ def render_summary(model, gaps):
         "Baselines are `unmeasured` and targets and thresholds `unset`: values arrive only through a reviewed, "
         "versioned catalogue change backed by research evidence.", "",
         "## Decision thresholds", "",
-        *table(("Threshold", "Warn", "Kill", "Minimum sample", "On crossing", "Reviewers"), [
-            (f"`{identifier}`", threshold["warn"]["source"], threshold["kill"]["source"],
+        *table(("Threshold", "Measure", "Journeys", "Warn", "Kill", "Minimum sample", "On crossing", "Reviewers"), [
+            (f"`{identifier}`",
+             codes(sorted(record["id"] for record in measured if record["threshold_id"] == identifier)),
+             codes(threshold["journey_ids"]), threshold["warn"]["source"], threshold["kill"]["source"],
              f"`{threshold['minimum_sample_ref']}`", threshold["on_cross"], codes(sorted(threshold["reviewers"])))
             for identifier, threshold in sorted(indexed["thresholds"].items())]), "",
         "## Research triggers", "",
