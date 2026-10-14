@@ -15,6 +15,7 @@
     "registry_ref",
     "research_gate",
     "approvals",
+    "reviews",
     "diagrams",
     "blueprints"
   ],
@@ -83,6 +84,14 @@
       "maxItems": 5,
       "items": {
         "$ref": "#/definitions/approval"
+      }
+    },
+    "reviews": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/definitions/review"
       }
     },
     "diagrams": {
@@ -834,6 +843,58 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/gap"
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "tabletop",
+            "boundary_review"
+          ],
+          "description": "tabletop: the cross-channel handoff and failure-branch tabletop; boundary_review: the security/privacy boundary review (docs#67 Tests). Both are held human inputs."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_run",
+            "recorded"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}(?![\\s\\S])"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+(/[a-z0-9_.-]+)*(?![\\s\\S])"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+            }
           }
         }
       }

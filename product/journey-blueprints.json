@@ -42,6 +42,18 @@
       "source": null
     }
   ],
+  "reviews": [
+    {
+      "kind": "tabletop",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "kind": "boundary_review",
+      "status": "not_run",
+      "evidence": null
+    }
+  ],
   "diagrams": [
     {
       "id": "D01",

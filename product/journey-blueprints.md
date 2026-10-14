@@ -20,6 +20,7 @@ The readiness verdict is NOT GREEN by construction: the checker holds every huma
 | readiness.research_pending | 1 | PenniLogic/docs#66 |
 | readiness.persona_provisional | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.approval_pending | 5 | architecture, ia, operations, product, security |
+| readiness.review_pending | 2 | boundary_review, tabletop |
 | readiness.metric_pending | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.event_pending | 33 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J06.T.05, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
 | readiness.gap_open | 19 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J10-03, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
@@ -38,6 +39,11 @@ Drift of the live registry from the pin (readiness.registry_id_added, readiness.
 | security | pending |
 | operations | pending |
 | ia | pending |
+
+| Review | Status |
+|---|---|
+| tabletop | not_run |
+| boundary_review | not_run |
 
 Research gate PenniLogic/docs#66: pending, 0 evidence records.
 

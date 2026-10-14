@@ -20,14 +20,15 @@ stay `pending:PenniLogic/docs#77` and event references `pending:<owner issue>`; 
 Persona basis stays provisional until docs#66 evidence exists.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers matching a published
-grammar; input text is never echoed. Readiness gaps (pending research, approvals, metrics and events, open gaps
-without backlog items, held Figma artifacts, the unintegrated registry, live-registry drift, unchecked identifier
-continuity) are counted, never filled in, and keep the default mode NOT GREEN. No network, remote action,
-approval, issue creation or review is made or implied.
+grammar; input text is never echoed. Readiness gaps (pending research, approvals, the handoff and failure-branch
+tabletop and the security/privacy boundary review, metrics and events, open gaps without backlog items, held
+Figma artifacts, the unintegrated registry, live-registry drift, unchecked identifier continuity) are counted,
+never filled in, and keep the default mode NOT GREEN. No network, remote action, approval, issue creation or
+review is made or implied.
 
 Human inputs are held (held.*): this checker cannot resolve or digest-check a decision or evidence record, so a
-recorded approval, complete research, a validated persona basis or document status, a backlog item or a resolved
-gap is refused rather than trusted. NOT GREEN is therefore constant by construction: the held rules, the pinned
+recorded approval or review, complete research, a validated persona basis or document status, a backlog item or a
+resolved gap is refused rather than trusted. NOT GREEN is therefore constant by construction: the held rules, the pinned
 registry_ref, the pending-only metric and event grammars and the held Figma state admit no resolved value, so
 GREEN needs a later change to this checker and its schema, not only new inputs. readiness() itself computes every
 gap from the data (a synthetic resolved model reaches GREEN in the tests).
@@ -94,6 +95,8 @@ FIGMA_PREFIX = "Figma "
 # The service-blueprint diagrams are rendered by the blueprints of the journeys they name.
 BLUEPRINT_DIAGRAMS = {"D04": ("J03",), "D05": ("J10", "J11")}
 APPROVAL_ROLES = ("product", "architecture", "security", "operations", "ia")
+# docs#67 Tests: the cross-channel handoff and failure-branch tabletop and the security/privacy boundary review.
+REVIEW_KINDS = ("tabletop", "boundary_review")
 BRANCH_KINDS = ("failure", "offline", "timeout", "revocation", "partial", "escalation", "rollback",
                 "permission_denied")
 SIGNALS = ("completion", "abandonment", "correction", "recovery", "escalation")
@@ -124,6 +127,7 @@ GRAMMAR = {
     "diagram": re.compile(r"D[0-9]{2}"),
     "adr": re.compile(r"ADR-[0-9]{3}"),
     "role": re.compile(r"product|architecture|security|operations|ia"),
+    "review": re.compile(r"tabletop|boundary_review"),
 }
 ISSUE_REF = re.compile(
     r"PenniLogic/(" + "|".join(re.escape(name.split("/")[1]) for name in strategy.REPOSITORY_IDS)
@@ -165,6 +169,8 @@ EXEMPT_PATHS = {
     ("approvals", "*", "source", "path"): FILE_PATH,
     ("research_gate", "evidence", "*", "commit"): COMMIT, ("research_gate", "evidence", "*", "sha256"): DIGEST,
     ("research_gate", "evidence", "*", "path"): FILE_PATH,
+    ("reviews", "*", "evidence", "commit"): COMMIT, ("reviews", "*", "evidence", "sha256"): DIGEST,
+    ("reviews", "*", "evidence", "path"): FILE_PATH,
 }
 NUMBER_PATHS = frozenset({("schema_version",)})
 
@@ -180,6 +186,7 @@ STRUCTURE_RULES = (
     "blueprint.name_mismatch", "blueprint.persona_mismatch", "blueprint.flow_mismatch",
     "blueprint.audience_mismatch", "blueprint.order",
     "persona.basis_ref", "approval.order", "approval.ia_before_backlog",
+    "review.set_mismatch", "held.review",
     "held.approval", "held.research_evidence", "held.status", "held.persona_basis", "held.backlog_item",
     "held.gap_status",
     "diagram.set_mismatch", "diagram.registry_mismatch", "diagram.figma_mismatch", "diagram.rendering_missing",
@@ -203,7 +210,7 @@ STRUCTURE_RULES = (
 )
 READINESS_RULES = (
     "readiness.registry_unintegrated", "readiness.research_pending", "readiness.persona_provisional",
-    "readiness.approval_pending", "readiness.metric_pending", "readiness.event_pending",
+    "readiness.approval_pending", "readiness.review_pending", "readiness.metric_pending", "readiness.event_pending",
     "readiness.gap_open", "readiness.gap_backlog_missing", "readiness.figma_held",
     "readiness.continuity_unchecked",
     "readiness.registry_id_added", "readiness.registry_id_retired", "readiness.registry_record_changed",
@@ -517,6 +524,10 @@ def check_header(model):
     gate = document["research_gate"]
     require(gate["status"] == "pending" and not gate["evidence"], "held.research_evidence", RESEARCH_ISSUE)
     require(document["status"] == "provisional", "held.status")
+    # Review round 2 SR-10: the tabletop and the boundary review are held like approvals; none is run here.
+    require([review["kind"] for review in document["reviews"]] == list(REVIEW_KINDS), "review.set_mismatch")
+    for review in document["reviews"]:
+        require(review["status"] == "not_run" and review["evidence"] is None, "held.review", review["kind"])
     require([diagram["id"] for diagram in document["diagrams"]] == list(OWNED_DIAGRAMS), "diagram.set_mismatch")
     for identifier in OWNED_DIAGRAMS:
         record = registry["diagrams"].get(identifier)
@@ -768,6 +779,9 @@ def readiness(model, current=None):
     for approval in document["approvals"]:
         if approval["status"] != "recorded":
             gaps["readiness.approval_pending"].add(approval["role"])
+    for review in document["reviews"]:
+        if review["status"] != "recorded":
+            gaps["readiness.review_pending"].add(review["kind"])
     for blueprint in document["blueprints"]:
         if blueprint["persona_basis"] != "validated":
             gaps["readiness.persona_provisional"].add(blueprint["journey_id"])
@@ -941,6 +955,7 @@ def render_summary(model, gaps):
               "mode only, never by this file.", ""]
     lines += ["## Approvals and research gate", ""]
     lines += _table(("Role", "Status"), [(item["role"], item["status"]) for item in document["approvals"]])
+    lines += _table(("Review", "Status"), [(item["kind"], item["status"]) for item in document["reviews"]])
     lines += [f"Research gate {document['research_gate']['issue']}: {document['research_gate']['status']}, "
               f"{len(document['research_gate']['evidence'])} evidence records.", ""]
     lines += ["## Diagram renderings", ""]

@@ -154,6 +154,7 @@ def documents(pin):
         "research_gate": {"issue": "PenniLogic/docs#66", "status": "pending", "evidence": []},
         "approvals": [{"role": role, "status": "pending", "source": None}
                       for role in ("product", "architecture", "security", "operations", "ia")],
+        "reviews": [{"kind": kind, "status": "not_run", "evidence": None} for kind in ("tabletop", "boundary_review")],
         "diagrams": [{"id": identifier, "rendering": "markdown_text",
                       "figma": "not_applicable" if identifier == "D01" else "held"}
                      for identifier in ("D01", "D03", "D04", "D05", "D21")],
@@ -399,6 +400,16 @@ class HeaderTests(JourneyCase):
     def test_research_complete_with_fabricated_evidence(self):
         self.assertRefused("held.research_evidence", "PenniLogic/docs#66", setter(
             ("research_gate",), {"issue": "PenniLogic/docs#66", "status": "complete", "evidence": [FABRICATED_SOURCE]}))
+
+    def test_review_set_out_of_order(self):
+        # Review round 2 SR-10: the tabletop and the boundary review are held records in a fixed order.
+        self.assertRefused("review.set_mismatch", None, lambda d: d["reviews"].reverse())
+
+    def test_tabletop_recorded_refused(self):
+        self.assertRefused("held.review", "tabletop", setter(("reviews", 0, "status"), "recorded"))
+
+    def test_boundary_review_with_fabricated_evidence_refused(self):
+        self.assertRefused("held.review", "boundary_review", setter(("reviews", 1, "evidence"), FABRICATED_SOURCE))
 
     def test_validated_status_refused(self):
         self.assertRefused("held.status", None, setter(("status",), "validated"))
@@ -765,6 +776,7 @@ EXPECTED_GAPS = {
     "readiness.research_pending": ["PenniLogic/docs#66"],
     "readiness.persona_provisional": ["J01", "J10"],
     "readiness.approval_pending": ["architecture", "ia", "operations", "product", "security"],
+    "readiness.review_pending": ["boundary_review", "tabletop"],
     "readiness.metric_pending": ["J01", "J10"],
     "readiness.event_pending": ["J01.T.01", "J10.T.01"],
     "readiness.gap_open": ["GAP-J10-01"],
@@ -809,6 +821,8 @@ class ReadinessTests(JourneyCase):
         document["research_gate"]["status"] = "complete"
         for approval in document["approvals"]:
             approval["status"] = "recorded"
+        for review in document["reviews"]:
+            review["status"] = "recorded"
         for item in document["blueprints"]:
             item["persona_basis"] = "validated"
             item["outcome"]["metric_ref"] = "M-SYNTHETIC-01"
@@ -1070,6 +1084,7 @@ PUBLISHED_READINESS = {
     "readiness.research_pending": ["PenniLogic/docs#66"],
     "readiness.persona_provisional": _ids("J", 12),
     "readiness.approval_pending": ["architecture", "ia", "operations", "product", "security"],
+    "readiness.review_pending": ["boundary_review", "tabletop"],
     "readiness.metric_pending": _ids("J", 12),
     "readiness.event_pending": [
         "J01.T.02", "J01.T.03", "J03.T.02", "J03.T.03", "J03.T.04", "J03.T.05", "J04.T.01", "J04.T.02", "J05.T.01",
