@@ -652,13 +652,16 @@ def _named(text):
 
 
 def duplicates(component, other, family_words=frozenset()):
-    """Criterion 2 against one published record: the same name or semantic role (as word sets or run together),
-    or the published property signature contained in this one together with a shared content word that is not a
-    family word. An equal signature alone is not a duplicate: distinct components may share property names and
-    types, and siblings of one registry family (the pinned `input` or `action` names) share their family word."""
+    """Criterion 2 against one published record: a name or semantic role equal to the other's name or semantic
+    role (as word sets or run together; across the two fields too, so swapping them does not hide a copy), or the
+    published property signature contained in this one together with a shared content word that is not a family
+    word. An equal signature alone is not a duplicate: distinct components may share property names and types,
+    and siblings of one registry family (the pinned `input` or `action` names) share their family word."""
+    others = [(_words(other[field]), _joined(other[field])) for field in ("name", "semantic_role")]
     for field in ("name", "semantic_role"):
         words, joined = _words(component[field]), _joined(component[field])
-        if (words and words == _words(other[field])) or (joined and joined == _joined(other[field])):
+        if any((words and words == other_words) or (joined and joined == other_joined)
+               for other_words, other_joined in others):
             return True
     signature = {(_normal(item["name"]), item["type"]) for item in component["properties"]}
     other_signature = {(_normal(item["name"]), item["type"]) for item in other["properties"]}

@@ -1380,6 +1380,16 @@ class DuplicateTests(RuleCase):
         self.assertEqual(module._words("V card"), {"v", "card"})
         self.assertEqual(module._words("Revision v3 panel"), {"revision", "panel"})
 
+    def test_swapped_name_and_role_do_not_hide_a_duplicate(self):
+        """Fable r1 F3: a name equal to the other's semantic role (or a role equal to its name) is a duplicate,
+        with a different property contract."""
+        for change in (dict(name="Primary action", semantic_role="button"),
+                       dict(name="ActionPrimary", semantic_role="Summary card"),
+                       dict(name="Summary card", semantic_role="Buttons")):
+            with self.subTest(change=change):
+                self.assertRefused(lambda d: local(d).update(change), "duplicate.semantic_component", "C-SYN-LOCAL",
+                                   "C-SYN-BUTTON")
+
     def test_family_words_do_not_corroborate_a_duplicate(self):
         """R3-AV-2: two governed input-family siblings with a contained field API pass (the word `input` names
         two families); a candidate sharing a word only one governed name has is still refused."""

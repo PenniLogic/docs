@@ -110,13 +110,15 @@ no visual direction is selected.
    property; plurals folded to their singular: a final `-s`, `-e` and `-s` dropped and `-y` read as `-i`,
    so `status`/`statuses`, `purpose`/`purposes`, `cookie`/`cookies` and `entry`/`entries` meet) and as
    the content words run together, so word order, case, punctuation, camelCase or run-together spelling,
-   digit and version suffixes, function words and plurals do not hide a duplicate. A record is a duplicate when its name or semantic
-   role equals the other's in either form, or when it contains the other's whole property signature
-   (property names and types) and shares a content word of its name or role with it; an equal signature
-   alone is not a duplicate, because distinct components may share property names and types
-   (`duplicate.semantic_component`). A word of four or more letters that starts or ends a run-together
-   word of the other record, leaving four or more letters (`Actioncard`), counts as shared. A family
-   word, one that appears in the names of two or more component families outside `LIB-CANDIDATE` (in the
+   digit and version suffixes, function words and plurals do not hide a duplicate. A record is a
+   duplicate when its name or semantic role equals the other's name or semantic role in either form
+   (across the fields too, so a name and role swapped do not hide a duplicate), or when it contains the
+   other's whole property signature (property names and types) and shares a content word of its name or
+   role with it; an equal signature alone is not a duplicate, because distinct components may share
+   property names and types (`duplicate.semantic_component`). A word of four or more letters that starts
+   or ends a run-together word of the other record, leaving four or more letters (`Actioncard`), counts
+   as shared. A family word, one that appears in the names of two or more component families outside
+   `LIB-CANDIDATE` (in the
    pinned registry `action`, `input`, `recovery`, `status` and others), does not count as shared: those
    siblings share a field API by design. So a candidate whose only shared words are family words, or
    whose spelling hides a word inside another with a shorter remainder, passes the lint and is left to
