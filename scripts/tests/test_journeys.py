@@ -1331,6 +1331,15 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(routed, [("GAP-J03-02", "policy", "PenniLogic/android#32", "open")])
         self.assertEqual(self.model.issues["PenniLogic/android#32"]["plan_id"], "T-ING-01")
 
+    def test_issue_routing_is_stated_as_of_the_inventory_snapshot(self):
+        # Fable review round 1 F3: reference.closed_issue reads the inventory snapshot, not live GitHub state.
+        inventory = json.loads((ROOT / module.INVENTORY).read_text(encoding="utf-8"))
+        command = f"`{inventory['refresh_command']}`"
+        summary = module.render_summary(self.model, module.readiness(self.model))
+        for text in (" ".join(module.__doc__.split()), summary):
+            self.assertIn("as of its snapshot_at, not live GitHub state", text)
+            self.assertIn(command, text)
+
     def test_erasure_reversal_names_pre_shred_cancellation(self):
         # Review round 2 SR-09: ADR-021 Phase 1 freeze starts the cancellation window; cancellation is available
         # until Phase 2 (shred) starts, with the same proof as intake.

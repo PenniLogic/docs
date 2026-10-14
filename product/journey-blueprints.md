@@ -10,6 +10,8 @@ Personas are planning hypotheses, not research evidence: every persona basis sta
 
 Step data classes (public, internal, confidential, restricted) are a provisional scale proposed here: personal-data classification belongs to the T-CMP-04 jurisdiction profile (PenniLogic/docs#44, ADR-020 section 15), which confirms or replaces it (GAP-J10-03).
 
+Owner and pending issue states are checked against planning/issue-inventory.json as of its snapshot_at, not live GitHub state; the coordinator-owned `python scripts/check_test_strategy.py --refresh-inventory` refreshes the snapshot.
+
 The readiness verdict is NOT GREEN by construction: the checker holds every human input (approvals, research, persona validation, backlog items, gap resolution), the registry pin, pending metric and event references and the Figma state, so GREEN needs a later change to the checker and its schema, not only new inputs. Identifier continuity against an earlier published revision is not checked (readiness.continuity_unchecked).
 
 ## Readiness gaps

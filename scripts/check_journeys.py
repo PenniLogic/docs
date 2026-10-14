@@ -18,6 +18,10 @@ each step's boundary flags must be false, but nothing here inspects what a step 
 the pending Security/Privacy boundary review, not on these checks. Metric references
 stay `pending:PenniLogic/docs#77` and event references `pending:<owner issue>`; no EV- or M- identifier is minted.
 Persona basis stays provisional until docs#66 evidence exists.
+Issue routing (a gap owner or pending event/policy issue exists, is open and is not docs#67) is checked
+against planning/issue-inventory.json as of its snapshot_at, not live GitHub state; the coordinator-owned
+`python scripts/check_test_strategy.py --refresh-inventory` refreshes it, so an issue closed after the
+snapshot still passes until then.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers matching a published
 grammar; input text is never echoed. Readiness gaps (pending research, approvals, the handoff and failure-branch
@@ -942,6 +946,9 @@ def render_summary(model, gaps):
         "Step data classes (public, internal, confidential, restricted) are a provisional scale proposed here: "
         "personal-data classification belongs to the T-CMP-04 jurisdiction profile (PenniLogic/docs#44, ADR-020 "
         "section 15), which confirms or replaces it (GAP-J10-03).", "",
+        "Owner and pending issue states are checked against planning/issue-inventory.json as of its snapshot_at, "
+        "not live GitHub state; the coordinator-owned `python scripts/check_test_strategy.py --refresh-inventory` "
+        "refreshes the snapshot.", "",
         "The readiness verdict is NOT GREEN by construction: the checker holds every human input (approvals, "
         "research, persona validation, backlog items, gap resolution), the registry pin, pending metric and event "
         "references and the Figma state, so GREEN needs a later change to the checker and its schema, not only new "
