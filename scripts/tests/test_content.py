@@ -994,6 +994,53 @@ class RegulatedBindingTests(Harness):
             "key.copy_out_of_range", "state.empty.headline")
 
 
+class NormalisedWordingTests(Harness):
+    """Review round 2 SS-02: labels, aliases and restatements compare the normalised wording banned_in uses."""
+
+    def test_duplicate_label_spelled_with_a_dash_or_extra_space(self):
+        for label in ("pay-off", "Pay  Off", "PAY\u2013OFF"):
+            with self.subTest(label=label):
+                self.assertRefused(lambda d: terms_of(d)["term.debt"].update(preferred_label=label),
+                                   "term.duplicate_label", "term.payoff term.debt")
+
+    def test_alias_collision_spelled_with_a_dash_or_extra_space(self):
+        for alias in ("pay-off", "Pay  off", "re-voked"):
+            with self.subTest(alias=alias):
+                other = "term.payoff" if "pay" in alias.casefold() else "term.revoked"
+                self.assertRefused(lambda d: terms_of(d)["term.debt"]["forbidden_aliases"].append(alias),
+                                   "term.alias_collision", f"term.debt {other}")
+
+    def test_alias_equal_to_own_label_spelled_with_a_dash(self):
+        self.assertRefused(lambda d: terms_of(d)["term.debt"]["forbidden_aliases"].append("de-bt"),
+                           "term.alias_is_label", "term.debt")
+
+    def test_key_copy_with_a_variant_of_a_forbidden_alias(self):
+        for text in ("Review loan-burden", "Review loan  burden", "Review loan\u2013burden", "Review loan burdens",
+                     "Review LOAN BURDEN"):
+            with self.subTest(text=text):
+                self.assertRefused(lambda d: keys_of(d)["debt.delete.next"].update(copy=text),
+                                   "key.forbidden_alias", "debt.delete.next")
+
+    def test_definition_with_a_variant_of_another_terms_alias(self):
+        self.assertRefused(lambda d: terms_of(d)["term.payoff"].update(definition="Ends the loan-burdens."),
+                           "term.forbidden_alias", "term.payoff")
+
+    def test_regulated_copy_with_a_variant_of_a_forbidden_alias(self):
+        self.assertRefused(lambda d: first(d).update(copy="Consent covers your loan-burden."),
+                           "regulated.forbidden_alias", "RC-001")
+
+    def test_taxonomy_string_restated_with_terminal_punctuation(self):
+        for text in ("Synthetic.", "Synthetic!", "Synthetic\u2026", "Synthetic...", "SYNTHETIC ?"):
+            with self.subTest(text=text):
+                self.assertRefused(lambda d: add_key(d, key("states.empty.headline", text, "empty")),
+                                   "key.taxonomy_copy_restated", "states.empty.headline")
+
+    def test_word_that_merely_contains_an_alias_passes(self):
+        docs = documents()
+        keys_of(docs)["debt.delete.next"]["copy"] = "Review loan burdensome {item}"
+        self.run_check(docs)
+
+
 class TaxonomyRestatementTests(Harness):
     """Review round 1 F-15: a taxonomy string restated under a look-alike root forks same_wording."""
 

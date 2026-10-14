@@ -297,7 +297,7 @@ def taxonomy_facts(taxonomy):
                              for name, label in action.get(field, {}).items())
         keys = set(texts)
         # The same strings check_client_states.canonical_strings yields: copy, variants and action labels.
-        canonical = {" ".join(text.casefold().split()) for text in texts.values() if isinstance(text, str)}
+        canonical = {wording(text) for text in texts.values() if isinstance(text, str)}
         ordered = sorted(keys)
         valid = (
             forbidden and all(isinstance(term, str) and term for term in forbidden) and copy_rules and states
@@ -352,9 +352,9 @@ def check_glossary(glossary, facts, roles):
     terms = glossary["terms"]
     _unique([term["id"] for term in terms], TERM, "term.id_grammar", "term.duplicate_id")
     index, labels, fields = {}, {}, {}
-    forbidden = {term.casefold() for term in facts["forbidden_terms"]}
+    forbidden = {compact(term) for term in facts["forbidden_terms"]}
     for term in terms:
-        identifier, label = term["id"], term["preferred_label"].casefold()
+        identifier, label = term["id"], compact(term["preferred_label"])
         require(term["owner"] in roles, "owner.unknown_role", identifier)
         require(label not in labels, "term.duplicate_label", labels.get(label, identifier), identifier)
         labels[label] = identifier
@@ -371,9 +371,9 @@ def check_glossary(glossary, facts, roles):
         index[identifier] = term
     for term in terms:
         for alias in term["forbidden_aliases"]:
-            folded = alias.casefold()
+            folded = compact(alias)
             require(folded not in forbidden, "taxonomy.forked_forbidden_term", term["id"])
-            require(folded != term["preferred_label"].casefold(), "term.alias_is_label", term["id"])
+            require(folded != compact(term["preferred_label"]), "term.alias_is_label", term["id"])
             require(folded not in labels, "term.alias_collision", term["id"], labels.get(folded, term["id"]))
     for identifier in COMPREHENSION_TERMS:
         require(identifier in index, "term.comprehension_term_missing", identifier)
@@ -413,11 +413,11 @@ def check_voice(voice, facts):
 
 def check_term_wording(glossary, banned):
     """Labels and definitions follow the voice too: no banned phrase and no term's forbidden alias."""
-    aliases = [alias.casefold() for term in glossary["terms"] for alias in term["forbidden_aliases"]]
+    aliases = alias_forms(glossary)
     for term in glossary["terms"]:
         for text in (term["preferred_label"], term["definition"]):
             require(banned_in(text, banned) is None, "term.banned_pattern", term["id"])
-            require(forbidden_in(text, aliases) is None, "term.forbidden_alias", term["id"])
+            require(banned_in(text, aliases) is None, "term.forbidden_alias", term["id"])
 
 
 DASHES = re.compile("[-\u2010\u2011\u2012\u2013\u2014\u2015\u2212]")
@@ -435,6 +435,23 @@ def normalised(text):
     for short, full in CONTRACTIONS:
         folded = folded.replace(short, full)
     return " ".join(DASHES.sub(" ", folded).split())
+
+
+def compact(text):
+    """normalised() without spaces: the form labels and aliases are compared in, so "pay-off", "pay  off" and
+    "payoff" are one label (fails closed: two labels that differ only in spacing are refused as duplicates)."""
+    return normalised(text).replace(" ", "")
+
+
+def wording(text):
+    """normalised() without terminal punctuation: whole strings are restatements whatever their final mark."""
+    return normalised(text).rstrip(".!?\u2026 ")
+
+
+def alias_forms(glossary):
+    """Every forbidden alias with its plural forms ("txn", "txns", "txnes"), matched like banned phrases."""
+    return [alias + suffix for term in glossary["terms"] for alias in term["forbidden_aliases"]
+            for suffix in ("", "s", "es")]
 
 
 def banned_in(text, phrases):
@@ -458,7 +475,7 @@ def check_copy(text, subject, context, rules):
     """Shared copy lint for keys and regulated records: taxonomy terms, glossary aliases, banned voice patterns,
     sentence length and placeholders. `rules` maps each lint to the caller's static rule identifier."""
     require(forbidden_in(text, context["forbidden_terms"]) is None, rules["forbidden_term"], subject)
-    require(forbidden_in(text, context["aliases"]) is None, rules["forbidden_alias"], subject)
+    require(banned_in(text, context["aliases"]) is None, rules["forbidden_alias"], subject)
     require(banned_in(text, context["banned"]) is None, rules["banned_pattern"], subject)
     require(all(count <= context["max_words"] for count in words_per_sentence(text)), rules["sentence"], subject)
     names = PLACEHOLDER.findall(text)
@@ -491,7 +508,7 @@ def check_key_roots(entry, facts, regulated_ids):
         require(text is None or bounds["min"] <= len(text) <= bounds["max"], "key.copy_out_of_range", key)
     elif entry["copy"] is not None:
         # same_wording: a taxonomy string restated under another root would fork it; generic labels may repeat.
-        folded = " ".join(entry["copy"].casefold().split())
+        folded = wording(entry["copy"])
         require(folded not in facts["canonical"] or folded in GENERIC_LABELS, "key.taxonomy_copy_restated", key)
     if root == "reg":
         require(entry["regulated_ref"] in regulated_ids, "key.regulated_root_without_record", key)
@@ -931,7 +948,7 @@ def check(documents, schemas, taxonomy, gates, now, sources, owner=None):
         require(state is None or state in facts["states"], "pattern.state_mismatch", pattern["id"])
     context = {
         "forbidden_terms": facts["forbidden_terms"], "banned": banned, "max_words": voice["max_sentence_words"],
-        "aliases": [alias.casefold() for term in glossary["terms"] for alias in term["forbidden_aliases"]],
+        "aliases": alias_forms(glossary),
         "placeholders": check_placeholders(catalogue, facts),
         "data_placeholders": {item["id"] for item in catalogue["placeholders"]
                               if item["source"] in DATA_PLACEHOLDER_SOURCES},
