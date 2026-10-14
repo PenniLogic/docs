@@ -6,5 +6,347 @@
   "owner": {
     "accountable": "basiltt"
   },
-  "refreshes": []
+  "refreshes": [
+    {
+      "date": "2026-10-14",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "github:basiltt",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Compliance readiness under PenniLogic/docs#21 after the launch-blocking compliance floor moved to E27: the release checklist, the structured release-evidence record, the waiver-record format and the missing-evidence, waiver-expiry and cross-reference checks (docs#23); and post-beta readiness - counsel review of the advice boundary across application copy, store listing and model output, a named privacy owner and review cadence, a cross-border transfer position and signed agreement per processor including model providers, the payment self-assessment for a hosted payment page arrangement, a machine-readable record of processing and data-flow map reconciled against captured traffic, and the verification sweep of unverified claims (docs#45). Trust boundaries: the public docs repository where records, evidence references and approvals are written by one owner account and several AI sessions; external counsel who receives review material and issues the review; the release pipeline that attaches gate evidence produced by other tickets; the payment provider's hosted page that card data must never cross back from; and model and other processors whose transfer positions the record states. Out of scope and reviewed in their own epics: the consent ledger, rights, retention jobs, age gate, component inventory, Data Safety declaration, privacy policy, terms, disclaimer text, processor agreements and CERT-In drill (E27: docs#44, api#24, android#17, android#18), checkout and billing (E14: api#31, api#32), AI gateway and evaluation (E17), and the gate implementations docs#23 only aggregates. The epic body's global-readiness jurisdictional analysis has no child ticket at this date and is not reviewed here; the first non-India flow, the international card path of api#31, belongs to E14's record.",
+      "tickets_in_scope": [
+        "PenniLogic/docs#23",
+        "PenniLogic/docs#45"
+      ],
+      "sources": [
+        "PenniLogic/docs#21 (epic body: goal, scope, out of scope moving the launch-blocking floor to E27, exit criteria, key risks R9 and Data Safety mismatch)",
+        "PenniLogic/docs#23 (release checklist, release-evidence-record schema, waiver rules, tests, security and privacy notes, coordinator development-ready appendix of 2026-10-11)",
+        "PenniLogic/docs#45 (T-CMR-01: counsel review, privacy owner, transfer positions, payment self-assessment, processing record, verification sweep)",
+        "architecture/02-security-architecture.md#1-threat-model-stride (assets, trust boundaries, actors, T-01 to T-15)",
+        "compliance/01-regulatory-landscape.md (section 0 obligations O-7, O-8, O-9, O-18, O-24, O-26, O-28; sections 2.1 to 2.3, 5.3, 5.4 and 6.4)",
+        "ADR-022 (provider admission needs processor agreement and retention evidence; India residency profile; consent for user-directed transfers)",
+        "ADR-004, ADR-006 and ADR-021 (raw content stays on device; crypto-shredding; shared-data erasure)",
+        "product/02-risk-register.md (R9 advice boundary owned by T-CMR-01 and T-AIP-03)",
+        "governance/DELIVERY.md (single owner, separate AI review sessions, procedural rather than two-human review)",
+        "Related tickets read for hand-off scope: PenniLogic/docs#44, PenniLogic/android#16, PenniLogic/ai-service#7, PenniLogic/api#31, PenniLogic/infra#43"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Personal and financial data of users and of the household members and counterparties inside their records (identity, structured transactions, salary, debts, AI inference inputs), described - not moved - by the record of processing, the data-flow map and the per-processor transfer positions",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties"
+          ],
+          "purpose_ref": "Purpose registry and consent ledger PenniLogic/api#24 will create (O-1, E27); the record of processing and transfer positions PenniLogic/docs#45 will publish (E20-F04); processor agreements and the privacy policy are PenniLogic/docs#44 (E27)",
+          "retention": "Per data class from the counsel-reviewed India retention profile PenniLogic/docs#44 will publish (O-4); the processing record states it and invents no period",
+          "erasure_path": "Crypto-shredding per ADR-006 and shared-data erasure per ADR-021, delivered by PenniLogic/api#38 and restore-safe erasure PenniLogic/infra#33; the processing record must name, per processor, how erasure reaches the copy it holds (E20-F04)",
+          "children": "Adult-only launch: the versioned age-eligibility policy (PenniLogic/docs#44) and both account-creation gates - the Android pre-onboarding age gate (PenniLogic/android#17) and the web signup age-eligibility step (PenniLogic/web#26) - apply that server-evaluated policy and fail closed, so children are not users; a child can still appear as a household member or counterparty inside an adult's records, which the record must state",
+          "processors": [
+            "Model providers admitted only under ADR-022 with a processor agreement and retention evidence; none approved at this date",
+            "Payment provider for hosted checkout (PenniLogic/api#31); not selected at this date",
+            "Hosting inside the counsel-approved India residency profile (ADR-022); no vendor chosen",
+            "Cross-border destinations: none recorded at this date; docs#45 records one transfer position per processor (E20-F04)",
+            "User-directed custom-endpoint and bring-your-own-key destinations (PenniLogic/ai-service#3, E17): a separate class, not processors; off until ADR-022's approvals, lawful only on versioned, withdrawable consent with truthful destination copy, destination country not known in advance (E20-F04)"
+          ]
+        },
+        {
+          "data_class": "Payment card data entered by users on the payment provider's hosted page during web checkout, which the payment self-assessment asserts never reaches PenniLogic",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Web checkout PenniLogic/api#31 (hosted payment pages only; E14); the payment self-assessment PenniLogic/docs#45 (E20-F07)",
+          "retention": "None at PenniLogic: card data is held only by the payment provider under its own terms; PenniLogic keeps provider references and invoices under the billing tickets",
+          "erasure_path": "Nothing to erase at PenniLogic if the hosted-page condition holds; the self-assessment re-runs when it changes (E20-F07); provider-side deletion follows the provider agreement docs#44 records",
+          "children": "Checkout is reachable only by an adult account created behind one of the two account-creation age gates (Android PenniLogic/android#17, web signup PenniLogic/web#26), both applying the server-evaluated, fail-closed age-eligibility policy PenniLogic/docs#44",
+          "processors": [
+            "Payment provider hosting the payment page (not selected; commercial decision outside this epic)"
+          ]
+        },
+        {
+          "data_class": "Counsel review and verification-sweep material: application copy, store listing text, consent wording and model-output samples sent to external counsel, and the review document counsel returns",
+          "subjects": [
+            "users",
+            "operators"
+          ],
+          "purpose_ref": "Counsel review under PenniLogic/docs#45; users are subjects only if real answers or transcripts were shared, which E20-F05 forbids; operators covers the named compliance roles in the review exchange",
+          "retention": "Not yet recorded: the counsel engagement terms for material received and returned are part of E20-F05",
+          "erasure_path": "Synthetic material only, so no user erasure duty arises; the engagement records return or deletion of what counsel received (E20-F05)",
+          "children": "No child data: synthetic material only, and the product is adult-only (PenniLogic/docs#44)",
+          "processors": [
+            "External counsel (not engaged at this date; no firm named)"
+          ]
+        },
+        {
+          "data_class": "Named compliance roles and approvals: the named privacy owner and obligation owners, the counsel reviewer's role, date and engagement reference, release approvers, waiver approvers and the on-call owner who acknowledged the alert proof",
+          "subjects": [
+            "operators",
+            "contributors"
+          ],
+          "purpose_ref": "Release-evidence record PenniLogic/docs#23 and compliance roles PenniLogic/docs#45; public delivery under governance/DELIVERY.md. The schema has no subject for an external adviser, so counsel is recorded here under operators as a role only (E20-F03)",
+          "retention": "Indefinite in the public repository and release history",
+          "erasure_path": "Not erasable from public history, so only roles, session or review identifiers, dates and digests are written there; personal contact details stay out of the public repository (E20-F03, E20-F08)",
+          "children": "Not subjects: the owner account, AI sessions, operators and counsel are adults acting in a professional role",
+          "processors": [
+            "GitHub (repository, issues, Project and workflow artifacts)"
+          ]
+        },
+        {
+          "data_class": "Release-candidate traffic captures and Data Safety re-check evidence referenced by the release-evidence record",
+          "subjects": [
+            "contributors"
+          ],
+          "purpose_ref": "Privacy traffic inspection PenniLogic/android#16 (synthetic accounts only, scrubbed, bounded retention; E25-F11) consumed per candidate by PenniLogic/docs#23 (E20-F01)",
+          "retention": "Captures are attached to the release record of the candidate they prove (android#16) and kept for the 400-day release-evidence retention (governance/test-strategy.md sections 9.4 and 15); transient workflow-run copies expire at the 90-day CI artifact retention and are never evidence",
+          "erasure_path": "Deleted from the release record at the end of the release-evidence retention; synthetic accounts carry no user data, and a capture holding real user data is a defect handled under E25-F11",
+          "children": "None: captures come from synthetic accounts operated by delivery sessions",
+          "processors": [
+            "GitHub release-record attachment store (releases of public repositories, readable by anyone, which E25-F11's scrubbing and access-list control must account for)",
+            "GitHub workflow artifact storage (transient copies, 90 days, never evidence); the proxy-enabled runner from the infra repository"
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Three kinds of counterparty assertion are recorded in this epic and each can be forged today. Counsel: the exit criteria require a counsel review recorded with a date and a named reviewer, yet every record is written by the one owner account, so a session can assert a review that never happened (E20-F03). The payment provider: the self-assessment relies on card data being entered only on the provider's hosted page, and a lookalike form injected into the page that starts checkout impersonates it (E20-F07). Signed processor agreements and transfer positions: docs#44 and docs#45 require a signed agreement per processor, and a session can write a reference to an agreement no counterparty signed as easily as a counsel review, so personal data reaches a processor with no agreement (E20-F04). The release-candidate test-bypass gate (test identities and sandbox keys accepted in production) is already E25-F12 on docs#23 and is not restated. Parser-config signing is not touched by this epic; it is reviewed with the ingestion epics.",
+          "evidence": [],
+          "findings": [
+            "E20-F03",
+            "E20-F07",
+            "E20-F04"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "The assets are the release-evidence record, its waivers and the machine-readable record of processing. docs#23 itself names the gaps: a data-safety re-check that reuses a prior candidate's capture and an expired waiver carried forward; a gate entry edited after its evidence was attached has the same effect (E20-F01). Artifact provenance for the same evidence is also E25-F05 on PenniLogic/docs#49, whose gate reads it; E20-F01 asks for one shared field set rather than a second scheme, and docs#23 owns only the schema and its rehearsal over synthetic records. An edited processing record that drops a processor is caught only by docs#45's reconciliation against captured traffic (E20-F04). Changes to records land through PR-only integration with an empty bypass list (governance/DELIVERY.md), which exposes edits to committed files but not a false entry written in the first place. Ingestion boundary and parser-config signing chain: not touched; this epic consumes their evidence through android#16.",
+          "evidence": [
+            "governance/DELIVERY.md: PR-only, current-base integration with the native CI job and an empty bypass list; independent review recorded procedurally"
+          ],
+          "findings": [
+            "E20-F01",
+            "E20-F04"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Actions that must be provable later: release approval, each waiver with its approver and expiry, the alert-to-on-call acknowledgement, counsel review, and the named owner and next review date of each ongoing obligation. docs#23 requires an independent second-reviewer approval and a timestamped on-call acknowledgement but the record format does not exist yet (E20-F08); counsel review is the same exposure from outside the organisation (E20-F03); docs#45's re-verification sweep, obligation owners and next review dates are written by the same account with no attribution format either (E20-F10). Single-owner procedural separation is accepted organisation-wide in governance/DELIVERY.md; CERT-In log retention and time synchronisation belong to docs#44 and infra#27 and are reviewed there.",
+          "evidence": [
+            "governance/DELIVERY.md: independent review is procedural, not two-human review or cryptographic identity"
+          ],
+          "findings": [
+            "E20-F08",
+            "E20-F03",
+            "E20-F10"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "This epic moves little personal data itself but publishes statements about all of it: the record of processing, data-flow map and transfer positions per processor including model providers. If they drift from real flows, users' financial data reaches an undisclosed processor or country (E20-F04). Counsel review and the verification sweep are the epic's own outbound channel to an external party (E20-F05). Raw content never leaves the device (ADR-004): this epic does not carry message text; it verifies the claim through docs#23's traffic-inspection gate fed by android#16, whose captures are themselves a data store (E25-F11). Ingestion boundary: not crossed here. Card data must stay on the hosted page (E20-F07). The release-evidence record is also a disclosure channel: it and its waivers are attached to releases of public repositories, so the detail of a failed or waived Security gate would publish an exploitable weakness of a shipped candidate (E20-F09).",
+          "evidence": [
+            "PenniLogic/docs#23: the release-evidence record and its waivers are attached to each release; SECURITY.md (repository root): exploit details, credentials and production data never go in a public issue"
+          ],
+          "findings": [
+            "E20-F04",
+            "E20-F05",
+            "E20-F09"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "not_applicable",
+          "analysis": "This epic runs no service, endpoint, queue or paid budget an attacker could exhaust; docs#23 adds repository checks over small synthetic records. The reliability evidence it aggregates (backup restore by infra#26, rollback rehearsal by infra#25 and android#37, SLOs and alert delivery by infra#27, all in E24) is reviewed in E24's record, and the CERT-In reporting window (docs#44) in E27's record.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "The privileged action in this epic is the waiver: it lets a release pass a failed gate. docs#23 requires a written waiver with a named approver and an expiry but does not yet separate the approver from the session preparing the release or from the gate owner, nor mark gates that can never be waived, so with one owner account the release author can approve its own exception (E20-F02). Repository protections apply to the sole owner (governance/DELIVERY.md) but cannot tell a self-approved waiver from an independent one.",
+          "evidence": [
+            "governance/DELIVERY.md: the same protections apply to the sole owner and every AI session"
+          ],
+          "findings": [
+            "E20-F02"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No purchase, renewal, refund, webhook or entitlement change is built or decided in this epic. Checkout and invoicing are api#31, webhook verification api#32 and the lifecycle and replay suite api#48, all in E14, and are reviewed in E14's record. The payment self-assessment here examines only whether card data reaches PenniLogic, which is reviewed under spoofing and information disclosure (E20-F07).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "not_applicable",
+          "analysis": "This epic holds no entitlement or quota state and designs no unlock path. Entitlement resolution is ADR-007 and ADR-023, implemented by api#29 and api#30 in E14; the release checklist only lists their evidence, so tampering with what it lists is the evidence-integrity finding E20-F01.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "not_applicable",
+          "analysis": "No gateway, provider key, routing configuration or kill switch exists or is changed here. The epic's AI-adjacent work is documentary: a transfer position and agreement for each model provider (E20-F04), which ADR-022 already makes a precondition of provider admission through a processor agreement and retention evidence; gateway, routing and spend controls are ai-service#2, ai-service#8 and ai-service#7 in E17 and are reviewed there.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "not_applicable",
+          "analysis": "Nothing in this epic serves a browser session, accepts a callback or fetches a supplied address; its outputs are repository records and checks over them. Checkout redirects and provider callbacks are api#31 and api#32 (E14) and custom AI endpoints are ai-service#3 (E17), reviewed in those epics.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "finding",
+          "analysis": "The advice-boundary review (risk R9) covers model output, and the boundary that matters is the one an adversarial user or injected merchant, note or statement text can push the assistant across, not the one benign samples show. Counsel review of sample answers alone certifies a boundary the evaluation suite never tests (E20-F06); the control is an output evaluation, which ai-service#4 itself assigns to ai-service#7 (adversarial cases, harmful-answer path), while the dispatcher-level injection defences stay with ai-service#4 in E17. Delivery sessions treating public comments as untrusted is organisation-wide and already published by the closure of E01-F03 (PenniLogic/.github#4).",
+          "evidence": [],
+          "findings": [
+            "E20-F06"
+          ]
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "No shared ledger, share rule or settlement is built or changed here. The epic's only contact with split data is descriptive: the processing record must cover counterparties and household members whose data sits in users' split records, inventoried in data_flows under E20-F04; erasure that preserves the other members' debt evidence is ADR-021 and api#38 in E19.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "Every authority this epic creates - recording counsel review, approving a release, granting a waiver, publishing the processing record and its agreement references - is exercised through the one owner account, so its compromise forges all of them at once. E20-F02's session separation and E20-F03's counsel-issued document constrain honest sessions and make a forgery a deliberate, reviewable act, but they do not mitigate compromise of the account that writes every E20 record: the session identifiers F02 relies on and the digest F03 records are written by that same account. Hardening of the account itself is E01-F04, handed to infra#43, which was closed as not planned on 2026-10-03; the owner's disposition of 2026-10-04 on that issue records an owner-accepted residual risk with further hardening deferred (organisation 2FA enforcement off, a broadly scoped administrative credential, the revocation drill not rehearsed), and E01-F04 stays unremediated. E20 adds no control for compromise of that account; whether the owner's 2026-10-04 acceptance extends to forged release approvals, waivers and counsel records is the owner's to confirm and is not inferred here.",
+          "evidence": [
+            "PenniLogic/infra#43: owner disposition of 2026-10-04 - owner-accepted residual risk, further hardening deferred, E01-F04 unremediated",
+            "governance/DELIVERY.md: review is procedural, not two-human review, cryptographic identity or independently verified attestation provenance"
+          ],
+          "findings": [
+            "E20-F02",
+            "E20-F03"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E20-F01",
+          "category": "tampering",
+          "severity": "high",
+          "title": "Release evidence can be edited, reused from an earlier candidate or carried forward after expiry",
+          "attack_path": "Under schedule pressure a session attaches the previous release's traffic capture or rollback rehearsal to the current release-evidence record, edits a gate entry from failed to passed after the evidence was attached, or copies an expired waiver into the new record; the checklist shows every gate green although the candidate being shipped was never verified, so a candidate that transmits raw message text or fails the cross-tenant suite reaches users.",
+          "recommended_control": "The release-evidence record binds every gate entry to the specific release candidate (build or commit identity) and to its evidence artifact using one provenance field set shared with E25-F05 (PenniLogic/docs#49) - candidate commit, producing run and check name, artifact digest and pipeline signature - which docs#23 defines in the record schema and docs#49's gate reads; the digest binds the artifact attached to the release record, never an expiring workflow-run artifact; the rehearsal check rejects an artifact bound to a different candidate, a record whose gate result disagrees with its evidence, and any waiver that is expired or was issued for another release, with a planted test for each; the record is append-only once a release decision is taken.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        },
+        {
+          "id": "E20-F02",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "A gate waiver can be granted by the same session or role that needs the release",
+          "attack_path": "Every write in this organisation goes through one owner account, so the session preparing a release can also write a waiver for its own failing gate and record the release approval; a waiver with a distant or missing expiry, or one written against a non-negotiable privacy or money gate, turns the checklist into an assertion and ships behaviour the gate exists to stop.",
+          "recommended_control": "The waiver-record format names the approver role and the review session that approved it, which must differ from the session that prepared the release and from the gate's own owner - a procedural separation, not an identity guarantee, since one account writes both - and binds the approval to a reviewable review record identifier, as E20-F08 requires; waivers carry a bounded expiry and written justification; the checklist marks gates that can never be waived (raw message text never transmitted, no financial values in analytics, ledger zero-sum, cross-tenant denial); and the rehearsal fails on a self-approved, unbounded or forbidden waiver.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        },
+        {
+          "id": "E20-F03",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "Counsel review can be asserted by an AI session instead of evidenced by counsel",
+          "attack_path": "The epic's exit criteria require counsel review of the advice boundary and consent design recorded with a date and a named reviewer; because every record is written by the owner account, a session can write a review entry naming a reviewer and a date that never happened, or reuse a review of an earlier copy version, and downstream gates then treat unreviewed advice-boundary wording and consent language as cleared.",
+          "recommended_control": "Record counsel review as a reference to a review document issued by counsel that arrives through counsel's own channel and whose authenticity is verified by the owner, not by a session, held outside the public repository, identified by digest, reviewer role and engagement reference, date and the exact copy or wording version reviewed; a review applies only to the versions it names, so changed copy is unreviewed; no session may author the review outcome; publish only role, date, scope and digest rather than personal contact details.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#45",
+          "resolution": null
+        },
+        {
+          "id": "E20-F04",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Processing record, data-flow map and transfer positions can diverge from the data flows that exist",
+          "attack_path": "A model provider, payment provider, analytics or crash SDK, or hosting region is added or changed without the processing record and transfer positions following; users' financial data then reaches a processor or country the published record and privacy notice do not disclose, the record states a protection that is not implemented, and the declared position becomes the policy violation the epic's Data Safety mismatch risk describes.",
+          "recommended_control": "Publish the record of processing as machine-readable data diffed per release; a reconciliation test fails when a destination in the release candidate's captured traffic or the component inventory has no processor entry, when a processor has no transfer position or signed agreement reference, when an agreement reference does not name a counterparty-signed document held outside the public repository, identified by digest, verified by the owner and never authored by a session, or when an entry claims a destination or protection the evidence does not show; a processor without a position blocks public release; the record also lists user-directed transfers with their consent reference (custom endpoints and bring-your-own-key destinations), never as processors.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#45",
+          "resolution": null
+        },
+        {
+          "id": "E20-F05",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Counsel and verification-sweep material may carry real user data to an external party",
+          "attack_path": "To show counsel how the assistant phrases debt and goal guidance, a session exports real model answers, support transcripts or screenshots containing users' salaries, debts and merchant names, or attaches a traffic capture from a real account to the verification sweep; the material leaves PenniLogic for a party with no processor agreement, retention limit or erasure path, and is quoted back into a public issue or the review record.",
+          "recommended_control": "Counsel review and the verification sweep use only synthetic material: application copy and store text as authored, and model output generated from the synthetic evaluation corpus; no production answer, transcript, screenshot or capture is shared; the engagement records what counsel receives, its retention and return or deletion, and the review record quotes no user content.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#45",
+          "resolution": null
+        },
+        {
+          "id": "E20-F06",
+          "category": "prompt_injection",
+          "severity": "medium",
+          "title": "The counsel-reviewed advice boundary is not exercised against steering and jailbreak inputs",
+          "attack_path": "A user prompt, or text inside a merchant name, note or imported statement, steers the assistant into recommending a specific security, fund or allocation, which is the SEBI investment-advice line the advice-boundary review (risk R9) is meant to hold; counsel reviewed benign sample answers, so the review is true for those answers and false for the adversarial ones users can produce.",
+          "recommended_control": "Turn the counsel-reviewed boundary into adversarial evaluation cases in the governed synthetic corpus: direct requests, role-play and injected instructions asking for individual investment recommendations must yield a refusal or the reviewed disclaimer, failing the merge otherwise; a reported advice-boundary breach follows the harmful-answer path and becomes a new case.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#7",
+          "resolution": null
+        },
+        {
+          "id": "E20-F07",
+          "category": "spoofing",
+          "severity": "medium",
+          "title": "The payment self-assessment can stay asserted after the hosted-page conditions it relies on change",
+          "attack_path": "The self-assessment confirms that no card data reaches PenniLogic because checkout uses the provider's hosted page; a script injected into the web page that starts checkout swaps the redirect for a lookalike payment form, or the integration later moves to embedded card fields, and card numbers are captured or pass through PenniLogic while the recorded assessment still states the minimal scope.",
+          "recommended_control": "Record the assessment against the exact checkout integration it assessed, with the conditions that keep it valid (redirect or provider-hosted frame only, integrity of the page that starts checkout, no card field in PenniLogic code or traffic) and a re-assessment trigger on any change to them; bind it to captured checkout traffic for the release showing no card data and no unexpected script source on the redirect page.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#45",
+          "resolution": null
+        },
+        {
+          "id": "E20-F08",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Release approvals, waivers and alert acknowledgements are not yet attributable",
+          "attack_path": "After an incident traced to a shipped candidate nobody can show who approved the release, who granted the waiver that let a failing gate pass, or whether the on-call alert proof was a real acknowledgement; with one owner account and several sessions, an unattributed entry can later be disowned by every session, and the CERT-In timeline cannot be reconstructed from the record.",
+          "recommended_control": "Every approval, waiver and acknowledgement in the release-evidence record carries the approving role, the review session or review record identifier, a timestamp and the release it applies to; the alert-to-on-call proof names the acknowledging on-call owner and time; and the rehearsal fails an entry with no attribution or with an attribution to the session that prepared the release.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        },
+        {
+          "id": "E20-F09",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "A public release-evidence record or waiver can publish an exploitable weakness of a shipped candidate",
+          "attack_path": "The release-evidence record and its waivers are attached to releases of public repositories; a waiver for, or the failing evidence of, a Security gate (no secrets in history, default-deny authorization with cross-tenant tests, dependency scan clean of high or critical) written with its detail - the secret's location, the vulnerable component and advisory, the failing authorization case - announces to anyone, until the waiver expires, how to attack a candidate users are running, contrary to SECURITY.md's rule that exploit details never go in a public issue.",
+          "recommended_control": "Exploitable detail of a failed or waived Security gate never enters a public release record, waiver or issue: it is held in a private channel (a private vulnerability report or draft security advisory) and referenced by identifier and digest; the public record carries only gate id, verdict, waiver id, expiry, approver role and digest; the rehearsal fails when a planted secret path or advisory id appears in a public waiver justification or gate entry.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        },
+        {
+          "id": "E20-F10",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Verification-sweep, obligation-owner and processing-record entries can be self-asserted by a session",
+          "attack_path": "docs#45 requires each previously unverified claim to be re-verified with a date and source, a named owner for every ongoing obligation, and review completion and next review dates tracked and visible; every such entry is written by the one owner account, so a session can mark a claim re-verified against a source it never checked, assign an obligation to an owner who never accepted it, or move a next review date, and a critical decision then rests on a verification nobody performed and an obligation nobody holds, with no record of who made the entry.",
+          "recommended_control": "Each verification-sweep entry names the claim, a checkable source (a public reference, a document digest or a repository path), the retrieval date and the review record identifier that confirmed it, or is marked as an assumption with its fallback; each obligation entry names the accountable role, the review record identifier in which that role accepted it and the next review date; each processing-record change carries the review record identifier that approved it; the reconciliation fails an entry that has neither a checkable source nor a review record identifier, or whose only attribution is the session that wrote it.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#45",
+          "resolution": null
+        }
+      ]
+    }
+  ]
 }
