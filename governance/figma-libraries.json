@@ -1,0 +1,1675 @@
+{
+  "schema_version": 1,
+  "contract_version": "0.1.0",
+  "source_issue": "PenniLogic/docs#78",
+  "plan_id": "T-DSY-02",
+  "registry_ref": {
+    "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+    "path": "planning/source/evidence/experience-coverage.json",
+    "sha256": "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
+  },
+  "direction_ref": null,
+  "access": {
+    "public_links_enabled": false,
+    "external_sharing_enabled": false,
+    "asset_export_enabled": false,
+    "offboarding_revokes": true
+  },
+  "libraries": [
+    {
+      "id": "LIB-FOUNDATION",
+      "kind": "foundation",
+      "figma_file": "02 - Foundations library",
+      "figma_page": "Foundations",
+      "owner_role": "systems",
+      "publish_roles": [
+        "systems"
+      ],
+      "consumes": [],
+      "status": "shell"
+    },
+    {
+      "id": "LIB-COMPONENTS",
+      "kind": "shared_semantic",
+      "figma_file": "03 - Components library",
+      "figma_page": "Components",
+      "owner_role": "systems",
+      "publish_roles": [
+        "systems"
+      ],
+      "consumes": [
+        "LIB-FOUNDATION"
+      ],
+      "status": "shell"
+    },
+    {
+      "id": "LIB-ANDROID",
+      "kind": "platform_variant",
+      "figma_file": "03 - Components library",
+      "figma_page": "Android variants",
+      "owner_role": "systems",
+      "publish_roles": [
+        "systems"
+      ],
+      "consumes": [
+        "LIB-FOUNDATION",
+        "LIB-COMPONENTS"
+      ],
+      "status": "shell"
+    },
+    {
+      "id": "LIB-WEB",
+      "kind": "platform_variant",
+      "figma_file": "03 - Components library",
+      "figma_page": "Web variants",
+      "owner_role": "systems",
+      "publish_roles": [
+        "systems"
+      ],
+      "consumes": [
+        "LIB-FOUNDATION",
+        "LIB-COMPONENTS"
+      ],
+      "status": "shell"
+    },
+    {
+      "id": "LIB-ADMIN",
+      "kind": "platform_variant",
+      "figma_file": "03 - Components library",
+      "figma_page": "Admin variants",
+      "owner_role": "systems",
+      "publish_roles": [
+        "systems"
+      ],
+      "consumes": [
+        "LIB-FOUNDATION",
+        "LIB-COMPONENTS"
+      ],
+      "status": "shell"
+    },
+    {
+      "id": "LIB-CANDIDATE",
+      "kind": "candidate",
+      "figma_file": null,
+      "figma_page": null,
+      "owner_role": "systems",
+      "publish_roles": [],
+      "consumes": [
+        "LIB-FOUNDATION",
+        "LIB-COMPONENTS"
+      ],
+      "status": "shell"
+    }
+  ],
+  "releases": [
+    {
+      "library": "LIB-FOUNDATION",
+      "version": "1.0.0",
+      "previous": null,
+      "change_class": "major",
+      "breaking": false,
+      "status": "draft",
+      "migration_plan_ref": null,
+      "cdo_approval": {
+        "role": "decision_coordinator",
+        "scope": "shared_system_major",
+        "status": "pending",
+        "decision_source": null
+      },
+      "rollback_to": null
+    },
+    {
+      "library": "LIB-COMPONENTS",
+      "version": "1.0.0",
+      "previous": null,
+      "change_class": "major",
+      "breaking": false,
+      "status": "draft",
+      "migration_plan_ref": null,
+      "cdo_approval": {
+        "role": "decision_coordinator",
+        "scope": "shared_system_major",
+        "status": "pending",
+        "decision_source": null
+      },
+      "rollback_to": null
+    },
+    {
+      "library": "LIB-ANDROID",
+      "version": "1.0.0",
+      "previous": null,
+      "change_class": "major",
+      "breaking": false,
+      "status": "draft",
+      "migration_plan_ref": null,
+      "cdo_approval": {
+        "role": "decision_coordinator",
+        "scope": "shared_system_major",
+        "status": "pending",
+        "decision_source": null
+      },
+      "rollback_to": null
+    },
+    {
+      "library": "LIB-WEB",
+      "version": "1.0.0",
+      "previous": null,
+      "change_class": "major",
+      "breaking": false,
+      "status": "draft",
+      "migration_plan_ref": null,
+      "cdo_approval": {
+        "role": "decision_coordinator",
+        "scope": "shared_system_major",
+        "status": "pending",
+        "decision_source": null
+      },
+      "rollback_to": null
+    },
+    {
+      "library": "LIB-ADMIN",
+      "version": "1.0.0",
+      "previous": null,
+      "change_class": "major",
+      "breaking": false,
+      "status": "draft",
+      "migration_plan_ref": null,
+      "cdo_approval": {
+        "role": "decision_coordinator",
+        "scope": "shared_system_major",
+        "status": "pending",
+        "decision_source": null
+      },
+      "rollback_to": null
+    }
+  ],
+  "components": [
+    {
+      "id": "C-ACTION",
+      "name": "Primary secondary tonal text and icon actions",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-ACTION-FAB",
+      "name": "Contextual Android floating action button",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-ACTION-MENU",
+      "name": "Menu context menu and command action",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-AI-ANSWER",
+      "name": "Model answer citation refusal and override",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-BILLING-PLAN",
+      "name": "Plan channel quota invoice and lifecycle",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-AMOUNT",
+      "name": "Currency amount balance and delta",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-CHART",
+      "name": "Accessible financial chart with table equivalent",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-COMPARISON",
+      "name": "Neutral strategy and scenario comparison",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-DEBT",
+      "name": "Debt summary schedule and status",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-DERIVATION",
+      "name": "Explain why this number derivation",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-GOAL",
+      "name": "Goal contribution and progress",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-HOLDING",
+      "name": "Holding valuation and composition",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-LIST",
+      "name": "Responsive list and card collection",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-PROGRESS",
+      "name": "Debt goal and milestone progress",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-PROVENANCE",
+      "name": "Source confidence freshness and provenance",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-SEARCH",
+      "name": "Search filter sort and saved view",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-STATUS",
+      "name": "Typed status and state badge",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-TABLE",
+      "name": "Data table pagination selection and bulk action",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-TIMELINE",
+      "name": "Chronological transaction bill and event timeline",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-DATA-TRANSACTION",
+      "name": "Transaction summary and detail",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-FEEDBACK-BANNER",
+      "name": "Persistent system and risk banner",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-FEEDBACK-ERROR",
+      "name": "Inline error summary retry and recovery",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-FEEDBACK-SNACKBAR",
+      "name": "Transient snackbar and toast status",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-FEEDBACK-STATUS",
+      "name": "Skeleton progress empty and completion feedback",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-FEEDBACK-UNDO",
+      "name": "Time-bounded undo and reversal action",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-DATE",
+      "name": "Date time and quiet-hours input",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-FILE",
+      "name": "File receipt and attachment input",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-MONEY",
+      "name": "Integer minor-unit money input",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-OTP",
+      "name": "Verification and recovery code input",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-PASSKEY",
+      "name": "Passkey and biometric action",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-RATE",
+      "name": "Rate and percentage input",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-SELECT",
+      "name": "Select autocomplete chips radio and checkbox",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-SLIDER",
+      "name": "Exact-value slider with keyboard and switch alternative",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-SWITCH",
+      "name": "Boolean and preference switch",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-INPUT-TEXT",
+      "name": "Text and multiline input",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-NAV-ADMIN",
+      "name": "Role-aware admin side navigation and queue switcher",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-NAV-ANDROID",
+      "name": "Android app bar navigation bar rail and drawer",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-NAV-STEPPER",
+      "name": "Onboarding and high-risk task stepper",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-NAV-WEB",
+      "name": "Customer web side navigation drawer breadcrumbs and tabs",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "web"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OP-AUDIT",
+      "name": "Immutable audit timeline and verification",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OP-CLOCK",
+      "name": "SLA statutory and elevation clock",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OP-DIFF",
+      "name": "Before after impact and immutable change diff",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OP-INCIDENT",
+      "name": "Anomaly incident and blocked action",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OP-QUEUE",
+      "name": "Operator queue assignment and SLA ordering",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OP-REDACTED",
+      "name": "Redacted value and authorized reveal",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OVERLAY-CONTAINER",
+      "name": "Dialog alert sheet drawer and focus container",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-OVERLAY-TOOLTIP",
+      "name": "Popover and tooltip disclosure",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-ACCESSLOG",
+      "name": "Subject-visible access event",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-APPROVAL",
+      "name": "Provenance and four-eyes approval",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-CONSENT",
+      "name": "Purpose consent and withdrawal",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-DESTRUCTIVE",
+      "name": "Destructive action consequence and recovery",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-DISCLOSURE",
+      "name": "Projection AI billing and policy disclosure",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-GRANT",
+      "name": "Per-person category aggregate and detail grant",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-PERMISSION",
+      "name": "Permission rationale status and recovery",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-PRIVACY",
+      "name": "Privacy mask lock and concealment",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-SAFEEXIT",
+      "name": "Discreet exit and duress concealment",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    },
+    {
+      "id": "C-TRUST-STEPUP",
+      "name": "Step-up cooling-off and recovery restriction",
+      "library": "LIB-COMPONENTS",
+      "status": "draft",
+      "semantic_role": null,
+      "owner_role": "systems",
+      "description": null,
+      "platforms": [
+        "android",
+        "web",
+        "admin"
+      ],
+      "properties": [],
+      "accessibility": null,
+      "variant_of": null,
+      "since_version": null,
+      "deprecation": null,
+      "proposal_branch": null,
+      "token_refs": []
+    }
+  ],
+  "tabletop": [
+    {
+      "id": "TT-01",
+      "action": "publish",
+      "role": "android_design",
+      "library": "LIB-FOUNDATION",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-02",
+      "action": "publish",
+      "role": "web_design",
+      "library": "LIB-FOUNDATION",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-03",
+      "action": "publish",
+      "role": "admin_design",
+      "library": "LIB-FOUNDATION",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-04",
+      "action": "publish",
+      "role": "android_design",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-05",
+      "action": "publish",
+      "role": "web_design",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-06",
+      "action": "publish",
+      "role": "admin_design",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-07",
+      "action": "publish",
+      "role": "android_design",
+      "library": "LIB-ANDROID",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-08",
+      "action": "publish",
+      "role": "web_design",
+      "library": "LIB-WEB",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-09",
+      "action": "publish",
+      "role": "admin_design",
+      "library": "LIB-ADMIN",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-10",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-FOUNDATION",
+      "offboarded": true,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-11",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-COMPONENTS",
+      "offboarded": true,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-12",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-ANDROID",
+      "offboarded": true,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-13",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-WEB",
+      "offboarded": true,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-14",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-ADMIN",
+      "offboarded": true,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-15",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "model_permitted",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-16",
+      "action": "publish",
+      "role": "systems",
+      "library": "LIB-CANDIDATE",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-17",
+      "action": "publish",
+      "role": "design_ops",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-18",
+      "action": "publish",
+      "role": "decision_coordinator",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-19",
+      "action": "edit",
+      "role": "android_design",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-20",
+      "action": "edit",
+      "role": "systems",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "model_permitted",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-21",
+      "action": "comment",
+      "role": "admin_design",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "model_permitted",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-22",
+      "action": "view",
+      "role": "design_qa",
+      "library": "LIB-ANDROID",
+      "offboarded": false,
+      "expected": "model_permitted",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-23",
+      "action": "view",
+      "role": "android_design",
+      "library": "LIB-ANDROID",
+      "offboarded": true,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-24",
+      "action": "public_link",
+      "role": "systems",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-25",
+      "action": "public_link",
+      "role": "web_design",
+      "library": "LIB-WEB",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-26",
+      "action": "export",
+      "role": "systems",
+      "library": "LIB-FOUNDATION",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-27",
+      "action": "export",
+      "role": "admin_design",
+      "library": "LIB-ADMIN",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-28",
+      "action": "edit",
+      "role": "android_design",
+      "library": "LIB-CANDIDATE",
+      "offboarded": false,
+      "expected": "model_permitted",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    },
+    {
+      "id": "TT-29",
+      "action": "external_share",
+      "role": "systems",
+      "library": "LIB-COMPONENTS",
+      "offboarded": false,
+      "expected": "refused",
+      "evidence_class": "tabletop",
+      "live_verified": false
+    }
+  ],
+  "approvals": [
+    {
+      "role": "systems",
+      "status": "not_recorded"
+    },
+    {
+      "role": "design_ops",
+      "status": "not_recorded"
+    },
+    {
+      "role": "accessibility",
+      "status": "not_recorded"
+    },
+    {
+      "role": "ux_engineering",
+      "status": "not_recorded"
+    },
+    {
+      "role": "decision_coordinator",
+      "status": "not_recorded"
+    }
+  ]
+}

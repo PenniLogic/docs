@@ -1,0 +1,903 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PenniLogic/docs/blob/main/product/journey-blueprints.schema.json",
+  "title": "PenniLogic journey and service blueprints",
+  "description": "T-UXR-04 (PenniLogic/docs#67) source contract for product/journey-blueprints.json; the definition gaps_document shapes product/journey-gaps.json. Self-contained draft-07 subset validated by scripts/check_journeys.py through the shared check_client_states.py validator; text length, identifier agreement, registry joins, coverage, boundary and pending-reference rules are enforced in code. Step IDs Jnn.C.nn and Jnn.T.nn are the customer and team lanes. Persona basis stays provisional until docs#66 evidence exists; metric references stay pending:PenniLogic/docs#77 and event references pending owner issues; no EV- or M- identifier is minted here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "schema_version",
+    "blueprint_version",
+    "source_issue",
+    "plan_id",
+    "status",
+    "registry_ref",
+    "research_gate",
+    "approvals",
+    "reviews",
+    "diagrams",
+    "blueprints"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "const": "journey_blueprints"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "blueprint_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?![\\s\\S])"
+    },
+    "source_issue": {
+      "type": "string",
+      "const": "PenniLogic/docs#67"
+    },
+    "plan_id": {
+      "type": "string",
+      "const": "T-UXR-04"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "provisional",
+        "validated"
+      ]
+    },
+    "registry_ref": {
+      "$ref": "#/definitions/source"
+    },
+    "research_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue",
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "issue": {
+          "type": "string",
+          "const": "PenniLogic/docs#66"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "complete"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/source"
+          }
+        }
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/definitions/approval"
+      }
+    },
+    "reviews": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/definitions/review"
+      }
+    },
+    "diagrams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/diagram"
+      }
+    },
+    "blueprints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/blueprint"
+      }
+    }
+  },
+  "definitions": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}(?![\\s\\S])"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+(/[a-z0-9_.-]+)*(?![\\s\\S])"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "status",
+        "source"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "product",
+            "architecture",
+            "security",
+            "operations",
+            "ia"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "recorded"
+          ]
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}(?![\\s\\S])"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+(/[a-z0-9_.-]+)*(?![\\s\\S])"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+            }
+          }
+        }
+      }
+    },
+    "diagram": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rendering",
+        "figma"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": [
+            "D01",
+            "D03",
+            "D04",
+            "D05",
+            "D21"
+          ]
+        },
+        "rendering": {
+          "type": "string",
+          "const": "markdown_text"
+        },
+        "figma": {
+          "type": "string",
+          "enum": [
+            "held",
+            "not_applicable"
+          ],
+          "description": "held: the registry artifact is a Figma page, held while Figma is disabled; not_applicable: the registry artifact is a controlled-Git file, so no Figma artifact exists to hold."
+        }
+      }
+    },
+    "branch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "to",
+        "recovery",
+        "recovery_owner"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "failure",
+            "offline",
+            "timeout",
+            "revocation",
+            "partial",
+            "escalation",
+            "rollback",
+            "permission_denied"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^J[0-9]{2}\\.(C|T)\\.[0-9]{2}(?![\\s\\S])"
+        },
+        "recovery": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recovery_owner": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*(?![\\s\\S])"
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "lane",
+        "channel",
+        "actor",
+        "action",
+        "system",
+        "flow_id",
+        "screen_ids",
+        "data_class",
+        "authorization",
+        "event_refs",
+        "policy_refs",
+        "telemetry",
+        "handoff",
+        "controls",
+        "boundary",
+        "branches",
+        "next"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^J[0-9]{2}\\.(C|T)\\.[0-9]{2}(?![\\s\\S])"
+        },
+        "lane": {
+          "type": "string",
+          "enum": [
+            "customer",
+            "team"
+          ]
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "android",
+            "web",
+            "admin",
+            "notification",
+            "service"
+          ]
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "system": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(?![\\s\\S])"
+        },
+        "flow_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}(?![\\s\\S])"
+        },
+        "screen_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^S-(AND|WEB|ADM)-[0-9]{3}(?![\\s\\S])"
+          },
+          "uniqueItems": true
+        },
+        "data_class": {
+          "type": "string",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ],
+          "description": "Provisional H02 proposal: personal-data classification belongs to the T-CMP-04 jurisdiction profile (PenniLogic/docs#44, ADR-020 section 15), which confirms or replaces this scale (GAP-J10-03)."
+        },
+        "authorization": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "policy_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "telemetry": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "signal",
+            "fields"
+          ],
+          "properties": {
+            "signal": {
+              "type": "string",
+              "enum": [
+                "completion",
+                "abandonment",
+                "correction",
+                "recovery",
+                "escalation"
+              ]
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(?![\\s\\S])"
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            }
+          }
+        },
+        "handoff": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "authoritative_service",
+            "may_show"
+          ],
+          "properties": {
+            "authoritative_service": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(?![\\s\\S])"
+            },
+            "may_show": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "controls": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "clock",
+            "audit",
+            "notification",
+            "reversal"
+          ],
+          "properties": {
+            "clock": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "notification": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reversal": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "boundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "raw_message_egress",
+            "client_money_arithmetic",
+            "unauthorized_detail_access"
+          ],
+          "properties": {
+            "raw_message_egress": {
+              "type": "boolean"
+            },
+            "client_money_arithmetic": {
+              "type": "boolean"
+            },
+            "unauthorized_detail_access": {
+              "type": "boolean"
+            }
+          }
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          }
+        },
+        "next": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^J[0-9]{2}\\.(C|T)\\.[0-9]{2}(?![\\s\\S])"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "abuse_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "step_id",
+        "actor",
+        "threat",
+        "safe_failure"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^AB-J[0-9]{2}-[0-9]{2}(?![\\s\\S])"
+        },
+        "step_id": {
+          "type": "string",
+          "pattern": "^J[0-9]{2}\\.(C|T)\\.[0-9]{2}(?![\\s\\S])"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "threat": {
+          "type": "string",
+          "minLength": 1
+        },
+        "safe_failure": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "not_applicable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "kind",
+        "reason"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "branch",
+            "signal"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "failure",
+            "offline",
+            "timeout",
+            "revocation",
+            "partial",
+            "escalation",
+            "rollback",
+            "permission_denied",
+            "completion",
+            "abandonment",
+            "correction",
+            "recovery"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "blueprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "journey_id",
+        "journey_name",
+        "audience",
+        "persona_ids",
+        "persona_basis",
+        "persona_basis_ref",
+        "flow_ids",
+        "diagram_ids",
+        "policy_class",
+        "outcome",
+        "current_map",
+        "target_map",
+        "moments_of_truth",
+        "steps",
+        "abuse_paths",
+        "not_applicable"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^BP-J[0-9]{2}(?![\\s\\S])"
+        },
+        "journey_id": {
+          "type": "string",
+          "pattern": "^J[0-9]{2}(?![\\s\\S])"
+        },
+        "journey_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audience": {
+          "type": "string",
+          "enum": [
+            "customer",
+            "operator"
+          ]
+        },
+        "persona_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^P[0-9]{2}(?![\\s\\S])"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "persona_basis": {
+          "type": "string",
+          "enum": [
+            "provisional",
+            "validated"
+          ]
+        },
+        "persona_basis_ref": {
+          "type": "string",
+          "pattern": "^pending:PenniLogic/[a-z.-]+#[1-9][0-9]{0,5}(?![\\s\\S])"
+        },
+        "flow_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^F-(AND|WEB|ADM)-[0-9]{2}(?![\\s\\S])"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "diagram_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "D01",
+              "D03",
+              "D04",
+              "D05",
+              "D21"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "policy_class": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "rights",
+            "sharing",
+            "billing",
+            null
+          ]
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "success",
+            "failure_recovery",
+            "metric_ref"
+          ],
+          "properties": {
+            "success": {
+              "type": "string",
+              "minLength": 1
+            },
+            "failure_recovery": {
+              "type": "string",
+              "minLength": 1
+            },
+            "metric_ref": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "current_map": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "basis"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "basis": {
+              "type": "string",
+              "const": "planned_baseline"
+            }
+          }
+        },
+        "target_map": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "supersedes"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "supersedes": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "moments_of_truth": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "step_id",
+              "statement"
+            ],
+            "properties": {
+              "step_id": {
+                "type": "string",
+                "pattern": "^J[0-9]{2}\\.(C|T)\\.[0-9]{2}(?![\\s\\S])"
+              },
+              "statement": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/step"
+          }
+        },
+        "abuse_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/abuse_path"
+          }
+        },
+        "not_applicable": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/not_applicable"
+          }
+        }
+      }
+    },
+    "gap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "journey_id",
+        "step_id",
+        "category",
+        "owner_issue",
+        "summary",
+        "backlog_item",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^GAP-J[0-9]{2}-[0-9]{2}(?![\\s\\S])"
+        },
+        "journey_id": {
+          "type": "string",
+          "pattern": "^J[0-9]{2}(?![\\s\\S])"
+        },
+        "step_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^J[0-9]{2}\\.(C|T)\\.[0-9]{2}(?![\\s\\S])"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "registry_content",
+            "contract_event",
+            "policy",
+            "service",
+            "research",
+            "metric",
+            "design_artifact"
+          ]
+        },
+        "owner_issue": {
+          "type": "string",
+          "pattern": "^PenniLogic/[a-z.-]+#[1-9][0-9]{0,5}(?![\\s\\S])"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "backlog_item": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^PenniLogic/[a-z.-]+#[1-9][0-9]{0,5}(?![\\s\\S])"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "resolved"
+          ]
+        }
+      }
+    },
+    "gaps_document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "source_issue",
+        "gaps"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "journey_gaps"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "source_issue": {
+          "type": "string",
+          "const": "PenniLogic/docs#67"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gap"
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "tabletop",
+            "boundary_review"
+          ],
+          "description": "tabletop: the cross-channel handoff and failure-branch tabletop; boundary_review: the security/privacy boundary review (docs#67 Tests). Both are held human inputs."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_run",
+            "recorded"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}(?![\\s\\S])"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+(/[a-z0-9_.-]+)*(?![\\s\\S])"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+            }
+          }
+        }
+      }
+    }
+  }
+}
