@@ -99,6 +99,8 @@ amounts or identity.
 - Criterion 2 (every pattern states source, status, consequence, safe remainder and next action): slots the
   taxonomy copy does not state are counted as `readiness.pattern_slot_unstated` and routed to the taxonomy owner
   (PenniLogic/docs#1), never filled in here; whether the mapped copy meets the criterion needs human Content review.
+  That review also covers the generic `pattern.` keys (criteria 2 and 3), including whether "their" and "them" in
+  `pattern.destructive.consequence` read clearly when the item is a debt or a transaction.
 
 `python scripts/check_content.py` reports `NOT GREEN: readiness incomplete` with exact gap counts until these
 exist; `--structure` checks structure only.

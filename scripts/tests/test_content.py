@@ -1965,12 +1965,13 @@ class PublishedContentTests(unittest.TestCase):
 
     def test_governance_lists_every_held_gate(self):
         # Review round 2 SS-08: DoD 4, the human no-blame and uncertainty review, the contracts mapping and the
-        # refund/reversal definitions are held, never claimed.
+        # refund/reversal definitions are held, never claimed. Fable round 1 F-04: the human Content review covers the
+        # generic pattern. copy too, including the referent of pattern.destructive.consequence.
         page = (ROOT / "product" / "content" / "content-governance.md").read_text(encoding="utf-8")
         held = " ".join(page.split("## Held gates (never filled in here)", 1)[1].split())
         for gate in ("Definition of Done item 4", "native GitHub blockedBy edges", "no-blame and uncertainty review",
                      "disguises uncertainty", "contract field names", "PenniLogic/contracts", "ADR-017 section 2.6",
-                     "RC-005"):
+                     "RC-005", "generic `pattern.` keys", "`pattern.destructive.consequence`"):
             with self.subTest(gate=gate):
                 self.assertIn(gate, held)
 
