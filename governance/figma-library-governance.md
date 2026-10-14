@@ -104,11 +104,13 @@ no visual direction is selected.
 2. **Duplicate review (criterion 2).** Before review, the registry lint compares every record with every
    published or deprecated record of every shared library (`LIB-COMPONENTS` and the platform libraries).
    Names and semantic roles are split at camelCase and letter/digit boundaries and compared as sets of
-   content words (function words such as `and`, `or`, `of`, `the` dropped; plurals folded to their
-   singular: a final `-s`, `-e` and `-s` dropped and `-y` read as `-i`, so `status`/`statuses`,
-   `purpose`/`purposes`, `cookie`/`cookies` and `entry`/`entries` meet) and as the content words run
-   together, so word order, case, punctuation, camelCase or run-together spelling, digit suffixes,
-   function words and plurals do not hide a duplicate. A record is a duplicate when its name or semantic
+   content words (function words such as `and`, `or`, `of`, `the` dropped; a digit run, and a `v` version
+   marker directly before one, dropped, so `Button2`, `Button 2`, `ButtonV2` and `Button v2.0` read as
+   `Button`, and numbered siblings such as `Step 1` and `Step 2` meet as one component that takes a
+   property; plurals folded to their singular: a final `-s`, `-e` and `-s` dropped and `-y` read as `-i`,
+   so `status`/`statuses`, `purpose`/`purposes`, `cookie`/`cookies` and `entry`/`entries` meet) and as
+   the content words run together, so word order, case, punctuation, camelCase or run-together spelling,
+   digit and version suffixes, function words and plurals do not hide a duplicate. A record is a duplicate when its name or semantic
    role equals the other's in either form, or when it contains the other's whole property signature
    (property names and types) and shares a content word of its name or role with it; an equal signature
    alone is not a duplicate, because distinct components may share property names and types

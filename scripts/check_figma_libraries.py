@@ -607,8 +607,12 @@ CASE_BOUNDARY = re.compile(
 
 
 def _tokens(text):
+    """Content words: function words are dropped, and so are a digit run and a `v` version marker directly before
+    one, which number a copy ("Button2", "ButtonV2", "Button v2.0") rather than name a new component."""
     words = re.findall(r"[a-z0-9]+", CASE_BOUNDARY.sub(" ", text or "").lower())
-    return [word for word in words if word not in STOP_WORDS]
+    numbered = [word.isdigit() or (word == "v" and following.isdigit())
+                for word, following in zip(words, [*words[1:], ""])]
+    return [word for word, number in zip(words, numbered) if not number and word not in STOP_WORDS]
 
 
 def _words(text):

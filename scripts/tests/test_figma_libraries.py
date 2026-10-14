@@ -1369,6 +1369,17 @@ class DuplicateTests(RuleCase):
             with self.subTest(name=name):
                 self.assertRefused(mutate, "duplicate.semantic_component", "C-SYN-LOCAL", "C-SYN-BUTTON")
 
+    def test_digit_and_version_suffixes_do_not_hide_a_duplicate(self):
+        """Fable r1 F1: a digit run, and a `v` version marker before one, number a copy and do not name a new
+        component, so a numbered copy with a different property contract is still refused."""
+        for name in ("Button2", "Button 2", "ButtonV2", "Button-2", "Button v2.0", "2 Buttons"):
+            with self.subTest(name=name):
+                self.assertRefused(lambda d: local(d).update(name=name), "duplicate.semantic_component",
+                                   "C-SYN-LOCAL", "C-SYN-BUTTON")
+        # Only a `v` directly before a digit run is a version marker; a lone `v` or a word holding one stays.
+        self.assertEqual(module._words("V card"), {"v", "card"})
+        self.assertEqual(module._words("Revision v3 panel"), {"revision", "panel"})
+
     def test_family_words_do_not_corroborate_a_duplicate(self):
         """R3-AV-2: two governed input-family siblings with a contained field API pass (the word `input` names
         two families); a candidate sharing a word only one governed name has is still refused."""
