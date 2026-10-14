@@ -6,5 +6,345 @@
   "owner": {
     "accountable": "basiltt"
   },
-  "refreshes": []
+  "refreshes": [
+    {
+      "date": "2026-10-14",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "github:basiltt",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Multi-currency and localization under PenniLogic/docs#33 (phase P6 Moat, ADR-017 section 4.9): the server exchange write path that activates the reserved per-currency clearing accounts and two-leg exchange groups with quoted rate, rate source, rate feed, rate instant, rounding side and explicit fee entries, the admitted-currency widening migration and the reporting-currency conversion over an append-only reference-quote store (api#46); the additive contract slice with QuotedRate, ExchangeGroup, MoneyByCurrency, ConvertedMoney, Derivation and the closed rate_feed list (contracts#9, handoff ticket H18); the Android localization framework with INR-first rendering, Indian digit grouping and right-to-left readiness (android#34, MVP work that depends on nothing else in the epic); Android presentation-currency selection and multi-currency presentation (android#45); and the web multi-currency rendering slice (web#11). Trust boundaries: client to API through the generated clients and the ADR-015 Money wire form; API to PostgreSQL, where deferred constraint triggers and the low-privilege runtime role carry the per-currency zero-sum, group atomicity and append-only rules; API to an external reference-rate feed, a new third party whose provider, cadence and choice ADR-017 section 13 leaves to an owner decision that is not yet recorded; and clients to the analytics pipeline for the coarse locale and currency counts the client tickets add. Out of scope: executing a conversion or holding a balance for the user, remittance and investment products, translation content, and the reservation itself, which the ledger migration api#2 (E04) lands before this epic. Nothing in this epic is implemented yet; every control below except the Money wire form already published in PenniLogic/contracts is a control a ticket must build.",
+      "tickets_in_scope": [
+        "PenniLogic/android#34",
+        "PenniLogic/android#45",
+        "PenniLogic/api#46",
+        "PenniLogic/contracts#9",
+        "PenniLogic/web#11"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#1-threat-model-stride",
+        "adr/ADR-017.md (decision summary and sections 4, 5, 6.3, 6.4, 7, 8, 9, 12 and 13: ledger currency, exchange groups, quoted rates, per-currency totals, reference-feed decision left open)",
+        "adr/ADR-015.md (decision summary and section 1.4: Money wire form, currency registry and idempotency of every state-changing operation)",
+        "adr/ADR-018.md (section 9: residue after erasure of constrained ledger rows)",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-2, O-4, O-6, O-7, O-8, O-13, O-16)",
+        "PenniLogic/docs#33 (epic body: scope, out of scope, exit criteria)",
+        "PenniLogic/api#46, PenniLogic/contracts#9, PenniLogic/android#34, PenniLogic/android#45, PenniLogic/web#11 (child ticket bodies and the coordinator readiness appendix on contracts#9, read 2026-10-14)",
+        "PenniLogic/contracts spec/openapi.yaml and spec/currency-registry.v1.json at main 12b6f72e (the published Money component and the INR, JPY and KWD registry)",
+        "governance/threat-model/records/E26.json and governance/threat-model/records/E07.json (hand-offs for ADR-017 and the analytics pipeline this epic depends on)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Exchange records in the owner's own ledger: the exchange group row (currency pair, quoted rate, rate source, rate feed identifier, rate instant, rounding side, occurred and booked instants, opaque evidence reference, reversal link), its two single-currency legs, the per-currency clearing entries and the explicit FX fee entries (api#46, ADR-017 section 4)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Core ledger purpose to be registered in the consent ledger and purpose registry (compliance O-1, PenniLogic/api#24); no E30 ticket creates a separate purpose, and an exchange is always between two accounts of the same owner, so no counterparty is a subject",
+          "retention": "Append-only ledger rows retained for the account's life under the periods the compliance floor publishes (O-4, PenniLogic/api#24); ADR-017 forbids UPDATE and DELETE on exchange_groups and entries for the runtime role, so no shorter period exists",
+          "erasure_path": "Account erasure crypto-shreds the encrypted classes (O-13, PenniLogic/api#38) and leaves the constrained ledger and exchange rows under an unlinkable owner as ADR-018 section 9 publishes the residue; a reversal group is never used as erasure (ADR-017 section 7); a grantee reaches exchange entries only through ADR-018's grant-mediated read, and clearing accounts are never part of a split-relevant projection (ADR-017 section 7)",
+          "children": "Not subjects: every ledger write requires an account that passed the age gate (O-6, PenniLogic/android#17); the product is restricted to adults",
+          "processors": []
+        },
+        {
+          "data_class": "Presentation preferences that can indicate residence, nationality or foreign holdings: the device locale and language used for rendering (android#34), the persisted presentation currency (android#45) and the reporting currency sent as a request parameter (web#11, contracts#9, ADR-017 section 5.3)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Product functionality under the core purpose (O-1, PenniLogic/api#24); android#34, android#45 and web#11 each state that locale and currency choices are presentation settings never sent to an external service with financial data",
+          "retention": "Not stated by android#45 or web#11: a persisted presentation currency follows the account or device lifetime until a ticket states a period; the reporting currency is a per-request parameter and is not stored by design (ADR-017 section 5.3)",
+          "erasure_path": "Device-local values are removed with the app's data; a server-held preference, if android#45 persists one server-side, is erased with the account (O-2, PenniLogic/api#24)",
+          "children": "Not subjects: settings exist only for accounts past the age gate (O-6, PenniLogic/android#17)",
+          "processors": []
+        },
+        {
+          "data_class": "Coarse product telemetry the epic adds: locale distribution (android#34), presentation-currency selections and stale-rate occurrences (android#45), reporting-currency selection and derivation-inspection counts (web#11), and server exchange-group and per-currency constraint-violation counters (api#46, ADR-017 section 8)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Product analytics purpose entry in the consent ledger (O-1, PenniLogic/api#24) with the opt-out surfaces (O-16, PenniLogic/web#20, PenniLogic/android#31); events pass the ingestion schema and cohort minimums PenniLogic/api#82 owns (E30-F09)",
+          "retention": "The retention period PenniLogic/api#82 publishes for the event store; server counters carry no identifier and follow the operational metrics retention",
+          "erasure_path": "The api#82 erasure job deletes a subject's events by pseudonymous identifier (O-2, O-4); counters without an identifier hold nothing to erase; opted-out users emit no event",
+          "children": "No event is accepted for an account below the age gate (O-6, PenniLogic/android#17)",
+          "processors": []
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Users and devices authenticate through the existing session path (E03); E30 adds no identity, token or credential of its own. The new party that must be trusted is the external reference-rate feed: its quotes enter an append-only store and drive every reporting-currency figure, yet ADR-017 section 13 leaves the provider, cadence and choice to an owner decision no ticket records, so neither its authenticity check nor the rule that fixes its destination in server configuration exists (E30-F03). A fixture or sandbox feed used in tests must never be selectable in production; the closed rate_feed list contracts#9 publishes is the allowlist that prevents it. Parser-config signing chain: not touched; a PROVIDER_STATEMENT rate arrives already structured from the statement import path (PenniLogic/api#10), and E30 adds no parser rule or template.",
+          "evidence": [
+            "ADR-017 section 13: reference-feed choice, provider and update cadence left to an owner decision",
+            "PenniLogic/contracts#9: closed rate_feed list"
+          ],
+          "findings": [
+            "E30-F03"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Modifiable assets: exchange group rows, legs, clearing and fee entries, the admitted-currency set, the reference-quote store, the contract components and every rendered figure. ADR-017 fixes the controls (single-currency transactions, per-currency zero sum and group atomicity under deferred triggers, immutable quote fields, paired whole-group reversal, rate identity bound, insert-only migration) but none is built: the write path and its tests are api#46's (E30-F01) and so is the migration (E30-F02). The Money wire form already published in PenniLogic/contracts makes amounts canonical decimal strings with a required currency, but QuotedRate, MoneyByCurrency and the no-mixed-total lint are contracts#9's (E30-F05). Displayed values can disagree with the authoritative ones through client-side conversion, mixed-currency sums, stale cached quotes, locale grouping, display-string parsing or bidirectional reordering on Android and web (E30-F06, E30-F07, E30-F08). Ingestion boundary: E30 parses no captured message, notification or statement text; it consumes structured rates only.",
+          "evidence": [
+            "PenniLogic/contracts spec/openapi.yaml: Money component, canonical decimal string amount with required currency (published on main 12b6f72e)",
+            "PenniLogic/contracts spec/currency-registry.v1.json: accepted codes and exponents (INR, JPY, KWD)",
+            "ADR-017 sections 4 and 5: exchange group, rate identity, per-currency totals",
+            "ADR-015 decision summary: Money wire form and Idempotency-Key on every state-changing operation"
+          ],
+          "findings": [
+            "E30-F01",
+            "E30-F02",
+            "E30-F05",
+            "E30-F06",
+            "E30-F07",
+            "E30-F08"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Actions that must be attributable later: recording an exchange, reversing it, and every converted figure a user may dispute. ADR-017 section 7 makes ledger rows append-only with booked_at bounded to the database clock, reason codes and correction links, and ADR-015 idempotency records tie a write to its principal; those are decided but not built for exchange groups. The gap specific to this epic is provenance: if rate_source is taken from the request, a typed rate can claim to be a bank statement or feed rate, and a derivation that does not name its exact quote cannot be reproduced when disputed (E30-F04). Operator views of exchange data are E13's audit concern, not this epic's.",
+          "evidence": [
+            "ADR-017 section 7: append-only rows, booked_at plausibility, reason codes and correction links",
+            "ADR-015 decision summary: idempotency scoped to principal, operation and key"
+          ],
+          "findings": [
+            "E30-F04"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Data classes: exchange records in the owner's ledger, presentation preferences that can reveal residence or foreign holdings, and the coarse telemetry the client tickets add (see data_flows). Raw content never leaves the device: E30 handles no SMS, notification or statement text, and android#34, android#45 and web#11 state that locale and currency choices are not sent to any external service with financial data; the reference-feed fetch is outbound and carries no user data. ADR-017 section 8 limits server signals to counts, kinds and residual buckets with no amount, rate or identifier, and ADR-017 section 7 accepts, with ADR-018 section 9, that rate_instant, like the other ledger instants, reveals the rhythm of activity under an opaque owner. The new exposure is small-cohort telemetry: a handful of users holding or viewing an uncommon currency or locale can be singled out on a dashboard or by joining events (E30-F09). Children are not subjects (age gate, android#17).",
+          "evidence": [
+            "ADR-017 section 8: signals carry no amount, balance, rate or identifier",
+            "ADR-018 section 9: published residue after erasure of constrained ledger rows",
+            "PenniLogic/api#82: analytics ingestion with schema validation and cohort minimums"
+          ],
+          "findings": [
+            "E30-F09"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "Exhaustible resources: database capacity for reporting-currency conversion, which looks up one reference quote per transaction for historical figures; the reference feed itself, which can be unavailable; and client usability when a rate is stale. The exchange write path must not depend on the feed, and a missing quote must surface as an incomplete derivation and the T-UX-01 stale state rather than an error or a silently old rate. No bound, rate limit or outage behaviour for conversion is specified by any ticket yet (E30-F10); the client stale state is part of android#45 and web#11 acceptance.",
+          "evidence": [
+            "ADR-017 section 5.2: Derivation carries an incomplete flag",
+            "PenniLogic/android#45: stale-rate state test"
+          ],
+          "findings": [
+            "E30-F10"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "Authorisation decisions in this epic are server-side ledger rules: who may post to the new clearing and fee system accounts, whether a leg or a reversal target may belong to another owner, and whether a grantee may see clearing accounts. ADR-017 sections 4.1, 4.5 and 7 decide that clearing accounts are server-created and not user-postable, that composite owner keys bind group and legs, and that clearing accounts never enter a split-relevant projection; with admission at INR only these paths are structurally unreachable today, and E30 opens them, so the database refusals and their negative tests must exist before the flag turns on (E30-F11). Clients make no authorisation decision: currency selection is presentation only.",
+          "evidence": [
+            "ADR-017 sections 4.1 and 4.5: clearing accounts not user-postable; group and leg owner binding"
+          ],
+          "findings": [
+            "E30-F11"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No purchase, receipt, store, webhook, trial or plan-price surface exists in this epic: the five tickets record exchanges the user already made elsewhere and render them, and executing a conversion or moving money for the user is a permanent non-goal of api#46 and web#11. Billing first appears in E14 (PenniLogic/docs#15), whose refresh reviews this category; pricing a plan in more than one currency would be an E14 scope change, not an E30 one.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "not_applicable",
+          "analysis": "No ticket in this epic makes multi-currency a paid capability or consumes a quota: the E30 flag in api#46, android#45 and web#11 is a rollout switch, and a client that flips its own copy only exposes a selector, because the server refuses a currency outside the admitted set (ADR-015 section 1.4). Entitlements first appear in E14 (PenniLogic/docs#15); gating multi-currency by plan later needs a scope_changed refresh of this record.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "not_applicable",
+          "analysis": "No model, AI gateway, provider key, routing configuration or tool dispatcher is touched by api#46, contracts#9, android#34, android#45 or web#11. The external reference-rate feed is a data source, not an AI service, and is reviewed under spoofing and denial of service. Assistant features that read multi-currency balances belong to the AI epics (E17, PenniLogic/docs#18), whose refreshes review this category.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "finding",
+          "analysis": "Server-side request forgery: the only server fetch the epic adds is the reference-rate feed; its destination must come from server configuration keyed by the closed rate_feed list and never from a request field, which is part of the feed control in E30-F03. The evidence reference on an exchange is an opaque identifier, never a URL. Replay: creating an exchange group is a Money-bearing state change, so a replayed or retried request must hit the ADR-015 Idempotency-Key and the duplicate screen rather than post a second group (E30-F01). Cross-site request forgery: web#11 adds a reporting-currency selector whose value is a request parameter and changes presentation only, so a forged request can at most change what the victim's next page shows; the epic adds no state-changing web form, and web session anti-forgery controls are reviewed in the web application epic (E12, PenniLogic/docs#13).",
+          "evidence": [
+            "ADR-015 decision summary: Idempotency-Key on every state-changing operation",
+            "ADR-017 section 5.3: reporting currency is a request parameter, never a profile setting that reshapes stored data"
+          ],
+          "findings": [
+            "E30-F01",
+            "E30-F03"
+          ]
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "not_applicable",
+          "analysis": "No model or AI agent consumes any input this epic introduces, and the epic adds no free text: rate_source is an enumeration, rate_feed an identifier from a closed list, the evidence reference an opaque identifier, and locale or currency a code. Translation content is out of scope. Assistant prompts that later read exchange data are reviewed in the AI epics (E17, PenniLogic/docs#18); delivery sessions reading public issue text are covered programme-wide by E31.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "finding",
+          "analysis": "E30 widens the admitted currency set, which makes non-INR split groups and members paying in a foreign currency possible for the first time. ADR-017 section 6.3 keeps split groups single-currency by composite keys, computes simplification per currency and has a member record a cross-currency payment as an exchange in their own ledger and the expense in the group's currency; api#33 owns those keys and the currency-separation tests, but proving them only with INR leaves exponent-0 and exponent-3 remainders and mixed-currency settlements untested when admission widens (E30-F12). Clearing accounts never enter a split-relevant projection (ADR-017 section 7).",
+          "evidence": [
+            "ADR-017 section 6.3: single-currency split groups by composite keys; per-currency simplification",
+            "PenniLogic/api#33: currency separation, tie-break determinism and original-record immutability tests"
+          ],
+          "findings": [
+            "E30-F12"
+          ]
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "not_applicable",
+          "analysis": "The epic adds no operator identity, console, elevation, unmask, export or approval workflow. The administrative levers it introduces, the admitted-currency set and the closed rate_feed list, change only through migrations and contract releases merged to protected main under governance/DELIVERY.md, so their compromise is the owner-account risk recorded in the E01 and E31 records rather than a new administrative identity. Operator access to exchange data is the admin console epic's (E13, PenniLogic/docs#14) to review.",
+          "evidence": [],
+          "findings": []
+        }
+      ],
+      "findings": [
+        {
+          "id": "E30-F01",
+          "category": "tampering",
+          "severity": "high",
+          "title": "The exchange write path could post a half group, absorb a fee into the rate or post a retried exchange twice",
+          "attack_path": "A client, a buggy import or a retried request submits an exchange whose legs are in one currency, whose clearing signs are wrong, whose rate was inverted or inflated to hide a fee, or which arrives twice after a network retry; if the group, the rate identity and the idempotency check live only in application code, a process that dies between legs or a second post leaves one currency's money created or destroyed and a converted figure that no stored rate explains.",
+          "recommended_control": "Implement ADR-017 section 4 as written: one database transaction per group with the deferred group trigger (exactly two legs, currencies equal the pair, one clearing entry per leg with the stated signs, same owner and instant), the rate identity with abs(residual) at most one minor unit of the rounded side refused as exchange_rate_inconsistent, every fee an FX_FEE entry, the ADR-015 Idempotency-Key and duplicate screen on group creation, and the ExchangeGroupAtomicityTest, ExplicitFeeTest and ExchangeGroupPairedReversalTest conformance tests in CI.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#46",
+          "resolution": null
+        },
+        {
+          "id": "E30-F02",
+          "category": "tampering",
+          "severity": "high",
+          "title": "The admission-widening migration could rewrite or reinterpret existing single-currency amounts",
+          "attack_path": "The E30 migration that inserts admitted currencies and enables the write path also touches an existing column, back-fills a currency, recomputes a balance or changes how an INR amount is read; every existing user's stored figures shift silently and the epic exit criterion that single-currency users see no change fails without a visible error.",
+          "recommended_control": "Keep the migration insert-only as ADR-017 section 4.8 states (insert admitted currencies, create clearing and fee accounts lazily, enable the write path behind the E30 flag), prove it with MigrationEquivalenceTest over a checksum of every entry's id, amount and currency and every derived balance before and after, and keep single-currency behaviour identical with the flag off.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#46",
+          "resolution": null
+        },
+        {
+          "id": "E30-F03",
+          "category": "spoofing",
+          "severity": "medium",
+          "title": "Reference-feed quotes can be forged or redirected because the feed's provider, transport and authenticity check are undecided",
+          "attack_path": "ADR-017 section 13 leaves the reference-feed choice, provider and cadence to an owner decision that no ticket records. A spoofed or compromised feed, a configuration that lets a request name an arbitrary feed location, or a relay that alters quotes injects a wrong rate into the append-only reference-quote store; every reporting-currency figure then derives from it, and because the store is append-only the forged quote stays citable in later derivations.",
+          "recommended_control": "Before reporting-currency conversion ships: take the feed only from the closed rate_feed list contracts#9 publishes, with the fetch destination fixed in server configuration and never derived from request input; authenticate the source (validated transport identity, and a signature where the chosen provider offers one); refuse a quote that is non-positive, off-scale or outside a plausibility band against the previous quote for the pair; and record the feed identifier and publication instant on every stored quote so a forged quote can be identified and superseded by a labelled correction.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#46",
+          "resolution": null
+        },
+        {
+          "id": "E30-F04",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Rate provenance can be asserted by the client, so a typed rate can masquerade as a bank or feed rate",
+          "attack_path": "If rate_source arrives from the request body, a user or a compromised client records a hand-typed rate as PROVIDER_STATEMENT or REFERENCE_FEED; a disputed converted figure then cites evidence that never existed, and later support or audit cannot tell what the provider applied from what someone typed.",
+          "recommended_control": "Assign rate_source on the server from the write path (manual entry is USER_ENTERED; PROVIDER_STATEMENT only from the import path with its evidence_ref; REFERENCE_FEED only from the feed ingest), make the rate, source, feed, instant and rounding side immutable, and name the exact quote in every Derivation so the same query returns the same figure later, proven by RateProvenanceTest.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#46",
+          "resolution": null
+        },
+        {
+          "id": "E30-F05",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "The contract could still admit a bare amount, a JSON-number rate or a scalar cross-currency total",
+          "attack_path": "Without a contract lint, one endpoint added later exposes a total that sums minor units of two currencies, an amount without a currency, or a quoted rate as a JSON number or at another scale; the generated TypeScript client parses the rate as a binary float or a bigint crosses a JSON boundary, and the web and Android clients show different figures for the same exchange.",
+          "recommended_control": "Publish QuotedRate as a positive canonical decimal string with exactly ten fraction digits, ExchangeGroup, MoneyByCurrency, ConvertedMoney, ConvertedBreakdown and Derivation once and reference them everywhere; add the lint that rejects any amount without a currency and any scalar cross-currency total outside ConvertedBreakdown (NoMixedCurrencyTotalTest, ADR-017 section 9); and prove the Kotlin and TypeScript round trip and the previous-client compatibility run named in the ticket.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/contracts#9",
+          "resolution": null
+        },
+        {
+          "id": "E30-F06",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "Locale formatting could misstate a domestic amount or let display text reorder digits and signs",
+          "attack_path": "A formatter using foreign grouping shows an INR amount as 100,000.00 rather than 1,00,000.00, a formatted string is parsed back into an amount in a decimal-comma locale and gains or loses a factor of one hundred or one thousand, or a right-to-left layout or an adjacent merchant name carrying bidirectional control characters visually moves the minus sign or reorders digits on the screen where the user reads a debt.",
+          "recommended_control": "Format only at the render boundary from the published Money value and never parse a display string back into an amount, enforced by the domain-layer static check; snapshot-test INR with Indian grouping and every supported locale, including a decimal-comma locale and a right-to-left pseudo-locale; isolate each rendered amount and its sign from surrounding user-supplied text with Unicode bidirectional isolation; and keep the screen-reader announcement of amount with currency.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#34",
+          "resolution": null
+        },
+        {
+          "id": "E30-F07",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "The Android client could convert, add currencies or show a stale rate as current",
+          "attack_path": "The Android presentation layer, or its offline cache, multiplies a bucket by a locally held rate, adds two currencies into one figure, persists a converted value over a stored amount, or keeps showing a converted figure after the quote aged; the user acts on a number the server never produced and that no derivation explains.",
+          "recommended_control": "Consume ConvertedMoney and MoneyByCurrency from the generated client only, with no rate fetched or computed on the device; label every converted figure with its rate and instant and render it as derived; show the T-UX-01 stale state when a rate is stale or unavailable; and prove with the stored-amount immutability, mixed-currency subtotal and stale-rate tests the ticket names that a presentation-currency change alters no stored amount.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#45",
+          "resolution": null
+        },
+        {
+          "id": "E30-F08",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "The web client could show a mixed-currency total, convert locally or lose precision at a server-component boundary",
+          "attack_path": "A web component sums a mixed portfolio into one number, a server component passes amounts across a JSON boundary as bigint or float, or a selector change sends a request that alters stored data; the web figure diverges from Android and from the ledger for the same user, and a misrendered or reordered amount in a right-to-left layout misstates a balance.",
+          "recommended_control": "Parse the canonical decimal string once at the render boundary and never let bigint cross a server-component or JSON boundary (static check); render per-currency buckets with each converted figure's rate, source, instant and fee; isolate rendered amounts from adjacent user text bidirectionally; and keep the mixed-portfolio component test and the end-to-end request-payload assertion that currency selection changes presentation only.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/web#11",
+          "resolution": null
+        },
+        {
+          "id": "E30-F09",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Locale and currency telemetry can single out the few users who hold or view an uncommon currency",
+          "attack_path": "The new counts (locale distribution, presentation-currency selections, stale-rate occurrences, reporting-currency selections) are keyed to the pseudonymous analytics identifier or shown on a dashboard by currency or locale; a cohort of a handful of users holding KWD or viewing in a rare locale is re-identifiable when joined with other events, disclosing foreign holdings or residence.",
+          "recommended_control": "Accept these events only through the ingestion schema with allowlisted properties (currency or locale code and a count, never an amount, rate, account or merchant), apply the published cohort minimum to every currency and locale breakdown on the team dashboard, and reject any event that carries a property outside the schema.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#82",
+          "resolution": null
+        },
+        {
+          "id": "E30-F10",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "Reporting-currency conversion can be made unbounded or can fail closed on a feed outage",
+          "attack_path": "Historical conversion needs the reference quote in force at each transaction's effective instant; a request for a reporting currency over years of activity, repeated across currencies, performs one quote lookup per transaction and exhausts database capacity, while a feed outage either blocks every report or silently converts with an old quote.",
+          "recommended_control": "Bound reporting-currency requests (range and page limits, a quote lookup indexed by pair and instant, per-principal rate limits), keep the exchange write path independent of feed availability, and when no quote exists at or before the instant return the derivation with incomplete set rather than an error or an unlabelled older rate; test the bound and the outage path.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#46",
+          "resolution": null
+        },
+        {
+          "id": "E30-F11",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "Activating clearing accounts opens a path to post into system accounts or another owner's ledger",
+          "attack_path": "Once admission widens, a crafted request posts directly to an FX_CLEARING or FX_FEE account, builds a leg consisting of system accounts only to conjure a source of funds, or references a leg, clearing account or reversal target that belongs to another owner; if only API code guards these, one missed check moves money between owners or fabricates balances.",
+          "recommended_control": "Enforce ADR-017 sections 4.1 and 4.5 in the database: clearing accounts are server-created, not user-creatable and not user-postable, a clearing entry is accepted only from an EXCHANGE_LEG or its reversal, every leg needs an entry on a non-system account, and composite owner keys bind group, legs and reversal targets to one owner under forced row-level security; add negative tests for each refusal as part of ExchangeGroupAtomicityTest.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#46",
+          "resolution": null
+        },
+        {
+          "id": "E30-F12",
+          "category": "split_manipulation",
+          "severity": "medium",
+          "title": "Wider currency admission lets a split group, expense or settlement mix currencies or round wrongly at other exponents",
+          "attack_path": "After E30 admits currencies beyond INR, a member records a split expense in another currency than the group's, settles in a second currency, or exploits remainder allocation in an exponent-0 or exponent-3 currency; if the composite keys and per-currency simplification are proven only for INR, a balance owed between members shifts without the counterparty's consent.",
+          "recommended_control": "Keep split groups single-currency by the composite keys ADR-017 section 6.3 names, compute simplification per currency, record a member's cross-currency payment as an exchange in their own ledger and the expense in the group's currency, and extend the currency-separation and remainder tests to a two-currency fixture including JPY and KWD exponents before E30 enables admission.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#33",
+          "resolution": null
+        }
+      ]
+    }
+  ]
 }
