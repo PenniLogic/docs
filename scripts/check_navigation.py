@@ -85,6 +85,20 @@ WIDGET_LINK = re.compile(rf"android-widget://{_SEGMENT}(?:/{_ELEMENT})*")
 # Imported registry hints (H06 grammar): Android and widget deep links or web/admin paths.
 ROUTE_HINT = re.compile(rf"(?:android|android-widget)://{_SEGMENT}(?:/{_ELEMENT})*|/{_ELEMENT}(?:/{_ELEMENT})*(?:/\*)?")
 PATTERN_LIMIT = 120
+SURFACE_TYPE = re.compile(_SEGMENT)
+# The surfaces opened from outside the route tree and the external entries each may use; a page (the registry
+# default) always has a navigation parent.
+EXTERNAL_SURFACES = {
+    "widget": ("widget",), "notification-landing": ("notification",), "system-handoff": ("deep_link", "system_handoff"),
+}
+# The pinned registry screens a signed-out route may host, by role: launch, lock and degraded-resource gates;
+# registration and sign-in with channel verification; recovery; purpose consent and age eligibility (before
+# registration, ADR-019 section 2); unauthenticated help; operator sign-in and recovery. Anything else is reachable
+# only signed in (and, in the console, only with roles); changing this list is a reviewed code change.
+PUBLIC_SCREENS = frozenset({
+    "S-AND-001", "S-AND-002", "S-AND-059", "S-AND-004", "S-AND-005", "S-AND-006", "S-AND-007", "S-AND-008",
+    "S-AND-009", "S-AND-010", "S-WEB-001", "S-WEB-002", "S-WEB-042", "S-WEB-037", "S-ADM-001", "S-ADM-030",
+})
 # Accepted sources a provisional operator role may be derived from (ADR-020 and the product documents).
 ROLE_SOURCES = ("adr/ADR-020.md", "product/01-product-spec.md", "product/08-experience-design-and-sdlc-plan.md")
 SCRUBBED_GIT_VARIABLES = (
@@ -105,11 +119,12 @@ STRUCTURE_RULES = (
     "route.cycle", "route.entry_mismatch", "route.search_only", "route.empty_leaf", "route.retired_reused",
     "held.label_status", "held.message_key", "label.dynamic_content",
     "presentation.platform_mismatch", "presentation.narrow_hidden", "android.primary_count",
-    "android.primary_adaptation", "android.unlisted_primary",
+    "android.primary_adaptation", "android.unlisted_primary", "android.primary_scattered",
     "access.customer_route_roles", "admin.access_mismatch", "admin.role_unknown", "admin.unauthorized_not_absent",
     "admin.role_wider_than_parent", "admin.external_entry",
     "placement.unknown_screen", "placement.duplicate", "placement.orphan_screen", "placement.route_dangling",
     "placement.platform_mismatch", "placement.host_and_external", "placement.rationale_missing",
+    "placement.external_surface", "placement.signed_out_private",
     "deep_link.grammar", "deep_link.duplicate_pattern", "deep_link.ambiguous_pattern", "deep_link.hint_unmapped",
     "deep_link.hint_misrouted", "deep_link.redirect_duplicate", "deep_link.redirect_dangling",
     "deep_link.redirect_shadowed",
@@ -361,16 +376,21 @@ class GitSources:
 
 
 class Registry:
-    """The identifiers this check needs from an experience-coverage registry: screens with their platform and imported
-    route hint, flows with their platform and journeys (the docs#75 registry names the hint route_hint)."""
+    """The identifiers this check needs from an experience-coverage registry: screens with their platform, imported
+    route hint and surface type, flows with their platform and journeys (the docs#75 registry names the hint
+    route_hint)."""
 
     def __init__(self, document, rule):
         require(isinstance(document, dict), rule)
-        self.screens, self.flows = {}, {}
+        self.screens, self.flows, self.surfaces = {}, {}, {}
         for record in self._records(document, "screens", SCREEN_ID, rule):
             hint = record.get("route_hint") if "route_hint" in record else record.get("route")
             require(isinstance(hint, str) and len(hint) <= PATTERN_LIMIT and ROUTE_HINT.fullmatch(hint), rule)
+            # product/08 section 10: surface_type defaults to page; only non-page surfaces state it.
+            surface = record.get("surface_type", "page")
+            require(isinstance(surface, str) and SURFACE_TYPE.fullmatch(surface), rule)
             self.screens[record["id"]] = (INFIX[record["id"][2:5]], hint)
+            self.surfaces[record["id"]] = surface
         for record in self._records(document, "flows", FLOW_ID, rule):
             self.flows[record["id"]] = INFIX[record["id"][2:5]]
         self.journeys = {record["id"] for record in self._records(document, "journeys", JOURNEY_ID, rule)}
@@ -505,7 +525,8 @@ def check_labels(model):
 
 
 def check_presentation(model):
-    """Android compact/expanded and web/admin narrow/wide; 3-5 Android primary destinations (product/08 line 209)."""
+    """Android compact/expanded and web/admin narrow/wide; 3-5 Android primary destinations (product/08 line 209)
+    that share one navigation bar."""
     for identifier, route in model.routes.items():
         android = route["platform"] == "android"
         presentation = route["presentation"]
@@ -523,8 +544,15 @@ def check_presentation(model):
                     and route["entry_from_parent"] == "primary_navigation", "android.primary_adaptation", identifier)
         else:
             require(not bar, "android.unlisted_primary", identifier)
-    primary = sum(route["primary"] for route in model.routes.values() if route["platform"] == "android")
-    require(3 <= primary <= 5, "android.primary_count", "android")
+    primary = [route for route in model.routes.values() if route["platform"] == "android" and route["primary"]]
+    require(3 <= len(primary) <= 5, "android.primary_count", "android")
+    # One navigation bar: the primary destinations are signed-in siblings of one parent (the one most of them share),
+    # never spread across depths or into the signed-out tree.
+    parents = [route["parent_route_id"] for route in primary]
+    bar = max(sorted(set(parents), key=natural_key), key=parents.count)
+    for route in primary:
+        require(route["audience"] == "signed_in" and route["parent_route_id"] == bar, "android.primary_scattered",
+                route["id"])
 
 
 def check_access(model):
@@ -549,8 +577,9 @@ def check_access(model):
 
 def check_placements(model):
     """Each registry screen is placed exactly once: hosted by one same-platform route, or a documented external entry
-    (deep link, notification, system handoff or widget) with a rationale; admin screens are always hosted. Every route
-    hosts a screen or has children."""
+    (deep link, notification, system handoff or widget) with a rationale for a widget, notification-landing or
+    system-handoff surface of the matching kind; pages and admin screens are always hosted. Every route hosts a screen
+    or has children."""
     screens = model.registry.screens
     for item in sorted(model.document["screen_placements"], key=lambda item: natural_key(item["screen_id"])):
         identifier, host, external = item["screen_id"], item["host_route_id"], item["external"]
@@ -563,11 +592,16 @@ def check_placements(model):
             require(model.routes[host]["platform"] == screens[identifier][0], "placement.platform_mismatch",
                     identifier)
             model.hosted[host].append(identifier)
+            # A signed-out route is open without an account and, in the console, without roles: public screens only.
+            require(model.routes[host]["audience"] == "signed_in" or identifier in model.public_screens,
+                    "placement.signed_out_private", identifier)
         else:
             require(external["rationale"] is not None, "placement.rationale_missing", identifier)
             # Outside every route an operator screen would carry no role: admin screens are always hosted, and an
             # operator deep link resolves to a role-bound route.
             require(screens[identifier][0] != "admin", "admin.external_entry", identifier)
+            require(external["entry"] in EXTERNAL_SURFACES.get(model.registry.surfaces[identifier], ()),
+                    "placement.external_surface", identifier)
     for identifier in screens:
         require(identifier in model.placements, "placement.orphan_screen", identifier)
     for identifier in model.routes:
@@ -752,14 +786,17 @@ def check_allocation(model):
         require(flow in allocated, "allocation.flow_unallocated", flow)
 
 
-def check(routes, allocation, routes_schema, allocation_schema, sources, synthetic_ok=False):
-    """Run every structure rule in a fixed order; raise Refused at the first violation, else return the model."""
+def check(routes, allocation, routes_schema, allocation_schema, sources, synthetic_ok=False,
+          public_screens=PUBLIC_SCREENS):
+    """Run every structure rule in a fixed order; raise Refused at the first violation, else return the model.
+    Synthetic fixtures name their own public screens; published mode uses PUBLIC_SCREENS."""
     shape(routes, routes_schema)
     shape(allocation, allocation_schema)
     guard_content(routes)
     guard_content(allocation)
     registry = read_registry(routes, allocation, sources)
     model = Model(routes, allocation, registry)
+    model.public_screens = frozenset(public_screens)
     check_identifiers(model, synthetic_ok)
     check_topology(model)
     check_labels(model)

@@ -35,22 +35,24 @@ ALLOCATION_SCHEMA = module.support.load_json(ROOT / module.ALLOCATION_SCHEMA)
 PIN_COMMIT = "1" * 40
 
 
-def screen(identifier, hint, flow):
+def screen(identifier, hint, flow, surface=None):
+    """A synthetic registry screen; like the registry, only a non-page surface states its surface_type."""
     platform = module.INFIX[identifier[2:5]]
-    return {"id": identifier, "platform": platform, "name": f"Synthetic screen {identifier[-3:]}", "route": hint,
-            "flow_ids": [flow]}
+    record = {"id": identifier, "platform": platform, "name": f"Synthetic screen {identifier[-3:]}", "route": hint,
+              "flow_ids": [flow]}
+    return record if surface is None else {**record, "surface_type": surface}
 
 
 SCREENS = [
     screen("S-AND-001", "android://launch", "F-AND-01"), screen("S-AND-002", "android://home", "F-AND-01"),
     screen("S-AND-003", "android://debts", "F-AND-01"), screen("S-AND-004", "android://debts/:id", "F-AND-01"),
     screen("S-AND-005", "android://transactions", "F-AND-01"),
-    screen("S-AND-006", "android://notifications/:id", "F-AND-01"),
-    screen("S-AND-007", "android-widget://debt-progress", "F-AND-01"),
+    screen("S-AND-006", "android://notifications/:id", "F-AND-01", "notification-landing"),
+    screen("S-AND-007", "android-widget://debt-progress", "F-AND-01", "widget"),
     screen("S-AND-008", "android://plan", "F-AND-01"),
     screen("S-WEB-001", "/login", "F-WEB-01"), screen("S-WEB-002", "/overview", "F-WEB-01"),
     screen("S-WEB-003", "/transactions", "F-WEB-01"), screen("S-WEB-004", "/transactions/:id", "F-WEB-01"),
-    screen("S-WEB-005", "/split/invites/:token", "F-WEB-01"),
+    screen("S-WEB-005", "/split/invites/:token", "F-WEB-01", "system-handoff"),
     screen("S-ADM-001", "/operator/login", "F-ADM-01"), screen("S-ADM-002", "/operator", "F-ADM-01"),
     screen("S-ADM-003", "/operator/support", "F-ADM-01"), screen("S-ADM-004", "/operator/audit", "F-ADM-01"),
 ]
@@ -200,11 +202,14 @@ class Fixture:
         self.routes_schema, self.allocation_schema = copy.deepcopy(ROUTES_SCHEMA), copy.deepcopy(ALLOCATION_SCHEMA)
         self.blobs = {(PIN_COMMIT, module.IMPORT_PATH): REGISTRY_BYTES}
         self.published, self.base, self.base_error, self.synthetic_ok = True, None, False, True
+        # The synthetic sign-in, launch and operator sign-in screens are this fixture's only public screens.
+        self.public_screens = {"S-AND-001", "S-WEB-001", "S-ADM-001"}
 
     def check(self):
         return module.check(
             self.routes, self.allocation, self.routes_schema, self.allocation_schema,
             Sources(self.blobs, self.published, self.base, self.base_error), synthetic_ok=self.synthetic_ok,
+            public_screens=self.public_screens,
         )
 
     def route(self, identifier):
@@ -357,7 +362,8 @@ class TopologyTests(NavigationCase):
                      "route.audience_widened", "R-WEB-004")
 
     def test_signed_out_route_under_a_signed_out_parent_passes(self):
-        model = self.passes(lambda fixture: fixture.route("R-WEB-002").update(audience="signed_out"))
+        model = self.passes(lambda fixture: fixture.route("R-WEB-002").update(audience="signed_out"),
+                            prepare=lambda fixture: fixture.public_screens.add("S-WEB-002"))
         self.assertEqual(model.routes["R-WEB-002"]["audience"], "signed_out")
 
 
@@ -371,9 +377,9 @@ def demote(fixture, identifier):
 
 
 def add_notification_route(fixture):
-    """Host the external notification screen on a new non-primary Android route (a sixth candidate destination)."""
+    """Host the external notification screen on a new non-primary Android route beside the primary destinations."""
     fixture.routes["routes"].append(
-        route("R-AND-007", "R-AND-002", "navigation_link", "Notifications", ["android://notifications/:id"], ANDROID))
+        route("R-AND-007", "R-AND-001", "navigation_link", "Notifications", ["android://notifications/:id"], ANDROID))
     fixture.placement("S-AND-006").update(host_route_id="R-AND-007", external=None)
 
 
@@ -413,8 +419,8 @@ class PresentationTests(NavigationCase):
     def test_five_primary_destinations_pass_and_six_fail(self):
         def prepare(fixture):
             add_notification_route(fixture)
-            make_primary(fixture, "R-AND-004")
-        self.refused(lambda fixture: make_primary(fixture, "R-AND-007"), "android.primary_count", "android",
+            make_primary(fixture, "R-AND-007")
+        self.refused(lambda fixture: make_primary(fixture, "R-AND-004"), "android.primary_count", "android",
                      prepare=prepare)
 
     def test_three_primary_destinations_pass_and_two_fail(self):
@@ -431,6 +437,14 @@ class PresentationTests(NavigationCase):
 
     def test_navigation_drawer_is_an_expanded_adaptation(self):
         self.passes(lambda fixture: fixture.route("R-AND-002")["presentation"].update(expanded="navigation_drawer"))
+
+    def test_primary_destinations_share_one_navigation_bar(self):
+        # A fifth primary destination one level down, inside the Debts destination, is not in the bar.
+        self.refused(lambda fixture: make_primary(fixture, "R-AND-004"), "android.primary_scattered", "R-AND-004")
+
+    def test_primary_destination_is_never_signed_out(self):
+        self.refused(lambda fixture: fixture.route("R-AND-002").update(audience="signed_out"),
+                     "android.primary_scattered", "R-AND-002")
 
     def test_bar_entry_outside_the_primary_count_is_refused(self):
         self.refused(lambda fixture: fixture.route("R-AND-004")["presentation"].update(compact="navigation_bar"),
@@ -479,6 +493,17 @@ class RoleDenialTests(NavigationCase):
         self.refused(lambda fixture: fixture.route("R-ADM-003").update(audience="signed_out", access=None),
                      "route.audience_widened", "R-ADM-003")
 
+    def test_signed_out_route_hosts_only_public_screens(self):
+        # Without an account (or, in the console, without roles) only the pinned public screens are reachable.
+        cases = (
+            ("S-AND-004", lambda fixture: fixture.placement("S-AND-004").update(host_route_id="R-AND-001")),
+            ("S-WEB-002", lambda fixture: fixture.route("R-WEB-002").update(audience="signed_out")),
+            ("S-ADM-002", lambda fixture: fixture.route("R-ADM-002").update(audience="signed_out", access=None)),
+        )
+        for identifier, mutate in cases:
+            with self.subTest(screen=identifier):
+                self.refused(mutate, "placement.signed_out_private", identifier)
+
     def test_admin_screen_is_never_an_external_entry(self):
         # Outside every route an operator screen would carry no role at all.
         self.refused(lambda fixture: fixture.placement("S-ADM-004").update(host_route_id=None, external=external(
@@ -524,9 +549,23 @@ class PlacementTests(NavigationCase):
                      "placement.rationale_missing", "S-AND-007")
 
     def test_route_without_screens_or_children_is_refused(self):
+        self.refused(lambda fixture: fixture.placement("S-WEB-004").update(host_route_id="R-WEB-003"),
+                     "route.empty_leaf", "R-WEB-004")
+
+    def test_page_is_never_an_external_entry(self):
+        # A page (the registry default surface) always has a navigation parent, whatever rationale is given.
         self.refused(lambda fixture: fixture.placement("S-WEB-004").update(host_route_id=None, external=external(
             "deep_link", "Synthetic fixture: opened from an export file.", "/transactions/:id")),
-            "route.empty_leaf", "R-WEB-004")
+            "placement.external_surface", "S-WEB-004")
+
+    def test_external_entry_matches_its_surface(self):
+        self.refused(lambda fixture: fixture.placement("S-AND-007")["external"].update(entry="notification"),
+                     "placement.external_surface", "S-AND-007")
+        self.passes(lambda fixture: fixture.placement("S-WEB-005")["external"].update(entry="system_handoff"))
+
+    def test_registry_surface_type_is_a_static_word(self):
+        screens = [dict(item, surface_type=1) if item["id"] == "S-AND-007" else item for item in SCREENS]
+        self.refused(lambda fixture: fixture.set_registry({**REGISTRY, "screens": screens}), "registry.invalid")
 
     def test_container_route_with_children_needs_no_screen(self):
         def mutate(fixture):
@@ -1368,6 +1407,10 @@ class PublishedDataTests(unittest.TestCase):
         unbound = {identifier: model.hosted[identifier] for identifier, route in model.routes.items()
                    if route["platform"] == "admin" and route["access"] is None}
         self.assertEqual(unbound, {"R-ADM-001": ["S-ADM-001"], "R-ADM-002": ["S-ADM-030"]})
+        # Every pinned public screen is in use on a signed-out route, and nothing else is.
+        signed_out = {screen for screen, item in model.placements.items() if item["host_route_id"] is not None
+                      and model.routes[item["host_route_id"]]["audience"] == "signed_out"}
+        self.assertEqual(signed_out, module.PUBLIC_SCREENS)
 
     def test_published_eligibility_precedes_registration(self):
         # Accepted ADR-019 section 2 orders enrolment consent and age eligibility -> email channel -> passkey
