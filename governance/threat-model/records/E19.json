@@ -423,7 +423,7 @@
           "severity": "high",
           "title": "Unwrapped data keys in API memory leak through heap dumps, core dumps or diagnostics",
           "attack_path": "The API keeps unwrapped DEKs and index keys in a bounded cache for up to five minutes (ADR-018 section 9); an out-of-memory heap dump, a core dump, a remote diagnostic attach or an error report that serialises the cache writes many users' keys and decrypted values to disk, an operator laptop or an error-reporting processor.",
-          "recommended_control": "Disable heap and core dumps and remote diagnostic attach for the API in every environment that holds real data, hold cached keys in buffers that are overwritten on eviction and on shutdown, never render a key or plaintext in an exception message or object string form, publish the cache size and lifetime, and add a test that forces the dump and error paths and asserts no key bytes or planted plaintext appear in any artefact or log.",
+          "recommended_control": "Within PenniLogic/api#37's application scope: hold cached keys in buffers that are overwritten on eviction and on shutdown, never render a key or plaintext in an exception message or object string form, publish the cache size and lifetime, and add a test that forces the dump and error paths and asserts no key bytes or planted plaintext appear in any artefact or log. As a dependency of this hand-off, disabling heap and core dumps and remote diagnostic attach for the API in every environment that holds real data is runtime configuration of the container runtime that PenniLogic/infra#25 provisions.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/api#37",
           "resolution": null
