@@ -222,6 +222,13 @@ class ControlTests(JourneyCase):
             "Journey blueprints 0.1.0 structure valid: 2 blueprints, 7 steps (4 customer, 3 team), 9 branches, "
             "2 abuse paths, 1 gaps; registry " + SYNTHETIC_COMMIT + " checked")
 
+    def test_docstring_does_not_claim_boundary_enforcement(self):
+        # Review round 2 SR-07: the boundary flags are author-declared; criterion 4 awaits the boundary review.
+        text = " ".join(module.__doc__.split())
+        self.assertIn("The backstage boundary (no raw message egress, client-side money arithmetic or unauthorized "
+                      "detail access) is author-declared", text)
+        self.assertNotRegex(text, r"enforce[^.]*backstage boundary")
+
     def test_schema_keywords_are_in_the_shared_subset(self):
         allowed = module.support.SUPPORTED | module.support.ANNOTATIONS
 

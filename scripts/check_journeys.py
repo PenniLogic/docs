@@ -12,8 +12,10 @@ their owners.
 Blueprint steps Jnn.C.nn and Jnn.T.nn are the customer and team lanes. Every step names its channel, system, data
 classification and authorization; the checks below enforce registry joins, lane and channel agreement, reachable
 step graphs, failure and recovery coverage, cross-channel handoff authority, rights/sharing/billing controls
-(clock, audit, notification, reversal), the backstage boundary (no raw message egress, client-side money
-arithmetic or unauthorized detail access), content-free telemetry and abuse paths per journey. Metric references
+(clock, audit, notification, reversal), content-free telemetry and abuse paths per journey. The backstage
+boundary (no raw message egress, client-side money arithmetic or unauthorized detail access) is author-declared:
+each step's boundary flags must be false, but nothing here inspects what a step does, so criterion 4 rests on
+the pending Security/Privacy boundary review, not on these checks. Metric references
 stay `pending:PenniLogic/docs#77` and event references `pending:<owner issue>`; no EV- or M- identifier is minted.
 Persona basis stays provisional until docs#66 evidence exists.
 
