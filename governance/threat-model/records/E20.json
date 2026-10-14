@@ -136,13 +136,14 @@
         {
           "id": "repudiation",
           "disposition": "finding",
-          "analysis": "Actions that must be provable later: release approval, each waiver with its approver and expiry, the alert-to-on-call acknowledgement, counsel review, and the named owner and next review date of each ongoing obligation. docs#23 requires an independent second-reviewer approval and a timestamped on-call acknowledgement but the record format does not exist yet (E20-F08); counsel review is the same exposure from outside the organisation (E20-F03). Single-owner procedural separation is accepted organisation-wide in governance/DELIVERY.md; CERT-In log retention and time synchronisation belong to docs#44 and infra#27 and are reviewed there.",
+          "analysis": "Actions that must be provable later: release approval, each waiver with its approver and expiry, the alert-to-on-call acknowledgement, counsel review, and the named owner and next review date of each ongoing obligation. docs#23 requires an independent second-reviewer approval and a timestamped on-call acknowledgement but the record format does not exist yet (E20-F08); counsel review is the same exposure from outside the organisation (E20-F03); docs#45's re-verification sweep, obligation owners and next review dates are written by the same account with no attribution format either (E20-F10). Single-owner procedural separation is accepted organisation-wide in governance/DELIVERY.md; CERT-In log retention and time synchronisation belong to docs#44 and infra#27 and are reviewed there.",
           "evidence": [
             "governance/DELIVERY.md: independent review is procedural, not two-human review or cryptographic identity"
           ],
           "findings": [
             "E20-F08",
-            "E20-F03"
+            "E20-F03",
+            "E20-F10"
           ]
         },
         {
@@ -161,7 +162,7 @@
         {
           "id": "denial_of_service",
           "disposition": "not_applicable",
-          "analysis": "This epic runs no service, endpoint, queue or paid budget an attacker could exhaust; docs#23 adds repository checks over small synthetic records. The reliability evidence it aggregates (backup restore by infra#26, rollback rehearsal by infra#25 and android#37, SLOs and alert delivery by infra#27, all in E24) and the CERT-In reporting window by docs#44 in E27, and is reviewed in those epics' records.",
+          "analysis": "This epic runs no service, endpoint, queue or paid budget an attacker could exhaust; docs#23 adds repository checks over small synthetic records. The reliability evidence it aggregates (backup restore by infra#26, rollback rehearsal by infra#25 and android#37, SLOs and alert delivery by infra#27, all in E24) is reviewed in E24's record, and the CERT-In reporting window (docs#44) in E27's record.",
           "evidence": [],
           "findings": []
         },
@@ -223,7 +224,7 @@
         {
           "id": "administrative_identity_compromise",
           "disposition": "finding",
-          "analysis": "Every authority this epic creates - recording counsel review, approving a release, granting a waiver, publishing the processing record and its agreement references - is exercised through the one owner account, so its compromise forges all of them at once. E20-F02's session separation and E20-F03's counsel-issued document constrain honest sessions and make a forgery a deliberate, reviewable act, but they do not mitigate compromise of the account that writes every E20 record: the session identifiers F02 relies on and the digest F03 records are written by that same account. Hardening of the account itself is E01-F04, handed to infra#43, which was closed as not planned on 2026-10-03; the owner's disposition of 2026-10-04 on that issue records an owner-accepted residual risk with further hardening deferred (organisation 2FA enforcement off, a broadly scoped administrative credential, the revocation drill not rehearsed), and E01-F04 stays unremediated. E20's authorities carry that same residual under that decision; whether the owner's acceptance extends to forged release approvals, waivers and counsel records is the owner's to confirm, and is not inferred here.",
+          "analysis": "Every authority this epic creates - recording counsel review, approving a release, granting a waiver, publishing the processing record and its agreement references - is exercised through the one owner account, so its compromise forges all of them at once. E20-F02's session separation and E20-F03's counsel-issued document constrain honest sessions and make a forgery a deliberate, reviewable act, but they do not mitigate compromise of the account that writes every E20 record: the session identifiers F02 relies on and the digest F03 records are written by that same account. Hardening of the account itself is E01-F04, handed to infra#43, which was closed as not planned on 2026-10-03; the owner's disposition of 2026-10-04 on that issue records an owner-accepted residual risk with further hardening deferred (organisation 2FA enforcement off, a broadly scoped administrative credential, the revocation drill not rehearsed), and E01-F04 stays unremediated. E20 adds no control for compromise of that account; whether the owner's 2026-10-04 acceptance extends to forged release approvals, waivers and counsel records is the owner's to confirm and is not inferred here.",
           "evidence": [
             "PenniLogic/infra#43: owner disposition of 2026-10-04 - owner-accepted residual risk, further hardening deferred, E01-F04 unremediated",
             "governance/DELIVERY.md: review is procedural, not two-human review, cryptographic identity or independently verified attestation provenance"
@@ -332,6 +333,17 @@
           "recommended_control": "Exploitable detail of a failed or waived Security gate never enters a public release record, waiver or issue: it is held in a private channel (a private vulnerability report or draft security advisory) and referenced by identifier and digest; the public record carries only gate id, verdict, waiver id, expiry, approver role and digest; the rehearsal fails when a planted secret path or advisory id appears in a public waiver justification or gate entry.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/docs#23",
+          "resolution": null
+        },
+        {
+          "id": "E20-F10",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Verification-sweep, obligation-owner and processing-record entries can be self-asserted by a session",
+          "attack_path": "docs#45 requires each previously unverified claim to be re-verified with a date and source, a named owner for every ongoing obligation, and review completion and next review dates tracked and visible; every such entry is written by the one owner account, so a session can mark a claim re-verified against a source it never checked, assign an obligation to an owner who never accepted it, or move a next review date, and a critical decision then rests on a verification nobody performed and an obligation nobody holds, with no record of who made the entry.",
+          "recommended_control": "Each verification-sweep entry names the claim, a checkable source (a public reference, a document digest or a repository path), the retrieval date and the review record identifier that confirmed it, or is marked as an assumption with its fallback; each obligation entry names the accountable role, the review record identifier in which that role accepted it and the next review date; each processing-record change carries the review record identifier that approved it; the reconciliation fails an entry that has neither a checkable source nor a review record identifier, or whose only attribution is the session that wrote it.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#45",
           "resolution": null
         }
       ]
