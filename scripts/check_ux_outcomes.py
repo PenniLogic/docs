@@ -48,6 +48,19 @@ REGISTRY_PIN = {
 # The full remote-tracking ref: a local branch named origin/main must not shadow it.
 BASE_REF = "refs/remotes/origin/main"
 PLATFORM_REF = "pending:PenniLogic/infra#27"  # T-PLT-03: cohort minimum, retention, aggregation and access
+# Review round 1 (spec-and-safety.-r1-F1): each held privacy and research gate names the issue that owns it in the
+# accepted threat model and plan; the choice stays labelled for coordinator confirmation in the summary.
+# E33-F04 references the E07 allowlist rule E07-F01 (owner android#7); api#82 validates ingestion against it.
+PAYLOAD_ALLOWLIST_REFS = ("pending:PenniLogic/android#7", "pending:PenniLogic/api#82")
+# The E33 data class of these definitions: analytics purpose in the consent ledger and purpose registry (O-1).
+CONSENT_REF = "pending:PenniLogic/api#24"
+OPT_OUT_ENFORCEMENT_REF = "pending:PenniLogic/api#63"  # E07-F03: opt-out recorded and enforced server-side
+# Outcome interpretation stays unvalidated until research operations (T-UXR-02) and persona, jobs and mental-model
+# evidence (T-UXR-03) exist: the ticket's retained acceptance gates.
+OUTCOME_VALIDATION_REFS = ("pending:PenniLogic/docs#65", "pending:PenniLogic/docs#66")
+# E38 moderated usability per platform (T-DQA-04/05/06); a journey's platforms come from its pinned registry flows.
+MODERATED_OWNERS = {"android": "pending:PenniLogic/docs#129", "web": "pending:PenniLogic/docs#130",
+                    "admin": "pending:PenniLogic/docs#131"}
 GREEN = "GREEN: readiness complete"
 NOT_GREEN = "NOT GREEN: readiness incomplete"
 
@@ -346,7 +359,8 @@ class GitSources:
 
 
 def read_registry(document, sources, pin):
-    """{journey ID: critical} from the pinned registry, read at the pinned commit and digest-checked."""
+    """({journey ID: critical}, {journey ID: platforms}) from the pinned registry, read at the pinned commit and
+    digest-checked; a journey's platforms are those of the flows it names."""
     require(document["registry_ref"] == pin, "registry.ref_mismatch")
     try:
         blob = sources.blob(pin["commit"], pin["path"])
@@ -358,14 +372,25 @@ def read_registry(document, sources, pin):
     except (ValueError, RecursionError):
         raise Refused("registry.invalid") from None
     journeys = registry.get("journeys") if isinstance(registry, dict) else None
-    require(isinstance(journeys, list), "registry.invalid")
-    pinned = {}
+    flows = registry.get("flows") if isinstance(registry, dict) else None
+    require(isinstance(journeys, list) and isinstance(flows, list), "registry.invalid")
+    platform_of = {}
+    for flow in flows:
+        identifier = flow.get("id") if isinstance(flow, dict) else None
+        require(isinstance(identifier, str) and identifier not in platform_of
+                and isinstance(flow.get("platform"), str), "registry.invalid")
+        platform_of[identifier] = flow["platform"]
+    pinned, platforms = {}, {}
     for record in journeys:
         identifier = record.get("id") if isinstance(record, dict) else None
         require(classify(identifier) == "journey" and identifier not in pinned, "registry.invalid")
         require(isinstance(record.get("critical"), bool), "registry.invalid")
+        flow_ids = record.get("flow_ids")
+        require(isinstance(flow_ids, list) and all(isinstance(flow, str) and flow in platform_of for flow in flow_ids),
+                "registry.invalid")
         pinned[identifier] = record["critical"]
-    return pinned
+        platforms[identifier] = frozenset(platform_of[flow] for flow in flow_ids)
+    return pinned, platforms
 
 
 def read_base(sources):
@@ -556,6 +581,10 @@ def check_frame(document):
     for key in ("cohort_minimum_ref", "retention_ref", "aggregation_ref", "access_ref"):
         require(privacy[key] == PLATFORM_REF, "privacy.platform_ref")
     require(privacy["opt_out"]["honoured"] is True, "privacy.opt_out")
+    require(sorted(privacy["payload_allowlist_refs"]) == sorted(PAYLOAD_ALLOWLIST_REFS), "privacy.payload_allowlist_ref")
+    require(privacy["consent_ref"] == CONSENT_REF, "privacy.consent_ref")
+    require(privacy["opt_out"]["enforcement_ref"] == OPT_OUT_ENFORCEMENT_REF, "privacy.opt_out_enforcement_ref")
+    require(sorted(document["outcome_validation_refs"]) == sorted(OUTCOME_VALIDATION_REFS), "validation.refs")
     require(privacy["session_recording"] == "prohibited", "privacy.session_recording")
     for key, (low, high) in BUDGET_CAPS.items():
         require(low <= privacy["privacy_budget"][key] <= high, "privacy.budget_bounds")
@@ -704,13 +733,17 @@ def check_calendar(calendar):
             require(classify(journey) == "journey", "id.grammar")
 
 
-def check_benchmarks(indexed, base):
+def check_benchmarks(indexed, base, platforms):
     """Versioned, reproducible unmoderated benchmarks (ticket criterion 5): the task script digest is recorded,
     and a changed script at an already-published version is refused (the version must be bumped)."""
     for identifier, benchmark in indexed["benchmarks"].items():
         require(classify(benchmark["journey_id"]) == "journey", "id.grammar", identifier)
         require(journey_of(identifier) == benchmark["journey_id"], "id.journey_mismatch", identifier)
         require(SEMVER.fullmatch(benchmark["version"]) is not None, "benchmark.version_grammar", identifier)
+        # Unmoderated benchmarks follow moderated defects closing on every platform the journey runs on (product/08).
+        owners = [MODERATED_OWNERS.get(platform) for platform in sorted(platforms.get(benchmark["journey_id"], ()))]
+        require(owners and None not in owners and benchmark["moderated_defects_refs"] == sorted(owners),
+                "benchmark.moderated_owner", identifier)
         require(benchmark["task_steps"] != [], "benchmark.script_missing", identifier)
         recorded = digest(benchmark["task_steps"])
         require(benchmark["task_script_sha256"] == recorded, "benchmark.script_digest_mismatch", identifier)
@@ -777,7 +810,7 @@ def check(document, schema, sources, pin=None, base=None, fixture=False, invento
     shape(document, schema)
     guard_content(document)
     check_frame(document)
-    pinned = read_registry(document, sources, pin)
+    pinned, platforms = read_registry(document, sources, pin)
     indexed = index(document)
     budget = document["privacy"]["privacy_budget"]
     for event in indexed["events"].values():
@@ -789,13 +822,13 @@ def check(document, schema, sources, pin=None, base=None, fixture=False, invento
     check_triggers(indexed)
     check_thresholds(indexed)
     check_calendar(document["research_calendar"])
-    check_benchmarks(indexed, base)
+    check_benchmarks(indexed, base, platforms)
     check_longitudinal(document["longitudinal_plan"], indexed)
     check_debt(indexed, schema, fixture)
     check_coverage(indexed, pinned)
     check_references(document, inventory)
     guard_numbers(document)
-    return {"document": document, "indexed": indexed, "pinned": pinned}
+    return {"document": document, "indexed": indexed, "pinned": pinned, "platforms": platforms}
 
 
 READINESS_RULES = (
@@ -909,8 +942,14 @@ def render_summary(model, gaps):
         "## Privacy and collection", "",
         f"- Collection: {'enabled' if collection['enabled'] else 'disabled'}; enabling requires "
         f"{codes(sorted(collection['enable_requires']))}. Rollback: {sentence(collection['rollback'])}",
-        f"- Payload allowlist (referenced, not restated; E33-F04): {codes(privacy['payload_allowlist_refs'])}.",
-        f"- Consent: `{privacy['consent_ref']}`. Opt-out honoured: {sentence(privacy['opt_out']['rule'])}",
+        f"- Payload allowlist (referenced, not restated; E33-F04 names the E07 allowlist rule E07-F01 and its "
+        f"ingestion validation): {codes(sorted(privacy['payload_allowlist_refs']))}.",
+        f"- Analytics consent (purpose entry in the consent ledger): `{privacy['consent_ref']}`. Opt-out honoured: "
+        f"{sentence(privacy['opt_out']['rule'])} Server-side opt-out enforcement (E07-F03): "
+        f"`{privacy['opt_out']['enforcement_ref']}`. Study-specific research consent stays with "
+        f"`{document['research_calendar']['operations_ref']}`.",
+        "- These owner choices follow the accepted threat-model records (E07, E33) and await coordinator "
+        "confirmation.",
         f"- Cohort minimum, retention, aggregation and access: `{privacy['cohort_minimum_ref']}`, "
         f"`{privacy['retention_ref']}`, `{privacy['aggregation_ref']}`, `{privacy['access_ref']}`.",
         f"- Session recording of financial or operator-sensitive content: `{privacy['session_recording']}`.",
@@ -928,6 +967,8 @@ def render_summary(model, gaps):
              event["incentive"] or "none", cell(event["purpose"]))
             for identifier, event in sorted(indexed["events"].items())]), "",
         "## Outcome metrics", "",
+        "Every metric and guardrail stays `unvalidated` until research operations and persona, jobs and "
+        f"mental-model evidence exist: {codes(sorted(document['outcome_validation_refs']))}.", "",
         *table(("Metric", "Journey", "Role", "Kind", "Statement", "Numerator", "Denominator", "Direction",
                 "Threshold", "Guardrails", "Sample limitation"), [
             (f"`{identifier}`", f"`{metric['journey_id']}`", metric["role"], metric["kind"], cell(metric["statement"]),
@@ -967,11 +1008,15 @@ def render_tail(model):
             (item["study"], item["cadence"], codes(item["journey_ids"]))
             for item in sorted(calendar["cadences"], key=lambda item: item["study"])]), "",
         "## Unmoderated benchmarks", "",
+        "Each benchmark starts only after moderated-usability defects close on every platform its journey runs on "
+        "(platforms from the pinned registry flows; E38 owners: Android "
+        f"`{MODERATED_OWNERS['android']}`, web `{MODERATED_OWNERS['web']}`, admin `{MODERATED_OWNERS['admin']}`). "
+        "These owner choices await coordinator confirmation.", "",
         *table(("Benchmark", "Journey", "Version", "Scenario", "Steps", "Script digest", "Success", "Entry"), [
             (f"`{identifier}`", f"`{benchmark['journey_id']}`", benchmark["version"], cell(benchmark["scenario"]),
              str(len(benchmark["task_steps"])), f"`{benchmark['task_script_sha256']}`",
              cell(benchmark["success_definition"]),
-             f"{benchmark['entry_criteria']} (`{benchmark['moderated_defects_ref']}`)")
+             f"{benchmark['entry_criteria']} ({codes(benchmark['moderated_defects_refs'])})")
             for identifier, benchmark in sorted(indexed["benchmarks"].items())]), "",
         "## Post-beta longitudinal plan", "",
         f"- Status: `{plan['status']}`. Cohort: {sentence(plan['cohort'])} Minimum: `{plan['cohort_minimum_ref']}`.",

@@ -486,8 +486,13 @@
         "entry_criteria": {
           "const": "moderated_defects_closed"
         },
-        "moderated_defects_ref": {
-          "$ref": "#/definitions/pending_ref"
+        "moderated_defects_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pending_ref"
+          },
+          "uniqueItems": true,
+          "minItems": 1
         },
         "baseline": {
           "$ref": "#/definitions/unmeasured"
@@ -501,7 +506,7 @@
         "entry_criteria",
         "id",
         "journey_id",
-        "moderated_defects_ref",
+        "moderated_defects_refs",
         "results",
         "scenario",
         "success_definition",
@@ -635,6 +640,14 @@
     "status": {
       "$ref": "#/definitions/id"
     },
+    "outcome_validation_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/pending_ref"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
     "registry_ref": {
       "type": "object",
       "properties": {
@@ -701,9 +714,13 @@
             },
             "rule": {
               "$ref": "#/definitions/text"
+            },
+            "enforcement_ref": {
+              "$ref": "#/definitions/pending_ref"
             }
           },
           "required": [
+            "enforcement_ref",
             "honoured",
             "rule"
           ],
@@ -903,6 +920,7 @@
     "guardrails",
     "longitudinal_plan",
     "metrics",
+    "outcome_validation_refs",
     "plan_id",
     "privacy",
     "registry_ref",

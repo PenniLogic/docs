@@ -36,9 +36,17 @@ INVENTORY = frozenset(f"PenniLogic/{issue}" for issue in (
     "docs#131", "infra#27"))
 
 
-def registry_bytes(journeys=(("J01", True), ("J02", True), ("J03", False))):
-    registry = {"journeys": [{"id": identifier, "name": "Synthetic journey", "critical": critical}
-                             for identifier, critical in journeys]}
+# Synthetic flows: J01 runs on Android and web, J02 on admin, J03 on web (review round 1, F1 platform owners).
+FLOWS = {"F-AND-01": "android", "F-WEB-01": "web", "F-ADM-01": "admin"}
+JOURNEY_FLOWS = {"J01": ["F-AND-01", "F-WEB-01"], "J02": ["F-ADM-01"], "J03": ["F-WEB-01"]}
+OWNERS = {"J01": ["pending:PenniLogic/docs#129", "pending:PenniLogic/docs#130"], "J02": ["pending:PenniLogic/docs#131"],
+          "J03": ["pending:PenniLogic/docs#130"]}
+
+
+def registry_bytes(journeys=(("J01", True), ("J02", True), ("J03", False)), flows=FLOWS):
+    registry = {"flows": [{"id": identifier, "platform": platform} for identifier, platform in flows.items()],
+                "journeys": [{"id": identifier, "name": "Synthetic journey", "critical": critical,
+                              "flow_ids": JOURNEY_FLOWS[identifier]} for identifier, critical in journeys]}
     return (json.dumps(registry, indent=2) + "\n").encode("utf-8")
 
 
@@ -116,7 +124,7 @@ def benchmark(journey):
         "id": f"BM-{journey}", "journey_id": journey, "version": "1.0.0", "scenario": "Synthetic scenario",
         "task_steps": steps, "task_script_sha256": module.digest(steps),
         "success_definition": "Task completed without assistance", "entry_criteria": "moderated_defects_closed",
-        "moderated_defects_ref": "pending:PenniLogic/docs#66", "baseline": {"value": None, "source": "unmeasured"},
+        "moderated_defects_refs": list(OWNERS[journey]), "baseline": {"value": None, "source": "unmeasured"},
         "results": None,
     }
 
@@ -145,12 +153,14 @@ def catalogue(pin):
     return {
         "schema_version": "1.0.0", "catalogue_version": "0.1.0", "source_issue": "PenniLogic/docs#77",
         "plan_id": "T-UXR-08", "status": "proposed", "registry_ref": dict(pin),
+        "outcome_validation_refs": ["pending:PenniLogic/docs#65", "pending:PenniLogic/docs#66"],
         "collection": {"enabled": False, "enable_requires": ["consent", "payload_allowlist", "cohort_minimum"],
                        "rollback": "Stop collection and keep only approved aggregate history"},
         "privacy": {
-            "payload_allowlist_refs": ["pending:PenniLogic/android#18", "pending:PenniLogic/api#82"],
-            "consent_ref": "pending:PenniLogic/docs#65",
-            "opt_out": {"honoured": True, "rule": "Opted-out users emit nothing and leave every denominator"},
+            "payload_allowlist_refs": ["pending:PenniLogic/android#7", "pending:PenniLogic/api#82"],
+            "consent_ref": "pending:PenniLogic/api#24",
+            "opt_out": {"honoured": True, "rule": "Opted-out users emit nothing and leave every denominator",
+                        "enforcement_ref": "pending:PenniLogic/api#63"},
             "cohort_minimum_ref": module.PLATFORM_REF, "retention_ref": module.PLATFORM_REF,
             "aggregation_ref": module.PLATFORM_REF, "access_ref": module.PLATFORM_REF,
             "session_recording": "prohibited",
@@ -460,17 +470,32 @@ class FrameTests(CatalogueCase):
         self.assertRefused("registry.unavailable", sources=sources)
 
     def test_pending_reference_must_name_a_known_issue(self):
-        # Review round 1 (spec-and-safety.-r1-F9): unknown issues were counted as gaps no owner could close.
-        for change in (lambda d: d["benchmarks"][0].update(moderated_defects_ref="pending:PenniLogic/docs#9999"),
-                       lambda d: d["privacy"].update(payload_allowlist_refs=["pending:PenniLogic/nosuchrepo#1"])):
-            with self.subTest(change=change):
-                self.assertRefused("reference.unknown_issue", document=mutate(self.document, change))
+        # Review round 1 (spec-and-safety.-r1-F9): unknown issues were counted as gaps no owner could close. The
+        # other reference fields are pinned to their owners (F1), so the unpinned privacy review reference is used.
+        for reference in ("pending:PenniLogic/docs#9999", "pending:PenniLogic/nosuchrepo#1"):
+            with self.subTest(reference=reference):
+                self.assertRefused("reference.unknown_issue", document=mutate(
+                    self.document, lambda d: d["longitudinal_plan"].update(privacy_review_ref=reference)))
 
     def test_pending_reference_cannot_name_this_ticket(self):
-        for change in (lambda d: d["privacy"].update(payload_allowlist_refs=["pending:PenniLogic/docs#77"]),
-                       lambda d: d["longitudinal_plan"].update(privacy_review_ref="pending:PenniLogic/docs#77")):
-            with self.subTest(change=change):
-                self.assertRefused("reference.self", document=mutate(self.document, change))
+        self.assertRefused("reference.self", document=mutate(
+            self.document, lambda d: d["longitudinal_plan"].update(privacy_review_ref="pending:PenniLogic/docs#77")))
+
+    def test_held_gates_name_their_threat_model_owners(self):
+        # Review round 1 (spec-and-safety.-r1-F1): the gates pointed at tickets that do not own them.
+        cases = (
+            (lambda d: d["privacy"].update(payload_allowlist_refs=["pending:PenniLogic/android#18",
+                                                                   "pending:PenniLogic/api#82"]),
+             "privacy.payload_allowlist_ref"),
+            (lambda d: d["privacy"]["payload_allowlist_refs"].pop(), "privacy.payload_allowlist_ref"),
+            (lambda d: d["privacy"].update(consent_ref="pending:PenniLogic/docs#65"), "privacy.consent_ref"),
+            (lambda d: d["privacy"]["opt_out"].update(enforcement_ref="pending:PenniLogic/api#24"),
+             "privacy.opt_out_enforcement_ref"),
+            (lambda d: d["outcome_validation_refs"].pop(), "validation.refs"),
+        )
+        for number, (change, rule) in enumerate(cases):
+            with self.subTest(case=number):
+                self.assertRefused(rule, document=mutate(self.document, change))
 
     def test_inventory_snapshot_is_read_and_validated(self):
         known = module.read_inventory(ROOT)
@@ -702,6 +727,27 @@ class ResearchTests(CatalogueCase):
         self.run_check(base={("BM-J01", "0.9.0"): published[("BM-J01", "1.0.0")]})  # control: older version only
         self.assertRefused("benchmark.version_not_bumped", "BM-J01", base=published)
 
+    def test_moderated_defect_owners_follow_journey_platforms(self):
+        # Review round 1 (spec-and-safety.-r1-F1): docs#66 (personas) cannot close moderated-usability defects.
+        cases = (("BM-J01", 0, ["pending:PenniLogic/docs#66"]), ("BM-J01", 0, ["pending:PenniLogic/docs#129"]),
+                 ("BM-J02", 1, ["pending:PenniLogic/docs#129"]))
+        for identifier, position, refs in cases:
+            with self.subTest(identifier=identifier, refs=refs):
+                self.assertRefused("benchmark.moderated_owner", identifier, mutate(
+                    self.document, lambda d: d["benchmarks"][position].update(moderated_defects_refs=refs)))
+
+    def test_unknown_platform_has_no_moderated_owner(self):
+        blob = registry_bytes(flows=dict(FLOWS, **{"F-WEB-01": "kiosk"}))
+        self.blob, self.pin = blob, pin_for(blob)
+        self.document = catalogue(self.pin)
+        self.assertRefused("benchmark.moderated_owner", "BM-J01")
+
+    def test_registry_flow_must_resolve(self):
+        blob = registry_bytes(flows={"F-AND-01": "android", "F-ADM-01": "admin"})
+        self.blob, self.pin = blob, pin_for(blob)
+        self.document = catalogue(self.pin)
+        self.assertRefused("registry.invalid")
+
     def test_unchanged_script_at_published_version_passes(self):
         self.run_check(base={("BM-J01", "1.0.0"): self.document["benchmarks"][0]["task_script_sha256"]})
 
@@ -821,9 +867,9 @@ class ReadinessTests(CatalogueCase):
                          ["decision_coordinator", "privacy", "product_owner", "research"])
         self.assertEqual(gaps["readiness.collection_disabled"], ["collection"])
         self.assertEqual(gaps["readiness.payload_review_pending"], ["EV-001", "EV-002", "EV-003", "EV-004"])
-        self.assertEqual(gaps["readiness.pending_reference"], [
-            "pending:PenniLogic/android#18", "pending:PenniLogic/api#82", "pending:PenniLogic/docs#65",
-            "pending:PenniLogic/docs#66", "pending:PenniLogic/infra#27"])
+        self.assertEqual(gaps["readiness.pending_reference"], [f"pending:PenniLogic/{issue}" for issue in (
+            "android#7", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#129", "docs#130", "docs#131",
+            "infra#27")])
         self.assertEqual(len(gaps["readiness.baseline_unmeasured"]), 11)
         self.assertEqual(gaps["readiness.threshold_unset"], ["TH-001", "TH-002"])
         self.assertEqual(len(gaps["readiness.measure_unvalidated"]), 9)
@@ -1166,9 +1212,9 @@ class PublishedCatalogueTests(unittest.TestCase):
             "readiness.approval_pending": ["decision_coordinator", "privacy", "product_owner", "research"],
             "readiness.collection_disabled": ["collection"],
             "readiness.payload_review_pending": [f"EV-{number:03d}" for number in range(1, 16)],
-            "readiness.pending_reference": [
-                "pending:PenniLogic/android#18", "pending:PenniLogic/android#38", "pending:PenniLogic/api#82",
-                "pending:PenniLogic/docs#65", "pending:PenniLogic/docs#66", "pending:PenniLogic/infra#27"],
+            "readiness.pending_reference": [f"pending:PenniLogic/{issue}" for issue in (
+                "android#7", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#129", "docs#130", "docs#131",
+                "infra#27")],
             "readiness.baseline_unmeasured": sorted([*measures, *benchmarks],
                                                     key=lambda identifier: (module.journey_of(identifier),
                                                                             identifier)),
@@ -1183,7 +1229,7 @@ class PublishedCatalogueTests(unittest.TestCase):
         self.assertEqual(self.gaps, expected)
         self.assertEqual({rule: len(items) for rule, items in self.gaps.items()}, {
             "readiness.approval_pending": 4, "readiness.collection_disabled": 1,
-            "readiness.payload_review_pending": 15, "readiness.pending_reference": 6,
+            "readiness.payload_review_pending": 15, "readiness.pending_reference": 10,
             "readiness.baseline_unmeasured": 76, "readiness.threshold_unset": 8,
             "readiness.measure_unvalidated": 64, "readiness.benchmark_unrun": 12,
             "readiness.longitudinal_unrun": 1, "readiness.journey_outside_pin": 0,

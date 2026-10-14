@@ -4,6 +4,10 @@
   "source_issue": "PenniLogic/docs#77",
   "plan_id": "T-UXR-08",
   "status": "proposed",
+  "outcome_validation_refs": [
+    "pending:PenniLogic/docs#65",
+    "pending:PenniLogic/docs#66"
+  ],
   "registry_ref": {
     "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
     "path": "planning/source/evidence/experience-coverage.json",
@@ -20,14 +24,14 @@
   },
   "privacy": {
     "payload_allowlist_refs": [
-      "pending:PenniLogic/android#18",
-      "pending:PenniLogic/android#38",
+      "pending:PenniLogic/android#7",
       "pending:PenniLogic/api#82"
     ],
-    "consent_ref": "pending:PenniLogic/docs#65",
+    "consent_ref": "pending:PenniLogic/api#24",
     "opt_out": {
       "honoured": true,
-      "rule": "Opted-out sessions emit no event and are excluded from every denominator"
+      "rule": "Opted-out sessions emit no event and are excluded from every denominator",
+      "enforcement_ref": "pending:PenniLogic/api#63"
     },
     "cohort_minimum_ref": "pending:PenniLogic/infra#27",
     "retention_ref": "pending:PenniLogic/infra#27",
@@ -3308,7 +3312,10 @@
       "task_script_sha256": "sha256:ae7ef9c469a5bf6258de203d6218930b607b027265c4ac0db14e21f511340c1f",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3328,7 +3335,10 @@
       "task_script_sha256": "sha256:4035d2fe1aeb43cc6aec2d49e26179c067da4175c25de32035d69d54eeb52626",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3348,7 +3358,10 @@
       "task_script_sha256": "sha256:c4201d3033183df2dff0f5c6ab36d2e259642720a9ba5bdf01a3cc26ad725b8a",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3368,7 +3381,10 @@
       "task_script_sha256": "sha256:38757a2f74672a93e22a88258e65f58f5998afe5316cbf78c9c90e18b71bd693",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3388,7 +3404,10 @@
       "task_script_sha256": "sha256:10393f3eb9471155527fd73a6099523dc06212fe795b921d814e56cd0c00c311",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3408,7 +3427,10 @@
       "task_script_sha256": "sha256:41828739edfa0d090fd4edd6dbd2b2788b0d373ebb1dc9da1b421479a78e4b85",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3428,7 +3450,10 @@
       "task_script_sha256": "sha256:50805e1e627492f724d5ddcac082dd7342b9d8854d87c870b6f4e42093778319",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3448,7 +3473,10 @@
       "task_script_sha256": "sha256:3a07282059101e89473dfa2eb00c964a83850c95cfdc6e9e83f4d50c6e7cd848",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3468,7 +3496,10 @@
       "task_script_sha256": "sha256:1821a411fdb41128f27ef104b78db3820056d8406130e8bbea23e9620c97750e",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3488,7 +3519,11 @@
       "task_script_sha256": "sha256:68da431d08147754d64fd3c644d3483d850c919fae1a7b2b4cad1f969a3bb6a1",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#129",
+        "pending:PenniLogic/docs#130",
+        "pending:PenniLogic/docs#131"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3508,7 +3543,9 @@
       "task_script_sha256": "sha256:94411a9276e407fdd519a21d3637761643fced18ca354f837a7ae2750f47e4cc",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#131"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
@@ -3528,7 +3565,9 @@
       "task_script_sha256": "sha256:1db2b6b6c9fa73a10dbf508250d585c10b42fe69ea8b4d038ab55841992fa77d",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
-      "moderated_defects_ref": "pending:PenniLogic/docs#66",
+      "moderated_defects_refs": [
+        "pending:PenniLogic/docs#131"
+      ],
       "baseline": {
         "value": null,
         "source": "unmeasured"
