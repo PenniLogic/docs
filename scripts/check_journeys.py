@@ -968,7 +968,11 @@ def render_summary(model, gaps):
     lines += ["## Diagram renderings", ""]
     lines += _table(("Diagram", "Rendering", "Figma"), [
         (diagram["id"], diagram["rendering"], diagram["figma"]) for diagram in document["diagrams"]])
-    lines += ["### D01 experience ecosystem (text rendering)", ""] + _ecosystem(model)
+    lines += ["### D01 experience ecosystem (text rendering)", "",
+              "The team lane offers only the admin and service channels, so the on-device capture component "
+              "(android-capture, J03.T.01) is drawn on the service channel beside backend services although it runs "
+              "on the owner device with no network path for raw text; a device-local channel waits on a later schema "
+              "revision with the registry and IA owners.", ""] + _ecosystem(model)
     lines += ["### D03 current and target journey map set (text rendering)", ""]
     lines += _table(("Blueprint", "Journey", "Audience", "Current map", "Target map", "Success", "Failure recovery"), [
         (blueprint["id"], blueprint["journey_id"], blueprint["audience"], blueprint["current_map"]["summary"],

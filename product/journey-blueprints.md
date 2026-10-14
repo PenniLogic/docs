@@ -61,6 +61,8 @@ Research gate PenniLogic/docs#66: pending, 0 evidence records.
 
 ### D01 experience ecosystem (text rendering)
 
+The team lane offers only the admin and service channels, so the on-device capture component (android-capture, J03.T.01) is drawn on the service channel beside backend services although it runs on the owner device with no network path for raw text; a device-local channel waits on a later schema revision with the registry and IA owners.
+
 ```mermaid
 flowchart LR
     channel_admin["admin channel"]

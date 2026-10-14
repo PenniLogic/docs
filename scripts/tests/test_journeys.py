@@ -1340,6 +1340,15 @@ class PublishedDataTests(unittest.TestCase):
             self.assertIn("as of its snapshot_at, not live GitHub state", text)
             self.assertIn(command, text)
 
+    def test_d01_notes_that_on_device_capture_is_drawn_on_the_service_channel(self):
+        # Fable review round 1 F4: J03.T.01 runs on the device but the team lane has no device-local channel.
+        step = self.model.steps["J03.T.01"]
+        self.assertEqual((step["lane"], step["channel"], step["system"]), ("team", "service", "android-capture"))
+        summary = module.render_summary(self.model, module.readiness(self.model))
+        d01 = summary.split("### D01 experience ecosystem (text rendering)\n\n")[1].split("```mermaid")[0]
+        self.assertIn("on-device capture component (android-capture, J03.T.01) is drawn on the service channel", d01)
+        self.assertIn("channel_service --> system_android_capture", summary)
+
     def test_erasure_reversal_names_pre_shred_cancellation(self):
         # Review round 2 SR-09: ADR-021 Phase 1 freeze starts the cancellation window; cancellation is available
         # until Phase 2 (shred) starts, with the same proof as intake.
