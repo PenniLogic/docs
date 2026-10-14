@@ -677,6 +677,12 @@ class CoverageTests(JourneyCase):
     def test_not_applicable_contradicts_a_present_branch(self):
         self.assertRefused("coverage.not_applicable_contradiction", "BP-J01",
                            lambda d: blueprint_of(d, "J01")["not_applicable"].append(
+                               {"scope": "branch", "kind": "offline", "reason": "Synthetic reason"}))
+
+    def test_failure_branch_cannot_be_declared_not_applicable(self):
+        # Review round 2 SR-11: the ticket's non-goal excludes a happy path declared complete without recovery.
+        self.assertRefused("coverage.failure_not_waivable", "BP-J01",
+                           lambda d: blueprint_of(d, "J01")["not_applicable"].append(
                                {"scope": "branch", "kind": "failure", "reason": "Synthetic reason"}))
 
     def test_dangling_moment_of_truth(self):

@@ -190,6 +190,7 @@ STRUCTURE_RULES = (
     "step.service_without_branch", "branch.dangling_target",
     "coverage.flow_without_step", "coverage.critical_flow_unmapped", "coverage.branch_missing",
     "coverage.signal_missing", "coverage.not_applicable_kind", "coverage.not_applicable_contradiction",
+    "coverage.failure_not_waivable",
     "handoff.missing", "handoff.unexpected", "handoff.unknown_service",
     "policy.class_mismatch", "policy.controls_missing", "policy.controls_unexpected", "policy.ref_grammar",
     "policy.unknown_adr", "boundary.raw_message_egress", "boundary.client_money_arithmetic",
@@ -685,6 +686,8 @@ def check_coverage(model, blueprint):
     for entry in blueprint["not_applicable"]:
         scope, kind = entry["scope"], entry["kind"]
         require(kind in (BRANCH_KINDS if scope == "branch" else SIGNALS), "coverage.not_applicable_kind", identifier)
+        # docs#67 non-goal: a happy path is never complete without recovery, so failure cannot be waived.
+        require((scope, kind) != ("branch", "failure"), "coverage.failure_not_waivable", identifier)
         require(kind not in present[scope] and kind not in declared[scope], "coverage.not_applicable_contradiction",
                 identifier)
         declared[scope].add(kind)
