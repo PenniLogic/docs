@@ -16,7 +16,7 @@
         "session": "github:basiltt",
         "role": "pennilogic-developer"
       },
-      "scope": "Platform, deployment and reliability under PenniLogic/docs#27: infrastructure as code, environments, deploy pipelines, the feature-flag and kill-switch mechanism, residency policy and the database extension gate (infra#25); backups, point-in-time recovery and the restore drill (infra#26); traces, metrics, logs, SLOs, alert routing, on-call, clock synchronisation and in-region tamper-evident log retention (infra#27); governed human access to production data stores, backups and keys (infra#32); backend log scrubbing and the no-financial-data-in-logs gate (api#21); the notification and transactional email outbox with providers, delivery callbacks and sessionless unsubscribe (api#56); the Android and web notification preference editors (android#56, web#21); Play App Signing, the AAB pipeline, tracks and staged rollout (android#37). Trust boundaries: the delivery pipeline towards the runtime hosts, the key custodian and the Play Console; the ADR-022 R4 self-managed Linux, Docker Compose and nftables runtime (which replaces the epic text's managed-container assumption) and the humans who can reach its hosts; services towards the telemetry collector, log store and paging service; the outbox towards push and e-mail providers and their callbacks back into the API; anonymous holders of an unsubscribe reference; backup storage and the secondary region; clients editing preferences through an authenticated session.",
+      "scope": "Platform, deployment and reliability under PenniLogic/docs#27: infrastructure as code, environments, deploy pipelines, the feature-flag and kill-switch mechanism, residency policy and the database extension gate (infra#25); backups, point-in-time recovery and the restore drill (infra#26); traces, metrics, logs, SLOs, alert routing, on-call, clock synchronisation and in-region tamper-evident log retention (infra#27); governed human access to production data stores, backups and keys (infra#32); backend log scrubbing and the no-financial-data-in-logs gate (api#21); the notification and transactional email outbox with providers, delivery callbacks and sessionless unsubscribe (api#56); the Android and web notification preference editors (android#56, web#21); Play App Signing, the AAB pipeline, tracks and staged rollout (android#37). Trust boundaries: clients on the internet towards the public ingress of the R4 hosts (domain, DNS, TLS termination and the relying-party origin); the delivery pipeline towards the runtime hosts, the key custodian and the Play Console; the ADR-022 R4 self-managed Linux, Docker Compose and nftables runtime (which replaces the epic text's managed-container assumption) and the humans who can reach its hosts; services towards the telemetry collector, log store and paging service; the outbox towards push and e-mail providers and their callbacks back into the API; anonymous holders of an unsubscribe reference; backup storage and the secondary region; clients editing preferences through an authenticated session.",
       "tickets_in_scope": [
         "PenniLogic/android#37",
         "PenniLogic/android#56",
@@ -32,12 +32,14 @@
         "architecture/02-security-architecture.md#1-threat-model-stride",
         "architecture/03-stack-and-monetization.md sections 15 and 16 (research candidates for runtime, observability, crash, uptime and push services; not decisions)",
         "compliance/01-regulatory-landscape.md (obligations O-4, O-7, O-9, O-26, O-29)",
-        "ADR-004, ADR-006, ADR-009 (title and runtime split only), ADR-018 section 6.1.1, ADR-019 (web token custody), ADR-020 sections 8 and 15, ADR-021 (backup bound), ADR-022 sections 1, 3 and 7, ADR-023 (supersession of the research entitlement sketch)",
+        "ADR-004, ADR-006, ADR-009 (title and runtime split only), ADR-018 sections 6.1.1, 6.6 and 6.7, ADR-019 (web token custody, RP ID and the assetlinks and webauthn files), ADR-020 sections 8 and 15, ADR-021 (backup bound and backup residue), ADR-022 sections 1, 3, 7 and 11, ADR-023 (supersession of the research entitlement sketch)",
         "adr/ai-egress-consequences.json (runtime, kill_switch, observability, runtime_gates T7, T12, T17, T19, T20)",
         "governance/DELIVERY.md",
         "PenniLogic/docs#27 (epic body: goal, scope, out of scope, exit criteria) and the bodies of its nine child tickets, including the coordinator readiness appendices",
-        "PenniLogic/infra#33, PenniLogic/infra#43, PenniLogic/api#23, PenniLogic/api#32, PenniLogic/api#59, PenniLogic/contracts#15, PenniLogic/android#18, PenniLogic/docs#44 (read to test hand-off scope)",
-        "planning/issue-inventory.json (titles and plan identifiers of the other cited tickets)"
+        "PenniLogic/infra#33, PenniLogic/infra#43 (owner disposition), PenniLogic/infra#28, PenniLogic/infra#31, PenniLogic/api#40, PenniLogic/android#27, PenniLogic/api#23, PenniLogic/api#32, PenniLogic/api#59, PenniLogic/contracts#15, PenniLogic/android#18, PenniLogic/docs#44 (read to test hand-off scope)",
+        "planning/issue-inventory.json (titles and plan identifiers of the other cited tickets)",
+        "governance/threat-model/records/E01.json (E01-F04 status) and governance/threat-model/records/E25.json (upload-key review delegated to E24)",
+        "architecture/02-security-architecture.md perimeter boundary (WAF, rate limiter, DDoS protection) as the baseline the self-managed runtime must replace"
       ],
       "data_flows": [
         {
@@ -50,7 +52,7 @@
           ],
           "purpose_ref": "Recovery of the primary stores under PenniLogic/infra#26; restore-safe erasure is owned by PenniLogic/infra#33 and the retention basis by the PenniLogic/docs#44 India jurisdiction profile (not yet published)",
           "retention": "The infra#26 backup retention, which ADR-021 and ADR-018 section 6.7 make the published erasure-completeness bound; no value is set yet and docs#44 must supply it before real data exists",
-          "erasure_path": "Crypto-shredding (ADR-006, ADR-021) leaves pre-erasure ciphertext unreadable once keys are destroyed; a restore must replay the infra#33 tombstone journal before readiness, and backups expire at the infra#26 retention bound",
+          "erasure_path": "Live erasure destroys the user's DEK, IK and AK and physically clears platform-key values (ADR-018 section 6.7). Backups are not cleaned by that: until the infra#26 retention bound, backups and secondary-region copies still hold the wrapped keys and ciphertext (recoverable by a party with the backup key and custodian unwrap rights on that KEK version), contact channels and push tokens under platform keys, and, per ADR-021, pre-redaction group ciphertext with the still-live group key and pre-pseudonymisation viewer and user identifiers readable with the backup alone. A restore replays the key journal and the infra#33 tombstones before readiness (ADR-018 section 6.6); multi-subject copies (split seats, group-key ciphertext, access-event viewer identifiers) and derived copies follow the ADR-021 placeholder and pseudonymisation steps, which the T-SEC-07 replay repeats. During the window the controls are backup-key and KEK-custodian separation (E24-F13) and backup access separation (infra#26, infra#32); E24-F07 covers resurrection on restore.",
           "children": "Adult-only launch scope that the docs#44 age-eligibility policy must publish; backups copy whatever the primary stores hold, so the age gate upstream (android#17) is the only condition and no separate rule exists here",
           "processors": [
             "Hosting provider of the runtime hosts and backup storage (not chosen; ADR-022 requires the counsel-approved India residency profile before provisioning)",
@@ -65,8 +67,8 @@
           ],
           "purpose_ref": "Observability and security-log retention under PenniLogic/infra#27 and log scrubbing under PenniLogic/api#21; the retention period and legal basis come from the PenniLogic/docs#44 jurisdiction profile (compliance O-9)",
           "retention": "Security logs: the CERT-In period from the docs#44 India profile, append-only with deletion refused before expiry (infra#27); operational logs, traces and metrics: not yet published",
-          "erasure_path": "Telemetry carries no account identity by construction (api#21 correlation identifiers are not derived from user identity); retained security logs expire at the profile period and are not erased early; the ADR-020 audit streams follow ADR-020 section 8.7",
-          "children": "Adult-only launch scope (docs#44 age policy, not yet published); telemetry is not conditioned per user because it must hold no personal content",
+          "erasure_path": "Traces and metrics carry no account identity by construction (api#21 correlation identifiers are not derived from user identity); security logs hold client network addresses and account references, which are personal data (as ADR-020 section 8.7 treats audit-stream identifiers), kept on the CERT-In and O-9 legal-obligation basis until the docs#44 period with erasure deferred by that obligation, then expired, never erased early; the ADR-020 audit streams follow ADR-020 section 8.7",
+          "children": "Adult-only launch scope (docs#44 age policy, not yet published); traces and metrics hold no personal content, and security logs are retained on the legal-obligation basis for every account holder alike",
           "processors": [
             "Telemetry, crash-reporting and uptime or paging services (research candidates in architecture/03-stack-and-monetization.md section 15 are hosted services; none chosen, residency unproven)",
             "Google Play Console: Android Vitals crash and ANR data read as the android#37 rollout gate"
@@ -109,7 +111,24 @@
           "erasure_path": "Audit records are not erased (ADR-020 section 8.7); subject-visible events follow the transparency stream rules; roster entries are removed on leaver",
           "children": "Not subjects: operators and contributors are adults; user subjects appear only as opaque references",
           "processors": [
-            "Paging or uptime service for on-call contacts (not chosen)"
+            "Paging or uptime service for on-call contacts (not chosen)",
+            "GitHub: workflow runs, environment approvals and deploy actors of the delivery pipeline (governance/DELIVERY.md; cross-border processor)",
+            "Google Play Console: user roster and release, promotion and rollout actors (android#37; cross-border processor)"
+          ]
+        },
+        {
+          "data_class": "Client requests and responses at the public ingress: TLS-terminated API traffic carrying session tokens, client network addresses and every request body the API accepts",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties"
+          ],
+          "purpose_ref": "Service delivery through the R4 ingress under PenniLogic/infra#25 network provisioning and ADR-022; no ticket yet owns the edge (E24-F20, E24-F21)",
+          "retention": "Not retained at the ingress beyond the access and security logs of the telemetry flow; any edge-side buffering or logging period is unpublished",
+          "erasure_path": "No stored copy at the ingress by design; access logs follow the telemetry flow and any edge processor's own logs need a docs#44 agreement and deletion term",
+          "children": "Adult-only launch scope (docs#44 age policy and android#17 age gate, neither delivered yet); the ingress does not condition on age",
+          "processors": [
+            "TLS-terminating CDN or edge service (research candidate in architecture/03-stack-and-monetization.md section 15; not chosen, ADR-022 selects self-managed hosts with no managed edge; residency unproven)"
           ]
         }
       ],
@@ -117,20 +136,24 @@
         {
           "id": "spoofing",
           "disposition": "finding",
-          "analysis": "Parties that must prove identity: the deploy pipeline towards the runtime hosts, secret store and key custodian (infra#25), the Android release pipeline and its Play publishing service account (android#37), push and e-mail providers calling back into the API (api#56), anonymous holders of an unsubscribe reference, and operators opening brokered sessions (infra#32). None of these controls exists today: every child ticket is open and the R4 runtime of ADR-022 is a future target. The trust root that matters most is the pipeline's federated credential: infra#25 requires short-lived federated credentials and no long-lived cloud keys but does not state which workflow, branch and environment claims the trust policy binds, so a pull-request or fork workflow that can mint the same token could deploy (E24-F01). Forged provider callbacks and guessed unsubscribe references are reviewed under request_forgery (E24-F15, E24-F16); the Play upload key under administrative identity (E24-F17). The parser-config signing chain is outside this epic: android#37 signs the application bundle only, and no E24 ticket distributes remotely updatable parser rules (docs#51 owns the template runbook).",
+          "analysis": "Parties that must prove identity: the deploy pipeline towards the runtime hosts, secret store and key custodian (infra#25), the Android release pipeline and its Play publishing service account (android#37), push and e-mail providers calling back into the API (api#56), anonymous holders of an unsubscribe reference, and operators opening brokered sessions (infra#32). None of these controls exists today: every child ticket is open and the R4 runtime of ADR-022 is a future target. The trust root that matters most is the pipeline's federated credential: infra#25 requires short-lived federated credentials and no long-lived cloud keys but does not state which workflow, branch and environment claims the trust policy binds, so a pull-request or fork workflow that can mint the same token could deploy (E24-F01). Forged provider callbacks and guessed unsubscribe references are reviewed under request_forgery (E24-F15, E24-F16); the Play Console reset route under administrative identity (E24-F17). Upload-key custody, which E25 delegated to this refresh: android#37 owns custody, rotation and recovery and short-lived federated pipeline credentials, but does not say that the upload key and the Play publishing credential are reachable only from the protected release workflow and environment, so a feature-branch or pull-request workflow in the Android repository could sign or publish a malicious bundle, and no rotation drill is recorded (E24-F24). The organisation itself must prove its origin: whoever controls the registrar and DNS account, certificate issuance or a host's TLS private key can serve the genuine origin, relay passkey assertions or alter the assetlinks and webauthn files that ADR-019 places on the relying-party apex, where a wrong RP ID is unfixable once credentials exist; ADR-022 selects self-managed hosts with no managed edge, android#27 owns client certificate pinning whose rotation must follow server key changes, and no ticket owns domain, DNS, certificate or TLS-key custody (E24-F20). The parser-config signing chain is outside this epic: android#37 signs the application bundle only, and no E24 ticket distributes remotely updatable parser rules (docs#51 owns the template runbook).",
           "evidence": [
             "PenniLogic/infra#25: short-lived federated pipeline credentials, no deploy from a developer machine",
             "PenniLogic/android#37: Play App Signing custody and short-lived federated pipeline credentials",
-            "ADR-022: R4 runtime is a future target; no production credential is authorised"
+            "ADR-022: R4 runtime is a future target; no production credential is authorised",
+            "ADR-019: RP ID unfixable once credentials exist; assetlinks and webauthn files served from the RP ID apex (android#20, web#8, infra)",
+            "governance/threat-model/records/E25.json: upload-key custody, rotation and recovery delegated to the E24 refresh (android#37)"
           ],
           "findings": [
-            "E24-F01"
+            "E24-F01",
+            "E24-F20",
+            "E24-F24"
           ]
         },
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "Modifiable assets: infrastructure definitions and their applied state, deployable images and the Android bundle, the feature-flag and kill-switch store that infra#25 makes changeable without a deploy (ADR-022 puts the AI kill switch in a primary-database flag store whose ON transition needs two operators), the template payload allowlist (api#56), backups and point-in-time logs (infra#26) and the retained security logs (infra#27). Planned detection: drift detection and pipeline-only deploys (infra#25), the reproducible-build check and track gate (android#37), the ledger zero-sum check on restored data (infra#26), append-only retention with deletion refused (infra#27) and artifact provenance verification (infra#31, E25). Gaps: no ticket says who may change a flag or kill switch outside the two-operator AI path, how such a change is authorised and recorded, or that a flag can never grant an entitlement or bypass a quota or egress check (E24-F02); and a restore is verified only against the ledger, not against backup checksums or the ADR-020 audit chain and its write-once copy, so a tampered or partial backup could be served (E24-F03). Ingestion boundary: the server stores only structured fields (ADR-004), so backups and logs hold no raw message text by construction. Parser-config signing: no E24 ticket ships parser rules; android#37 signs only the application bundle (see spoofing).",
+          "analysis": "Modifiable assets: infrastructure definitions and their applied state, deployable images and the Android bundle, the feature-flag and kill-switch store that infra#25 makes changeable without a deploy (ADR-022 puts the AI kill switch in a primary-database flag store whose ON transition needs two operators), the template payload allowlist (api#56), backups and point-in-time logs (infra#26) and the retained security logs (infra#27). Planned detection: drift detection and pipeline-only deploys (infra#25), the reproducible-build check and track gate (android#37), the ledger zero-sum check on restored data (infra#26), append-only retention with deletion refused (infra#27), which stops deletion but not forged or injected entries (E24-F23) and artifact provenance verification (infra#31, E25). Gaps: no ticket says who may change a flag or kill switch outside the two-operator AI path, how such a change is authorised and recorded, or that a flag can never grant an entitlement or bypass a quota or egress check (E24-F02); and a restore is verified only against the ledger, not against backup checksums or the ADR-020 audit chain and its write-once copy, so a tampered or partial backup could be served (E24-F03). Host packages, kernel, Docker Engine and nftables on the R4 hosts can be altered or left vulnerable outside the IaC drift check; that is reviewed under elevation_of_privilege (E24-F22). Ingestion boundary: the server stores only structured fields (ADR-004), so backups and logs hold no raw message text by construction. Parser-config signing: no E24 ticket ships parser rules; android#37 signs only the application bundle (see spoofing).",
           "evidence": [
             "ADR-022: kill switch store, seeded OFF, ON requires two independent eligible operators (adr/ai-egress-consequences.json kill_switch)",
             "ADR-020: section 8.5 chain verification against the write-once copy",
@@ -145,25 +168,28 @@
         {
           "id": "repudiation",
           "disposition": "finding",
-          "analysis": "Actions that must be attributable later: deployments, canary aborts, rollbacks, flag and kill-switch changes, IaC applies (infra#25), restore drills and restores (infra#26), Play track promotions and rollout halts (android#37), brokered production reads and their approvals (infra#32), alert acknowledgements (infra#27) and preference or unsubscribe changes (api#56). infra#32 already requires statement, object and key-use audit with actor and approval reference, projected into the ADR-020 streams, and infra#27 owns clock synchronisation and in-region append-only retention for CERT-In (O-9), with the period read from the docs#44 profile. infra#25 publishes deploy start, finish, canary verdict and rollback events with duration and version but not the approving principal, nor flag changes, so a production change made under the single owner account cannot later be tied to the session and approval that authorised it (E24-F04). The single-account procedural separation itself is accepted in governance/DELIVERY.md and not re-opened here.",
+          "analysis": "Actions that must be attributable later: deployments, canary aborts, rollbacks, flag and kill-switch changes, IaC applies (infra#25), restore drills and restores (infra#26), Play track promotions and rollout halts (android#37), brokered production reads and their approvals (infra#32), alert acknowledgements (infra#27) and preference or unsubscribe changes (api#56). infra#32 already requires statement, object and key-use audit with actor and approval reference, projected into the ADR-020 streams, and infra#27 owns clock synchronisation and in-region append-only retention for CERT-In (O-9), with the period read from the docs#44 profile. infra#25 publishes deploy start, finish, canary verdict and rollback events with duration and version but not the approving principal, nor flag changes, so a production change made under the single owner account cannot later be tied to the session and approval that authorised it (E24-F04). The retained CERT-In logs are only as trustworthy as their time and their writers: ADR-020 section 8.5 requires every host that writes or verifies a stream to use the jurisdiction profile's time source, and DPoP freshness under ADR-019 depends on server time, yet infra#27 measures drift only against the configured source, so a spoofed or shifted source goes unnoticed; and nothing authenticates emitters to the collector or separates client telemetry from security logs, so a compromised or unauthenticated emitter can inject or forge entries that append-only retention then preserves (E24-F23). The single-account procedural separation itself is accepted in governance/DELIVERY.md and not re-opened here.",
           "evidence": [
             "PenniLogic/infra#32: broker audit with actor, approval reference and row or object count",
             "PenniLogic/infra#27: clock drift alerting and in-region append-only security-log retention",
-            "governance/DELIVERY.md: one account, procedural not cryptographic separation"
+            "governance/DELIVERY.md: one account, procedural not cryptographic separation",
+            "ADR-020: section 8.5 hosts writing or verifying a stream use the jurisdiction profile's time source; occurred_at regression is a finding"
           ],
           "findings": [
-            "E24-F04"
+            "E24-F04",
+            "E24-F23"
           ]
         },
         {
           "id": "information_disclosure",
           "disposition": "finding",
-          "analysis": "Data classes are the five data_flows entries: backups, telemetry, messaging data, preference edits and operator access records. Ingestion boundary: E24 sits wholly on the structured side; no E24 path carries captured message, notification or statement content (ADR-004). Leak paths: log, trace and metric sinks; alert and page payloads; hosted telemetry, crash, push, e-mail and paging processors possibly outside India; restored or lower-environment copies; notification previews. Planned controls: api#21 scrubs the api backend's logs fail-closed with a static rule and a planted-value runtime scan; api#56 restricts templates to a payload allowlist excluding amounts, merchants and other users; infra#26 refuses unscrubbed restores into lower environments; infra#25 enforces a residency policy for stateful resources; android#18 (E27) owns crash-report scrubbing on the device. Gaps: api#21 covers one service's logs, while traces, span attributes and metric labels from every service (ai-service, admin API) reach the collector with no filter of their own (E24-F05); infra#25's residency policy covers stateful resources, not hosted telemetry, paging or crash processors, and alert payloads can copy log excerpts to them (E24-F06); a pre-erasure backup can resurrect an erased user (E24-F07); provider-side copies of addresses and tokens survive account erasure (E24-F08). Raw content never leaves the device: no E24 server path can receive it (ADR-004); the client paths are crash reports and Android logs, which android#18 and the traffic capture of android#16 must prove clean, and android#37 only configures the crash reporter and mapping upload.",
+          "analysis": "Data classes are the six data_flows entries: backups, telemetry, messaging data, preference edits, operator access records and client traffic at the public ingress. Ingestion boundary: E24 sits wholly on the structured side; no E24 path carries captured message, notification or statement content (ADR-004). Leak paths: log, trace and metric sinks; alert and page payloads; hosted telemetry, crash, push, e-mail and paging processors possibly outside India; restored or lower-environment copies; notification previews. Planned controls: api#21 scrubs the api backend's logs fail-closed with a static rule and a planted-value runtime scan; api#56 restricts templates to a payload allowlist excluding amounts, merchants and other users; infra#26 refuses unscrubbed restores into lower environments; infra#25 enforces a residency policy for stateful resources; android#18 (E27) owns crash-report scrubbing on the device. Gaps: api#21 covers one service's logs, while traces, span attributes and metric labels from every service (ai-service, admin API) reach the collector with no filter of their own (E24-F05); infra#25's residency policy covers stateful resources, not hosted server telemetry or paging processors, and alert payloads can copy log excerpts to them (E24-F06); the Android crash SDK is a client-embedded processor that android#18 inventories and docs#44 must cover with an agreement and transfer basis, not something an infra policy check can enforce; a pre-erasure backup can resurrect an erased user (E24-F07); provider-side copies of addresses and tokens survive account erasure (E24-F08). Raw content never leaves the device: no E24 server path can receive it (ADR-004); the client paths are crash reports and Android logs, which android#18 and the traffic capture of android#16 must prove clean, and android#37 configures the crash reporter and mapping upload and requires that no financial value and no message content reaches the crash reporter.",
           "evidence": [
             "PenniLogic/api#21: structured logging, fail-closed scrubber and planted-value gate",
             "PenniLogic/api#56: template payload allowlist checked at build time",
             "PenniLogic/android#18: error-report scrubbing with a planted monetary value (E27)",
-            "ADR-004: the server API has no field for raw message content"
+            "ADR-004: the server API has no field for raw message content",
+            "PenniLogic/android#37: crash reports configured so no financial value and no message content reaches the crash reporter"
           ],
           "findings": [
             "E24-F05",
@@ -175,29 +201,34 @@
         {
           "id": "denial_of_service",
           "disposition": "finding",
-          "analysis": "Exhaustible resources: provider sending quotas and spend for push and e-mail, the outbox queue and its dead-letter replays (api#56), telemetry ingestion and the append-only retained log store that cannot be purged before expiry (infra#27), on-call attention, backup storage, and the anonymous unsubscribe path. Planned bounds: api#56 has backoff, retry limits and a dead-letter queue; infra#27 rolls back a noisy alert rule; android#37 halts a staged rollout automatically on a Vitals breach; load and chaos suites, including webhook storms, belong to infra#29 (E25). Gaps: no per-recipient or per-class send cap, no priority that keeps security messages flowing during a flood, and no handling of a provider throttling or suspending the account (E24-F09); no ingestion, cardinality or volume bound protects write-once retained storage, which a log flood fills irreversibly, and no alert de-duplication protects on-call attention (E24-F10).",
+          "analysis": "Exhaustible resources: request capacity of the public ingress on self-managed hosts, which ADR-022 section 3.3 makes a platform obligation while the baseline perimeter (architecture/02-security-architecture.md: WAF, rate limiter and DDoS protection) assumed a managed edge; provider sending quotas and spend for push and e-mail, the outbox queue and its dead-letter replays (api#56), telemetry ingestion and the append-only retained log store that cannot be purged before expiry (infra#27), on-call attention, backup storage, and the anonymous unsubscribe path. Planned bounds: api#56 has backoff, retry limits and a dead-letter queue; infra#27 rolls back a noisy alert rule; android#37 halts a staged rollout automatically on a Vitals breach; load and chaos suites, including webhook storms, belong to infra#29 (E25). Gaps: no per-recipient or per-class send cap, no priority that keeps security messages flowing during a flood, and no handling of a provider throttling or suspending the account (E24-F09); no ingestion, cardinality or volume bound protects write-once retained storage, which a log flood fills irreversibly, and no alert de-duplication protects on-call attention (E24-F10); and no ticket bounds edge request capacity, per-address and per-route limits or flood absorption for the self-managed ingress (api#40 limits authentication and sensitive operations only), so a request flood takes every service down (E24-F21).",
           "evidence": [
             "PenniLogic/api#56: published backoff, retry limit and dead-letter queue",
-            "PenniLogic/infra#29: load, stress, soak and chaos suites with webhook storms (E25)"
+            "PenniLogic/infra#29: load, stress, soak and chaos suites with webhook storms (E25)",
+            "ADR-022: section 3.3 capacity and availability are obligations of the platform tickets; no managed edge"
           ],
           "findings": [
             "E24-F09",
-            "E24-F10"
+            "E24-F10",
+            "E24-F21"
           ]
         },
         {
           "id": "elevation_of_privilege",
           "disposition": "finding",
-          "analysis": "Capabilities at stake: the deploy identity that applies infrastructure code can rewrite IAM, key policy, retention locks and backup policy, and so grant itself or a human standing access (E24-F11); on the ADR-022 R4 self-managed hosts, shell, container-engine or hypervisor access reads process memory and disks, which infra#32's database, object, backup and key inventory does not name (E24-F12); the production KEK custodian, which ADR-018 section 6.1.1 and ADR-022 section 3.3 assign to T-PLT-03 (infra#27) although infra#27's body does not list it, decides whether a host or account compromise yields every key (baseline T-11, E24-F13). Planned controls: infra#26 forbids the application role from reading or deleting backups; infra#32 empties standing human grants, enforces FORCE ROW LEVEL SECURITY inventory and denies CI and workstation access; android#37 limits the Play service account to upload and track management. Preference and device endpoints must reject another user's identifier; api#23 (E25) owns object-authorization tests across the endpoint inventory.",
+          "analysis": "Capabilities at stake: the deploy identity that applies infrastructure code can rewrite IAM, key policy, retention locks and backup policy, and so grant itself or a human standing access (E24-F11); on the ADR-022 R4 self-managed hosts, shell, container-engine or hypervisor access reads process memory and disks, which infra#32's database, object, backup and key inventory does not name (E24-F12); the production KEK custodian, which ADR-018 section 6.1.1 and ADR-022 section 3.3 assign to T-PLT-03 (infra#27) although infra#27's body does not list it, decides whether a host or account compromise yields every key (baseline T-11, E24-F13). Host vulnerability management is unanalysed by any child: ADR-022 section 3.3 names host patching an obligation of the platform tickets and its section 7 re-runs the enforcement probes after a kernel change, but no ticket sets a patch cadence, a kernel, Docker Engine or runc CVE response, vulnerability and drift scanning of host images or re-qualification of the runtime gates after patching, so a compromised workload can escape to the host and bypass namespaces, nftables and the broker (E24-F22; infra#31 scans IaC and container images and infra#28 application dependencies, not host packages). Planned controls: infra#26 forbids the application role from reading or deleting backups; infra#32 empties standing human grants, enforces FORCE ROW LEVEL SECURITY inventory and denies CI and workstation access; android#37 limits the Play service account to upload and track management. Preference and device endpoints must reject another user's identifier; api#23 (E25) owns object-authorization tests across the endpoint inventory.",
           "evidence": [
             "PenniLogic/infra#32: empty standing-access inventory, CI and workstation denial, FORCE ROW LEVEL SECURITY check",
             "ADR-018: section 6.1.1 KEK custody requirements, selection by T-PLT-03",
-            "PenniLogic/api#23: object-level authorization coverage across the endpoint inventory (E25)"
+            "PenniLogic/api#23: object-level authorization coverage across the endpoint inventory (E25)",
+            "ADR-022: section 3.3 host patching is a platform-ticket obligation; section 7 re-runs probes after a kernel change; T-PLT-01 owns the suite-pass manifest bound to kernel, Docker and nftables configuration",
+            "ADR-022: section 11 affected-consumers table maps infra#27 (T-PLT-03) to custodian and observability; adr/ai-egress-consequences.json audit_evidence.custody_owners and delivery.consumers (T-PLT-03 is PenniLogic/infra#27)"
           ],
           "findings": [
             "E24-F11",
             "E24-F12",
-            "E24-F13"
+            "E24-F13",
+            "E24-F22"
           ]
         },
         {
@@ -210,12 +241,14 @@
         {
           "id": "entitlement_tampering",
           "disposition": "finding",
-          "analysis": "E24 stores no entitlement state, but infra#25 builds a flag and kill-switch mechanism changeable without a deploy. ADR-023 resolves entitlement server-side from plan versions and the usage ledger, so a flag must never become a second entitlement source or switch off a quota reservation; nothing in infra#25 says so, which is part of E24-F02. A point-in-time restore also rewinds the usage ledger to the recovery point; infra#26's sample reconciliation of restored data is where a lost quota or purchase event must be detected.",
+          "analysis": "E24 stores no entitlement state, but infra#25 builds a flag and kill-switch mechanism changeable without a deploy. ADR-023 resolves entitlement server-side from plan versions and the usage ledger, so a flag must never become a second entitlement source or switch off a quota reservation; nothing in infra#25 says so, which is part of E24-F02. A point-in-time restore also rewinds the usage ledger to the recovery point; infra#26's sample reconciliation of restored data is where a lost quota or purchase event must be detected, but nothing requires reconciling against an independent record, and a consistent snapshot passes the zero-sum check (E24-F25).",
           "evidence": [
-            "ADR-023: entitlement resolved server-side from plan versions and the append-only usage ledger"
+            "ADR-023: entitlement resolved server-side from plan versions and the append-only usage ledger",
+            "PenniLogic/infra#26: restored data passes the ledger zero-sum check and a sample reconciliation; recovery point objective published"
           ],
           "findings": [
-            "E24-F02"
+            "E24-F02",
+            "E24-F25"
           ]
         },
         {
@@ -253,22 +286,23 @@
         {
           "id": "split_manipulation",
           "disposition": "not_applicable",
-          "analysis": "E24 computes no shares and records no settlement. Split rows are copied by backups like every ledger row, and infra#26's zero-sum check on restored data covers their integrity; share rules, settlements and counterparty erasure belong to E15 (PenniLogic/docs#16) through api#49.",
+          "analysis": "E24 computes no shares and records no settlement. Split rows are copied by backups like every ledger row. infra#26's planned zero-sum check (open, not a control today) passes on any consistent point-in-time snapshot, so it cannot show that settlements recorded after the recovery point survived or that an erased seat was not resurrected; infra#33 plans a counterparty shared-balance integrity test after restore, and the loss of settlements and usage events inside the recovery-point window is reviewed under entitlement_tampering (E24-F25); share rules, settlements and counterparty erasure belong to E15 (PenniLogic/docs#16) through api#49.",
           "evidence": [],
           "findings": []
         },
         {
           "id": "administrative_identity_compromise",
           "disposition": "finding",
-          "analysis": "Administrative identities this epic creates or relies on: the hosting account that owns the R4 hosts, networks and key custodian; the Play Console developer account that can add users, promote tracks and request an upload-key reset; the push, e-mail, telemetry, crash and paging service consoles; the on-call roster; and the single basiltt owner account. infra#43 hardened the GitHub identity only. infra#32 governs human access to data stores, backups and keys with a two-approver roster that fails closed, which in a one-owner organisation means human production-data sessions stay disabled until two eligible approvers exist. Gaps: android#37 documents upload-key custody and who may promote but not Play Console account hardening, the user roster or the upload-key reset path as a compromise route (E24-F17); and no ticket owns the console accounts of the push, e-mail and paging or uptime services, whose holders can read recipient lists and delivery history or silence pages during an incident; api#59 covers only the ADR-020 administrative identity domain, so E24-F18 stays open.",
+          "analysis": "Administrative identities this epic creates or relies on: the hosting account that owns the R4 hosts, networks, backups, secondary region and key custodian; the domain registrar and DNS account that controls the public origin; the Play Console developer account that can add users, promote tracks and request an upload-key reset; the push, e-mail, telemetry, crash and paging service consoles; the on-call roster; and the single basiltt owner account. GitHub owner-account hardening was deferred by owner decision: infra#43 was closed as not planned with an owner-accepted residual risk (phishing-resistant sign-in, per-machine credential verification, rotation and alerting and the revocation drill unfulfilled; organisation 2FA enforcement off; a broadly scoped OAuth credential), so E01-F04 remains an unremediated finding. For E24 this means the E24-F01 trust-policy binding, the protected branch and the production environment approval are only as strong as that account, because the infra#25 deploy pipeline runs as GitHub workflows on GitHub-hosted runners (governance/DELIVERY.md configures only those runners). infra#32 governs human access to data stores, backups and keys with a two-approver roster that fails closed, which in a one-owner organisation means human production-data sessions stay disabled until two eligible approvers exist. Gaps: android#37 documents upload-key custody and who may promote but not Play Console account hardening, the user roster or the upload-key reset path as a compromise route (E24-F17); and no ticket owns the console accounts of the push, e-mail and paging or uptime services, whose holders can read recipient lists and delivery history or silence pages during an incident; api#59 covers only the ADR-020 administrative identity domain, so E24-F18 stays open. The hosting-account owner can snapshot or delete hosts, disks, backups and the secondary region and re-grant itself access, and the registrar and DNS account can repoint the origin; infra#32 inventories standing grants to data stores, not these owner identities, and no ticket covers their sign-in, break-glass custody or owner-action alerting, so E24-F19 stays open.",
           "evidence": [
-            "PenniLogic/infra#43: owner-account baseline for the GitHub identity (closed; GitHub scope only)",
+            "PenniLogic/infra#43: closed as not planned with an owner-accepted residual risk; GitHub owner-account hardening deferred, E01-F04 unremediated",
             "PenniLogic/infra#32: second-approved, time-boxed, brokered human sessions with a fail-closed approver roster",
             "ADR-020: separate administrative identity domain and break-glass rules"
           ],
           "findings": [
             "E24-F17",
-            "E24-F18"
+            "E24-F18",
+            "E24-F19"
           ]
         }
       ],
@@ -290,7 +324,7 @@
           "severity": "high",
           "title": "Flag and kill-switch changes have no stated authorisation, audit or limit on what a flag may enable",
           "attack_path": "A compromised operator session, a support role or a mistaken change flips a feature flag without a deploy: it re-enables a feature the kill switch stopped, switches off a quota reservation or entitlement check, or turns on an AI egress scope, and nothing records who changed it or refuses the change.",
-          "recommended_control": "Store flags as authorised, audited configuration: every change carries actor, approval and reason and lands in the ADR-020 trail; absent or malformed flags default OFF (ADR-022 kill_switch); flags may only narrow or disable behaviour and never grant an entitlement or bypass a quota, egress or authorisation check; test each refusal.",
+          "recommended_control": "Store flags as authorised, audited configuration: every change carries actor, approval and reason and lands in the ADR-020 trail; an absent, malformed or deleted flag or kill-switch row resolves to the safe state (capability disabled, kill engaged) and raises an alert, as ADR-022's kill_switch OFF_AND_ALERT does; a flag never grants an entitlement or bypass a quota, egress or authorisation check; test each refusal.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/infra#25",
           "resolution": null
@@ -332,9 +366,9 @@
           "id": "E24-F06",
           "category": "information_disclosure",
           "severity": "high",
-          "title": "Hosted telemetry, crash and paging processors and alert payloads are outside the residency policy",
-          "attack_path": "Security logs, traces or crash events are exported to a hosted observability or crash service outside India, or an alert template copies log lines and identifiers into a page sent through a third-party paging service, while the residency check covers only stateful resources the pipeline provisions.",
-          "recommended_control": "Extend the region assertion to every telemetry, crash and paging destination, permit only processors recorded with a signed agreement under docs#44, keep alert payloads to rule, service and severity with no log excerpt, and fail closed when a destination's region or agreement is unrecorded.",
+          "title": "Hosted server telemetry and paging processors and alert payloads are outside the residency policy",
+          "attack_path": "Server security logs, traces or error events are exported to a hosted observability service outside India, or an alert template copies log lines and identifiers into a page sent through a third-party paging service, while the residency check covers only stateful resources the pipeline provisions.",
+          "recommended_control": "Extend the region assertion to every server telemetry and paging destination, permit only processors recorded with a signed agreement under docs#44, keep alert payloads to rule, service and severity with no log excerpt, and fail closed when a destination's region or agreement is unrecorded.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/infra#27",
           "resolution": null
@@ -465,10 +499,87 @@
           "category": "administrative_identity_compromise",
           "severity": "medium",
           "title": "No ticket owns human access to the push, e-mail and paging or uptime service consoles",
-          "attack_path": "A holder of the e-mail or push provider console, or a stale former member, reads recipient addresses and delivery history or changes sender settings; a holder of the paging console silences or reroutes pages during an incident. infra#43 covers only the GitHub identity, api#59 the ADR-020 administrative identity domain, and api#56 and infra#27 API credentials and the log store; none covers these vendor console accounts.",
+          "attack_path": "A holder of the e-mail or push provider console, or a stale former member, reads recipient addresses and delivery history or changes sender settings; a holder of the paging console silences or reroutes pages during an incident. infra#43 concerned only the GitHub identity and was closed with hardening deferred, api#59 the ADR-020 administrative identity domain, and api#56 and infra#27 API credentials and the log store; none covers these vendor console accounts.",
           "recommended_control": "Create an owning ticket for third-party operational console accounts: roster, least-privilege roles, phishing-resistant sign-in, joiner and leaver revocation, audit export and a revocation drill per service, recorded before any real recipient or page flows through them.",
           "status": "open",
           "owner_ticket": null,
+          "resolution": null
+        },
+        {
+          "id": "E24-F19",
+          "category": "administrative_identity_compromise",
+          "severity": "high",
+          "title": "No ticket hardens the hosting-account owner or the domain registrar and DNS account",
+          "attack_path": "An attacker who phishes or recovers the hosting-account owner credential snapshots disks, deletes hosts, backups and the secondary-region copies or grants itself host and custodian access; an attacker holding the registrar or DNS account repoints the origin. Neither identity is in infra#32's standing-grant inventory, infra#43 concerned only GitHub, and no ticket owns them.",
+          "recommended_control": "Create an owning ticket for infrastructure owner identities: phishing-resistant sign-in, offline break-glass custody, no daily use, alerting on owner and registrar actions, and backups and the key custodian kept beyond that account's unilateral deletion (separate account or retention lock); rehearse recovery.",
+          "status": "open",
+          "owner_ticket": null,
+          "resolution": null
+        },
+        {
+          "id": "E24-F20",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "No ticket owns the public origin: registrar and DNS records, certificate issuance, TLS key custody and RP ID file hosting",
+          "attack_path": "An attacker who takes the registrar or DNS account, obtains a certificate for the domain or copies a host's TLS private key serves the genuine origin, relays passkey assertions or alters the assetlinks and webauthn files on the RP ID apex; app links and passkeys then trust the attacker, and a wrong RP ID cannot be repaired once credentials exist.",
+          "recommended_control": "Create an owner for the public origin: DNS records and certificate authority authorisation as reviewed code, certificate issuance monitored, TLS private keys generated on and confined to the ingress hosts with rotation, RP ID files served only by the production pipeline, and pin rotation coordinated with android#27.",
+          "status": "open",
+          "owner_ticket": null,
+          "resolution": null
+        },
+        {
+          "id": "E24-F21",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "No edge request capacity, per-address and per-route limits or flood protection for the self-managed ingress",
+          "attack_path": "A request flood or slow-connection attack from many addresses reaches the R4 hosts directly, because ADR-022 provides no managed edge and only authentication and sensitive operations are rate limited (api#40); the hosts exhaust connections and CPU and every service, including security messages and restores, becomes unavailable.",
+          "recommended_control": "Assign the ingress capacity plan to an owner: per-address and per-route limits, connection and body-size bounds, an upstream flood-absorption option recorded with its processor terms, and an alert before saturation; test a synthetic flood against the limits.",
+          "status": "open",
+          "owner_ticket": null,
+          "resolution": null
+        },
+        {
+          "id": "E24-F22",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "Host OS, kernel, Docker Engine, runc and nftables patching on the R4 hosts has no cadence, scan or re-qualification",
+          "attack_path": "A known kernel, Docker Engine or runc vulnerability stays unpatched on a self-managed R4 host; a compromised workload, such as the AI service handling hostile input, escapes its container to the host and bypasses the namespaces, nftables rules and broker that ADR-022 relies on, reaching keys and data of every service.",
+          "recommended_control": "Under infra#25's container runtime provisioning and rebuild-from-code scope (ADR-022 section 3.3, T-PLT-01): publish a patch cadence and an emergency CVE response time, rebuild hosts from code, scan host images for vulnerabilities and drift, and re-run the ADR-022 runtime gates before admission after every patch.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        },
+        {
+          "id": "E24-F23",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Retained security logs have no authenticated time source and no emitter authentication at the collector",
+          "attack_path": "An attacker on the network path shifts the hosts' time source, or a compromised service or client writes into the collector as another emitter; entries carry false times or forged origins, drift alerting stays quiet because it compares against the shifted source, and append-only retention preserves the forgeries as CERT-In evidence.",
+          "recommended_control": "Within infra#27's clock-synchronisation, collector and retention scope: use authenticated time sources cross-checked against a second source, authenticate every emitter to the collector with workload identity, keep client telemetry out of the security-log stream, accept structured fields only, and test a shifted source and an unauthenticated emitter.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#27",
+          "resolution": null
+        },
+        {
+          "id": "E24-F24",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "The upload key and Play publishing credential are not confined to the protected Android release workflow",
+          "attack_path": "A workflow on a feature branch or pull request in the Android repository, such as one an automated session pushes, obtains the upload key or the Play publishing credential, signs a malicious bundle and uploads it to a track; Play App Signing re-signs it and it installs as a trusted update.",
+          "recommended_control": "Under android#37's upload-key custody and rotation scope: release the upload key and Play publishing credential only to the protected release workflow on main with a named environment and required approval, refuse pull-request and branch contexts with a negative test, and record an upload-key rotation drill.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#37",
+          "resolution": null
+        },
+        {
+          "id": "E24-F25",
+          "category": "entitlement_tampering",
+          "severity": "medium",
+          "title": "A restore silently rewinds usage-ledger, purchase and settlement events inside the recovery-point window",
+          "attack_path": "After a restore to the recovery point, usage reservations, purchase or refund events and split settlements recorded after it are gone while the ledger stays internally consistent; the zero-sum check passes, a user regains spent quota or loses a paid entitlement, and a settled share reappears as owed.",
+          "recommended_control": "Within infra#26's restore drill and sample reconciliation: reconcile restored usage, purchase and settlement events against an independent record (the ADR-020 audit chain and its write-once copy, store receipts), list every event lost inside the recovery-point window for replay or user notice, and test it with events planted after the recovery point.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#26",
           "resolution": null
         }
       ]
