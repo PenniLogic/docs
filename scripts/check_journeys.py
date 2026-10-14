@@ -7,7 +7,10 @@ markdown rendering product/journey-blueprints.md. Journey, persona, flow, screen
 from the experience-coverage registry pinned by `registry_ref` {commit, path, sha256} (TS-M8): until docs#75 is
 integrated that is the imported planning registry at docs 1722fc79, read from the local Git object store and
 digest-checked. The registry is never edited; its content gaps are recorded as GAP-Jnn-nn entries routed to
-their owners.
+their owners. The pinned blob is read with lazy fetch disabled, so this checker and the published-data and
+pin tests in scripts/tests/test_journeys.py need a clone whose history contains the pinned commit (CI checks
+out with fetch-depth 0); a shallow clone refuses with registry.unavailable, which is an environment limit,
+not a data regression.
 
 Blueprint steps Jnn.C.nn and Jnn.T.nn are the customer and team lanes. Every step names its channel, system, data
 classification and authorization; the checks below enforce registry joins, lane and channel agreement, reachable

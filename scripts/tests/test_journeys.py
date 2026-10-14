@@ -1127,6 +1127,17 @@ PUBLISHED_READINESS = {
 }
 
 
+class HistoryRequirementTests(unittest.TestCase):
+    """Runs without the pinned commit, so a shallow clone still sees why PublishedDataTests cannot load."""
+
+    def test_full_history_requirement_is_disclosed(self):
+        # Fable review round 1 F5: the pinned registry blob must be in the local object store (no lazy fetch).
+        text = " ".join(module.__doc__.split())
+        self.assertIn("need a clone whose history contains the pinned commit (CI checks out with fetch-depth 0)", text)
+        self.assertIn("a shallow clone refuses with registry.unavailable", text)
+        self.assertIn("registry.unavailable", module.STRUCTURE_RULES)
+
+
 class PublishedDataTests(unittest.TestCase):
     """The committed J01-J12 blueprints and gaps, read (never written) and checked against the real pinned registry."""
 
