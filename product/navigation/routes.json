@@ -1,0 +1,3848 @@
+{
+  "schema_version": 1,
+  "ia_version": "0.1.0",
+  "status": "provisional",
+  "source_issue": "PenniLogic/docs#74",
+  "plan_id": "T-UXR-05",
+  "registry_ref": {
+    "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
+    "path": "planning/source/evidence/experience-coverage.json",
+    "sha256": "sha256:2f7b27c1f6683d4c256a938ccfb0fc06614f83fe57996a4d7aeaf0b7cae0bf3a"
+  },
+  "roles": [
+    {
+      "id": "ROLE-01",
+      "name": "Support and privacy operator",
+      "status": "provisional",
+      "source": "product/08-experience-design-and-sdlc-plan.md"
+    },
+    {
+      "id": "ROLE-02",
+      "name": "Security and compliance approver",
+      "status": "provisional",
+      "source": "product/08-experience-design-and-sdlc-plan.md"
+    },
+    {
+      "id": "ROLE-03",
+      "name": "Billing and product operator",
+      "status": "provisional",
+      "source": "product/08-experience-design-and-sdlc-plan.md"
+    }
+  ],
+  "routes": [
+    {
+      "id": "R-AND-001",
+      "platform": "android",
+      "parent_route_id": null,
+      "entry_from_parent": null,
+      "label": {
+        "text": "Launch and app gates",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://launch",
+        "android://lock",
+        "android://system/degraded"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-002",
+      "platform": "android",
+      "parent_route_id": "R-AND-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Sign in",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://auth",
+        "android://auth/verify"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-003",
+      "platform": "android",
+      "parent_route_id": "R-AND-002",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Account recovery",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://recovery",
+        "android://recovery/pending",
+        "android://recovery/reenroll"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-004",
+      "platform": "android",
+      "parent_route_id": "R-AND-002",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Onboarding and permissions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://onboarding/sms",
+        "android://onboarding/notifications"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-005",
+      "platform": "android",
+      "parent_route_id": "R-AND-004",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "App shell",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://home"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-006",
+      "platform": "android",
+      "parent_route_id": "R-AND-005",
+      "entry_from_parent": "primary_navigation",
+      "label": {
+        "text": "Home",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": "navigation_bar",
+        "expanded": "navigation_rail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://home/debt"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-007",
+      "platform": "android",
+      "parent_route_id": "R-AND-005",
+      "entry_from_parent": "primary_navigation",
+      "label": {
+        "text": "Debts",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": "navigation_bar",
+        "expanded": "navigation_rail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://debts"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-008",
+      "platform": "android",
+      "parent_route_id": "R-AND-005",
+      "entry_from_parent": "primary_navigation",
+      "label": {
+        "text": "Transactions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": "navigation_bar",
+        "expanded": "navigation_rail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://transactions"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-009",
+      "platform": "android",
+      "parent_route_id": "R-AND-005",
+      "entry_from_parent": "primary_navigation",
+      "label": {
+        "text": "Plan",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": "navigation_bar",
+        "expanded": "navigation_rail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [],
+      "access": null
+    },
+    {
+      "id": "R-AND-010",
+      "platform": "android",
+      "parent_route_id": "R-AND-005",
+      "entry_from_parent": "primary_navigation",
+      "label": {
+        "text": "More",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": "navigation_bar",
+        "expanded": "navigation_rail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [],
+      "access": null
+    },
+    {
+      "id": "R-AND-011",
+      "platform": "android",
+      "parent_route_id": "R-AND-006",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Progress and digests",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://progress"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-012",
+      "platform": "android",
+      "parent_route_id": "R-AND-007",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Debt detail",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://debts/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-013",
+      "platform": "android",
+      "parent_route_id": "R-AND-007",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Add or edit debt",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "modal",
+        "expanded": "modal",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://debts/edit"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-014",
+      "platform": "android",
+      "parent_route_id": "R-AND-012",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Strategies and simulations",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "tab",
+        "expanded": "tab",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://debts/compare",
+        "android://debts/simulate",
+        "android://debts/advanced"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-015",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Transaction detail",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://transactions/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-016",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Add transaction",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "modal",
+        "expanded": "modal",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://transactions/new"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-017",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Clarification inbox",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://clarifications"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-018",
+      "platform": "android",
+      "parent_route_id": "R-AND-017",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Candidate comparison",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://clarifications/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-019",
+      "platform": "android",
+      "parent_route_id": "R-AND-018",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Rule preview and rollback",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "supporting_pane",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://rules/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-020",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Accounts",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://accounts"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-021",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Categories",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://categories"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-022",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Import statement",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://import/map",
+        "android://import/preview"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-023",
+      "platform": "android",
+      "parent_route_id": "R-AND-008",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Capture health",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://capture"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-024",
+      "platform": "android",
+      "parent_route_id": "R-AND-023",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Email capture",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://capture/email"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-025",
+      "platform": "android",
+      "parent_route_id": "R-AND-023",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Receipt capture",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://capture/receipt",
+        "android://capture/receipt/review"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-026",
+      "platform": "android",
+      "parent_route_id": "R-AND-009",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Income, budgets and bills",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "tab",
+        "expanded": "tab",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://plan/income",
+        "android://plan/budgets",
+        "android://plan/bills"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-027",
+      "platform": "android",
+      "parent_route_id": "R-AND-009",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Goals",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "tab",
+        "expanded": "tab",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://plan/goals"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-028",
+      "platform": "android",
+      "parent_route_id": "R-AND-009",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Net worth and holdings",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "tab",
+        "expanded": "tab",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://plan/net-worth",
+        "android://plan/holdings"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-029",
+      "platform": "android",
+      "parent_route_id": "R-AND-009",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Reports",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "tab",
+        "expanded": "tab",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://reports"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-030",
+      "platform": "android",
+      "parent_route_id": "R-AND-010",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Split groups",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://split"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-031",
+      "platform": "android",
+      "parent_route_id": "R-AND-030",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Split group",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "tab",
+        "expanded": "tab",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://split/:id/expense",
+        "android://split/:id/settle",
+        "android://split/:id/dispute"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-032",
+      "platform": "android",
+      "parent_route_id": "R-AND-010",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Family and sharing",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://family/grants"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-033",
+      "platform": "android",
+      "parent_route_id": "R-AND-032",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Household dashboard",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://family/household"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-034",
+      "platform": "android",
+      "parent_route_id": "R-AND-032",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Access log",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://family/access"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-035",
+      "platform": "android",
+      "parent_route_id": "R-AND-032",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Safe exit",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://family/exit"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-036",
+      "platform": "android",
+      "parent_route_id": "R-AND-010",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Assistant",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://assistant"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-037",
+      "platform": "android",
+      "parent_route_id": "R-AND-036",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Assistant draft",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "modal",
+        "expanded": "modal",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://assistant/draft"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-038",
+      "platform": "android",
+      "parent_route_id": "R-AND-036",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Assistant history and providers",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://assistant/settings"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-039",
+      "platform": "android",
+      "parent_route_id": "R-AND-010",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Plan and billing",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://billing"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-040",
+      "platform": "android",
+      "parent_route_id": "R-AND-010",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Trust, privacy and preferences",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "list_detail",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://trust"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-041",
+      "platform": "android",
+      "parent_route_id": "R-AND-040",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Data rights",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://trust/rights"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-042",
+      "platform": "android",
+      "parent_route_id": "R-AND-040",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Support",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://support"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-043",
+      "platform": "android",
+      "parent_route_id": "R-AND-040",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Permissions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://settings/permissions"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-044",
+      "platform": "android",
+      "parent_route_id": "R-AND-040",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Notification preferences",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://settings/notifications"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-045",
+      "platform": "android",
+      "parent_route_id": "R-AND-040",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Language, appearance and accessibility",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://settings/accessibility"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-046",
+      "platform": "android",
+      "parent_route_id": "R-AND-040",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Account security and sessions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://settings/account"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-AND-047",
+      "platform": "android",
+      "parent_route_id": "R-AND-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Eligibility and consent",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://onboarding/consent",
+        "android://onboarding/age"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-001",
+      "platform": "web",
+      "parent_route_id": null,
+      "entry_from_parent": null,
+      "label": {
+        "text": "Sign in",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/login"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-002",
+      "platform": "web",
+      "parent_route_id": "R-WEB-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Verification and recovery",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/recover"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-003",
+      "platform": "web",
+      "parent_route_id": "R-WEB-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Eligibility and consent",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/signup/eligibility"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-004",
+      "platform": "web",
+      "parent_route_id": "R-WEB-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Help and support",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/help/support"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-005",
+      "platform": "web",
+      "parent_route_id": "R-WEB-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "App shell",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/app"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-006",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Overview",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/overview"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-007",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Transactions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/transactions"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-008",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Debts",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/debt"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-009",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Planning",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [],
+      "access": null
+    },
+    {
+      "id": "R-WEB-010",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Groups",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [],
+      "access": null
+    },
+    {
+      "id": "R-WEB-011",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Assistant",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/assistant"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-012",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Billing",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/billing"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-013",
+      "platform": "web",
+      "parent_route_id": "R-WEB-005",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Trust and support",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/trust"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-014",
+      "platform": "web",
+      "parent_route_id": "R-WEB-007",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Transaction detail",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/transactions/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-015",
+      "platform": "web",
+      "parent_route_id": "R-WEB-007",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Statement import",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/transactions/import"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-016",
+      "platform": "web",
+      "parent_route_id": "R-WEB-007",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Categories and rules",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/transactions/rules"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-017",
+      "platform": "web",
+      "parent_route_id": "R-WEB-007",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Accounts",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/accounts"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-018",
+      "platform": "web",
+      "parent_route_id": "R-WEB-007",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Clarification inbox",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/inbox"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-019",
+      "platform": "web",
+      "parent_route_id": "R-WEB-018",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Rule rollback",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/inbox/rules/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-020",
+      "platform": "web",
+      "parent_route_id": "R-WEB-007",
+      "entry_from_parent": "menu",
+      "label": {
+        "text": "Export and deletion",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/export"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-021",
+      "platform": "web",
+      "parent_route_id": "R-WEB-008",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Strategy comparison",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/debt/compare"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-022",
+      "platform": "web",
+      "parent_route_id": "R-WEB-008",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Payoff simulator",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/debt/simulate"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-023",
+      "platform": "web",
+      "parent_route_id": "R-WEB-008",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Add or edit debt",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "modal",
+        "wide": "modal"
+      },
+      "patterns": [
+        "/debt/new"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-024",
+      "platform": "web",
+      "parent_route_id": "R-WEB-008",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Advanced scenarios",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/debt/advanced"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-025",
+      "platform": "web",
+      "parent_route_id": "R-WEB-009",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Income, budgets and bills",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/planning/income"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-026",
+      "platform": "web",
+      "parent_route_id": "R-WEB-009",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Goals",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/goals"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-027",
+      "platform": "web",
+      "parent_route_id": "R-WEB-009",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Net worth",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/net-worth"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-028",
+      "platform": "web",
+      "parent_route_id": "R-WEB-027",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Holdings",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/net-worth/holdings"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-029",
+      "platform": "web",
+      "parent_route_id": "R-WEB-009",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Reports",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/reports"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-030",
+      "platform": "web",
+      "parent_route_id": "R-WEB-029",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Currency overview",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/reports/currencies"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-031",
+      "platform": "web",
+      "parent_route_id": "R-WEB-029",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Reporting currency",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/settings/currency"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-032",
+      "platform": "web",
+      "parent_route_id": "R-WEB-010",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Split groups",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/split"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-033",
+      "platform": "web",
+      "parent_route_id": "R-WEB-032",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Split group",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/split/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-034",
+      "platform": "web",
+      "parent_route_id": "R-WEB-033",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Split disputes",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/split/:id/disputes"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-035",
+      "platform": "web",
+      "parent_route_id": "R-WEB-010",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Family",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/family"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-036",
+      "platform": "web",
+      "parent_route_id": "R-WEB-035",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Household dashboard",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/family/household"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-037",
+      "platform": "web",
+      "parent_route_id": "R-WEB-035",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Access and safe exit",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/family/access"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-038",
+      "platform": "web",
+      "parent_route_id": "R-WEB-011",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Assistant draft",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "modal",
+        "wide": "modal"
+      },
+      "patterns": [
+        "/assistant/draft"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-039",
+      "platform": "web",
+      "parent_route_id": "R-WEB-011",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Assistant history and providers",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/assistant/settings"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-040",
+      "platform": "web",
+      "parent_route_id": "R-WEB-012",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Invoice and credit details",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/billing/invoices/:id"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-041",
+      "platform": "web",
+      "parent_route_id": "R-WEB-013",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Data rights",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/trust/rights"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-042",
+      "platform": "web",
+      "parent_route_id": "R-WEB-013",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Support",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/support"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-043",
+      "platform": "web",
+      "parent_route_id": "R-WEB-013",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Notification preferences",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/settings/notifications"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-044",
+      "platform": "web",
+      "parent_route_id": "R-WEB-013",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Language, appearance and accessibility",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/settings/accessibility"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-WEB-045",
+      "platform": "web",
+      "parent_route_id": "R-WEB-013",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Account security and sessions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/settings/account"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-ADM-001",
+      "platform": "admin",
+      "parent_route_id": null,
+      "entry_from_parent": null,
+      "label": {
+        "text": "Operator sign in",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/login"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-ADM-002",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Operator account recovery",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/recovery"
+      ],
+      "access": null
+    },
+    {
+      "id": "R-ADM-003",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Console",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/*"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01",
+          "ROLE-02",
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-004",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "My queue",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01",
+          "ROLE-02",
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-005",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-004",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Case access request",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/access/request"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-006",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-004",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Approval detail",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/access/approvals/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-007",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Plans, features and quotas",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator/plans"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-008",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-007",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Plan version builder",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/plans/new"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-009",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-007",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Plan migration and retirement",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/plans/:id/migrate"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-010",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "AI providers and spend",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator/ai/providers"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-011",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-010",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "AI routing and spend controls",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/operator/ai/routing"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-012",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Support and billing",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator/support"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-013",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-012",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Support case",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/support/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-014",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-013",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Refund and billing operations",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/billing/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-015",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Rights and grievances",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator/rights"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-016",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-015",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Rights request",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/rights/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-017",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-016",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Decision and completion evidence",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/rights/:id/decision"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-01"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-018",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Audit and access",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator/audit"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-019",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-018",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Access anomalies",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/operator/audit/anomalies"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-020",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-018",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Production access",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/platform/access"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-021",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-020",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Broker session approval",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/platform/access/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-022",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-020",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Restore review",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/platform/restores/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-023",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-018",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Operator roster",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/admins"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-024",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-023",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Operator lifecycle",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/admins/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-025",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-023",
+      "entry_from_parent": "tab",
+      "label": {
+        "text": "Qualifications and recertification",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "tab",
+        "wide": "tab"
+      },
+      "patterns": [
+        "/operator/admins/qualifications"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-026",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Aggregate analytics",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [
+        "/operator/analytics"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-03"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-027",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-003",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Incidents and break-glass",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": true,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "collapsed_menu",
+        "wide": "side_navigation"
+      },
+      "patterns": [],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-028",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-027",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Incident actions",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/incidents/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-029",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-027",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Break-glass ceremony",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/access/break-glass"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-030",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-027",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Red-team coverage",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "stack"
+      },
+      "patterns": [
+        "/operator/release/security"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    },
+    {
+      "id": "R-ADM-031",
+      "platform": "admin",
+      "parent_route_id": "R-ADM-030",
+      "entry_from_parent": "list_item",
+      "label": {
+        "text": "Finding evidence and retest",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_in",
+      "primary": false,
+      "presentation": {
+        "compact": null,
+        "expanded": null,
+        "narrow": "stack",
+        "wide": "list_detail"
+      },
+      "patterns": [
+        "/operator/release/findings/:id"
+      ],
+      "access": {
+        "roles": [
+          "ROLE-02"
+        ],
+        "unauthorized": "absent"
+      }
+    }
+  ],
+  "screen_placements": [
+    {
+      "screen_id": "S-AND-001",
+      "host_route_id": "R-AND-001",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-002",
+      "host_route_id": "R-AND-001",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-003",
+      "host_route_id": "R-AND-005",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-004",
+      "host_route_id": "R-AND-002",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-005",
+      "host_route_id": "R-AND-002",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-006",
+      "host_route_id": "R-AND-003",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-007",
+      "host_route_id": "R-AND-003",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-008",
+      "host_route_id": "R-AND-003",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-009",
+      "host_route_id": "R-AND-047",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-010",
+      "host_route_id": "R-AND-047",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-011",
+      "host_route_id": "R-AND-043",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-012",
+      "host_route_id": "R-AND-004",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-013",
+      "host_route_id": "R-AND-004",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-014",
+      "host_route_id": "R-AND-006",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-015",
+      "host_route_id": "R-AND-007",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-016",
+      "host_route_id": "R-AND-012",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-017",
+      "host_route_id": "R-AND-013",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-018",
+      "host_route_id": "R-AND-014",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-019",
+      "host_route_id": "R-AND-014",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-020",
+      "host_route_id": "R-AND-014",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-021",
+      "host_route_id": "R-AND-008",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-022",
+      "host_route_id": "R-AND-015",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-023",
+      "host_route_id": "R-AND-016",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-024",
+      "host_route_id": "R-AND-020",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-025",
+      "host_route_id": "R-AND-021",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-026",
+      "host_route_id": "R-AND-022",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-027",
+      "host_route_id": "R-AND-022",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-028",
+      "host_route_id": "R-AND-023",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-029",
+      "host_route_id": "R-AND-017",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-030",
+      "host_route_id": "R-AND-018",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-031",
+      "host_route_id": "R-AND-019",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-032",
+      "host_route_id": "R-AND-024",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-033",
+      "host_route_id": "R-AND-025",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-034",
+      "host_route_id": "R-AND-025",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-035",
+      "host_route_id": "R-AND-026",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-036",
+      "host_route_id": "R-AND-026",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-037",
+      "host_route_id": "R-AND-026",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-038",
+      "host_route_id": "R-AND-027",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-039",
+      "host_route_id": "R-AND-028",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-040",
+      "host_route_id": "R-AND-028",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-041",
+      "host_route_id": "R-AND-029",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-042",
+      "host_route_id": "R-AND-030",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-043",
+      "host_route_id": "R-AND-031",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-044",
+      "host_route_id": "R-AND-031",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-045",
+      "host_route_id": "R-AND-031",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-046",
+      "host_route_id": "R-AND-032",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-047",
+      "host_route_id": "R-AND-033",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-048",
+      "host_route_id": "R-AND-034",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-049",
+      "host_route_id": "R-AND-035",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-050",
+      "host_route_id": "R-AND-036",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-051",
+      "host_route_id": "R-AND-037",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-052",
+      "host_route_id": "R-AND-038",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-053",
+      "host_route_id": "R-AND-039",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-054",
+      "host_route_id": "R-AND-044",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-055",
+      "host_route_id": "R-AND-011",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-056",
+      "host_route_id": "R-AND-040",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-057",
+      "host_route_id": "R-AND-041",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-058",
+      "host_route_id": "R-AND-042",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-059",
+      "host_route_id": "R-AND-001",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-060",
+      "host_route_id": null,
+      "external": {
+        "entry": "widget",
+        "patterns": [
+          "android-widget://debt-progress"
+        ],
+        "rationale": "Home-screen widget drawn by the launcher outside the app route tree; it is a glanceable surface entered from the device home screen, not a destination inside the app navigation."
+      }
+    },
+    {
+      "screen_id": "S-AND-061",
+      "host_route_id": null,
+      "external": {
+        "entry": "deep_link",
+        "patterns": [
+          "android://split/invites/:token"
+        ],
+        "rationale": "Landing opened from a split invitation link shared outside the app; the invitee may not be a user yet (product/08 section 7, P08), so it has no in-app navigation parent."
+      }
+    },
+    {
+      "screen_id": "S-AND-062",
+      "host_route_id": null,
+      "external": {
+        "entry": "deep_link",
+        "patterns": [
+          "android://household/invites/:token"
+        ],
+        "rationale": "Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9)."
+      }
+    },
+    {
+      "screen_id": "S-AND-063",
+      "host_route_id": "R-AND-045",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-064",
+      "host_route_id": "R-AND-046",
+      "external": null
+    },
+    {
+      "screen_id": "S-AND-065",
+      "host_route_id": null,
+      "external": {
+        "entry": "notification",
+        "patterns": [
+          "android://notifications/:id"
+        ],
+        "rationale": "Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent."
+      }
+    },
+    {
+      "screen_id": "S-WEB-001",
+      "host_route_id": "R-WEB-001",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-002",
+      "host_route_id": "R-WEB-002",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-003",
+      "host_route_id": "R-WEB-005",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-004",
+      "host_route_id": "R-WEB-006",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-005",
+      "host_route_id": "R-WEB-017",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-006",
+      "host_route_id": "R-WEB-007",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-007",
+      "host_route_id": "R-WEB-014",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-008",
+      "host_route_id": "R-WEB-015",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-009",
+      "host_route_id": "R-WEB-020",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-010",
+      "host_route_id": "R-WEB-008",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-011",
+      "host_route_id": "R-WEB-021",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-012",
+      "host_route_id": "R-WEB-022",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-013",
+      "host_route_id": "R-WEB-023",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-014",
+      "host_route_id": "R-WEB-024",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-015",
+      "host_route_id": "R-WEB-018",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-016",
+      "host_route_id": "R-WEB-019",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-017",
+      "host_route_id": "R-WEB-025",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-018",
+      "host_route_id": "R-WEB-026",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-019",
+      "host_route_id": "R-WEB-027",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-020",
+      "host_route_id": "R-WEB-028",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-021",
+      "host_route_id": "R-WEB-029",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-022",
+      "host_route_id": "R-WEB-032",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-023",
+      "host_route_id": "R-WEB-033",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-024",
+      "host_route_id": "R-WEB-034",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-025",
+      "host_route_id": "R-WEB-035",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-026",
+      "host_route_id": "R-WEB-036",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-027",
+      "host_route_id": "R-WEB-037",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-028",
+      "host_route_id": "R-WEB-011",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-029",
+      "host_route_id": "R-WEB-038",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-030",
+      "host_route_id": "R-WEB-039",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-031",
+      "host_route_id": "R-WEB-012",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-032",
+      "host_route_id": "R-WEB-040",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-033",
+      "host_route_id": "R-WEB-043",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-034",
+      "host_route_id": "R-WEB-013",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-035",
+      "host_route_id": "R-WEB-041",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-036",
+      "host_route_id": "R-WEB-042",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-037",
+      "host_route_id": "R-WEB-004",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-038",
+      "host_route_id": "R-WEB-030",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-039",
+      "host_route_id": "R-WEB-031",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-040",
+      "host_route_id": null,
+      "external": {
+        "entry": "deep_link",
+        "patterns": [
+          "/split/invites/:token"
+        ],
+        "rationale": "Landing opened from a split invitation link shared outside the product; the invitee may not be a user yet (product/08 section 7, P08), so it has no navigation parent."
+      }
+    },
+    {
+      "screen_id": "S-WEB-041",
+      "host_route_id": null,
+      "external": {
+        "entry": "deep_link",
+        "patterns": [
+          "/family/invites/:token"
+        ],
+        "rationale": "Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9)."
+      }
+    },
+    {
+      "screen_id": "S-WEB-042",
+      "host_route_id": "R-WEB-003",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-043",
+      "host_route_id": "R-WEB-044",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-044",
+      "host_route_id": "R-WEB-045",
+      "external": null
+    },
+    {
+      "screen_id": "S-WEB-045",
+      "host_route_id": null,
+      "external": {
+        "entry": "notification",
+        "patterns": [
+          "/notifications/:id"
+        ],
+        "rationale": "Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent."
+      }
+    },
+    {
+      "screen_id": "S-WEB-046",
+      "host_route_id": "R-WEB-016",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-001",
+      "host_route_id": "R-ADM-001",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-002",
+      "host_route_id": "R-ADM-004",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-003",
+      "host_route_id": "R-ADM-003",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-004",
+      "host_route_id": "R-ADM-005",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-005",
+      "host_route_id": "R-ADM-006",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-006",
+      "host_route_id": "R-ADM-029",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-007",
+      "host_route_id": "R-ADM-023",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-008",
+      "host_route_id": "R-ADM-024",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-009",
+      "host_route_id": "R-ADM-025",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-010",
+      "host_route_id": "R-ADM-007",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-011",
+      "host_route_id": "R-ADM-008",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-012",
+      "host_route_id": "R-ADM-009",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-013",
+      "host_route_id": "R-ADM-010",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-014",
+      "host_route_id": "R-ADM-011",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-015",
+      "host_route_id": "R-ADM-012",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-016",
+      "host_route_id": "R-ADM-013",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-017",
+      "host_route_id": "R-ADM-014",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-018",
+      "host_route_id": "R-ADM-015",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-019",
+      "host_route_id": "R-ADM-016",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-020",
+      "host_route_id": "R-ADM-017",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-021",
+      "host_route_id": "R-ADM-018",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-022",
+      "host_route_id": "R-ADM-019",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-023",
+      "host_route_id": "R-ADM-026",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-024",
+      "host_route_id": "R-ADM-020",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-025",
+      "host_route_id": "R-ADM-021",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-026",
+      "host_route_id": "R-ADM-022",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-027",
+      "host_route_id": "R-ADM-030",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-028",
+      "host_route_id": "R-ADM-031",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-029",
+      "host_route_id": "R-ADM-028",
+      "external": null
+    },
+    {
+      "screen_id": "S-ADM-030",
+      "host_route_id": "R-ADM-002",
+      "external": null
+    }
+  ],
+  "redirects": [],
+  "retired_route_ids": [],
+  "research": [
+    {
+      "platform": "android",
+      "tree_test": {
+        "status": "not_run",
+        "evidence_ref": null,
+        "metrics": {
+          "task_success": null,
+          "first_click_correctness": null,
+          "backtrack_rate": null
+        }
+      },
+      "card_sort": {
+        "status": "not_run",
+        "evidence_ref": null
+      },
+      "walkthrough": {
+        "status": "not_run",
+        "evidence_ref": null
+      }
+    },
+    {
+      "platform": "web",
+      "tree_test": {
+        "status": "not_run",
+        "evidence_ref": null,
+        "metrics": {
+          "task_success": null,
+          "first_click_correctness": null,
+          "backtrack_rate": null
+        }
+      },
+      "card_sort": {
+        "status": "not_run",
+        "evidence_ref": null
+      },
+      "walkthrough": {
+        "status": "not_run",
+        "evidence_ref": null
+      }
+    },
+    {
+      "platform": "admin",
+      "tree_test": {
+        "status": "not_run",
+        "evidence_ref": null,
+        "metrics": {
+          "task_success": null,
+          "first_click_correctness": null,
+          "backtrack_rate": null
+        }
+      },
+      "card_sort": {
+        "status": "not_run",
+        "evidence_ref": null
+      },
+      "walkthrough": {
+        "status": "not_run",
+        "evidence_ref": null
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "information_architecture",
+      "status": "pending",
+      "ref": null
+    },
+    {
+      "decision": "security",
+      "status": "pending",
+      "ref": null
+    },
+    {
+      "decision": "accessibility",
+      "status": "pending",
+      "ref": null
+    }
+  ]
+}
