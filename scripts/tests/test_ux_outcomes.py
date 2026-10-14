@@ -1145,6 +1145,15 @@ class CliTests(CatalogueCase):
         self.assertTrue(first.endswith("\n") and "\r" not in first)
         self.assertIn("`M-J01-01`", first)
 
+    def test_summary_states_d8_gate_integration_is_not_wired(self):
+        # Fable review round 1 (F2): check_design_gates.py does not consume d8_blocking_debt yet; the summary must not
+        # read as if D8 gate evaluation were already blocked by open high debt.
+        model = self.run_check()
+        rendered = module.render_summary(model, module.readiness(model, date(2026, 10, 13)))
+        self.assertIn("D8 gate evaluation in `scripts/check_design_gates.py` does not yet consume `d8_blocking_debt`",
+                      rendered)
+        self.assertIn("follow-up for the design-gates owner", rendered)
+
     def test_summary_neutralises_table_markup(self):
         model = self.run_check(mutate(self.document, lambda d: d["metrics"][0].update(statement="Done | <b>bold</b>")))
         rendered = module.render_summary(model, module.readiness(model, date(2026, 10, 13)))

@@ -1189,7 +1189,9 @@ def render_tail(model):
         "Open critical or high debt (the only debt whose release impact is `blocks_release`) blocks D8 unless the "
         "CDO-equivalent (`decision_coordinator`) records a dated, unexpired exception; "
         "`check_ux_outcomes.d8_blocking_debt` evaluates this, and open debt past its due date is reported as "
-        "`readiness.debt_overdue`, on the date the check runs.", "",
+        "`readiness.debt_overdue`, on the date the check runs. D8 gate evaluation in `scripts/check_design_gates.py` "
+        "does not yet consume `d8_blocking_debt`, so the block is advisory until that integration lands as a "
+        "follow-up for the design-gates owner.", "",
         *(table(("Debt", "Title", "Journeys", "Severity", "Owner", "Due", "Release impact", "Status", "Exception"), [
             (f"`{identifier}`", cell(debt["title"]), codes(debt["journey_ids"]), debt["severity"], debt["owner_role"],
              debt["due_date"], debt["release_impact"], debt["status"],
