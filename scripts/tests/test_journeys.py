@@ -617,6 +617,16 @@ class BoundaryAndReferenceTests(JourneyCase):
         self.assertRefused("reference.unknown_issue", "J01.T.01 PenniLogic/contracts#999",
                            setter(("J01.T.01", "event_refs"), ["pending:PenniLogic/contracts#999"]))
 
+    def test_event_owner_must_not_be_this_ticket(self):
+        # Review round 2 SR-06: routing a pending reference to docs#67 itself routes it to no owner.
+        self.assertRefused("reference.self_issue", "J01.T.01 PenniLogic/docs#67",
+                           setter(("J01.T.01", "event_refs"), ["pending:PenniLogic/docs#67"]))
+
+    def test_event_owner_must_be_open(self):
+        # docs#69 is closed (completed) in the inventory snapshot; a pending reference to it can never be honoured.
+        self.assertRefused("reference.closed_issue", "J01.T.01 PenniLogic/docs#69",
+                           setter(("J01.T.01", "event_refs"), ["pending:PenniLogic/docs#69"]))
+
     def test_policy_reference_grammar(self):
         self.assertRefused("policy.ref_grammar", "J01.T.01", setter(("J01.T.01", "policy_refs"), ["ADR 15"]))
 
@@ -703,6 +713,14 @@ class GapTests(JourneyCase):
     def test_gap_owner_must_be_an_inventory_issue(self):
         self.assertRefused("reference.unknown_issue", "GAP-J10-01 PenniLogic/docs#9999",
                            gap_setter("owner_issue", "PenniLogic/docs#9999"), "gaps")
+
+    def test_gap_owner_must_not_be_this_ticket(self):
+        self.assertRefused("reference.self_issue", "GAP-J10-01 PenniLogic/docs#67",
+                           gap_setter("owner_issue", "PenniLogic/docs#67"), "gaps")
+
+    def test_gap_owner_must_be_open(self):
+        self.assertRefused("reference.closed_issue", "GAP-J10-01 PenniLogic/docs#69",
+                           gap_setter("owner_issue", "PenniLogic/docs#69"), "gaps")
 
     def test_registry_gap_routed_to_docs75(self):
         self.assertRefused("gap.category_owner", "GAP-J10-01", gap_setter("owner_issue", "PenniLogic/docs#74"),

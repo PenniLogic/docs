@@ -193,7 +193,7 @@ STRUCTURE_RULES = (
     "policy.unknown_adr", "boundary.raw_message_egress", "boundary.client_money_arithmetic",
     "boundary.unauthorized_detail_access", "boundary.restricted_notification",
     "telemetry.content_field", "telemetry.identity_missing",
-    "event.minted", "event.ref_grammar", "reference.unknown_issue",
+    "event.minted", "event.ref_grammar", "reference.unknown_issue", "reference.self_issue", "reference.closed_issue",
     "moment.dangling_step", "abuse.missing", "abuse.journey_mismatch", "abuse.dangling_step",
     "gap.journey_mismatch", "gap.unknown_journey", "gap.dangling_step", "gap.category_owner",
     "summary.drift",
@@ -575,7 +575,14 @@ def check_reference(model, value, minted_rule, grammar_rule, subject, adr_ok=Fal
         return
     match = PENDING_REF.fullmatch(value)
     require(match is not None, grammar_rule, subject)
-    require(match.group(1) in model.issues, "reference.unknown_issue", subject, match.group(1))
+    require_routable(model, match.group(1), subject)
+
+
+def require_routable(model, reference, subject):
+    """An owner issue that can still honour the routing: in the inventory, open, and not this ticket itself."""
+    require(reference in model.issues, "reference.unknown_issue", subject, reference)
+    require(reference != model.document["source_issue"], "reference.self_issue", subject, reference)
+    require(model.issues[reference]["state"] == "open", "reference.closed_issue", subject, reference)
 
 
 def check_step(model, blueprint, step):
@@ -715,7 +722,7 @@ def check_gaps(model):
         if gap["step_id"] is not None:
             own = {step["id"] for step in model.blueprints[journey_id]["steps"]}
             require(gap["step_id"] in own, "gap.dangling_step", identifier)
-        require(gap["owner_issue"] in model.issues, "reference.unknown_issue", identifier, gap["owner_issue"])
+        require_routable(model, gap["owner_issue"], identifier)
         expected = GAP_OWNERS.get(gap["category"])
         require(expected is None or gap["owner_issue"] == expected, "gap.category_owner", identifier)
         # HC-m10: creating a backlog issue is an owner-approved mutation outside this change, and any inventory
