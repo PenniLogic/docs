@@ -1023,6 +1023,31 @@ class SummaryAndCliTests(JourneyCase):
             os.symlink(moved, self.root / "product", target_is_directory=True)
             self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
 
+    def assert_in_root_link_refused(self, target):
+        # Fable review round 1 F2: a link that stays inside the root passes the resolve-containment check, so only
+        # the per-component symlink refusal stops the read; the spy proves the link target is never loaded.
+        loaded, real = [], module.support.load_json
+        with mock.patch.object(module.support, "load_json",
+                               side_effect=lambda path: loaded.append(Path(path).resolve()) or real(path)):
+            self.assertEqual(self.main("--structure"), self.refused("input.unreadable_or_invalid"))
+        self.assertTrue(all(target.resolve() not in [path, *path.parents] for path in loaded))
+
+    def test_symlink_to_an_in_root_sibling_file_refused(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        sibling = self.root / "product" / "gaps-sibling.json"
+        (self.root / module.GAPS).rename(sibling)
+        os.symlink(sibling.name, self.root / module.GAPS)
+        self.assertIn(self.root.resolve(), (self.root / module.GAPS).resolve().parents)
+        self.assert_in_root_link_refused(sibling)
+
+    def test_symlinked_parent_directory_to_an_in_root_sibling_refused(self):
+        self.assertEqual(self.main("--structure")[0], 0)
+        sibling = self.root / "product-sibling"
+        (self.root / "product").rename(sibling)
+        os.symlink(sibling.name, self.root / "product", target_is_directory=True)
+        self.assertIn(self.root.resolve(), (self.root / module.DATA).resolve().parents)
+        self.assert_in_root_link_refused(sibling)
+
     def test_write_summary_never_follows_a_symlinked_target(self):
         self.assertEqual(self.main("--write-summary")[0], 0)
         with tempfile.TemporaryDirectory() as outside:
