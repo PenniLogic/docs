@@ -1837,7 +1837,9 @@ class JsonBoundTests(unittest.TestCase):
         paths += [ROOT / content.schema_path(name) for name in content.DOCUMENTS]
         paths += [ROOT / content.TAXONOMY, ROOT / content.GATES]
         deepest = max(content.nesting_depth(path.read_bytes()) for path in paths)
-        self.assertEqual(deepest, 8)  # glossary.schema.json; the documented headroom is eightfold
+        # 8 today (glossary.schema.json). Bound the depth rather than pin it, so a shallower schema still passes;
+        # the safety property is the documented eightfold headroom under MAX_JSON_DEPTH.
+        self.assertLessEqual(deepest, 8)
         self.assertLessEqual(deepest * 8, content.MAX_JSON_DEPTH)
 
     def test_integer_bound_holds_whatever_the_interpreter_digit_limit(self):
