@@ -6,12 +6,13 @@ identifiers come from the experience-coverage registry pinned by commit, path an
 at docs 1722fc79 until PenniLogic/docs#75 integrates), read from the local Git object store only.
 
 The catalogue defines outcomes; it collects nothing. Collection stays disabled, every event is an allowlisted,
-non-financial shape (bucketed or enumerated values, no free text, money, raw content, prompt, identity or household
-detail; E33-F04), opt-out is honoured in every event and denominator, and cohort minimums, retention, aggregation and
-access are references to PenniLogic/infra#27 (T-PLT-03), never numbers. Baselines are null and `unmeasured`,
-thresholds are `unset` and a crossed kill threshold opens a reviewed product decision, never an automatic action.
-The only numbers in the catalogue are the two privacy-budget caps. Design debt uses `DEBT-NNN` identifiers; the D8
-check is the function `d8_blocking_debt`, which never edits governance/design-gates.json.
+non-financial shape (bucketed or enumerated values whose every name and value segment comes from a reviewed
+vocabulary; no free text, money, raw content, prompt, identity, household, location or demographic detail; E33-F04),
+opt-out is honoured in every event and denominator, and cohort minimums, retention, aggregation and access are
+references to PenniLogic/infra#27 (T-PLT-03), never numbers. Baselines are null and `unmeasured`, thresholds are
+`unset` and a crossed kill threshold opens a reviewed product decision, never an automatic action. The only numbers
+in the catalogue are the two privacy-budget caps. Design debt uses `DEBT-NNN` identifiers; the D8 check is the
+function `d8_blocking_debt`, which never edits governance/design-gates.json.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a catalogue or
 journey grammar; input text is never echoed. Held inputs (approvals, research operations, payload allowlist review,
@@ -366,39 +367,84 @@ FIELD_KINDS = frozenset({"boolean", "enum", "count_bucket", "duration_bucket"})
 BUDGET_CAPS = {"max_fields_per_event": (1, 8), "max_values_per_field": (2, 12)}
 VALUE_LIMIT = 32
 # Planted-field rejection (E33-F04; ticket criterion 3): a name, field or value segment naming one of these
-# categories is refused with the category's rule. Matching is per underscore segment (and its plural), and
-# also by substring for the unambiguous words in SUBSTRINGS, so a joined name such as `txnamount` is caught.
+# categories is refused with the category's rule. Matching is per underscore segment (and its plural), also by
+# substring for the unambiguous words in SUBSTRINGS, so a joined name such as `txnamount` is caught, and on every
+# look-alike reading of the token (am0unt, arnount). Whatever no category names still has to pass EVENT_VOCABULARY.
 SENSITIVE = (
     ("event.money_field", ("amount", "balance", "money", "currency", "price", "cost", "fee", "salary", "income",
                            "payment", "debt", "loan", "emi", "interest", "spend", "spent", "merchant", "payee",
                            "counterparty", "account", "iban", "upi", "card", "wallet", "networth",
-                           "amt", "acct", "accno", "ifsc", "vpa")),
+                           "amt", "acct", "accno", "ifsc", "vpa",
+                           # Review round 1: currency codes, units and Indian shorthand as segments, and the money,
+                           # payer and lender words that passed (credit_limit, txn_kind, payer, lender, employer).
+                           *_CURRENCIES.lower().split("|"), "rs", "rupee", "paise", "paisa", "lakh", "lac", "lk",
+                           "crore", "cr", "k", "dollar", "euro", "pound", "cent", "buck", "dirham",
+                           "bank", "credit", "debit", "overdraft", "saving", "savings", "investment", "invest",
+                           "bill", "rent", "txn", "transaction", "transfer", "deposit", "withdrawal", "refund",
+                           "cashback", "tax", "mortgage", "pension", "payer", "payroll", "wage", "recipient",
+                           "lender", "borrower", "creditor", "debtor", "employer", "budget", "allowance", "invoice",
+                           "receipt", "fund", "asset", "liability")),
     ("event.content_field", ("text", "message", "body", "content", "note", "memo", "description", "comment",
                              "query", "search", "transcript", "sms", "raw", "narration", "subject", "freeform")),
     ("event.prompt_field", ("prompt", "completion", "response", "reply", "chat", "utterance", "conversation")),
     ("event.identity_field", ("name", "email", "phone", "mobile", "address", "user", "uid", "id", "ids", "uuid",
-                              "device", "ip", "identifier", "token", "pan", "aadhaar", "dob", "birth", "location",
-                              "lat", "lon", "latitude", "longitude", "gps", "contact", "handle",
-                              "imei", "msisdn", "ssn", "passport", "gstin",
+                              "device", "ip", "identifier", "token", "pan", "aadhaar", "dob", "birth",
+                              "contact", "handle", "imei", "msisdn", "ssn", "passport", "gstin",
                               "otp", "pin", "password", "passcode", "secret", "credential")),
     ("event.household_field", ("household", "member", "relationship", "partner", "spouse", "child", "children",
-                               "parent", "family", "invitee", "grantee", "guardian", "dependant", "dependent")),
+                               "parent", "family", "invitee", "grantee", "guardian", "dependant", "dependent",
+                               "wife", "husband", "kid", "son", "daughter", "sibling", "brother", "sister", "mother",
+                               "father", "grandparent", "relative", "marital", "married", "widow", "divorce")),
+    ("event.location_field", ("location", "lat", "lon", "latitude", "longitude", "gps", "geo", "geohash",
+                              "coordinate", "pincode", "postcode", "zipcode", "zip", "city", "town", "village",
+                              "district", "locality", "region", "country")),
+    ("event.demographic_field", ("gender", "sex", "age", "religion", "caste", "tribe", "ethnicity", "race",
+                                 "nationality", "disability", "health", "medical", "pregnancy", "pregnant",
+                                 "orientation")),
 )
 SUBSTRINGS = frozenset({"amount", "balance", "merchant", "salary", "counterparty", "transcript", "message", "prompt",
                         "email", "aadhaar", "household", "relationship", "spouse", "password", "passcode", "passport",
-                        "msisdn", "credential"})
+                        "msisdn", "credential", "loan", "overdraft", "savings", "investment", "creditor", "employer",
+                        "family", "husband", "pincode", "postcode", "zipcode", "religion", "disability"})
+# Look-alike readings: digits read as the letters they imitate (1 as l or i) and rn, vv read as m, w.
+LOOK_ALIKE = tuple(str.maketrans("0123456789", "o" + one + "zeasgtbg") for one in "li")
+# Only journey codes may carry digits, and only as enumerated values.
+JOURNEY_VALUE = re.compile(r"j[0-9]{2}")
+# Review round 1 (spec-and-safety.-r1-F2): the positive allowlist. Every underscore segment of an event name, field
+# name and value must be one of these reviewed, neutral words; anything else (a merchant, bank, place, number or a
+# joined abbreviation such as txnamt) is refused with `event.vocabulary`. Adding a word is a reviewed code change
+# and still needs the payload review held on every event.
+EVENT_VOCABULARY = frozenset("""
+    abandoned accepted access answer answered article assistant assisted assistive cancel change check class
+    completed comprehension confirmation confirmed conflict connectivity consequence core corrected correction
+    day declined deferred discarded downgrade edit elapsed entry error escalated escalation explanation few
+    figure finished first form goal granted help immediate journey kind later long longer medium met milestone
+    minute minutes mode month more not offer on once only opened or outcome partly paused permission plan
+    reached recovery request restored result reversed revoked route same saved scope self service session set
+    share shared short shown source stage start started step subscription support task three times twice
+    unavailable uncertainty under understood upgrade validation view week within
+""".split())
+
+
+def look_alikes(token):
+    """The token and its look-alike readings, so am0unt, ba1ance, arnount and h0usehold read as the words they
+    imitate."""
+    readings = {token, *(token.translate(table) for table in LOOK_ALIKE)}
+    return sorted(readings | {reading.replace("rn", "m").replace("vv", "w") for reading in readings})
 
 
 def sensitive_rule(token):
-    """The category rule a snake-case token falls under, or None."""
-    segments = token.split("_")
-    compact = token.replace("_", "")
+    """The category rule a snake-case token, or any look-alike reading of it, falls under, or None."""
+    readings = look_alikes(token)
     for rule, words in SENSITIVE:
-        for word in words:
-            if any(segment in (word, word + "s", word + "es") for segment in segments):
-                return rule
-            if word in SUBSTRINGS and word in compact:
-                return rule
+        for reading in readings:
+            segments = reading.split("_")
+            compact = reading.replace("_", "")
+            for word in words:
+                if any(segment in (word, word + "s", word + "es") for segment in segments):
+                    return rule
+                if word in SUBSTRINGS and word in compact:
+                    return rule
     return None
 
 
@@ -462,7 +508,7 @@ def check_event(event, budget):
     identifier = event["id"]
     require(SNAKE.fullmatch(event["name"]) is not None and len(event["name"]) <= NAME_LIMIT,
             "event.name_grammar", identifier)
-    tokens = [event["name"]]
+    names_used, enumerated = [event["name"]], []
     require(len(event["fields"]) <= budget["max_fields_per_event"], "event.privacy_budget", identifier)
     names = set()
     for field in event["fields"]:
@@ -480,10 +526,20 @@ def check_event(event, budget):
         for value in values:
             require(SNAKE.fullmatch(value) is not None and len(value) <= VALUE_LIMIT, "event.value_grammar",
                     identifier)
-        tokens += [field["name"], *values]
-    for token in tokens:
+        names_used.append(field["name"])
+        enumerated += values
+    # Category first (the most specific rule), then digits, then the reviewed vocabulary; all fail closed. Only an
+    # enumerated value may be a journey code; a name never carries a digit.
+    tokens = [(token, False) for token in names_used] + [(token, True) for token in enumerated]
+    for token, _ in tokens:
         rule = sensitive_rule(token)
         require(rule is None, rule, identifier)
+    for token, is_value in tokens:
+        code = is_value and JOURNEY_VALUE.fullmatch(token) is not None
+        require(code or not any(character.isdigit() for character in token), "event.number_token", identifier)
+    for token, is_value in tokens:
+        code = is_value and JOURNEY_VALUE.fullmatch(token) is not None
+        require(code or set(token.split("_")) <= EVENT_VOCABULARY, "event.vocabulary", identifier)
     require(event["opt_out_honoured"] is True, "event.opt_out_not_honoured", identifier)
     require(event["enabled"] is False, "collection.enabled", identifier)
 
@@ -793,6 +849,11 @@ def render_summary(model, gaps):
         f"- Session recording of financial or operator-sensitive content: `{privacy['session_recording']}`.",
         f"- Privacy budget: at most {budget['max_fields_per_event']} fields per event and "
         f"{budget['max_values_per_field']} enumerated values per field; no free-text, number or identifier kind.",
+        "- Planted-field rejection: event names, field names and values use only the reviewed vocabulary "
+        "`EVENT_VOCABULARY` in `scripts/check_ux_outcomes.py`; money, currency, raw content, prompt, identity, "
+        "household, location and demographic words, and their digit-for-letter and rn/vv look-alikes, are refused by "
+        "category, and a digit appears only in a journey code. Residual risk: a reviewed word can still be misused in "
+        "context, so the payload review held on every event remains the backstop.",
         "", "## Events", "",
         *table(("Event", "Name", "Fields", "Incentive", "Purpose"), [
             (f"`{identifier}`", f"`{event['name']}`",

@@ -28,6 +28,7 @@ Readiness: **NOT GREEN: readiness incomplete**.
 - Cohort minimum, retention, aggregation and access: `pending:PenniLogic/infra#27`, `pending:PenniLogic/infra#27`, `pending:PenniLogic/infra#27`, `pending:PenniLogic/infra#27`.
 - Session recording of financial or operator-sensitive content: `prohibited`.
 - Privacy budget: at most 5 fields per event and 12 enumerated values per field; no free-text, number or identifier kind.
+- Planted-field rejection: event names, field names and values use only the reviewed vocabulary `EVENT_VOCABULARY` in `scripts/check_ux_outcomes.py`; money, currency, raw content, prompt, identity, household, location and demographic words, and their digit-for-letter and rn/vv look-alikes, are refused by category, and a digit appears only in a journey code. Residual risk: a reviewed word can still be misused in context, so the payload review held on every event remains the backstop.
 
 ## Events
 

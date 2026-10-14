@@ -261,6 +261,44 @@ class EventPrivacyTests(CatalogueCase):
             with self.subTest(name=name):
                 self.assertRefused(rule, "EV-001", mutate(self.document, add_field(name)))
 
+    def test_round1_planted_fields_are_refused(self):
+        # Review round 1 (spec-and-safety.-r1-F2): each of these passed the denylist-only check.
+        money, place, people = "event.money_field", "event.location_field", "event.demographic_field"
+        cases = (
+            ("plan_band", "enum", ("inr_500", "inr_5000"), money), ("band", "enum", ("under_50000", "over_50000"),
+                                                                      "event.number_token"),
+            ("size_band", "count_bucket", ("rs_100", "rs_1000"), money), ("limit_band", "enum", ("lakh_1", "lakh_5"),
+                                                                          money),
+            ("store", "enum", ("swiggy", "zomato", "amazon"), "event.vocabulary"),
+            ("bank", "enum", ("hdfc", "icici", "sbi"), money), ("txn_kind", "enum", ("debit", "credit"), money),
+            ("credit_limit", "enum", ("low", "high"), money), ("overdraft", "boolean", (), money),
+            ("savings", "boolean", (), money), ("investment", "boolean", (), money), ("loanamt", "boolean", (), money),
+            ("billamt", "boolean", (), "event.vocabulary"), ("rentamt", "boolean", (), "event.vocabulary"),
+            ("payer", "boolean", (), money), ("recipient_kind", "enum", ("low", "high"), money),
+            ("lender", "boolean", (), money), ("creditor", "boolean", (), money), ("employer", "boolean", (), money),
+            ("wife_present", "boolean", (), "event.household_field"),
+            ("husband_present", "boolean", (), "event.household_field"),
+            ("kid_count", "count_bucket", ("none", "some"), "event.household_field"),
+            ("familyshare", "boolean", (), "event.household_field"),
+            ("pincode", "boolean", (), place), ("postcode", "boolean", (), place), ("city", "boolean", (), place),
+            ("gender", "boolean", (), people), ("age_band", "enum", ("low", "high"), people),
+            ("religion", "boolean", (), people), ("caste", "boolean", (), people), ("disability", "boolean", (), people),
+            ("am0unt_band", "enum", ("low", "high"), money), ("ba1ance_band", "enum", ("low", "high"), money),
+            ("arnount_band", "enum", ("low", "high"), money),
+            ("h0usehold_role", "enum", ("low", "high"), "event.household_field"),
+            ("emai1_domain", "enum", ("low", "high"), "event.identity_field"),
+            ("pr0mpt_kind", "enum", ("low", "high"), "event.prompt_field"), ("merch4nt", "boolean", (), money),
+            ("txnamt", "boolean", (), "event.vocabulary"), ("j01", "boolean", (), "event.number_token"),
+            ("step_kind", "enum", ("entry", "step_2"), "event.number_token"),
+        )
+        for name, kind, values, rule in cases:
+            with self.subTest(name=name):
+                self.assertRefused(rule, "EV-001", mutate(self.document, add_field(name, kind, values)))
+
+    def test_reviewed_vocabulary_and_journey_codes_pass(self):
+        self.run_check(mutate(self.document, add_field("step_kind", values=("entry", "core", "confirmation"))))
+        self.run_check(mutate(self.document, add_field("journey", values=("j01", "j02"))))
+
     def test_planted_sensitive_value_is_refused(self):
         self.assertRefused("event.money_field", "EV-001", mutate(self.document, lambda d: d["events"][0]["fields"][0]
                                                                   ["values"].append("merchant_known")))
