@@ -1001,9 +1001,11 @@ def check_base(documents, base):
         old, new = version(before[version_field]), version(documents[name][version_field])
         require(new >= old, "version.regressed")
         if items is None:
-            # Voice: any change to what consumers read (patterns, banned list, sentence limit, rules) needs a minor.
-            unchanged = all(documents[name][field] == before[field] for field in documents[name]
-                            if field != version_field) and set(before) == set(documents[name])
+            # Voice: any change to what consumers read (patterns, banned list, sentence limit, rules), including a
+            # field added or removed, needs a minor. Both sides are compared whole, so a field on one side only is a
+            # change, never a lookup error.
+            unchanged = ({field: value for field, value in documents[name].items() if field != version_field}
+                         == {field: value for field, value in before.items() if field != version_field})
             require(unchanged or new[:2] > old[:2], "voice.changed_without_minor")
             continue
         current = {item[identity]: item for item in documents[name][items]}

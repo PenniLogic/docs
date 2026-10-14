@@ -1707,6 +1707,32 @@ class VersionedFieldTests(Harness):
                 docs["voice"]["voice_version"] = "0.2.0"
                 self.run_check(docs, sources=FakeSources(documents()))  # control
 
+    def test_added_or_removed_voice_field_needs_a_minor_bump(self):
+        """A voice field present on one side only is a change like any other. An added field once raised KeyError
+        in the comparison, reported as base.invalid even with a minor bump."""
+        wider = copy.deepcopy(self.schemas)  # a later voice schema that allows one more optional field
+        wider["voice"]["properties"]["tone_notes"] = {"type": "string", "minLength": 1}
+
+        def noted():
+            docs = documents()
+            docs["voice"]["tone_notes"] = "Synthetic note."
+            return docs
+
+        def outcome(docs, base, base_schemas):
+            try:
+                content.check(docs, wider, taxonomy(), gates(), NOW, FakeSources(base, base_schemas=base_schemas))
+            except content.Refused as error:
+                return error.rule, error.subject
+            return "accepted"
+        refused = ("voice.changed_without_minor", None)
+        cases = {"added": (noted, documents, self.schemas), "removed": (documents, noted, wider)}
+        for change, (head, base, base_schemas) in cases.items():
+            for bump, expected in (("0.1.0", refused), ("0.1.1", refused), ("0.2.0", "accepted")):
+                with self.subTest(change=change, voice_version=bump):
+                    docs = head()
+                    docs["voice"]["voice_version"] = bump
+                    self.assertEqual(outcome(docs, base(), base_schemas), expected)
+
     def test_expired_copy_never_returns_to_review_or_draft_at_the_same_version(self):
         base = documents()
         approve(first(base), "expired", start=NOW - timedelta(days=20), end=NOW - timedelta(days=1))

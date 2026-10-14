@@ -49,9 +49,9 @@ Versions are compared with the merge base of `HEAD` and `origin/main`. Adding a 
 consumers read (a term's label, definition, surfaces, forbidden aliases or contract field names; a key's category,
 copy, range, platforms, term references, safe-exit flag or regulated record binding), needs at least a minor bump;
 removing or renaming one needs a major bump. Any change to `voice.json` other than its `voice_version` (patterns and
-their slot keys, banned patterns, sentence limit, reading level, principles, conventions, imported rule list) needs
-at least a minor `voice_version` bump. Each base document is validated against the schema of its own base
-commit, and a base the comparison cannot read fails closed.
+their slot keys, banned patterns, sentence limit, reading level, principles, conventions, imported rule list),
+including a field added or removed, needs at least a minor `voice_version` bump. Each base document is validated
+against the schema of its own base commit, and a base the comparison cannot read fails closed.
 
 ## Regulated-copy workflow
 
