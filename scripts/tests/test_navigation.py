@@ -114,10 +114,18 @@ ROLES = [
 ]
 
 
+HINTS = {item["id"]: item["route"] for item in SCREENS}
+
+
+def external(entry, rationale, *patterns):
+    return {"entry": entry, "patterns": list(patterns), "rationale": rationale}
+
+
 def placement(identifier):
+    """Hosted by its route, or an external entry opened by its own pinned hint."""
     if identifier in EXTERNAL:
-        entry, rationale = EXTERNAL[identifier]
-        return {"screen_id": identifier, "host_route_id": None, "external": {"entry": entry, "rationale": rationale}}
+        return {"screen_id": identifier, "host_route_id": None,
+                "external": external(*EXTERNAL[identifier], HINTS[identifier])}
     return {"screen_id": identifier, "host_route_id": HOSTS[identifier], "external": None}
 
 
@@ -473,8 +481,8 @@ class RoleDenialTests(NavigationCase):
 
     def test_admin_screen_is_never_an_external_entry(self):
         # Outside every route an operator screen would carry no role at all.
-        self.refused(lambda fixture: fixture.placement("S-ADM-004").update(host_route_id=None, external={
-            "entry": "deep_link", "rationale": "Synthetic fixture: an operator screen opened from a link."}),
+        self.refused(lambda fixture: fixture.placement("S-ADM-004").update(host_route_id=None, external=external(
+            "deep_link", "Synthetic fixture: an operator screen opened from a link.", "/operator/audit")),
                      "admin.external_entry", "S-ADM-004")
 
 
@@ -516,8 +524,8 @@ class PlacementTests(NavigationCase):
                      "placement.rationale_missing", "S-AND-007")
 
     def test_route_without_screens_or_children_is_refused(self):
-        self.refused(lambda fixture: fixture.placement("S-WEB-004").update(host_route_id=None, external={
-            "entry": "deep_link", "rationale": "Synthetic fixture: opened from an export file."}),
+        self.refused(lambda fixture: fixture.placement("S-WEB-004").update(host_route_id=None, external=external(
+            "deep_link", "Synthetic fixture: opened from an export file.", "/transactions/:id")),
             "route.empty_leaf", "R-WEB-004")
 
     def test_container_route_with_children_needs_no_screen(self):
@@ -556,8 +564,42 @@ class DeepLinkTests(NavigationCase):
                      "deep_link.ambiguous_pattern", "R-WEB-004")
 
     def test_hint_resolving_to_a_route_that_does_not_host_its_screen_is_refused(self):
+        self.refused(lambda fixture: fixture.placement("S-AND-003").update(host_route_id="R-AND-004"),
+                     "deep_link.hint_misrouted", "S-AND-003")
+
+    def test_hint_maps_by_match_shape(self):
+        model = self.passes(lambda fixture: fixture.route("R-WEB-004").update(patterns=["/transactions/:key"]))
+        self.assertEqual(model.shapes[("web", "/transactions/:")], "R-WEB-004")
+
+    def test_external_entry_claims_its_own_links(self):
+        model = Fixture().check()
+        self.assertEqual([model.patterns[("web", "/split/invites/:token")],
+                          model.patterns[("android", "android-widget://debt-progress")]], ["S-WEB-005", "S-AND-007"])
+
+    def test_route_pattern_cannot_capture_a_landing_link(self):
+        # A renamed parameter is the same link: every invitation URL stays with its landing.
+        self.refused(lambda fixture: fixture.route("R-WEB-002")["patterns"].append("/split/invites/:code"),
+                     "deep_link.ambiguous_pattern", "S-WEB-005")
         self.refused(lambda fixture: fixture.route("R-AND-002")["patterns"].append("android://notifications/:id"),
-                     "deep_link.hint_misrouted", "S-AND-006")
+                     "deep_link.duplicate_pattern", "S-AND-006")
+
+    def test_landing_link_follows_its_platform_and_entry_grammar(self):
+        cases = (("S-WEB-005", "/split/Invites"), ("S-AND-006", "android-widget://alerts"),
+                 ("S-AND-007", "android://widget"))
+        for identifier, pattern in cases:
+            with self.subTest(pattern=pattern):
+                self.refused(lambda fixture: fixture.placement(identifier)["external"]["patterns"].append(pattern),
+                             "deep_link.grammar", identifier)
+
+    def test_landing_hint_must_map_to_its_own_link(self):
+        self.refused(lambda fixture: fixture.placement("S-WEB-005")["external"].update(
+            patterns=["/split/join/:token"]), "deep_link.hint_unmapped", "S-WEB-005")
+
+    def test_landing_hint_claimed_by_a_route_is_misrouted(self):
+        def mutate(fixture):  # the invitation link moves from its landing to a route
+            fixture.placement("S-WEB-005")["external"]["patterns"] = ["/split/join/:token"]
+            fixture.route("R-WEB-002")["patterns"].append("/split/invites/:token")
+        self.refused(mutate, "deep_link.hint_misrouted", "S-WEB-005")
 
     def test_imported_hint_must_map_to_the_hosting_route(self):
         self.refused(lambda fixture: fixture.route("R-WEB-004").update(patterns=["/transactions/detail/:id"]),
@@ -590,6 +632,19 @@ class DeepLinkTests(NavigationCase):
     def test_redirect_from_an_active_pattern_is_refused(self):
         self.refused(lambda fixture: fixture.routes["redirects"].append(redirect("/overview", "R-WEB-003")),
                      "deep_link.redirect_shadowed", "R-WEB-003")
+
+    def test_redirect_from_a_landing_link_is_refused(self):
+        self.refused(lambda fixture: fixture.routes["redirects"].append(
+            redirect("/split/invites/:token", "R-WEB-002")), "deep_link.redirect_shadowed", "R-WEB-002")
+
+    def test_redirect_shadowing_ignores_parameter_names(self):
+        self.refused(lambda fixture: fixture.routes["redirects"].append(redirect("/transactions/:key", "R-WEB-002")),
+                     "deep_link.redirect_shadowed", "R-WEB-002")
+
+    def test_duplicate_redirect_ignores_parameter_names(self):
+        self.refused(lambda fixture: fixture.routes["redirects"].append(redirect("/old/:b", "R-WEB-003")),
+                     "deep_link.redirect_duplicate", "R-WEB-003",
+                     prepare=lambda fixture: fixture.routes["redirects"].append(redirect("/old/:a", "R-WEB-002")))
 
     def test_redirect_pattern_follows_its_target_platform(self):
         self.refused(lambda fixture: fixture.routes["redirects"].append(redirect("android://overview", "R-WEB-002")),
@@ -668,6 +723,30 @@ class CompatibilityTests(NavigationCase):
             fixture.freeze_base()
         self.refused(lambda fixture: fixture.routes["retired_route_ids"].remove("R-WEB-005"),
                      "route.retired_dropped", "R-WEB-005", prepare=prepare)
+
+    def test_published_landing_link_keeps_its_landing_or_gains_a_redirect(self):
+        def prepare(fixture):
+            # Published, then the registry moves the invitation hint: the landing keeps the old link beside the new.
+            fixture.freeze_base()
+            moved = [dict(item, route="/split/join/:token") if item["id"] == "S-WEB-005" else item for item in SCREENS]
+            fixture.set_registry({**REGISTRY, "screens": moved})
+            fixture.placement("S-WEB-005")["external"]["patterns"] = ["/split/join/:token", "/split/invites/:token"]
+        self.refused(lambda fixture: fixture.placement("S-WEB-005")["external"]["patterns"].pop(),
+                     "deep_link.published_changed", "S-WEB-005", prepare=prepare)
+
+        def redirected(fixture):
+            fixture.placement("S-WEB-005")["external"]["patterns"].pop()
+            fixture.routes["redirects"].append(redirect("/split/invites/:token", "R-WEB-002"))
+        self.passes(redirected, prepare=prepare)
+
+    def test_published_patterns_compare_by_match_shape(self):
+        def prepare(fixture):
+            fixture.routes["redirects"].append(redirect("/old/:a", "R-WEB-002"))
+            fixture.freeze_base()
+        def mutate(fixture):
+            fixture.routes["redirects"][0]["from_pattern"] = "/old/:b"
+            fixture.route("R-WEB-004")["patterns"] = ["/transactions/:key"]
+        self.assertIsNotNone(self.passes(mutate, prepare=prepare).base)
 
     def test_published_redirect_is_never_removed(self):
         def prepare(fixture):
@@ -980,6 +1059,11 @@ class SitemapTests(NavigationCase):
         self.assertIn("| CAP-002 | Synthetic capability 002 | J11 | absent | absent | parity: F-ADM-01 |", rendered)
         self.assertIn("| none (parity) | not required (parity) |", rendered)
 
+    def test_rendering_lists_external_entries_with_their_links(self):
+        rendered = module.render_sitemaps(Fixture().check())
+        self.assertIn("| S-AND-007 | widget | `android-widget://debt-progress` | Synthetic fixture: a home-screen "
+                      "widget outside the app tree. |", rendered)
+
     def test_data_text_cannot_break_the_markdown(self):
         fixture = Fixture()
         fixture.capability("CAP-001")["name"] = "Debt | plan *now*"
@@ -1067,9 +1151,9 @@ class Checkout:
 
 STRUCTURE_LINE = (
     "Navigation map 0.1.0 structure valid: 14 routes (6 Android, 4 web, 4 admin; 4 Android primary destinations), "
-    "0 orphan routes, 17 registry screens placed exactly once (14 hosted, 3 external), 14 deep-link patterns, "
-    "0 redirects, 0 retired route IDs checked against {base}; 3 capabilities (2 with a divergence) allocating "
-    "3 registry flows; registry pinned at planning/source/evidence/experience-coverage.json"
+    "0 orphan routes, 17 registry screens placed exactly once (14 hosted, 3 external), 17 deep-link patterns "
+    "(3 on external entries), 0 redirects, 0 retired route IDs checked against {base}; 3 capabilities (2 with a "
+    "divergence) allocating 3 registry flows; registry pinned at planning/source/evidence/experience-coverage.json"
 )
 GAP_COUNTS = [
     "readiness.tree_test_not_run: 3", "readiness.card_sort_not_run: 3", "readiness.decision_pending: 3",
@@ -1253,9 +1337,10 @@ class LiveRegistryTests(unittest.TestCase):
 
 PUBLISHED_STRUCTURE = (
     "Navigation map 0.1.0 structure valid: 123 routes (47 Android, 45 web, 31 admin; 5 Android primary "
-    "destinations), 0 orphan routes, 141 registry screens placed exactly once (134 hosted, 7 external), 134 deep-link "
-    "patterns, 0 redirects, 0 retired route IDs checked against {base}; 16 capabilities (16 with a divergence) "
-    "allocating 38 registry flows; registry pinned at planning/source/evidence/experience-coverage.json"
+    "destinations), 0 orphan routes, 141 registry screens placed exactly once (134 hosted, 7 external), 141 deep-link "
+    "patterns (7 on external entries), 0 redirects, 0 retired route IDs checked against {base}; 16 capabilities (16 "
+    "with a divergence) allocating 38 registry flows; registry pinned at "
+    "planning/source/evidence/experience-coverage.json"
 )
 # The recorded readiness gaps of the published route map and allocation against their pinned registry.
 PUBLISHED_GAP_COUNTS = {

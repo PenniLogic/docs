@@ -80,6 +80,8 @@ DEEP_LINKS = {
     "web": re.compile(rf"/{_ELEMENT}(?:/{_ELEMENT})*(?:/\*)?|/"),
     "admin": re.compile(rf"/{_ELEMENT}(?:/{_ELEMENT})*(?:/\*)?"),
 }
+# A launcher widget's surface (the registry's android-widget:// hints): an external widget entry's only grammar.
+WIDGET_LINK = re.compile(rf"android-widget://{_SEGMENT}(?:/{_ELEMENT})*")
 # Imported registry hints (H06 grammar): Android and widget deep links or web/admin paths.
 ROUTE_HINT = re.compile(rf"(?:android|android-widget)://{_SEGMENT}(?:/{_ELEMENT})*|/{_ELEMENT}(?:/{_ELEMENT})*(?:/\*)?")
 PATTERN_LIMIT = 120
@@ -220,13 +222,15 @@ CONTENT_SHAPES = (
 # Mixed-case alphanumeric runs of 32+ characters with a digit are key-shaped too.
 TOKEN = re.compile(r"[A-Za-z0-9+=_]{32,}")
 # Grammar-checked values exempt from the scan, located by path ("*" = any list index): the pin's commit and digest
-# (hex runs), its path and a role's source (closed allowlists) and deep-link patterns (letters-only grammar).
+# (hex runs), its path and a role's source (closed allowlists) and deep-link or widget patterns (letters-only).
 _ANY_DEEP_LINK = re.compile("|".join(f"(?:{grammar.pattern})" for grammar in DEEP_LINKS.values()))
 EXEMPT_PATHS = {
     ("registry_ref", "commit"): COMMIT.fullmatch, ("registry_ref", "sha256"): DIGEST.fullmatch,
     ("registry_ref", "path"): REGISTRY_PATHS.__contains__, ("roles", "*", "source"): ROLE_SOURCES.__contains__,
     ("routes", "*", "patterns", "*"): lambda value: len(value) <= PATTERN_LIMIT and _ANY_DEEP_LINK.fullmatch(value),
     ("redirects", "*", "from_pattern"): lambda value: len(value) <= PATTERN_LIMIT and _ANY_DEEP_LINK.fullmatch(value),
+    ("screen_placements", "*", "external", "patterns", "*"):
+        lambda value: len(value) <= PATTERN_LIMIT and (_ANY_DEEP_LINK.fullmatch(value) or WIDGET_LINK.fullmatch(value)),
 }
 NUMBER_PATHS = frozenset({("schema_version",)} | {
     ("research", "*", "tree_test", "metrics", name) for name in ("task_success", "first_click_correctness",
@@ -437,7 +441,8 @@ class Model:
                       for platform in PLATFORMS}
         self.hosted = {identifier: [] for identifier in self.routes}
         self.placements = {}
-        self.patterns, self.redirects = {}, {}
+        # Exact patterns and match shapes, each owned by a route or an external entry's screen; redirects by shape.
+        self.patterns, self.shapes, self.redirects = {}, {}, {}
         self.base = None
 
 
@@ -574,40 +579,59 @@ def match_shape(pattern):
     return re.sub(rf":{_SEGMENT}", ":", pattern)
 
 
+def _claim(model, platform, pattern, grammar, owner):
+    """Record one pattern for its owner (a route, or the screen of an external entry): within its grammar, unique,
+    and alone in its match shape on the platform."""
+    require(grammar is not None and len(pattern) <= PATTERN_LIMIT and grammar.fullmatch(pattern), "deep_link.grammar",
+            owner)
+    require((platform, pattern) not in model.patterns, "deep_link.duplicate_pattern", owner)
+    model.patterns[(platform, pattern)] = owner
+    require(model.shapes.setdefault((platform, match_shape(pattern)), owner) == owner, "deep_link.ambiguous_pattern",
+            owner)
+
+
 def check_deep_links(model):
-    """Every pattern resolves to exactly one route of its platform; imported route hints map to the hosting route;
-    redirects lead from retired patterns to active routes. Static segments outrank parameters, which outrank a
-    trailing wildcard, so only patterns with the same match shape on different routes are ambiguous."""
-    shapes = {}
+    """Every pattern resolves to exactly one route or external entry of its platform; imported route hints map to the
+    hosting route, or to the external entry's own pattern; redirects lead from retired patterns to active routes.
+    Static segments outrank parameters, which outrank a trailing wildcard, so only patterns with the same match shape
+    are ambiguous, and hints, redirects and the published base are all compared by match shape."""
     for identifier, route in model.routes.items():
-        platform = route["platform"]
         for pattern in route["patterns"]:
-            require(len(pattern) <= PATTERN_LIMIT and DEEP_LINKS[platform].fullmatch(pattern), "deep_link.grammar",
-                    identifier)
-            require((platform, pattern) not in model.patterns, "deep_link.duplicate_pattern", identifier)
-            model.patterns[(platform, pattern)] = identifier
-            owner = shapes.setdefault((platform, match_shape(pattern)), identifier)
-            require(owner == identifier, "deep_link.ambiguous_pattern", identifier)
+            _claim(model, route["platform"], pattern, DEEP_LINKS[route["platform"]], identifier)
+    # An invitation, notification or widget landing opened from outside the product has no route, but the links that
+    # open it persist outside the app: they are claimed like route patterns, so nothing else captures them.
+    for identifier, item in model.placements.items():
+        if item["external"] is not None:
+            platform, entry = model.registry.screens[identifier][0], item["external"]["entry"]
+            grammar = (WIDGET_LINK if platform == "android" else None) if entry == "widget" else DEEP_LINKS[platform]
+            for pattern in item["external"]["patterns"]:
+                _claim(model, platform, pattern, grammar, identifier)
     for item in model.document["redirects"]:
         target, pattern = item["to_route_id"], item["from_pattern"]
         require(target in model.routes, "deep_link.redirect_dangling", target)
         platform = model.routes[target]["platform"]
         require(len(pattern) <= PATTERN_LIMIT and DEEP_LINKS[platform].fullmatch(pattern), "deep_link.grammar", target)
-        require((platform, pattern) not in model.redirects, "deep_link.redirect_duplicate", target)
-        require((platform, pattern) not in model.patterns, "deep_link.redirect_shadowed", target)
-        model.redirects[(platform, pattern)] = target
+        key = (platform, match_shape(pattern))
+        require(key not in model.redirects, "deep_link.redirect_duplicate", target)
+        require(key not in model.shapes, "deep_link.redirect_shadowed", target)
+        model.redirects[key] = target
     for identifier, (platform, hint) in model.registry.screens.items():
-        host, owner = model.placements[identifier]["host_route_id"], model.patterns.get((platform, hint))
-        if owner is not None:
+        host, key = model.placements[identifier]["host_route_id"], (platform, match_shape(hint))
+        owner = model.shapes.get(key)
+        if host is None:
+            # An external entry resolves its own hint; a redirect leads to a route, never to a landing.
+            require(owner is not None, "deep_link.hint_unmapped", identifier)
+            require(owner == identifier, "deep_link.hint_misrouted", identifier)
+        elif owner is not None:
             require(owner == host, "deep_link.hint_misrouted", identifier)
-        elif host is not None:
-            require(model.redirects.get((platform, hint)) == host, "deep_link.hint_unmapped", identifier)
+        else:
+            require(model.redirects.get(key) == host, "deep_link.hint_unmapped", identifier)
 
 
 _BASE_ROUTE_ID = {"type": "string", "pattern": r"^R-(AND|WEB|ADM)-[0-9]{3}$(?![\s\S])"}
 # Only the fields compatibility reads, so a later schema version can still read an older published base.
 BASE_SCHEMA = {
-    "type": "object", "required": ["routes", "redirects", "retired_route_ids"],
+    "type": "object", "required": ["routes", "redirects", "retired_route_ids", "screen_placements"],
     "properties": {
         "routes": {"type": "array", "items": {
             "type": "object", "required": ["id", "patterns"],
@@ -618,6 +642,14 @@ BASE_SCHEMA = {
             "properties": {"from_pattern": {"type": "string"}, "to_route_id": _BASE_ROUTE_ID},
         }},
         "retired_route_ids": {"type": "array", "items": _BASE_ROUTE_ID},
+        "screen_placements": {"type": "array", "items": {
+            "type": "object", "required": ["screen_id", "external"],
+            "properties": {
+                "screen_id": {"type": "string", "pattern": r"^S-(AND|WEB|ADM)-[0-9]{3}$(?![\s\S])"},
+                "external": {"type": ["object", "null"], "required": ["patterns"],
+                             "properties": {"patterns": {"type": "array", "items": {"type": "string"}}}},
+            },
+        }},
     },
 }
 
@@ -639,8 +671,10 @@ def read_base(sources):
 
 
 def check_compatibility(model, base):
-    """Against the published base: route IDs are never dropped or reused, published deep-link patterns keep their
-    route or gain a redirect, and redirects are never removed (rollback restores the previous map and table)."""
+    """Against the published base: route IDs are never dropped or reused, published route and external-entry patterns
+    keep resolving to their route or screen (by match shape) or gain a redirect, and redirects are never removed. A
+    rollback is therefore a roll-forward: restore the earlier routes, labels and placements, retire the route IDs
+    added since and keep every redirect and published pattern."""
     model.base = base
     if base is None:
         return
@@ -650,13 +684,23 @@ def check_compatibility(model, base):
         require(identifier in model.routes or identifier in retired, "route.id_dropped", identifier)
         platform = INFIX[identifier[2:5]]
         for pattern in route["patterns"]:
-            key = (platform, pattern)
-            require(model.patterns.get(key) == identifier or key in model.redirects, "deep_link.published_changed",
+            key = (platform, match_shape(pattern))
+            require(model.shapes.get(key) == identifier or key in model.redirects, "deep_link.published_changed",
+                    identifier)
+    for item in sorted(base["screen_placements"], key=lambda item: natural_key(item["screen_id"])):
+        if item["external"] is None:
+            continue
+        identifier = item["screen_id"]
+        # Still the landing itself, or the route that now hosts that screen; otherwise a recorded redirect.
+        current = {identifier, model.placements.get(identifier, {}).get("host_route_id")} - {None}
+        for pattern in item["external"]["patterns"]:
+            key = (INFIX[identifier[2:5]], match_shape(pattern))
+            require(model.shapes.get(key) in current or key in model.redirects, "deep_link.published_changed",
                     identifier)
     for identifier in sorted(base["retired_route_ids"], key=natural_key):
         require(identifier in retired, "route.retired_dropped", identifier)
     for item in base["redirects"]:
-        key = (INFIX[item["to_route_id"][2:5]], item["from_pattern"])
+        key = (INFIX[item["to_route_id"][2:5]], match_shape(item["from_pattern"]))
         require(key in model.redirects, "deep_link.redirect_removed", item["to_route_id"])
 
 
@@ -786,15 +830,17 @@ def structure_line(model):
     counts = {platform: sum(route["platform"] == platform for route in routes) for platform in PLATFORMS}
     primary = sum(route["primary"] for route in routes if route["platform"] == "android")
     external = sum(item["external"] is not None for item in placements)
+    landing = sum(len(item["external"]["patterns"]) for item in placements if item["external"] is not None)
     divergent = sum(capability["cdo_approval"] is not None for capability in model.capabilities.values())
     base = "the published base" if model.base is not None else "no published base"
     return (
         f"Navigation map {model.document['ia_version']} structure valid: {len(model.routes)} routes "
         f"({counts['android']} Android, {counts['web']} web, {counts['admin']} admin; {primary} Android primary "
         f"destinations), 0 orphan routes, {len(model.placements)} registry screens placed exactly once "
-        f"({len(model.placements) - external} hosted, {external} external), {len(model.patterns)} deep-link patterns, "
-        f"{len(model.redirects)} redirects, {len(model.document['retired_route_ids'])} retired route IDs checked "
-        f"against {base}; {len(model.capabilities)} capabilities ({divergent} with a divergence) allocating "
+        f"({len(model.placements) - external} hosted, {external} external), {len(model.patterns)} deep-link patterns "
+        f"({landing} on external entries), {len(model.redirects)} redirects, "
+        f"{len(model.document['retired_route_ids'])} retired route IDs checked against {base}; "
+        f"{len(model.capabilities)} capabilities ({divergent} with a divergence) allocating "
         f"{len(model.registry.flows)} registry flows; registry pinned at {model.document['registry_ref']['path']}"
     )
 
@@ -853,9 +899,10 @@ def _platform_section(model, platform, title):
     external = [(identifier, item["external"]) for identifier, item in model.placements.items()
                 if item["external"] is not None and model.registry.screens[identifier][0] == platform]
     if external:
-        lines += ["", "### External and system entries", "", "| Screen | Entry | Rationale |", "| --- | --- | --- |"]
-        lines += [f"| {identifier} | {entry['entry']} | {_text(entry['rationale'])} |"
-                  for identifier, entry in external]
+        lines += ["", "### External and system entries", "", "| Screen | Entry | Patterns | Rationale |",
+                  "| --- | --- | --- | --- |"]
+        lines += [f"| {identifier} | {entry['entry']} | {', '.join(f'`{item}`' for item in entry['patterns'])} | "
+                  f"{_text(entry['rationale'])} |" for identifier, entry in external]
     if platform == "admin":
         lines += ["", "### Roles and per-role projection", "", "| Role | Name | Status | Source | Visible routes |",
                   "| --- | --- | --- | --- | --- |"]

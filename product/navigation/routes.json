@@ -3316,6 +3316,9 @@
       "host_route_id": null,
       "external": {
         "entry": "widget",
+        "patterns": [
+          "android-widget://debt-progress"
+        ],
         "rationale": "Home-screen widget drawn by the launcher outside the app route tree; it is a glanceable surface entered from the device home screen, not a destination inside the app navigation."
       }
     },
@@ -3324,6 +3327,9 @@
       "host_route_id": null,
       "external": {
         "entry": "deep_link",
+        "patterns": [
+          "android://split/invites/:token"
+        ],
         "rationale": "Landing opened from a split invitation link shared outside the app; the invitee may not be a user yet (product/08 section 7, P08), so it has no in-app navigation parent."
       }
     },
@@ -3332,6 +3338,9 @@
       "host_route_id": null,
       "external": {
         "entry": "deep_link",
+        "patterns": [
+          "android://household/invites/:token"
+        ],
         "rationale": "Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9)."
       }
     },
@@ -3350,6 +3359,9 @@
       "host_route_id": null,
       "external": {
         "entry": "notification",
+        "patterns": [
+          "android://notifications/:id"
+        ],
         "rationale": "Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent."
       }
     },
@@ -3553,6 +3565,9 @@
       "host_route_id": null,
       "external": {
         "entry": "deep_link",
+        "patterns": [
+          "/split/invites/:token"
+        ],
         "rationale": "Landing opened from a split invitation link shared outside the product; the invitee may not be a user yet (product/08 section 7, P08), so it has no navigation parent."
       }
     },
@@ -3561,6 +3576,9 @@
       "host_route_id": null,
       "external": {
         "entry": "deep_link",
+        "patterns": [
+          "/family/invites/:token"
+        ],
         "rationale": "Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9)."
       }
     },
@@ -3584,6 +3602,9 @@
       "host_route_id": null,
       "external": {
         "entry": "notification",
+        "patterns": [
+          "/notifications/:id"
+        ],
         "rationale": "Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent."
       }
     },

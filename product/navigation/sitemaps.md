@@ -67,12 +67,12 @@ Primary destinations (5; product/08 allows three to five): `R-AND-006` Home, `R-
 
 ### External and system entries
 
-| Screen | Entry | Rationale |
-| --- | --- | --- |
-| S-AND-060 | widget | Home-screen widget drawn by the launcher outside the app route tree; it is a glanceable surface entered from the device home screen, not a destination inside the app navigation. |
-| S-AND-061 | deep_link | Landing opened from a split invitation link shared outside the app; the invitee may not be a user yet (product/08 section 7, P08), so it has no in-app navigation parent. |
-| S-AND-062 | deep_link | Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9). |
-| S-AND-065 | notification | Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent. |
+| Screen | Entry | Patterns | Rationale |
+| --- | --- | --- | --- |
+| S-AND-060 | widget | `android-widget://debt-progress` | Home-screen widget drawn by the launcher outside the app route tree; it is a glanceable surface entered from the device home screen, not a destination inside the app navigation. |
+| S-AND-061 | deep_link | `android://split/invites/:token` | Landing opened from a split invitation link shared outside the app; the invitee may not be a user yet (product/08 section 7, P08), so it has no in-app navigation parent. |
+| S-AND-062 | deep_link | `android://household/invites/:token` | Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9). |
+| S-AND-065 | notification | `android://notifications/:id` | Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent. |
 
 ## Customer web
 
@@ -131,11 +131,11 @@ No route is hidden by a breakpoint: narrow web stays a complete management fallb
 
 ### External and system entries
 
-| Screen | Entry | Rationale |
-| --- | --- | --- |
-| S-WEB-040 | deep_link | Landing opened from a split invitation link shared outside the product; the invitee may not be a user yet (product/08 section 7, P08), so it has no navigation parent. |
-| S-WEB-041 | deep_link | Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9). |
-| S-WEB-045 | notification | Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent. |
+| Screen | Entry | Patterns | Rationale |
+| --- | --- | --- | --- |
+| S-WEB-040 | deep_link | `/split/invites/:token` | Landing opened from a split invitation link shared outside the product; the invitee may not be a user yet (product/08 section 7, P08), so it has no navigation parent. |
+| S-WEB-041 | deep_link | `/family/invites/:token` | Landing opened from a household invitation link; no membership exists before acceptance and eligibility cannot be bypassed through an invitation (product/01 section 3.9). |
+| S-WEB-045 | notification | `/notifications/:id` | Landing opened from a notification about one clarification item; it is entered only from that notification, so it has no navigation parent. |
 
 ## Admin and operator
 

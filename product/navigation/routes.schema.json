@@ -378,6 +378,7 @@
       "additionalProperties": false,
       "required": [
         "entry",
+        "patterns",
         "rationale"
       ],
       "properties": {
@@ -388,6 +389,14 @@
             "system_handoff",
             "widget"
           ]
+        },
+        "patterns": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/deep_link"
+          }
         },
         "rationale": {
           "$ref": "#/definitions/nullable_text"
