@@ -3,7 +3,8 @@
 PenniLogic/docs#77 publishes governance/ux-outcomes.json, validated against governance/ux-outcomes.schema.json
 (the shared draft-07 subset) and by the rules below, and the generated summary governance/ux-outcomes.md. Journey
 identifiers come from the experience-coverage registry pinned by commit, path and sha256 (the frozen planning import
-at docs 1722fc79 until PenniLogic/docs#75 integrates), read from the local Git object store only.
+at docs 1722fc79 until PenniLogic/docs#75 integrates), read from the local Git object store only. Every `pending:`
+reference must name an issue of the committed inventory snapshot (planning/issue-inventory.json) other than this one.
 
 The catalogue defines outcomes; it collects nothing. Collection stays disabled, every event is an allowlisted,
 non-financial shape (bucketed or enumerated values whose every name and value segment comes from a reviewed
@@ -36,6 +37,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = "governance/ux-outcomes.json"
 SCHEMA = "governance/ux-outcomes.schema.json"
 SUMMARY = "governance/ux-outcomes.md"
+INVENTORY = "planning/issue-inventory.json"
+SOURCE_ISSUE = "PenniLogic/docs#77"
 # The imported registry on docs main (final plan section 7, TS-M8); re-pinning after docs#75 is a one-field change.
 REGISTRY_PIN = {
     "commit": "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4",
@@ -59,6 +62,7 @@ def _sibling(name, filename):
 
 support = _sibling("ux_outcomes_schema_support", "check_client_states.py")
 gates = _sibling("ux_outcomes_design_gates", "check_design_gates.py")
+strategy = _sibling("ux_outcomes_test_strategy", "check_test_strategy.py")
 ROLES = frozenset(gates.ROLES)
 
 GRAMMAR = {
@@ -388,6 +392,23 @@ def read_base(sources):
                 and isinstance(value, str) and DIGEST.fullmatch(value) and key not in versions, "base.invalid")
         versions[key] = value
     return versions
+
+
+def read_inventory(root):
+    """The issue references of the committed inventory snapshot, validated by check_test_strategy (offline)."""
+    try:
+        return frozenset(strategy.validate_inventory(support.load_json(local_path(root, INVENTORY))))
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError):
+        raise Refused("inventory.invalid") from None
+
+
+def check_references(document, inventory):
+    """Review round 1 (spec-and-safety.-r1-F9): every `pending:` reference names an issue in the inventory, and never
+    this ticket, so each held gate has an owner that can close it."""
+    for reference in pending_references(document):
+        issue = reference[len("pending:"):]
+        require(issue != SOURCE_ISSUE, "reference.self")
+        require(issue in inventory, "reference.unknown_issue")
 
 
 COLLECTIONS = (
@@ -747,10 +768,12 @@ def d8_blocking_debt(design_debt, today):
     return sorted(blocking)
 
 
-def check(document, schema, sources, pin=None, base=None, fixture=False):
+def check(document, schema, sources, pin=None, base=None, fixture=False, inventory=None):
     """Every structure rule, fail closed. `base` is {(BM ID, version): digest} of the base catalogue or None;
-    `fixture` (tests only, never the CLI) admits a recorded debt exception so the D8 rules can be exercised."""
+    `fixture` (tests only, never the CLI) admits a recorded debt exception so the D8 rules can be exercised;
+    `inventory` holds the known issue references (default: this repository's committed snapshot)."""
     pin = REGISTRY_PIN if pin is None else pin
+    inventory = read_inventory(ROOT) if inventory is None else inventory
     shape(document, schema)
     guard_content(document)
     check_frame(document)
@@ -770,6 +793,7 @@ def check(document, schema, sources, pin=None, base=None, fixture=False):
     check_longitudinal(document["longitudinal_plan"], indexed)
     check_debt(indexed, schema, fixture)
     check_coverage(indexed, pinned)
+    check_references(document, inventory)
     guard_numbers(document)
     return {"document": document, "indexed": indexed, "pinned": pinned}
 
@@ -987,7 +1011,7 @@ def load_and_check(root, base=None):
     root = Path(root)
     sources = GitSources(root, base)
     document, schema = support.load_json(local_path(root, DATA)), support.load_json(local_path(root, SCHEMA))
-    return check(document, schema, sources, base=read_base(sources))
+    return check(document, schema, sources, base=read_base(sources), inventory=read_inventory(root))
 
 
 def today_utc():

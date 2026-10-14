@@ -30,6 +30,10 @@ SPEC.loader.exec_module(module)
 SCHEMA = module.support.load_json(ROOT / module.SCHEMA)
 REGISTRY_PATH = "planning/source/evidence/experience-coverage.json"
 COMMIT = "a" * 40
+# The synthetic inventory: issues the fixtures may name. docs#77 exists, so the self rule is tested on its own.
+INVENTORY = frozenset(f"PenniLogic/{issue}" for issue in (
+    "android#7", "android#18", "api#24", "api#63", "api#82", "docs#65", "docs#66", "docs#77", "docs#129", "docs#130",
+    "docs#131", "infra#27"))
 
 
 def registry_bytes(journeys=(("J01", True), ("J02", True), ("J03", False))):
@@ -201,9 +205,9 @@ class CatalogueCase(unittest.TestCase):
         self.pin = pin_for(self.blob)
         self.document = catalogue(self.pin)
 
-    def run_check(self, document=None, base=None, fixture=False, sources=None):
+    def run_check(self, document=None, base=None, fixture=False, sources=None, inventory=INVENTORY):
         return module.check(copy.deepcopy(self.document if document is None else document), SCHEMA,
-                            sources or Sources(self.blob), self.pin, base, fixture)
+                            sources or Sources(self.blob), self.pin, base, fixture, inventory)
 
     def assertRefused(self, rule, subject=None, document=None, **kwargs):
         with self.assertRaises(module.Refused) as caught:
@@ -454,6 +458,31 @@ class FrameTests(CatalogueCase):
         sources = Sources(self.blob)
         sources.blobs.clear()
         self.assertRefused("registry.unavailable", sources=sources)
+
+    def test_pending_reference_must_name_a_known_issue(self):
+        # Review round 1 (spec-and-safety.-r1-F9): unknown issues were counted as gaps no owner could close.
+        for change in (lambda d: d["benchmarks"][0].update(moderated_defects_ref="pending:PenniLogic/docs#9999"),
+                       lambda d: d["privacy"].update(payload_allowlist_refs=["pending:PenniLogic/nosuchrepo#1"])):
+            with self.subTest(change=change):
+                self.assertRefused("reference.unknown_issue", document=mutate(self.document, change))
+
+    def test_pending_reference_cannot_name_this_ticket(self):
+        for change in (lambda d: d["privacy"].update(payload_allowlist_refs=["pending:PenniLogic/docs#77"]),
+                       lambda d: d["longitudinal_plan"].update(privacy_review_ref="pending:PenniLogic/docs#77")):
+            with self.subTest(change=change):
+                self.assertRefused("reference.self", document=mutate(self.document, change))
+
+    def test_inventory_snapshot_is_read_and_validated(self):
+        known = module.read_inventory(ROOT)
+        self.assertTrue({"PenniLogic/docs#77", "PenniLogic/infra#27", "PenniLogic/api#82"} <= known)
+        self.assertNotIn("PenniLogic/docs#9999", known)
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / module.INVENTORY
+            target.parent.mkdir(parents=True)
+            target.write_text(json.dumps({"schema_version": 1, "issues": []}) + "\n", encoding="utf-8")
+            with self.assertRaises(module.Refused) as caught:
+                module.read_inventory(temporary)
+        self.assertEqual(caught.exception.rule, "inventory.invalid")
 
 
 class MeasureTests(CatalogueCase):
