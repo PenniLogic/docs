@@ -8,6 +8,8 @@ Registry pin: commit 1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4, path planning/sou
 
 Personas are planning hypotheses, not research evidence: every persona basis stays provisional until PenniLogic/docs#66 evidence exists. Metric references stay pending on PenniLogic/docs#77 and event references pending on their owner issues. Diagrams here are markdown text renderings; a Figma page named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, review, tabletop or backlog issue is recorded by this file.
 
+Step data classes (public, internal, confidential, restricted) are a provisional scale proposed here: personal-data classification belongs to the T-CMP-04 jurisdiction profile (PenniLogic/docs#44, ADR-020 section 15), which confirms or replaces it (GAP-J10-03).
+
 The readiness verdict is NOT GREEN by construction: the checker holds every human input (approvals, research, persona validation, backlog items, gap resolution), the registry pin, pending metric and event references and the Figma state, so GREEN needs a later change to the checker and its schema, not only new inputs. Identifier continuity against an earlier published revision is not checked (readiness.continuity_unchecked).
 
 ## Readiness gaps
@@ -20,8 +22,8 @@ The readiness verdict is NOT GREEN by construction: the checker holds every huma
 | readiness.approval_pending | 5 | architecture, ia, operations, product, security |
 | readiness.metric_pending | 12 | J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12 |
 | readiness.event_pending | 33 | J01.T.02, J01.T.03, J03.T.02, J03.T.03, J03.T.04, J03.T.05, J04.T.01, J04.T.02, J05.T.01, J05.T.02, J05.T.03, J06.T.01, J06.T.02, J06.T.03, J06.T.04, J06.T.05, J07.T.01, J07.T.02, J07.T.03, J07.T.04, J08.C.04, J08.T.01, J08.T.03, J09.T.01, J09.T.02, J09.T.03, J10.T.01, J10.T.04, J10.T.06, J10.T.08, J11.T.04, J11.T.06, J12.T.02 |
-| readiness.gap_open | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
-| readiness.gap_backlog_missing | 18 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
+| readiness.gap_open | 19 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J10-03, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
+| readiness.gap_backlog_missing | 19 | GAP-J01-01, GAP-J01-02, GAP-J01-03, GAP-J02-01, GAP-J02-02, GAP-J03-01, GAP-J05-01, GAP-J06-01, GAP-J07-01, GAP-J07-02, GAP-J07-03, GAP-J09-01, GAP-J10-01, GAP-J10-02, GAP-J10-03, GAP-J11-01, GAP-J11-02, GAP-J12-01, GAP-J12-02 |
 | readiness.figma_held | 4 | D03, D04, D05, D21 |
 | readiness.continuity_unchecked | 1 | PenniLogic/docs#67 |
 
@@ -1350,6 +1352,7 @@ A change to a system, an event owner or a policy reopens only the blueprints lis
 | GAP-J09-01 | J09 | J09.T.03 | registry_content | PenniLogic/docs#75 | none | open | J09 lists no operator refund flow; refund operations F-ADM-06 belong to J10 only, so billing reversal relies on the J10 operator step. |
 | GAP-J10-01 | J10 | J10.T.01 | policy | PenniLogic/docs#44 | none | open | Response clock values for export, deletion and grievance requests are not published in an accepted source; T-CMP-01 starts each clock at acknowledgement, and controls state the values as pending. |
 | GAP-J10-02 | J10 | J10.T.08 | registry_content | PenniLogic/docs#75 | none | open | Story US-ADM-06 on refund flow F-ADM-06 names persona P12, but journey J10 lists only P03, P07 and P10, so the refund step names the support operator; docs#75 owns adding P12 to J10 and docs#66 validates the persona. |
+| GAP-J10-03 | J10 | none | policy | PenniLogic/docs#44 | none | open | Every step carries a data class on a four-level scale (public, internal, confidential, restricted) proposed here; ADR-020 section 15 assigns personal-data classification to the T-CMP-04 jurisdiction profile, which confirms or replaces the scale. |
 | GAP-J11-01 | J11 | J11.T.04 | policy | PenniLogic/api#47 | none | open | ADR-020 section 16 sets elevation, unmask and break-glass limits but no expiry for an unapproved access request; J11 states it as pending. |
 | GAP-J11-02 | J11 | none | registry_content | PenniLogic/docs#75 | none | open | The docs#67 scope names operator blueprints for refunds, provider change and incidents, but the registry assigns those flows to J10 and J12, not J11. |
 | GAP-J12-01 | J12 | J12.T.07 | policy | PenniLogic/docs#44 | none | open | Regulator and customer notice deadlines for incidents are not published in an accepted source; the incident clock step cannot state them. |

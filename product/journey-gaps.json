@@ -144,6 +144,16 @@
       "status": "open"
     },
     {
+      "id": "GAP-J10-03",
+      "journey_id": "J10",
+      "step_id": null,
+      "category": "policy",
+      "owner_issue": "PenniLogic/docs#44",
+      "summary": "Every step carries a data class on a four-level scale (public, internal, confidential, restricted) proposed here; ADR-020 section 15 assigns personal-data classification to the T-CMP-04 jurisdiction profile, which confirms or replaces the scale.",
+      "backlog_item": null,
+      "status": "open"
+    },
+    {
       "id": "GAP-J11-01",
       "journey_id": "J11",
       "step_id": "J11.T.04",

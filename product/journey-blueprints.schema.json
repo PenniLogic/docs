@@ -329,7 +329,8 @@
             "internal",
             "confidential",
             "restricted"
-          ]
+          ],
+          "description": "Provisional H02 proposal: personal-data classification belongs to the T-CMP-04 jurisdiction profile (PenniLogic/docs#44, ADR-020 section 15), which confirms or replaces this scale (GAP-J10-03)."
         },
         "authorization": {
           "type": "string",

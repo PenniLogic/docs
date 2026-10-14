@@ -922,6 +922,9 @@ def render_summary(model, gaps):
         "references pending on their owner issues. Diagrams here are markdown text renderings; a Figma page "
         "named by the registry is held, and a diagram whose registry artifact is a Git file has none. No approval, "
         "review, tabletop or backlog issue is recorded by this file.", "",
+        "Step data classes (public, internal, confidential, restricted) are a provisional scale proposed here: "
+        "personal-data classification belongs to the T-CMP-04 jurisdiction profile (PenniLogic/docs#44, ADR-020 "
+        "section 15), which confirms or replaces it (GAP-J10-03).", "",
         "The readiness verdict is NOT GREEN by construction: the checker holds every human input (approvals, "
         "research, persona validation, backlog items, gap resolution), the registry pin, pending metric and event "
         "references and the Figma state, so GREEN needs a later change to the checker and its schema, not only new "

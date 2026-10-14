@@ -1056,7 +1056,8 @@ def _ids(prefix, count):
 
 
 PUBLISHED_GAPS = ["GAP-J01-01", "GAP-J01-02", "GAP-J01-03", "GAP-J02-01", "GAP-J02-02", "GAP-J03-01", "GAP-J05-01", "GAP-J06-01",
-                  "GAP-J07-01", "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J10-02", "GAP-J11-01",
+                  "GAP-J07-01", "GAP-J07-02", "GAP-J07-03", "GAP-J09-01", "GAP-J10-01", "GAP-J10-02", "GAP-J10-03",
+                  "GAP-J11-01",
                   "GAP-J11-02", "GAP-J12-01", "GAP-J12-02"]
 PUBLISHED_READINESS = {
     "readiness.registry_unintegrated": ["PenniLogic/docs#75"],
@@ -1091,7 +1092,7 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(
             module.structure_line(self.model),
             "Journey blueprints 0.1.0 structure valid: 12 blueprints, 127 steps (69 customer, 58 team), 97 branches, "
-            "28 abuse paths, 18 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
+            "28 abuse paths, 19 gaps; registry " + module.REGISTRY_PIN["commit"] + " checked")
 
     def test_readiness_gaps_are_exact(self):
         self.assertEqual(module.readiness(self.model), PUBLISHED_READINESS)
@@ -1257,6 +1258,17 @@ class PublishedDataTests(unittest.TestCase):
         self.assertEqual(missing, [])
         abuse = {path["id"]: path for path in self.model.blueprints["J10"]["abuse_paths"]}
         self.assertIn("ADR-019 step-up", abuse["AB-J10-02"]["safe_failure"])
+
+    def test_data_class_scale_is_provisional_and_routed(self):
+        # Review round 2 SR-08: ADR-020 section 15 gives personal-data classification to T-CMP-04 (docs#44).
+        schema = json.loads((ROOT / module.SCHEMA).read_text(encoding="utf-8"))
+        description = schema["definitions"]["step"]["properties"]["data_class"]["description"]
+        self.assertIn("Provisional H02 proposal", description)
+        routed = [(gap["id"], gap["owner_issue"], gap["category"]) for gap in self.gaps["gaps"]
+                  if "data class" in gap["summary"]]
+        self.assertEqual(routed, [("GAP-J10-03", "PenniLogic/docs#44", "policy")])
+        summary = module.render_summary(self.model, module.readiness(self.model))
+        self.assertIn("provisional scale proposed here", summary)
 
     def test_stories_outside_their_journey_personas_are_recorded_gaps(self):
         # TS-M1: the registry's own stories name personas their journey lacks; each one is a visible gap.
