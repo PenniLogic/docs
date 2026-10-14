@@ -157,7 +157,7 @@ class PublishedDataTests(TempRootMixin, unittest.TestCase):
             for refresh in refreshes:
                 datetime.date.fromisoformat(refresh["date"])
                 self.assertIn(refresh["performed_by"]["accountable"], MODEL["accountable_owners"], epic)
-                self.assertRegex(refresh["performed_by"]["session"], r"^copilot-session:", epic)
+                self.assertRegex(refresh["performed_by"]["session"], SCHEMA["definitions"]["session"]["pattern"], epic)
                 required = module.required_categories(MODEL, refresh["model_version"])
                 self.assertEqual({item["id"] for item in refresh["categories"]}, required, epic)
                 if refresh["trigger"] == "definition_of_ready":
