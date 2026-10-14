@@ -285,10 +285,12 @@
         },
         {
           "id": "split_manipulation",
-          "disposition": "not_applicable",
-          "analysis": "E24 computes no shares and records no settlement. Split rows are copied by backups like every ledger row. infra#26's planned zero-sum check (open, not a control today) passes on any consistent point-in-time snapshot, so it cannot show that settlements recorded after the recovery point survived or that an erased seat was not resurrected; infra#33 plans a counterparty shared-balance integrity test after restore, and the loss of settlements and usage events inside the recovery-point window is reviewed under entitlement_tampering (E24-F25); share rules, settlements and counterparty erasure belong to E15 (PenniLogic/docs#16) through api#49.",
+          "disposition": "finding",
+          "analysis": "E24 computes no shares and records no settlement. Split rows are copied by backups like every ledger row. infra#26's planned zero-sum check (open, not a control today) passes on any consistent point-in-time snapshot, so it cannot show that settlements recorded after the recovery point survived or that an erased seat was not resurrected; infra#33 plans a counterparty shared-balance integrity test after restore, so a restore that rewinds settlements recorded after the recovery point (a settled share reappearing as owed) is a split-settlement finding of this epic, carried by E24-F25 (primary category entitlement_tampering, handed to infra#26); share rules, settlements and counterparty erasure belong to E15 (PenniLogic/docs#16) through api#49.",
           "evidence": [],
-          "findings": []
+          "findings": [
+            "E24-F25"
+          ]
         },
         {
           "id": "administrative_identity_compromise",
@@ -498,8 +500,8 @@
           "id": "E24-F18",
           "category": "administrative_identity_compromise",
           "severity": "medium",
-          "title": "No ticket owns human access to the push, e-mail and paging or uptime service consoles",
-          "attack_path": "A holder of the e-mail or push provider console, or a stale former member, reads recipient addresses and delivery history or changes sender settings; a holder of the paging console silences or reroutes pages during an incident. infra#43 concerned only the GitHub identity and was closed with hardening deferred, api#59 the ADR-020 administrative identity domain, and api#56 and infra#27 API credentials and the log store; none covers these vendor console accounts.",
+          "title": "Human access to the push, e-mail and paging or uptime vendor consoles is ungoverned",
+          "attack_path": "A holder of the e-mail or push provider console, or a stale former member, reads recipient addresses and delivery history or changes sender settings; a holder of the paging console silences or reroutes pages during an incident. infra#43 concerned only the GitHub identity and was closed with hardening deferred, api#59 the ADR-020 administrative identity domain, and api#56 and infra#27 API credentials and the log store; none covered these vendor console accounts, and infra#93 now owns their governance.",
           "recommended_control": "Create an owning ticket for third-party operational console accounts: roster, least-privilege roles, phishing-resistant sign-in, joiner and leaver revocation, audit export and a revocation drill per service, recorded before any real recipient or page flows through them.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/infra#93",
@@ -508,7 +510,7 @@
         {
           "id": "E24-F19",
           "category": "administrative_identity_compromise",
-          "severity": "high",
+          "severity": "critical",
           "title": "No ticket hardens the hosting-account owner or the domain registrar and DNS account",
           "attack_path": "An attacker who phishes or recovers the hosting-account owner credential snapshots disks, deletes hosts, backups and the secondary-region copies or grants itself host and custodian access; an attacker holding the registrar or DNS account repoints the origin. Neither identity is in infra#32's standing-grant inventory, infra#43 concerned only GitHub, and no ticket owns them.",
           "recommended_control": "Create an owning ticket for infrastructure owner identities: phishing-resistant sign-in, offline break-glass custody, no daily use, alerting on owner and registrar actions, and backups and the key custodian kept beyond that account's unilateral deletion (separate account or retention lock); rehearse recovery.",
