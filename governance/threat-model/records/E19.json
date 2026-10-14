@@ -328,10 +328,11 @@
         {
           "id": "administrative_identity_compromise",
           "disposition": "finding",
-          "analysis": "The administrative identities this epic depends on are the KEK custodian's administrators, the approvers recorded in the key journal for retirement and emergency rotation, and the operator who may start an erasure (ADR-021 requires a distinct, chain-confirmed approver for operator-started destruction). The organisation has one GitHub owner account, and the ticket for its hardening baseline, PenniLogic/infra#43, was closed as not planned on 2026-10-03, so this epic cannot lean on it; KEK destruction or a self-granted unwrap right from that one identity is the worst outcome in the model, because it destroys or exposes every user's data at once (E19-F22, baseline T-11). The operator console, its identity domain and the chained log are E13's (ADR-020, api#27); production custodian selection is PenniLogic/infra#27.",
+          "analysis": "The administrative identities this epic depends on are the KEK custodian's administrators, the approvers recorded in the key journal for retirement and emergency rotation, and the operator who may start an erasure (ADR-021 requires a distinct, chain-confirmed approver for operator-started destruction). The organisation has one GitHub owner account, and the ticket for its hardening baseline, PenniLogic/infra#43, was closed as not planned on 2026-10-03, and its body records the owner's 2026-10-04 disposition of owner-accepted residual risk with further hardening deferred: E01-F04 stays unremediated on that single owner account, and this epic carries it as that accepted residual rather than leaning on the closed ticket as a control; KEK destruction or a self-granted unwrap right from that one identity is the worst outcome in the model, because it destroys or exposes every user's data at once (E19-F22, baseline T-11). The operator console, its identity domain and the chained log are E13's (ADR-020, api#27); production custodian selection is PenniLogic/infra#27.",
           "evidence": [
             "ADR-020: separate administrative identity domain, admin role without BYPASSRLS that never receives a data key",
-            "ADR-018 section 6.6: the key journal records approver identities for every key state transition"
+            "ADR-018 section 6.6: the key journal records approver identities for every key state transition",
+            "PenniLogic/infra#43: owner disposition of 2026-10-04, owner-accepted residual risk with further hardening deferred; E01-F04 remains unremediated"
           ],
           "findings": [
             "E19-F22"
