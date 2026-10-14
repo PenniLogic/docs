@@ -6,5 +6,594 @@
   "owner": {
     "accountable": "basiltt"
   },
-  "refreshes": []
+  "refreshes": [
+    {
+      "date": "2026-10-14",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "github:basiltt",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Security hardening under PenniLogic/docs#20: the data protection floor of envelope encryption, per-tenant blind index and forced row-level security (api#37), the crypto-shredding erasure path and its harness (api#38), the foundational audit event service (api#39), rate limiting, lockout, takeover detection and step-up (api#40), DEK, KEK and blind-index key rotation (api#53), restore-safe erasure through the tombstone journal (infra#33), server-side Play Integrity verdict verification (api#86) and Android hardening of local storage, screens, backups, integrity and pinned transport (android#27). Trust boundaries: the device hardware keystore against the app process and other apps on the device; the device against the api over pinned transport; the api process (which holds unwrapped data keys in memory) against PostgreSQL roles, policies and the MAC-bound session context; the api and key-operations worker against the KEK custodian; the live database against backups, the key journal and the erasure tombstone journal; and every writer against the append-only audit trail. Out of scope here and reviewed in their own epics: the platform services this epic depends on (backups infra#26, custodian selection and log retention infra#27, human access to keys infra#32, all E24), the administrative chain (api#27, E13), the AI gateway (E17) and billing (E14). OWASP Top 10 and API Security Top 10 coverage (architecture/02-security-architecture.md section 6.1): broken access control and object-level authorization by the forced row-level security of api#37 with the api#23 attack suite (E25); cryptographic failures by api#37, api#38 and api#53; authentication failures by api#40 and ADR-019; logging and monitoring failures by api#39 and infra#27; security misconfiguration by infra#31; unrestricted resource consumption for authentication and sensitive operations (api#40) and for non-metered state-changing operations per principal (api#107), with unauthenticated edge and ingress capacity unowned and held open in E24 (see denial_of_service); injection has no owner in this epic. The Top 10 review named in the epic scope has no owning ticket and is raised to the coordinator; the external penetration test is docs#43.",
+      "tickets_in_scope": [
+        "PenniLogic/android#27",
+        "PenniLogic/api#37",
+        "PenniLogic/api#38",
+        "PenniLogic/api#39",
+        "PenniLogic/api#40",
+        "PenniLogic/api#53",
+        "PenniLogic/api#86",
+        "PenniLogic/infra#33"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#1-threat-model-stride (with section 0 constraints, 4.1 and 4.4 key management and erasure, 5.1 to 5.3 Android storage, network and Play Integrity)",
+        "adr/ADR-006.md (crypto-shredding)",
+        "adr/ADR-018.md (encryption scope, blind index, row-level security, session context, key lifecycle, sections 1.3, 3.4, 4, 5, 6 and 9)",
+        "adr/ADR-019.md (passkeys, step-up, device-bound sessions, trial-abuse controls, section 20 ticket amendments)",
+        "adr/ADR-020.md (three audit streams, write topology, section 8.7 retention and erasure)",
+        "adr/ADR-021.md (shared-data erasure, group-scoped keys, no grantee-bound key material)",
+        "adr/ADR-022.md (runtime platform, egress path, KEK custodian qualification owner)",
+        "adr/ADR-025.md (durable user-derived embeddings prohibited)",
+        "compliance/01-regulatory-landscape.md (obligations O-4, O-6, O-7, O-9, O-12, O-13, O-14, O-29)",
+        "governance/test-strategy.md (section 12 synthetic-only test data, section 14 Definition of Ready threat-model item)",
+        "PenniLogic/docs#20 (epic body: goal, scope, out of scope, exit criteria, dependencies)",
+        "PenniLogic/android#27, PenniLogic/api#37, PenniLogic/api#38, PenniLogic/api#39, PenniLogic/api#40, PenniLogic/api#53, PenniLogic/api#86, PenniLogic/infra#33 (bodies and the coordinator ADR-018, ADR-019, ADR-020 and ADR-021 consequence comments on 2026-09-30)",
+        "Hand-off targets read for scope: PenniLogic/docs#43, PenniLogic/docs#49, PenniLogic/infra#27 (with its ADR-018 custodian amendment comment), PenniLogic/infra#32, PenniLogic/infra#23, PenniLogic/infra#25, PenniLogic/android#18",
+        "PenniLogic/android#57 (client Play Integrity primitives) and its PenniLogic/android docs/platform/play-integrity.md design (client, server and operation-policy ownership table; unavailable-token handling)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Descriptive personal financial data application-encrypted under the per-user DEK: merchant text, notes and descriptions, account names, identity columns, assistant conversation content and BYOK provider-key references (ADR-018 section 1.2), plus group-scoped split text under a group DEK (ADR-021)",
+          "subjects": [
+            "users",
+            "counterparties",
+            "household_members"
+          ],
+          "purpose_ref": "Purpose-registry entries to be created by PenniLogic/api#24 (compliance O-1); the encryption scope itself is ADR-018 and the floor is built by PenniLogic/api#37",
+          "retention": "Account lifetime in the live database; ciphertext and wrapped keys persist in backups until the backup retention PenniLogic/infra#26 publishes, which ADR-018 section 6.7 names as the erasure-completeness bound published to the PenniLogic/docs#44 profile (O-4)",
+          "erasure_path": "Erasure destroys the DEK, IK and AK rows (PenniLogic/api#38), and destroying the per-user analytics pseudonym key AK unlinks every analytics event of the subject (test erasure_unlinks_analytics_pseudonym on PenniLogic/api#38); group-scoped rows are redacted or left to surviving members per ADR-021; restore replays the key journal and tombstones before readiness (PenniLogic/infra#33); key rotation never restores readability of a destroyed key (PenniLogic/api#53)",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 and PenniLogic/web#26 (compliance O-6); this epic stores no age attribute and adds no route around the gate",
+          "processors": [
+            "Production KEK custodian (wraps and unwraps DEKs, sees key identifiers and caller identity, never plaintext data); not yet selected, India residency where the PenniLogic/docs#44 profile requires it, selection owned by PenniLogic/infra#27"
+          ]
+        },
+        {
+          "data_class": "Constrained ledger values kept as plaintext integer columns by decision: amounts, currencies, timestamps, opaque owner, account and category identifiers, split shares and settlements (ADR-018 section 1.3)",
+          "subjects": [
+            "users",
+            "counterparties",
+            "household_members"
+          ],
+          "purpose_ref": "ADR-018 section 1.3 (accepted, compensating controls) and the ledger purpose to be registered by PenniLogic/api#24",
+          "retention": "Ledger rows are append-only and survive erasure as residue under an unlinkable owner identifier; statutory periods come from the PenniLogic/docs#44 profile",
+          "erasure_path": "Not deleted: erasure severs every link from the opaque owner to an identified person (channels, grants, memberships, transparency rows) per ADR-018 section 6.7 and ADR-021, and publishes the residue list to the PenniLogic/docs#44 profile",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 and PenniLogic/web#26 (compliance O-6)",
+          "processors": []
+        },
+        {
+          "data_class": "Per-tenant blind-index values, the global identity index and channel ciphertext for e-mail and phone, and push tokens encrypted under a platform key (ADR-018 sections 1.2, 3.2 and 6.1)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "ADR-018 section 3.3 permitted equality query shapes; channel purposes registered by PenniLogic/api#24 per ADR-019 section 16",
+          "retention": "Account lifetime; index values re-randomised on index-key rotation (PenniLogic/api#53)",
+          "erasure_path": "Index key destroyed on erasure and residual index rows physically rewritten or destroyed (PenniLogic/api#53); channel rows and push tokens physically cleared because they sit under platform keys, which DEK destruction does not reach (PenniLogic/api#38, ADR-018 section 6.7)",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 and PenniLogic/web#26 (compliance O-6)",
+          "processors": []
+        },
+        {
+          "data_class": "Foundational audit trail events and the subject-visible transparency projection: subject and actor identifiers, action, outcome, reason code, purpose code, data classes touched, household viewer identifiers (ADR-020 section 8)",
+          "subjects": [
+            "users",
+            "household_members",
+            "operators"
+          ],
+          "purpose_ref": "Security and consent record-keeping per ADR-020 and compliance O-9; purposes and lawful bases to be confirmed by the PenniLogic/docs#44 profile",
+          "retention": "Trail kept at least the security-log floor of the PenniLogic/docs#44 profile (research baseline 180 days) with a write-once archive lock; transparency rows for the account lifetime plus the profile floor (ADR-020 section 8.7)",
+          "erasure_path": "Trail is never rewritten; erasure makes its identifiers unresolvable, deletes the subject's own transparency rows and pseudonymises the subject as viewer on counterparties' rows (ADR-020 section 8.7, PenniLogic/api#38, PenniLogic/api#39)",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 and PenniLogic/web#26; events carry no age attribute",
+          "processors": []
+        },
+        {
+          "data_class": "Key journal, erasure barrier, signed erasure receipt and the restore tombstone journal and register: pseudonymous subject locators, key identifiers, states, approver identities, completion times and policy versions, never key material (ADR-018 section 6.6, ADR-021)",
+          "subjects": [
+            "users",
+            "counterparties",
+            "operators"
+          ],
+          "purpose_ref": "Proof of erasure and restore safety under compliance O-4 and O-13; ADR-018 and ADR-021 define the content; built by PenniLogic/api#38, PenniLogic/api#53 and PenniLogic/infra#33",
+          "retention": "Independent write-once retention outside the database backup set; register retention is erasure_register_retention_days from the PenniLogic/docs#44 profile (ADR-021)",
+          "erasure_path": "Entries are themselves the erasure evidence and hold only opaque locators; the raw subject reference is replaced by a keyed digest within the register window (ADR-021 consequence on PenniLogic/infra#33)",
+          "children": "Same subjects as the account records, already conditioned on the age gate built by PenniLogic/android#17 and PenniLogic/web#26",
+          "processors": []
+        },
+        {
+          "data_class": "Authentication abuse signals: source network addresses, coarse location derived from them, the DPoP device key thumbprint, attempt and lockout counters, step-up outcomes and takeover reason codes (PenniLogic/api#40)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Account-security purpose to be registered by PenniLogic/api#24; no retention or purpose is stated in PenniLogic/api#40 today (E19-F12)",
+          "retention": "Not yet defined; PenniLogic/api#40 must take it from the PenniLogic/docs#44 profile and keep no precise location history (E19-F12)",
+          "erasure_path": "Signal rows keyed to the account are deleted by the erasure job (PenniLogic/api#38) once a retention and store exist; audit events about the outcomes follow the trail rules of ADR-020 section 8.7",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 and PenniLogic/web#26 (compliance O-6)",
+          "processors": []
+        },
+        {
+          "data_class": "Device integrity material: Play Integrity tokens and decoded verdicts, server-issued nonces, protected-request hashes, the replay registry and the DPoP key attestation chain (PenniLogic/android#27, PenniLogic/api#86, ADR-019)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Fraud and integrity protection purpose to be registered by PenniLogic/api#24; verdict details are processed, not stored (PenniLogic/api#86)",
+          "retention": "Nonces and replay-registry entries for at least maxAge plus clock skew and no longer than the registry needs (PenniLogic/api#86); attestation chains verified and never retained (ADR-019 consequence on PenniLogic/android#27); audit events carry reason identifiers only",
+          "erasure_path": "Short-lived registry entries expire under the retention bound; no verdict detail is stored to erase, and audit events carry reason identifiers only (PenniLogic/api#86, ADR-020 section 8.7)",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 (compliance O-6)",
+          "processors": [
+            "Google Play Integrity: the device obtains the verdict from the platform provider, and the server decode of standard-request tokens is expected to be a call to the provider's decryption operation (named in the PenniLogic/android Play Integrity design; PenniLogic/api#86 records the decode path, E19-F13); the embedded component is inventoried by PenniLogic/android#18"
+          ]
+        },
+        {
+          "data_class": "On-device local database and key-wrapped stores: the raw message store, parsed transactions, balances and cached server data held by the Android application, including other people's shared or group rows cached on a grantee's device (architecture/02-security-architecture.md section 5.1)",
+          "subjects": [
+            "users",
+            "counterparties",
+            "household_members"
+          ],
+          "purpose_ref": "On-device processing under ADR-004 (raw content never leaves the device); hardening built by PenniLogic/android#27",
+          "retention": "Install lifetime; the unwrapped database key lives only for the bounded process lifetime and is cleared on lock (PenniLogic/android#27)",
+          "erasure_path": "Uninstall or app-data clear destroys the hardware-backed wrapping key; backup exclusion keeps no off-device copy (PenniLogic/android#27, E19-F07). Another person's shared or group rows cached on the device are not reached by uninstall: they are evicted on revocation or membership end, including those that person's erasure causes, within the offline lease bound of PenniLogic/contracts#8 (T-CON-04), by PenniLogic/android#25 (T-FAM-03) and the split client tickets (ADR-021), and the hardened store of PenniLogic/android#27 protects them meanwhile",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17 before any capture starts",
+          "processors": []
+        },
+        {
+          "data_class": "Crash and error reports from hardened, obfuscated release builds, with the private mapping files needed to read them (PenniLogic/android#27)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Error-reporting purpose and allowlist scrubbing owned by PenniLogic/android#18 (compliance O-7)",
+          "retention": "The retention position PenniLogic/android#18 declares for the error-reporting component",
+          "erasure_path": "Reports carry no account identifier or financial value after allowlist scrubbing (PenniLogic/android#18); ADR-021 names erasure_processor_propagation_inventory as the processor erasure evidence",
+          "children": "Conditioned on the age gate built by PenniLogic/android#17",
+          "processors": [
+            "The error-reporting component in the PenniLogic/android#18 inventory; not yet selected"
+          ]
+        },
+        {
+          "data_class": "Trial-abuse fingerprints (trial_fingerprints): a keyed phone fingerprint, HMAC-SHA-256 under the platform key K_abuse, with first_trial_at and trials_used and no account reference (ADR-018 sections 1.2 and 6.1; populated once phone verification exists, ADR-019 section 12); schema added by PenniLogic/api#37, outside row-level security by design (ADR-018 section 4.2)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "Trial-abuse prevention, one trial per verified channel (ADR-019 section 12); purpose registered through PenniLogic/api#24",
+          "retention": "The abuse window the PenniLogic/docs#44 (T-CMP-04) profile publishes; fingerprints older than the window are deleted and K_abuse is rotated when the window rolls (ADR-018 section 6.1)",
+          "erasure_path": "Deliberately not cleared by erasure because it links to no account (ADR-018 section 1.2; the PenniLogic/api#38 ADR-018 consequence); declared as erasure residue (ADR-018 section 9) and published with the PenniLogic/docs#44 retention profile",
+          "children": "Conditioned on the age gates built by PenniLogic/android#17 and PenniLogic/web#26 (compliance O-6)",
+          "processors": []
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Parties that must prove identity in this epic: the installed app and device towards the api (Play Integrity standard verdicts bound to the request, verified only by the server in api#86, and the attested DPoP key of ADR-019 consumed by android#27), the account holder at the moment of a sensitive operation (step-up in api#40), and the key-operations worker towards the KEK custodian. Passwords no longer exist (ADR-019 removed breached-credential checking from api#40), so baseline T-01 credential stuffing becomes assertion and recovery flooding, bounded under denial_of_service (E19-F15); T-02 refresh replay is api#5's DPoP binding outside this epic. The trust roots are the server-held verification material, the expected package and signing-certificate digest, and the step-up binding; sideloaded QA cohorts are explicit test identities that must never be accepted by a production profile (architecture section 5.3), which is E19-F01. A stolen session reaching export or credential change is E19-F02. The epic's exit criterion that CI authenticates by federation with no long-lived cloud credential is not built by any ticket here; it depends on infra#25 in E24, and no ticket of this epic adds a pipeline credential.",
+          "evidence": [
+            "ADR-019: passkeys only, step-up freshness and target binding, key attestation consumed by PenniLogic/android#27",
+            "architecture/02-security-architecture.md section 5.3: verdicts validated on the backend only; test cohorts never weaken production policy",
+            "PenniLogic/infra#25: pipelines authenticate with short-lived federated credentials and a test proves no static cloud key exists (dependency, not a control today)"
+          ],
+          "findings": [
+            "E19-F01",
+            "E19-F02"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Modifiable assets: ciphertext rows and their headers, the wrapped key rows, the key journal and the erasure tombstone journal, rotation progress state, the audit trail, the device database and the pin set delivered over the air. The ledger's append-only and zero-sum integrity (baseline T-12) is ADR-002 and api#2's, preserved unchanged by ADR-018 section 1.3. Detection here rests on authenticated encryption with row, column and owner bound in the additional data (E19-F04), write-once journals outside the backup set (infra#33, ADR-018 section 6.6), and resumable rotation that never re-encrypts a row twice (api#53 acceptance). Ingestion boundary: this epic parses nothing; it protects the device store that holds raw messages at rest (E19-F07) and adds no path that moves raw content. Parser-config signing chain: no parser rule or template channel is built or consumed here; that chain is reviewed in E09 (PenniLogic/docs#10). The over-the-air pin set is the one remotely updatable security configuration this epic introduces, and its signing chain is E19-F03; overlay tampering (T-14) is covered by the obscured-touch control in E19-F07. The epic's supply-chain and secret exit criteria (SBOM, pinned actions, no secret in any repository history) are dependencies on infra#31 and infra#23, reviewed in their own epics.",
+          "evidence": [
+            "ADR-018 section 2: AES-256-GCM with row, column and owner in the additional authenticated data and a versioned key identifier",
+            "ADR-018 section 6.6: key journal and tombstone journal are append-only and outside the database backup set",
+            "PenniLogic/infra#23: secret scanning covers full repository history (dependency for the exit criterion, not a control today)",
+            "PenniLogic/infra#31: IaC, container, mobile binary, SBOM and signed-provenance verification (dependency)"
+          ],
+          "findings": [
+            "E19-F03",
+            "E19-F04"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Actions that must be attributable later: every authentication, step-up, lockout, consent, sharing and administrative action (api#39 is the single trail all of them write to, ADR-020 section 8), every key creation, rotation, retirement and destruction with its approver (key journal, ADR-018 section 6.6), and every erasure with its signed receipt and barrier (api#38, ADR-021). Baseline T-03 asked for an append-only log with chained integrity; ADR-020 splits that into the transactional trail built here and the chained administrative log built by api#27 in E13, so this epic owns transactional completeness and immutability of the trail (E19-F05) but not the hash chain. The erasure receipt is the subject's proof of erasure and the operator's defence against a false claim, yet its signing key has no class or custody (E19-F06). Trail ordering relies on clock synchronisation configured and monitored for drift by infra#27 in E24. All repository actions are by one account; the procedural separation of authoring and review sessions is the delivery policy, not a cryptographic identity.",
+          "evidence": [
+            "ADR-020 section 8.1: one transactional write into the foundational trail, projected to the chain and transparency streams",
+            "governance/DELIVERY.md: one GitHub user; independent review is recorded procedurally by non-author sessions and is not cryptographic identity"
+          ],
+          "findings": [
+            "E19-F05",
+            "E19-F06"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Data classes touched are inventoried in data_flows: descriptive data under per-user and group keys, plaintext constrained ledger values, blind-index and identity-index values, the audit trail and transparency projection, the key, erasure and restore journals, authentication abuse signals, device integrity material, the device database and crash reports. Raw content never leaves the device: this epic builds no egress path for raw text; its contribution is keeping the on-device raw store from leaving through cloud backup, device transfer, screenshots or a stolen handset (E19-F07), while the server only ever holds structured fields and the keyed dedupe artefact of ADR-018 section 7, and release-candidate traffic capture proving it is PenniLogic/android#16 in E25. Leakage knowingly accepted by decision and restated here, not raised again: plaintext ledger amounts and timestamps to a reader with a dump (ADR-018 section 1.3), within-tenant blind-index frequency (ADR-018 section 3.4), and erasure completeness bounded by backup retention (ADR-018 section 6.7). Unaccepted leaks: keys in API memory (E19-F08), real data before the floor (E19-F09), a rewrap criterion that keeps erased data readable (E19-F10), restore resurrection (E19-F11), the takeover signal store (E19-F12), an undeclared verdict-decode processor (E19-F13), and unverified mobile areas such as parser IPC and clipboard (E19-F14). Children: every class is conditioned on the age gate of PenniLogic/android#17 and, for web sign-ups, PenniLogic/web#26.",
+          "evidence": [
+            "ADR-018 section 1.3: ledger amounts stay plaintext integer columns under forced row-level security, accepted with compensating controls",
+            "ADR-018 section 3.4: within-tenant blind-index frequency leakage accepted with per-tenant keys and rotation",
+            "ADR-018 section 6.7: erasure completeness bound equals the backup retention window, published to PenniLogic/docs#44",
+            "ADR-025: no durable user-derived embeddings, so no vector store exists for erasure to reach"
+          ],
+          "findings": [
+            "E19-F07",
+            "E19-F08",
+            "E19-F09",
+            "E19-F10",
+            "E19-F11",
+            "E19-F12",
+            "E19-F13",
+            "E19-F14"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "Exhaustible here: the authentication and step-up limiters themselves, which an attacker can aim at victims (E19-F15); the KEK custodian, a single dependency of every decrypting read, erasure and emergency rotation (E19-F16), and its unwrap capacity, which an attacker holding many accounts can spend (E19-F23: detection owned by api#37; no ticket owns a preventive unwrap limiter, raised to the coordinator); database capacity during bulk re-encryption, which api#53 runs in resumable batches with stall alerts; and the Play Integrity path, where the provider-side decode makes protected operations depend on an external service (E19-F13). Nonces in api#86 are bound to an authenticated principal and a short lifetime, so issuing them is not an anonymous amplifier. Baseline T-13 token-store flooding is answered by ADR-019's short-lived access tokens and hashed refresh tokens in api#5, outside this epic. Alert routing is platform work in E24 (PenniLogic/infra#27). The epic's rate-limiting scope item is delivered for authentication and sensitive operations (api#40); per-principal and per-device admission limits on every non-metered state-changing operation are owned by PenniLogic/api#107 (opened 2026-10-14 for E02-F06), which excludes network-edge protection. Neither bounds non-mutating decrypting reads, whose per-principal pressure on the custodian is detected but not prevented (E19-F23), nor unauthenticated edge or ingress request capacity: infra#27, infra#25 and the other E24 children carry no rate-limit or capacity scope, and that edge gap (OWASP API4 at the ingress) is held open in E24's refresh as E24-F21 rather than credited to an owner here.",
+          "evidence": [
+            "PenniLogic/api#53: resumable re-encryption with stalled-rotation alert in its acceptance criteria",
+            "ADR-019: 15-minute access tokens and rotated, reuse-detected refresh tokens",
+            "PenniLogic/api#107: server-side per-principal and per-device admission limits on non-metered state-changing operations; network-edge DDoS protection is a non-goal"
+          ],
+          "findings": [
+            "E19-F15",
+            "E19-F16",
+            "E19-F13",
+            "E19-F23"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "Authorisation decisions in this epic are made in PostgreSQL: forced row-level security, a NOBYPASSRLS runtime role, a MAC-bound transaction-local context set only by the app_ctx setters, and grant-mediated cross-user reads through named policies (ADR-018 sections 4 and 5, ADR-021). The escalation paths are a cross-tenant read through a privileged role, a forged context or a pooled connection (E19-F17, baseline T-04) and the request-serving API reaching the far broader key-operations role (E19-F18). The audit trail grants writers INSERT only (E19-F05). Step-up is decided by the server from its own published operation list (ADR-019 sections 9 and 15) and verified server-side (E19-F02). Play Integrity is not yet: the android design assigns which protected actions require a verdict to the client ticket PenniLogic/android#27 (T-SEC-05), and the PenniLogic/api#86 outcome speaks of requests the application marks as protected, so a client that omits the verdict or the protected marker could skip verification; E19-F01 requires a server-held operation map so that the client never decides. Baseline T-11, a compromised cloud account reaching master keys, is administrative identity compromise and is E19-F22.",
+          "evidence": [
+            "ADR-018 section 4.4: every RLS bypass is forbidden by name",
+            "ADR-018 section 4.1: pennilogic_app is the only role the API connects as; pennilogic_keyops is the rotation and erasure worker"
+          ],
+          "findings": [
+            "E19-F17",
+            "E19-F18"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "finding",
+          "analysis": "This epic verifies no purchase, receipt, webhook, refund or price; provider verification and replay suites for the subscription lifecycle belong to E14 (PenniLogic/docs#15). Its one touchpoint is trial eligibility: ADR-019 lists the Play Integrity device and account verdict policy of android#27 among the trial-abuse controls, next to one trial per verified channel hash and velocity limits on the attested device key, so a gap in that policy lets a device farm obtain paid capability without paying (E19-F19). The prize is bounded because trial AI quota is small and server-authoritative (ADR-007, ADR-023), which is why the finding is low.",
+          "evidence": [
+            "ADR-019: trial-abuse controls (one trial per verified channel hash, Play Integrity verdict policy at trial start, attested-device velocity limits)"
+          ],
+          "findings": [
+            "E19-F19"
+          ]
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "not_applicable",
+          "analysis": "No entitlement, plan or quota state is created, cached or decided in this epic. The rate limits, lockouts and adverse-verdict restrictions built here are abuse and security controls, not plan entitlements, and each is enforced server-side by api#40 and api#86; an adverse verdict moves an install to a read-only or tracking-paused state that grants nothing. Entitlement resolution and the quota ledger are decided by ADR-007 and ADR-023 and implemented and reviewed under E14 (PenniLogic/docs#15).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "finding",
+          "analysis": "No gateway, provider integration, model allowlist or tool dispatcher is built here; those are E17 (PenniLogic/docs#18) under ADR-022. No gateway, proxy or controller gains a database role, customer trail access or custodian unwrap (ADR-022), and pennilogic_app is the only role the API connects as (ADR-018 section 4.1), so a compromised gateway cannot reach wrapped keys or ciphertext directly. This epic's touchpoints are that assistant conversation content and BYOK provider-key references are encrypted under the user's key and erased with it (ADR-018 section 1.2, api#38), that no embedding store exists to erase (ADR-025), and that adding or replacing a provider key or changing a custom endpoint is a step-up operation in api#40 after the ADR-019 amendment, so a stolen session cannot silently repoint a user's AI traffic or plant a key; that control is E19-F02.",
+          "evidence": [
+            "ADR-022: no gateway, proxy or controller gains a database role, audit insert, customer trail read or custodian unwrap",
+            "ADR-018 section 4.1: pennilogic_app is the only role the API connects as",
+            "ADR-025: durable user-derived embeddings prohibited on server and device"
+          ],
+          "findings": [
+            "E19-F02"
+          ]
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "finding",
+          "analysis": "Replayed and forged requests are this epic's concern in two places: the Play Integrity verdict is bound to a hash of the canonical request the server received (api#86), and the step-up token is bound to the hash of the canonical operation parameters (api#40, ADR-019). Both bindings are defeated if client and server disagree on the canonical form or if the form is not injective (E19-F20); step-up replay and retargeting is E19-F02. No browser session surface is built here (web session handling, including the non-extractable DPoP key, is web#8's), and no server-side fetch of a user- or partner-supplied URL is introduced; the one outbound call, the provider-side decode of standard verdict tokens, goes to a fixed provider destination, never a user- or partner-supplied one (E19-F13). ADR-022's egress path governs only the AI gateway and proxy; no ticket yet owns egress allowlisting for the core API, which is raised to the coordinator.",
+          "evidence": [
+            "ADR-019: step-up token bound to session, DPoP key, operation and the canonical operation-parameter hash"
+          ],
+          "findings": [
+            "E19-F20",
+            "E19-F02"
+          ]
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "not_applicable",
+          "analysis": "No model or AI agent reads untrusted content on the product's behalf in this epic. Takeover detection is deterministic rules over signals, the audit trail forbids free-text payloads (api#39) so no merchant or message string enters it, and the device hardening controls handle no text for a model. Injection through merchant names, message text and imported statements first reaches a model in E17 and E18 (PenniLogic/docs#18, PenniLogic/docs#19) and is exercised by the red-team scenarios of PenniLogic/docs#43.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "finding",
+          "analysis": "Split arithmetic and settlement are E15's (PenniLogic/docs#16), but this epic's erasure, rotation and restore paths rewrite the rows a split depends on: erasure converts a member to a placeholder and redacts their text, rotation re-keys group-scoped rows under the group DEK, and restore replays membership ends. Any of them could change another member's balance or let the placeholder be claimed (E19-F21). ADR-021 fixes the rule (placeholder with user identifier cleared, group-local member identifier kept, every share and settlement preserved, balances re-derived to the same value); the implementation and the before-and-after assertions do not exist yet.",
+          "evidence": [
+            "ADR-021: erased split member becomes an unclaimable placeholder and every other member's net balance is re-derived to the same value"
+          ],
+          "findings": [
+            "E19-F21"
+          ]
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "The administrative identities this epic depends on are the KEK custodian's administrators, the approvers recorded in the key journal for retirement and emergency rotation, and the operator who may start an erasure (ADR-021 requires a distinct, chain-confirmed approver for operator-started destruction). The organisation has one GitHub owner account, and the ticket for its hardening baseline, PenniLogic/infra#43, was closed as not planned on 2026-10-03, and its body records the owner's 2026-10-04 disposition of owner-accepted residual risk with further hardening deferred: E01-F04 stays unremediated on that single owner account, and this epic carries it as that accepted residual rather than leaning on the closed ticket as a control; KEK destruction or a self-granted unwrap right from that one identity is the worst outcome in the model, because it destroys or exposes every user's data at once (E19-F22, baseline T-11). The operator console, its identity domain and the chained log are E13's (ADR-020, api#27); production custodian selection is PenniLogic/infra#27.",
+          "evidence": [
+            "ADR-020: separate administrative identity domain, admin role without BYPASSRLS that never receives a data key",
+            "ADR-018 section 6.6: the key journal records approver identities for every key state transition",
+            "PenniLogic/infra#43: owner disposition of 2026-10-04, owner-accepted residual risk with further hardening deferred; E01-F04 remains unremediated"
+          ],
+          "findings": [
+            "E19-F22"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E19-F01",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "An omitted, replayed, unbound or test-cohort Play Integrity verdict is admitted on a protected operation",
+          "attack_path": "A repackaged app or scripted client on a farmed or stolen session omits the verdict header or the protected marker on export, sync or trial start so that verification never runs; or an attacker replays a verdict captured from a genuine device, presents one bound to a different request, or uses a sideloaded QA or debug build whose package name or signing-certificate digest is still accepted because a test-cohort allowlist was loaded into the production configuration; the server admits the request as coming from a genuine, licensed install.",
+          "recommended_control": "The api keeps a server-held, versioned operation-to-verdict-requirement map (the server copy of the PenniLogic/android#27 T-SEC-05 matrix, published additively through the contracts repository like the canonical request form), keyed on the server's own route and operation and never on a client flag or on header presence, and refuses every listed operation that arrives without a valid bound verdict, with a test that strips the header on each listed operation; it issues single-use nonces, recomputes the request hash from the bytes it received, keeps the replay registry for at least maxAge plus clock skew and fails startup otherwise, denies every adverse, missing or test-cohort verdict with no default-allow branch, and refuses to start a production profile that carries any non-production package, signing digest or test trust root; table-driven tests mirror the client reference table row for row and include a debug-signed verdict.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#86",
+          "resolution": null
+        },
+        {
+          "id": "E19-F02",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "A step-up proof is replayed, reused for another target or satisfied by a freshly added credential",
+          "attack_path": "An attacker holding a stolen session captures the step-up token minted for one operation (remove device A) and spends it on another (remove device B, export, sharing invite), or first adds a passkey of their own on the stolen session and uses that new credential to pass step-up for credential removal or export.",
+          "recommended_control": "Implement the ADR-019 section 9 amendment on the ticket: a fresh user-verified passkey assertion no older than 300 s, minted as a single-use token bound to session, DPoP key, operation and the hash of the canonical operation parameters, verified at execution; credentials younger than 24 h cannot step up on a mature account; StepUpFreshnessTest, StepUpReplayTest, StepUpTargetBindingTest and YoungCredentialCannotStepUpTest run in CI.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#40",
+          "resolution": null
+        },
+        {
+          "id": "E19-F03",
+          "category": "tampering",
+          "severity": "high",
+          "title": "The over-the-air pin rotation channel can install an attacker's pins, downgrade them or switch pinning off",
+          "attack_path": "The pin-set update or the staged-rollout kill switch is fetched over the very channel it pins, or is accepted unsigned; an attacker with a mis-issued certificate on a network path, or with write access to the delivery configuration, pushes a pin set containing their key, replays an older set, or sends the kill switch so the app silently falls back to unpinned transport for the financial API.",
+          "recommended_control": "Pin-set updates and kill-switch commands are signed with a dedicated key held offline and separate from any TLS key, verified on the device against a verification key compiled into the build, carry a monotonic version and an expiry, and are refused when unsigned, wrongly signed, older or expired; disabling pinning is itself a signed, audited, time-limited command; the rehearsal includes each refused case on the physical device.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#27",
+          "resolution": null
+        },
+        {
+          "id": "E19-F04",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "A ciphertext moved between rows, columns or owners decrypts as if it belonged there",
+          "attack_path": "A writer with database access (a compromised key-operations job, a faulty migration, a restore script) copies an encrypted note, merchant text or identity value from one row or user into another; if the additional authenticated data does not bind row, column and owner, the transplanted value decrypts and is shown or exported as the victim's own data.",
+          "recommended_control": "Bind every ciphertext to its table, column, row and owner scope through the additional authenticated data and a versioned key identifier in the header exactly as ADR-018 section 2 specifies, refuse decryption on any mismatch with a distinct reason, and run the ADR-018 section 12 conformance tests aad_transplant_rejected and header_key_id_round_trip in CI together with group_rows_use_group_scope_header from the ADR-021 consequence.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#37",
+          "resolution": null
+        },
+        {
+          "id": "E19-F05",
+          "category": "repudiation",
+          "severity": "high",
+          "title": "A security, consent, sharing or administrative action commits without its audit event, or an event is rewritten",
+          "attack_path": "A code path performs the action outside the audit module's transaction, or a role keeps UPDATE or DELETE on the trail, or a writer inserts under another namespace; an account takeover, a consent withdrawal or an operator read then leaves no event, or a forged or edited one, and the account owner or regulator cannot be shown what happened.",
+          "recommended_control": "Exactly one transactional write of the audit event with a server-minted UUIDv7 correlation identifier per action, an action rolling back when its event fails, INSERT-only namespace-bound policies per login role with no UPDATE or DELETE for any role, forward-only schema evolution, and a gap detector alert, as the ADR-020 consequence on the ticket lists; the namespace-forgery, transactional-coupling and immutability tests run against real PostgreSQL.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#39",
+          "resolution": null
+        },
+        {
+          "id": "E19-F06",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "The signed erasure receipt names no signing key class, custody, rotation or verification key",
+          "attack_path": "The ticket and ADR-021 require a signed receipt that verifies against the barrier, but no key class for that signature appears in the ADR-018 section 6.1 inventory; an implementer signs with a key held in application configuration or the API process, so anyone with that key can forge a receipt for an erasure that never completed, or deny one that did, and rotation silently invalidates old receipts.",
+          "recommended_control": "Define the receipt-signing key as a custodian-held, non-exportable asymmetric key class added to the crypto-inventory through the ADR-018 section 1.1 extension rule (version bump with security and privacy review), publish its verification keys with retirement that keeps old receipts verifiable, journal its lifecycle, and test that an altered receipt, a receipt signed by any other key and a receipt for an incomplete barrier all fail.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#38",
+          "resolution": null
+        },
+        {
+          "id": "E19-F07",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "The device copy of raw messages and financial data leaves the device through backup, screenshots or a stolen handset",
+          "attack_path": "Android cloud backup or device-to-device transfer copies the local database, including the raw message store, to the platform provider; a screenshot, screen recording or recents thumbnail captures balances; a rooted or stolen device reads a database whose key is not hardware-backed; an overlay captures input on sensitive views.",
+          "recommended_control": "Exclude every data store from backup and transfer, set the secure-window flag on every financial screen and blank the recents thumbnail, wrap the database key in the hardware keystore with biometric unwrap and clear it on lock, filter obscured touches on sensitive views, and verify each control on the physical device by an attempted backup and restore, a capture attempt and a rooted-device read, as the ticket's acceptance criteria require.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#27",
+          "resolution": null
+        },
+        {
+          "id": "E19-F08",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Unwrapped data keys in API memory leak through heap dumps, core dumps or diagnostics",
+          "attack_path": "The API keeps unwrapped DEKs and index keys in a bounded cache for up to five minutes (ADR-018 section 9); an out-of-memory heap dump, a core dump, a remote diagnostic attach or an error report that serialises the cache writes many users' keys and decrypted values to disk, an operator laptop or an error-reporting processor.",
+          "recommended_control": "Within PenniLogic/api#37's application scope: hold cached keys in buffers that are overwritten on eviction and on shutdown, never render a key or plaintext in an exception message or object string form, publish the cache size and lifetime, and add a test that forces the dump and error paths and asserts no key bytes or planted plaintext appear in any artefact or log. As a dependency of this hand-off, disabling heap and core dumps and remote diagnostic attach for the API in every environment that holds real data is runtime configuration of the container runtime that PenniLogic/infra#25 provisions.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#37",
+          "resolution": null
+        },
+        {
+          "id": "E19-F09",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Real user data reaches an environment before the data protection floor is live in it",
+          "attack_path": "A beta environment is opened to real accounts while a column group is still in the dual-read migration window, row-level security is not yet forced on a new table, or a backup holding real data is restored into a lower environment; a dump, a misconfigured role or a test fixture then exposes plaintext financial data, which the epic's exit criterion and compliance O-12 forbid.",
+          "recommended_control": "The beta evidence gate reads, for the beta environment, the published crypto-inventory and the isolation-suite result and fails while any declared column group is not encrypted, any user-scoped table lacks forced row-level security or the isolation suite is red, and it must be green before the first real account exists; restores into any other environment stay under the scrub and access checks of PenniLogic/infra#32.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#49",
+          "resolution": null
+        },
+        {
+          "id": "E19-F10",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "The rotation ticket still asks to rewrap an erased owner's shared rows to grantees' keys, contradicting ADR-021",
+          "attack_path": "An implementer follows the original api#53 criterion that a shared row whose owner is erased is rewrapped to the surviving participants' keys; that creates a grantee-addressed copy of the erased subject's data or key, which survives crypto-shredding, keeps the subject's descriptive data readable after erasure and breaks the ADR-006 promise that ADR-021 section 1 protects by allowing no grantee-bound key material.",
+          "recommended_control": "Before implementation, record on the ticket that the ADR-021 consequence replaces the rewrap criterion: no grantee-bound key copy, personal-scope shared rows become unreadable with the owner's key, split rows are protected by the group-scoped DEK and rotated with it; the tests erasure_no_key_material_remains, group_key_rotation_resumable and erasure_orphaned_group_key_destroyed replace the rewrap assertions.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#53",
+          "resolution": null
+        },
+        {
+          "id": "E19-F11",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "A restore from a pre-erasure backup resurrects a destroyed key, a revoked grant or readable data",
+          "attack_path": "Point-in-time recovery restores the pre-erasure user key row, a revoked grant or an ended membership together with ciphertext; if the restored environment serves traffic before the tombstone journal and key journal are replayed, or if the journal is unavailable and the restore proceeds anyway, an erased user's data is readable again.",
+          "recommended_control": "Readiness after any restore requires key-journal replay first (context key rotated, retired and destroyed keys re-destroyed), then tombstone and register replay, zero outstanding tombstones and canary decrypts; journal unavailability fails the restore; the planted backup-before-erasure test is shown failing with replay disabled and passing with it, together with the ADR-021 tests restore_does_not_resurrect_revoked_grant and restore_does_not_resurrect_membership.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#33",
+          "resolution": null
+        },
+        {
+          "id": "E19-F12",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Takeover-detection signals accumulate into an unbounded location and device history",
+          "attack_path": "Improbable-travel and new-device detection needs the source address, a location derived from it and the device key per sign-in; the ticket bounds precise location but states no retention, purpose or store, so the signal store becomes a long-lived movement history of every user, and an outbound geolocation lookup would send every sign-in address to a third party.",
+          "recommended_control": "Derive location at evaluation time from a locally held dataset with no outbound lookup, persist only the decision, reason code and a coarse bucket, take the retention period from the PenniLogic/docs#44 profile and register the purpose with PenniLogic/api#24, keep identifiers out of metric labels, and test that no raw address survives past the retention window.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#40",
+          "resolution": null
+        },
+        {
+          "id": "E19-F13",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "The server-side decode of standard verdict tokens is a processor call on every protected request that no inventory declares",
+          "attack_path": "The PenniLogic/api#86 scope speaks of decoding the standard-request token with server-held material, but the android Play Integrity design lists the provider's decryption operation for the server, and standard tokens are expected to be decoded only by the provider (provider documentation was not fetched here; api#86 must confirm). Every protected request then makes an outbound call carrying a device- and app-linked token to an external processor across a border, undeclared in any inventory, and every protected operation depends on that provider's availability.",
+          "recommended_control": "Record the decode path on the ticket before implementation; send only the token, to the fixed provider destination and never to a user- or partner-supplied one; declare the processor with its purpose in the PenniLogic/api#24 registry and the PenniLogic/android#18 inventory; and define the operation policy for provider unavailability (sensitive mutations fail closed, local capture continues) with a test for each. Egress allowlisting for the core API has no owning ticket (ADR-022 governs the AI path only) and is raised to the coordinator.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#86",
+          "resolution": null
+        },
+        {
+          "id": "E19-F14",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Mobile baseline threats outside the hardening ticket, such as parser IPC and clipboard, have no verification",
+          "attack_path": "The hardening ticket verifies storage, screens, backup, integrity and pinning only; the baseline threats T-08 (a hostile app reading parser output through an exported component) and T-15 (amounts and account numbers left on the clipboard) and the remaining mobile verification areas are verified by no ticket in this epic, and no public ticket builds clipboard handling at all, so the epic's exit criterion of hardening verified against the mobile verification standard could be declared met without them.",
+          "recommended_control": "The mobile security self-assessment covers every area of the mobile application security verification standard, including no exported components on the parser path and clipboard marking and clearing, maps each item to a ticket and a test or records it in the accepted-risk register with an owner and an expiry, and feeds its gap list into the external penetration-test scope.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/docs#43",
+          "resolution": null
+        },
+        {
+          "id": "E19-F15",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "Lockout and per-address limits are turned against legitimate users",
+          "attack_path": "An attacker with no credential floods sign-in, step-up or recovery attempts against a victim's credential or verified channel until the account is locked, or exhausts a per-address limit shared by many users behind one carrier-grade address, so genuine users cannot sign in or complete a sensitive operation.",
+          "recommended_control": "Key lockout to the presented credential and the attested DPoP device key rather than the whole account, use exponential backoff instead of a hard lock on the passkey path, size per-address limits for shared addresses, keep an enrolled device's own assertion working during an attack, run the thresholds report-only first as the ticket states, and test that a distributed flood neither locks an enrolled device nor unrelated accounts.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#40",
+          "resolution": null
+        },
+        {
+          "id": "E19-F16",
+          "category": "denial_of_service",
+          "severity": "high",
+          "title": "KEK custodian outage or unwrap-quota exhaustion stops every decrypting request, erasure and emergency rotation",
+          "attack_path": "The custodian is unreachable, partitioned or throttled, or its unwrap quota is spent by load (the attacker-driven variant is E19-F23); every read of descriptive data, every erasure and the emergency rotation path then fail together, and the outage cannot be routed around because no other path may unwrap.",
+          "recommended_control": "Select the production custodian with an availability objective at least as strict as the API's (ADR-018 section 6.1.1) and a published unwrap capacity, and alert on unwrap error rate and latency; the attacker-driven spend of that capacity is E19-F23. A rehearsal of custodian loss is in neither PenniLogic/infra#27's scope (observability, alerting and, through its ADR-018 comment, custodian selection) nor PenniLogic/infra#26's (a database backup and restore drill that leaves chaos and failover exercises to E25), so it is raised to the coordinator and this hand-off covers selection, capacity and alerting only.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#27",
+          "resolution": null
+        },
+        {
+          "id": "E19-F17",
+          "category": "elevation_of_privilege",
+          "severity": "critical",
+          "title": "A cross-tenant read through a privileged role, a forged session context or a pooled connection",
+          "attack_path": "The API connects with a role that owns tables or has BYPASSRLS, a SECURITY DEFINER read skips the predicate, a pooled connection keeps the previous request's principal, or the application role writes the principal or grant set itself; any one returns another user's ledger rows or decrypts their data.",
+          "recommended_control": "Implement ADR-018 sections 4 and 5 exactly: forced row-level security on every owner- or member-scoped table, a NOBYPASSRLS runtime role, invoker-rights views, a transaction-local MAC-bound context written only by the app_ctx setters, denial rather than emptiness; the cross-user, forged-context, pooled-connection and weakened-policy fixture tests named on the ticket run against real PostgreSQL, and PenniLogic/api#23 repeats the attempts against the running service.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#37",
+          "resolution": null
+        },
+        {
+          "id": "E19-F18",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "The request-serving API can act as the key-operations role",
+          "attack_path": "If the API deployable holds the key-operations login, shares its secret store, or can SET ROLE into it, a remote-code or injection flaw in the API escalates to UPDATE on every ciphertext and user key row and the erasure deletes, enough to destroy or replace any user's keys or run an erasure nobody requested.",
+          "recommended_control": "Provision the key-operations login only to the separate rotation and erasure worker identity, give the runtime role no membership in it, make begin_keyops and begin_group_keyops refuse unless the job identifier exists in the rotation job table or the erasure register, and add a test that the API credential cannot assume the role or call either setter.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#37",
+          "resolution": null
+        },
+        {
+          "id": "E19-F19",
+          "category": "billing_forgery",
+          "severity": "low",
+          "title": "Free trials are farmed from emulators or tampered devices because trial start is not integrity-gated",
+          "attack_path": "ADR-019 makes the Play Integrity device and account verdict policy of this ticket one of the trial-abuse controls; if trial start is missing from the operation-specific verdict policy, or the client only advises on an adverse verdict, a device farm of emulators or rooted handsets starts paid-capability trials at scale.",
+          "recommended_control": "List trial start as a protected operation in the operation-specific adverse-verdict policy, carry a bound standard verdict on that request for the server to verify, deny trial start on an adverse or missing verdict while local capture continues, and test that an emulator, unlicensed or replayed verdict cannot start a trial. Server-side denial at trial start depends on the server-held operation map of PenniLogic/api#86 (E19-F01) and on the trial path of PenniLogic/api#29 (E14); the client policy alone is advisory.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#27",
+          "resolution": null
+        },
+        {
+          "id": "E19-F20",
+          "category": "request_forgery",
+          "severity": "high",
+          "title": "Client and server disagree on the canonical request, so a verdict bound to one request authorises another",
+          "attack_path": "The client hashes one canonical form while the server recomputes another after proxy or framework normalisation (path encoding, header case, duplicate query keys, body whitespace, control characters); honest requests then fail and pressure grows to relax the check, or two distinct requests share a canonical form and a verdict obtained for a harmless request authorises a harmful one.",
+          "recommended_control": "Publish the byte-exact canonical form and refusal codes additively in the contracts repository before either side ships, compute the server hash over the bytes received before any normalisation, reject control characters and duplicate keys so the form is injective, and run shared golden vectors in both repositories alongside the one-byte body, path and method alteration tests.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#86",
+          "resolution": null
+        },
+        {
+          "id": "E19-F21",
+          "category": "split_manipulation",
+          "severity": "high",
+          "title": "Erasing a split-group member, or restoring around that erasure, changes what other members owe",
+          "attack_path": "The erasure job deletes or re-keys the erased member's shares and settlements, or a restore replays the membership end differently, so surviving members' net balances shift or a debt disappears; or the placeholder left for the erased member is later claimed by another account.",
+          "recommended_control": "Follow ADR-021: the erased member becomes a placeholder, whose claim refusal (erasure_placeholder_unclaimable) is enforced by PenniLogic/api#33 and PenniLogic/api#49 (E15) as a dependency of this hand-off, with every share, expense and settlement kept, each surviving member's net balance re-derived and asserted identical before and after erasure, the placeholder unlinkable to any account (erasure_placeholder_unlinkable), and the same balance assertion repeated after restore in the shared harness with PenniLogic/infra#33.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#38",
+          "resolution": null
+        },
+        {
+          "id": "E19-F22",
+          "category": "administrative_identity_compromise",
+          "severity": "critical",
+          "title": "One administrative identity can destroy, disable or grant itself use of the KEK",
+          "attack_path": "The custodian's administrative plane (destroy or disable a key version, change its access policy, add an unwrap principal) is reachable from the single owner account or a pipeline identity; a phished owner session or a compromised pipeline destroys the KEK, making every user's data unrecoverable at once, or grants itself unwrap rights and reads every DEK.",
+          "recommended_control": "No standing human or pipeline access to custodian administration; key destruction, disabling and access-policy changes only through brokered, time-boxed elevation approved by an independent second approver, recorded in key-use audit and the administrative chain before taking effect, with the scheduled inventory check failing on any standing human or pipeline grant to the custodian.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#32",
+          "resolution": null
+        },
+        {
+          "id": "E19-F23",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "An attacker spends the custodian unwrap capacity through many accounts or key-cache churn without being noticed",
+          "attack_path": "An attacker who controls many authenticated accounts (farmed sign-ups or a pool of stolen sessions) sends decrypting reads across them so that each forces an unwrap, or churns enough distinct principals through the bounded key cache to evict legitimate users' keys; each account stays within the per-account and per-address limits of PenniLogic/api#40, which cover authentication and sensitive operations only, so the combined unwrap rate reaches the custodian's capacity and the outage of E19-F16 follows.",
+          "recommended_control": "Within the scope PenniLogic/api#37 states: unwrap per request through the bounded five-minute cache keyed by user and key (ADR-018 section 5.4), record every unwrap, publish unwrap rate and cache-hit ratio, and alarm on an unusual unwrap rate with the threshold set below the custodian capacity selected under E19-F16; a test drives distinct-account unwraps past the threshold and asserts the alarm fires. A preventive per-principal or global unwrap limiter is in no ticket's scope; whether PenniLogic/api#37 should add one is raised to the coordinator, and until then this hand-off covers detection only.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#37",
+          "resolution": null
+        }
+      ]
+    }
+  ]
 }
