@@ -3359,13 +3359,13 @@
       "id": "BM-J04",
       "journey_id": "J04",
       "version": "1.0.0",
-      "scenario": "Synthetic plan with two strategies to compare",
+      "scenario": "Synthetic plan with alternative strategies to compare",
       "task_steps": [
-        "Compare the two strategies",
+        "Compare the strategies",
         "Explain the consequence of each",
         "Choose one and confirm the decision"
       ],
-      "task_script_sha256": "sha256:4600a1541ddd2d148eb21480eee27ae58a146a5b361aee3881ab58be3a0f93c4",
+      "task_script_sha256": "sha256:38757a2f74672a93e22a88258e65f58f5998afe5316cbf78c9c90e18b71bd693",
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_ref": "pending:PenniLogic/docs#66",
@@ -3399,7 +3399,7 @@
       "id": "BM-J06",
       "journey_id": "J06",
       "version": "1.0.0",
-      "scenario": "Synthetic group of three with one shared bill",
+      "scenario": "Synthetic group with one shared bill",
       "task_steps": [
         "Create the group and invite synthetic members",
         "Split the bill",

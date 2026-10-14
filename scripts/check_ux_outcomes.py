@@ -11,8 +11,9 @@ vocabulary; no free text, money, raw content, prompt, identity, household, locat
 opt-out is honoured in every event and denominator, and cohort minimums, retention, aggregation and access are
 references to PenniLogic/infra#27 (T-PLT-03), never numbers. Baselines are null and `unmeasured`, thresholds are
 `unset` and a crossed kill threshold opens a reviewed product decision, never an automatic action. The only numbers
-in the catalogue are the two privacy-budget caps. Design debt uses `DEBT-NNN` identifiers; the D8 check is the
-function `d8_blocking_debt`, which never edits governance/design-gates.json.
+in the catalogue are the two privacy-budget caps; free text names none (a digit outside an identifier or a cardinal
+number word is refused). Design debt uses `DEBT-NNN` identifiers; the D8 check is the function `d8_blocking_debt`,
+which never edits governance/design-gates.json.
 
 Structure failures raise `Refused` with a static rule identifier plus, at most, identifiers that match a catalogue or
 journey grammar; input text is never echoed. Held inputs (approvals, research operations, payload allowlist review,
@@ -76,6 +77,10 @@ DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 SEMVER = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
 CATALOGUE_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 SNAKE = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
+# A journey code as an event enum value (j01); the only digits an event value may carry.
+JOURNEY_VALUE = re.compile(r"j[0-9]{2}")
+ISSUE = re.compile(r"PenniLogic/[a-z][a-z0-9.-]*#[1-9][0-9]*")
+PLAN_IDENTIFIER = re.compile(r"T-[A-Z]{2,5}-[0-9]{2}")
 NAME_LIMIT = 48
 TEXT_LIMIT = 400
 SCRUBBED_GIT_VARIABLES = (
@@ -176,6 +181,23 @@ EXEMPT_PATHS = {
 # The two privacy-budget caps are the only numbers; baselines, targets, thresholds and cohorts carry none.
 NUMBER_PATHS = frozenset({("privacy", "privacy_budget", "max_fields_per_event"),
                           ("privacy", "privacy_budget", "max_values_per_field")})
+# Review round 1 (spec-and-safety.-r1-F5): free text names no number either. A string that is wholly a grammar-valid
+# value is exempt; elsewhere identifiers are taken out and any remaining digit, or a cardinal number word, is refused,
+# so no cohort size, retention period, sample size or threshold can be invented in prose (final plan 8.3).
+STRUCTURED = (PENDING, SEMVER, CATALOGUE_DATE, JOURNEY_VALUE, ISSUE, PLAN_IDENTIFIER)
+EMBEDDED_IDENTIFIER = re.compile(
+    r"(?<![A-Za-z0-9])(?:[MG]-J[0-9]{2}-[0-9]{2}|(?:TH|EV|RT|DEBT)-[0-9]{3}|BM-J[0-9]{2}|[Jj][0-9]{2})(?![A-Za-z0-9])"
+    r"|PenniLogic/[a-z][a-z0-9.-]*#[1-9][0-9]*"
+)
+NUMBER_WORD = re.compile(
+    r"\b(?:zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen"
+    r"|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundreds?|thousands?"
+    r"|lakhs?|crores?|millions?|billions?|dozens?|percent|half)\b",
+    re.IGNORECASE,
+)
+# Event names, field names and values are snake-case tokens whose digits check_event polices (event.number_token).
+EVENT_TOKEN_PATHS = frozenset({("events", "*", "name"), ("events", "*", "fields", "*", "name"),
+                               ("events", "*", "fields", "*", "values", "*")})
 
 
 def _secret_token(text):
@@ -194,6 +216,28 @@ def _scan(text, subject):
     for rule, pattern in CONTENT_SHAPES:
         require(pattern.search(text) is None, rule, *subject)
     require(not _secret_token(text), "content.secret_shape", *subject)
+
+
+def guard_numbers(document):
+    """No number in any string (spec-and-safety.-r1-F5). It runs after the structure rules, so a malformed identifier,
+    version or reference still reports its own rule; EXEMPT_PATHS digests and event tokens are skipped."""
+    def walk(value, subject, path):
+        if isinstance(value, dict):
+            if printable(value.get("id")):
+                subject = (value["id"],)
+            for key, item in value.items():
+                walk(item, subject, (*path, key))
+        elif isinstance(value, list):
+            for item in value:
+                walk(item, subject, (*path, "*"))
+        elif isinstance(value, str) and path not in EXEMPT_PATHS and path not in EVENT_TOKEN_PATHS:
+            if classify(value) is not None or any(grammar.fullmatch(value) for grammar in STRUCTURED):
+                return
+            require(re.search(r"[0-9]", EMBEDDED_IDENTIFIER.sub(" ", value)) is None, "content.number_in_text",
+                    *subject)
+            require(NUMBER_WORD.search(value) is None, "content.number_word", *subject)
+
+    walk(document, (), ())
 
 
 def guard_content(document):
@@ -408,8 +452,6 @@ SUBSTRINGS = frozenset({"amount", "balance", "merchant", "salary", "counterparty
                         "family", "husband", "pincode", "postcode", "zipcode", "religion", "disability"})
 # Look-alike readings: digits read as the letters they imitate (1 as l or i) and rn, vv read as m, w.
 LOOK_ALIKE = tuple(str.maketrans("0123456789", "o" + one + "zeasgtbg") for one in "li")
-# Only journey codes may carry digits, and only as enumerated values.
-JOURNEY_VALUE = re.compile(r"j[0-9]{2}")
 # Review round 1 (spec-and-safety.-r1-F2): the positive allowlist. Every underscore segment of an event name, field
 # name and value must be one of these reviewed, neutral words; anything else (a merchant, bank, place, number or a
 # joined abbreviation such as txnamt) is refused with `event.vocabulary`. Adding a word is a reviewed code change
@@ -728,6 +770,7 @@ def check(document, schema, sources, pin=None, base=None, fixture=False):
     check_longitudinal(document["longitudinal_plan"], indexed)
     check_debt(indexed, schema, fixture)
     check_coverage(indexed, pinned)
+    guard_numbers(document)
     return {"document": document, "indexed": indexed, "pinned": pinned}
 
 

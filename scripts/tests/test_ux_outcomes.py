@@ -1051,6 +1051,31 @@ class ContentGuardTests(CatalogueCase):
         self.assertRefused("content.unprintable_character", "G-J01-01", mutate(
             self.document, lambda d: d["guardrails"][0].update(signal="Pay " + chr(0x20B9) + "5")))
 
+    def test_invented_numbers_in_free_text_are_refused(self):
+        # Review round 1 (spec-and-safety.-r1-F5): each passed when only JSON numbers were refused.
+        digit, word = "content.number_in_text", "content.number_word"
+        cases = (
+            (lambda d: d["longitudinal_plan"].update(
+                cohort="Opted-in post-beta participants, at least 40 per cohort, kept 90 days"), digit, None),
+            (lambda d: d["metrics"][0].update(sample_limitation="Needs 200 sessions per week before reading"), digit,
+             "M-J01-01"),
+            (lambda d: d["collection"].update(rollback="Stop collection and delete events after 30 days"), digit, None),
+            (lambda d: d["longitudinal_plan"]["stop_criteria"].append("Stop when completion falls below 60 percent"),
+             digit, None),
+            (lambda d: d["metrics"][0]["numerator"].update(definition="Kill if under 0.35 of baseline"), digit,
+             "M-J01-01"),
+            (lambda d: d["longitudinal_plan"].update(cohort="At least forty participants per cohort"), word, None),
+            (lambda d: d["guardrails"][0].update(signal="Kill when reversals pass half of baseline"), word, "G-J01-01"),
+            (lambda d: d["metrics"][0].update(statement="Share of sessions above sixty percent"), word, "M-J01-01"),
+        )
+        for number, (change, rule, subject) in enumerate(cases):
+            with self.subTest(case=number):
+                self.assertRefused(rule, subject, mutate(self.document, change))
+
+    def test_identifiers_in_free_text_are_not_numbers(self):
+        text = "Read with M-J01-02, G-J01-01, TH-001, EV-002, BM-J01 and J01 until PenniLogic/infra#27"
+        self.run_check(mutate(self.document, lambda d: d["metrics"][0].update(sample_limitation=text)))
+
 
 class SummaryTextTests(CatalogueCase):
     def render(self, document):
