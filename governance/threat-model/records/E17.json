@@ -6,5 +6,654 @@
   "owner": {
     "accountable": "basiltt"
   },
-  "refreshes": []
+  "refreshes": [
+    {
+      "date": "2026-10-14",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "github:basiltt",
+        "role": "pennilogic-developer"
+      },
+      "scope": "The AI harness under PenniLogic/docs#18: the private AI gateway with per-user virtual keys, envelope-encrypted bring-your-own-key storage and the reserve-stream-reconcile bridge to the quota primitive (ai-service#2); register-once custom endpoint validation, pinning and the adversarial request-forgery suite (ai-service#3); the allowlist tool dispatcher, injection defences and minimisation before egress (ai-service#4); the evaluation merge gate, numeric fidelity and spend kill switch (ai-service#7); bounded provider routing, circuit breakers and quota-exact failover (ai-service#8); the read-only deterministic tool layer that owns all AI-facing arithmetic (api#36); and the network-layer egress denial for the AI workload (infra#30). Trust boundaries: core API to gateway (ADR-019 workload token plus API-minted delegation); gateway to the authenticated egress proxy and from it to an approved provider or a user-registered custom destination (ADR-022); gateway to the deterministic tools and through them to the ledger; attacker-influenced transaction text (merchant names, memos) entering prompts; provider responses and model output returning to the assistant surfaces that E18 owns. Raw messages never reach this epic (ADR-004). Nothing here is implemented today: the ai-service repository is a health-only scaffold and both AI modes are OFF with empty allowlists under ADR-022, so every runtime control below is a finding handed to the ticket that builds it.",
+      "tickets_in_scope": [
+        "PenniLogic/ai-service#2",
+        "PenniLogic/ai-service#3",
+        "PenniLogic/ai-service#4",
+        "PenniLogic/ai-service#7",
+        "PenniLogic/ai-service#8",
+        "PenniLogic/api#36",
+        "PenniLogic/infra#30"
+      ],
+      "sources": [
+        "PenniLogic/docs#18 (epic body: goal, scope, out of scope, exit criteria, key risks)",
+        "PenniLogic/ai-service#2, PenniLogic/ai-service#3, PenniLogic/ai-service#4, PenniLogic/ai-service#7, PenniLogic/ai-service#8, PenniLogic/api#36 and PenniLogic/infra#30 (child ticket bodies and their appended ADR-022 and coordinator sections)",
+        "architecture/02-security-architecture.md#1-threat-model-stride (T-09 is the only baseline AI entry)",
+        "compliance/01-regulatory-landscape.md (obligations O-1, O-2, O-4, O-6, O-7, O-8, O-13 and O-24)",
+        "ADR-022 sections 1, 2, 4, 6 to 11 and adr/ai-egress-consequences.json (runtime_gates T1 to T20)",
+        "ADR-023 section 6 (bring-your-own-key and custom-endpoint quota treatment, no fallback to Mode A)",
+        "ADR-004, ADR-009 and ADR-025 (raw content on device, separate AI service, no persisted embeddings)",
+        "ai/01-ai-harness-research.md (correction banner, sections 7.1 to 7.3)",
+        "scripts/tests/test_ai_egress_decision.py (source-only checks of the ADR-022 artifact)",
+        "PenniLogic/contracts#27 (closed: custom-destination registration group, egress enumerations, no-address lint)",
+        "PenniLogic/ai-service#6 and PenniLogic/web#15 (E18 consumers of model output, read for hand-off)",
+        "ADR-003, ADR-007, ADR-018, ADR-019 and ADR-021 (on-device parsing, server-side entitlements, encryption scope, workload and session authentication, shared-data erasure and cross-user key access)",
+        "PenniLogic/api#24, PenniLogic/api#34, PenniLogic/api#35, PenniLogic/api#39, PenniLogic/api#87, PenniLogic/admin#5, PenniLogic/infra#25, PenniLogic/infra#32, PenniLogic/web#26, PenniLogic/android#16, PenniLogic/android#17, PenniLogic/android#26, PenniLogic/api#30, PenniLogic/api#53, PenniLogic/infra#23, PenniLogic/infra#27, PenniLogic/docs#44, PenniLogic/contracts#7, PenniLogic/contracts#8, PenniLogic/contracts#10, PenniLogic/contracts#14 and PenniLogic/ai-service#1 (owner, candidate and evidence tickets read for hand-off)",
+        "PenniLogic/infra#43 (closed not planned on 2026-10-03; owner disposition of 2026-10-04 accepting the E01-F04 residual)",
+        "governance/threat-model/records/E01.json and governance/threat-model/records/E25.json (E01-F03, E01-F04 and E25-F14)",
+        "PenniLogic/infra#92 and PenniLogic/ai-service#22 (opened 2026-10-14 at the owner's direction to own E17-F18 and E17-F22; bodies read for the hand-off)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Minimised assistant prompt payload sent to a model provider: the user's question text, tokenized account and person references, redacted merchant strings, categories, necessary amounts and dates, and deterministic tool results read from the ledger (api#36), including shared household data within a live grant",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties"
+          ],
+          "purpose_ref": "ADR-022 section 2.1 payload rule; the AI processing purpose and its consent version are to be created in the purpose registry by PenniLogic/api#24 and shaped by PenniLogic/contracts#14; the default-off per-grant AI-egress permission for other principals' data in Modes B and C by PenniLogic/api#34 (E17-F07)",
+          "retention": "First party: not persisted beyond the trace policy of PenniLogic/ai-service#4, no embeddings (ADR-025); provider side: only providers with accepted zero-retention evidence (PenniLogic/ai-service#8), with prompt caching and batch use only where that evidence covers the feature (E17-F10), and processor agreements (PenniLogic/docs#44); no retention value is set yet",
+          "erasure_path": "First-party traces and assistant records through the PenniLogic/api#24 erasure propagation; bytes already sent cannot be recalled from a provider (ADR-022 section 9), so erasure there depends on zero-retention approval before any traffic. Other principals' data: ADR-021 section 1.6 permits no server-side copy of shared data, so AI traces, gateway caches and assistant records must hold references to a grantor's data, not copies; on grant revocation the PenniLogic/api#35 historical-access cut and no-cached-copies rule must reach them (E17-F28), and a household member's or counterparty's erasure propagates to them through PenniLogic/api#24 under ADR-021 section 3 (E17-F11)",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists; a counterparty is not an account holder and may be a minor named in a payee or memo, so no age gate conditions them: instead ADR-022 section 2.1 forbids counterparty and household names in any payload, merchant strings are redacted before egress and any retained screening excerpt is bounded and minimised (PenniLogic/ai-service#4), and a minor named in such text is handled as any other counterparty",
+          "processors": [
+            "Approved code-managed model providers and their regions (Modes A and B); the allowlist is empty today and each entry needs retention evidence and a processor agreement (ADR-022 section 2.2)",
+            "A user-registered custom destination (Mode C), a user-directed transfer under versioned consent; disabled today"
+          ]
+        },
+        {
+          "data_class": "Bring-your-own-key provider credentials and their key references, with key decryption, replacement and revocation events",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "ADR-022 section 2.1 and ADR-023 section 6 (Mode B and C credentials); custody, step-up enrolment and recovery suspension are built by PenniLogic/ai-service#2",
+          "retention": "Until the user replaces or revokes the key, recovery suspends it or the account is erased; decryption audit under the PenniLogic/api#39 schedule",
+          "erasure_path": "Envelope encryption under the user's key (ADR-022 sections 2.1 and 2.8); erasure shreds the owner's keys and invalidates cached material (PenniLogic/ai-service#2 acceptance criteria)",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists",
+          "processors": [
+            "The provider that issued the key receives it on every Mode B call, through the egress proxy"
+          ]
+        },
+        {
+          "data_class": "Custom destination registrations: host, path prefix, pinned address set, registered model names, lifecycle state and the separately classified address evidence",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "ADR-022 section 2.8 items 1 to 10 (personal data protected under ADR-018 and ADR-021); the registration flow is PenniLogic/ai-service#3 and the evidence boundary PenniLogic/api#39",
+          "retention": "Live, post-revocation and evidence-resolution periods come from the PenniLogic/api#24 retention profile with PenniLogic/docs#44 counsel input; ADR-022 sets none, so none exists yet",
+          "erasure_path": "Erasure deletes the resolving destination and evidence data and shreds the owner's keys without rewriting the opaque audit trail; backup restore must not resurrect them (ADR-022 section 2.8 item 10, gate T17)",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists",
+          "processors": [
+            "The registered destination receives a TLS-only validation probe and, once active, inference traffic"
+          ]
+        },
+        {
+          "data_class": "Per-user AI usage and control records: virtual-key budgets, reservations and usage events, spend counters, per-user throttle and injection-suspicion counters, routing decisions and tool-call audit (tool name and scope, no arguments), and injection-screening records that keep a bounded excerpt of the suspected merchant or memo text",
+          "subjects": [
+            "users",
+            "counterparties",
+            "operators"
+          ],
+          "purpose_ref": "ADR-023 sections 6 and 7 (usage ledger); quota primitive PenniLogic/api#30; audit stream PenniLogic/api#39; the abuse counter of PenniLogic/ai-service#4 has no purpose-registry entry yet and needs one from PenniLogic/api#24",
+          "retention": "Usage ledger per ADR-023; audit and security logs per PenniLogic/api#39 and the in-region retention of PenniLogic/infra#27; counters carry no request content. A screening excerpt lives only in the PenniLogic/ai-service#4 screening records, bounded and minimised, never in an audit event (PenniLogic/api#39 forbids counterparty text there); its retention period is not set yet and must come from the PenniLogic/api#24 schedule (E17-F11)",
+          "erasure_path": "Account erasure through PenniLogic/api#24 retention jobs; append-only usage and audit events keep only opaque identifiers so they need no rewrite (ADR-023 section 6). A screening excerpt carries text rather than an opaque identifier, so the PenniLogic/api#24 retention job for its class deletes it and the erasure of the user or counterparty it names reaches it (E17-F11)",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists; a counterparty is not an account holder and may be a minor named in a payee or memo, so no age gate conditions them: instead ADR-022 section 2.1 forbids counterparty and household names in any payload, merchant strings are redacted before egress and any retained screening excerpt is bounded and minimised (PenniLogic/ai-service#4), and a minor named in such text is handled as any other counterparty",
+          "processors": []
+        },
+        {
+          "data_class": "Verified-channel notifications of a pending, suspended or revoked provider key or custom destination, with the cancellation path",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "PenniLogic/ai-service#2 and PenniLogic/ai-service#3 acceptance criteria (pending activation, recovery suspension, verified-channel notification); the notice must not expose the key or the full endpoint (PenniLogic/web#15)",
+          "retention": "Delivery records follow the notification channel's retention, which no E17 ticket sets; the lifecycle event itself is audited under PenniLogic/api#39",
+          "erasure_path": "Account erasure through PenniLogic/api#24; a delivered message already in the user's own inbox is outside PenniLogic's reach and therefore carries no key or full endpoint",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists",
+          "processors": [
+            "The delivery provider of the verified channel (e-mail or push); none is selected in this epic"
+          ]
+        },
+        {
+          "data_class": "Evaluation corpus cases and harmful-answer reports, including a reported answer that is re-authored as a synthetic adversarial case",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties",
+            "contributors"
+          ],
+          "purpose_ref": "PenniLogic/ai-service#7 (governed synthetic corpus with recorded provenance per case and a named owner; no production content); compliance obligation O-24",
+          "retention": "Synthetic cases indefinitely in the repository; a harmful-answer report only until it is re-authored as a synthetic case containing no string, amount or date derived from the report and its correction is issued, under the PenniLogic/api#24 schedule",
+          "erasure_path": "The report is erased through PenniLogic/api#24; the committed case is re-authored rather than de-identified in place, so it carries no subject data and is not an erasure target; a committed case stays permanently in the public PenniLogic/ai-service git history, so the privacy check must happen before commit (E17-F29)",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists; a reported answer may name a household member or a counterparty, and a counterparty is not an account holder and may be a minor named in a payee or memo, so no age gate conditions them: instead the report is re-authored as a synthetic case containing no string, amount or date derived from it and privacy-reviewed before commit (PenniLogic/ai-service#7, E17-F29), the report itself is retained and erased under PenniLogic/api#24, and a minor named in a report is handled as any other counterparty",
+          "processors": [
+            "Model providers called by live evaluation runs in continuous integration (synthetic data only)"
+          ]
+        },
+        {
+          "data_class": "Gateway control-call content: the text the prompt-injection screening sidecar and redaction helpers send to a model on PenniLogic's own credential in every mode (ADR-023 section 3), which before redaction can include the user's question, merchant and memo strings and tool results carrying shared household data",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties"
+          ],
+          "purpose_ref": "ADR-023 section 3: internal control calls of PenniLogic/ai-service#4 (T-AI-05), not the user's inference, with their cost owned by PenniLogic/ai-service#7; the purpose-registry entry is to be created by PenniLogic/api#24; other principals' shared data stays under the per-grant AI-egress permission of PenniLogic/api#34 (E17-F07)",
+          "retention": "First party: the trace policy of PenniLogic/ai-service#4, as for the prompt payload; provider side: only an approved code-managed provider with accepted zero-retention evidence (PenniLogic/ai-service#8) and a processor agreement (PenniLogic/docs#44); no retention value is set yet",
+          "erasure_path": "First-party traces through the PenniLogic/api#24 erasure propagation; bytes sent to the provider cannot be recalled (ADR-022 section 9), so minimising or redacting locally before any control call is the only protection (E17-F27)",
+          "children": "Launch scope is adult-only: the versioned age-eligibility policy is PenniLogic/docs#44, enforced before onboarding by the Android age gate PenniLogic/android#17 and on the web signup path by PenniLogic/web#26; AI features are reachable only by an onboarded account, so a child is not an account-holder subject unless those gates fail, and no AI-specific child path exists; a counterparty is not an account holder and may be a minor named in a payee or memo, so no age gate conditions them: instead ADR-022 section 2.1 forbids counterparty and household names in any payload, merchant strings are redacted before egress and any retained screening excerpt is bounded and minimised (PenniLogic/ai-service#4), and a minor named in such text is handled as any other counterparty",
+          "processors": [
+            "The approved code-managed provider on the platform credential, used for control calls in all modes, including Modes B and C: a Mode B or C user's content reaches PenniLogic's provider for screening and redaction, not only the key or destination the user chose, unless those steps run locally (E17-F27); the allowlist is empty today"
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Identities in this epic are the core API calling the gateway (ADR-019 workload token plus an API-minted delegation carrying the user subject, audience, request binding and expiry), the gateway presenting a single-use egress capability to the proxy (ADR-022 section 2.2), approved providers and custom destinations proving their names by TLS, and deterministic tools trusting the delegated subject. No gateway exists yet, so nothing verifies any of them: a forged or replayed delegation, a customer access token presented alone, or a wrong-audience workload token would today meet no check. Minting is PenniLogic/api#87; rejection before provider routing is ai-service#2 (E17-F01); destination identity and pin checks sit in the request-forgery findings (E17-F19, E17-F20) and the tool-side subject check in E17-F15. Outbound, a destination must never receive PenniLogic's own identities: copied caller headers, workload, delegation or capability tokens and keys bound to another owner or audience are E17-F26 (gate T15). Test identities: ADR-022 section 8 requires a sealed test trust root that production artifacts cannot load (gate T20); the suite-pass manifest that gates ON and its signing identity are E17-F31. The parser-config signing chain is not touched by this epic: parsing stays on device (ADR-003, ADR-004).",
+          "evidence": [
+            "ADR-022 section 2.1 and 2.2: workload token plus API-minted delegation and egress capability bindings (decision, not an implemented control)"
+          ],
+          "findings": [
+            "E17-F01",
+            "E17-F26",
+            "E17-F31"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "What can be modified: the figures a user is shown (the model could restate or alter a tool value), the provider and model versions the gateway serves, the evaluation corpus and its baseline, the code-managed provider allowlist and egress rules, and the ADR-022 consequence artifact the consumers pin. Only the last is protected today: the artifact and schema are byte-bound to the record by source tests. The model never computes money (api#36 owns arithmetic, read-only, Decimal-backed per its acceptance criteria) but runtime blocking of a figure absent from tool output belongs to PenniLogic/ai-service#6 in E18 (E17-F02); version pinning and corpus governance to ai-service#7 (E17-F03); allowlist and rule integrity to infra#30 (E17-F04). Ingestion boundary: only structured transactions cross to the server (ADR-004); the epic receives them through the tools, never raw text, so the parser-config signing chain is out of scope here.",
+          "evidence": [
+            "scripts/tests/test_ai_egress_decision.py: test_record_schema_and_artifact_are_bound_to_one_decision and test_duplicate_keys_unknown_schema_keywords_and_binding_drift_fail (source-only binding of adr/ai-egress-consequences.json)"
+          ],
+          "findings": [
+            "E17-F02",
+            "E17-F03",
+            "E17-F04",
+            "E17-F31"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Actions that must be attributable later: every key decryption (ai-service#2), each custom destination registration, approval, use, revalidation, suspension and revocation (ai-service#3, ADR-022 section 2.8 item 9), kill-switch and allowlist changes and who turned a scope ON (ADR-022 section 2.9, two independent operators), every routing decision (ai-service#8) and every tool call with its scope (api#36). All of these tickets say 'audited' but none owns a store: the foundational append-only audit service PenniLogic/api#39 does not exist yet, and ADR-022 forbids literal addresses or their hashes in the immutable streams, so the opaque-reference split must be built there (E17-F05). In a single-owner organisation, ADR-022 section 2.9 already states that one GitHub account or several AI sessions never supply the two-operator approval, so production AI stays OFF until two eligible humans exist.",
+          "evidence": [
+            "ADR-022 section 2.9: two independently eligible operators for ON; one account or several AI sessions do not qualify"
+          ],
+          "findings": [
+            "E17-F05"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Seven data classes (see data_flows): the minimised prompt payload, gateway control-call content screened and redacted on PenniLogic's credential in every mode, bring-your-own-key credentials, custom destination registrations and address evidence, per-user usage and control records, verified-channel notifications of key and destination changes, and evaluation and harmful-answer material. Raw content never leaves the device (ADR-004): the only path from captured messages to a model is structured fields read by api#36 tools, and ADR-022 section 2.1 forbids raw-derived digests, account and card numbers, counterparty and household names and identifiers in any payload; O-8 traffic capture (PenniLogic/android#16) covers the device side. Leak points: provider prompts without minimisation (E17-F06); other principals' shared data sent to a user-controlled endpoint without their grant (E17-F07); keys in logs, traces and errors (E17-F08); context bleed between users through gateway caches (E17-F09); providers retaining prompts without accepted zero-retention evidence (E17-F10); AI-derived personal data with no retention value or erasure job (E17-F11); copied headers, internal tokens or a mis-bound key reaching a destination (E17-F26); control calls carrying unminimised content to the platform provider in every mode (E17-F27); another principal's shared data surviving grant revocation or erasure in AI traces, caches and assistant records (E17-F28); and a harmful-answer case leaking subject data into the public PenniLogic/ai-service repository (E17-F29). Metric labels must stay bounded (no host, model name, account or destination identifier, ADR-022 section 7). No persisted embedding exists by decision (ADR-025).",
+          "evidence": [
+            "ADR-004: the server API has no field that can accept raw message content",
+            "ADR-025: durable user-derived embeddings prohibited for the current release"
+          ],
+          "findings": [
+            "E17-F06",
+            "E17-F07",
+            "E17-F08",
+            "E17-F09",
+            "E17-F10",
+            "E17-F11",
+            "E17-F26",
+            "E17-F27",
+            "E17-F28",
+            "E17-F29"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "Exhaustible resources: provider spend under the platform key (a loop can consume a month of margin overnight, per ai-service#7), the user's quota through double reservation on retries and failover, gateway workers and connections held by slow or hostile custom destinations, and the provider capacity shared by every user. Bounds exist only as decisions: ADR-022 section 2.7 fixes timeouts (5 s connect and TLS, 30 s first byte, 120 s whole request), a 4 MiB decoded response cap, four concurrent requests per account and eight per registered host, and ADR-023 fixes reservation and settlement. None is implemented: the spend kill switch and per-user throttle are ai-service#7 (E17-F12), with operator caps in PenniLogic/admin#5; quota-exact retry, circuit breakers and the explicit all-providers-unavailable state are ai-service#8 (E17-F13); the custom-destination resource limits are gate T18 of ai-service#3 (E17-F14).",
+          "evidence": [
+            "ADR-022 section 2.7: transport, size and concurrency limits (decision, not implemented)",
+            "ADR-023 section 4: admission, reservation and settlement order"
+          ],
+          "findings": [
+            "E17-F12",
+            "E17-F13",
+            "E17-F14"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "Authorisation decisions in this epic: which user's ledger a tool reads, which tools the model may invoke, and which network destinations the AI workload can reach. The model is attacker-influenced, so scope must come from the verified delegated subject inside each tool, never from model or request arguments, and the tool surface must be read-only (api#36 and the PenniLogic/contracts#10 tool contract, both unbuilt) (E17-F15). The dispatcher allowlist (ai-service#4) is covered under prompt injection (E17-F21). The gateway must not hold the delegation-minting key or mint its own egress capability (ADR-022 section 2.2); the AI container must have no network capabilities (gate T19, infra#30, E17-F20). Row-level security for the ledger reads is the E19 data-protection floor, not this epic.",
+          "evidence": [
+            "ADR-022 section 2.2: neither model output nor the gateway may mint or widen the egress capability"
+          ],
+          "findings": [
+            "E17-F15"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No purchase, renewal, refund, chargeback, promotion or provider webhook is processed in this epic: the epic body puts subscription purchase, checkout and lifecycle in E14 and states that E17 depends only on the quota primitives. The quota primitive is PenniLogic/api#30 (parent E14) on the PenniLogic/contracts#7 contract; the gateway reserves and reconciles against it and holds no authoritative counter (ai-service#2). Mode B and C token use is recorded uncharged (ADR-023 section 6), so no charge to a user originates here. Quota misuse is reviewed under entitlement_tampering and denial_of_service; billing forgery is first introduced by the E14 purchase and webhook tickets.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "finding",
+          "analysis": "Entitlement reaches this epic as the per-user virtual key (plan budget, model allowlist, rate limits) and the quota reservation. Resolution is server-side by decision (ADR-007, ADR-023) and no client holds a provider key or talks to a provider (ADR-022 section 2.10). Open paths: a virtual key that still carries the old plan after a downgrade or revocation, and streamed consumption that is not reconciled exactly against the reservation (E17-F16); and a Mode B request with a missing, invalid or suspended key, or a Mode C request to an inactive destination, being re-executed on the platform credential, which ADR-023 section 6 forbids and whose guard metric must read zero (Mode B: E17-F17, ai-service#2; Mode C: E17-F30, ai-service#3). Mode B and C still consume the requests dimension, so bring-your-own-key users remain rate-bounded. Client unlock or retry affordances belong to the E18 assistant surfaces.",
+          "evidence": [
+            "ADR-023 section 6: no fallback to Mode A; requests consumed in every mode"
+          ],
+          "findings": [
+            "E17-F16",
+            "E17-F17",
+            "E17-F30"
+          ]
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "finding",
+          "analysis": "Keys: user keys are envelope-encrypted per user and never returned (ai-service#2); the Mode A platform provider credential is server-held (ADR-022 section 2.1); no earlier ticket owned its rotation, revocation or compromise drill, so PenniLogic/infra#92 was opened on 2026-10-14 at the owner's direction to own them (E17-F18, handed off). Destinations: the code-managed provider allowlist is empty today and grows only by reviewed code (E17-F04); custom destinations are OFF. A compromised gateway or a malicious provider response cannot write money: tools are read-only and arithmetic is deterministic (api#36, E17-F15), and responses are untrusted input to ai-service#4 (E17-F21). Spend caps, circuit breakers and the kill switch are unproven (E17-F12, E17-F13); silent model-version change is E17-F03. Evaluation runs in continuous integration spending real money or exposing keys was raised by E25 and handed to ai-service#7 (E25-F14). Today the scaffold contains no outbound client or provider configuration (ADR-022 section 1); that is not network-layer denial, which infra#30 has yet to build (E17-F20). Carried as accepted residuals of ADR-022 section 6, not controlled here: a compromised host root or controller can replace the kernel rules, a compromised gateway can misuse data already in its memory within authorised destinations, and approved providers remain untrusted processors.",
+          "evidence": [
+            "PenniLogic/ai-service#1: tests/test_boundaries.py test_runtime_package_imports_no_outbound_client and test_settings_carry_no_provider_configuration (health-only scaffold, no provider client)",
+            "ADR-022 section 2.9: global and custom scopes seeded OFF; absent or stale rows mean OFF"
+          ],
+          "findings": [
+            "E17-F18",
+            "E17-F03",
+            "E17-F12"
+          ]
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "finding",
+          "analysis": "The server fetches a user-supplied destination in Mode C, the textbook server-side request forgery primitive the epic names as its first key risk, and also dials provider hosts in Modes A and B. Today the only controls are source-level: the contract has no base-address field on any inference request and lints a planted one (PenniLogic/contracts#27, closed), and the address-policy vectors are tested against the ADR-022 artifact without any network. The application layer (register-once validation, canonical parsing in both address families, pinning, per-hop redirect checks, TLS-only probe, kill switch until the suite passes) is ai-service#3 (E17-F19); the network layer (namespaces, default-deny rules, authenticated proxy, explicit metadata and container-credential denial, in-workload probes on a schedule) is infra#30 (E17-F20). Self zones, public ingress and NAT addresses, and private and global IPv6 addresses from the published inventory are rejected as AI targets, and an empty or stale inventory refuses startup rather than failing open (gate T12, ai-service#3 with PenniLogic/infra#25, E17-F19). What a forged or redirected request carries is E17-F26: constructed headers only, no internal tokens, no cross-origin key forwarding (gate T15). Browser anti-forgery is not in scope: this epic has no browser session; the assistant surfaces are E18. No provider callback exists. Carried as an ADR-022 section 6 residual: custom registration remains a limited public-443 reachability and DNS-timing oracle, reduced but not eliminated by rate limits, coarse errors, TLS-only probes and audit.",
+          "evidence": [
+            "PenniLogic/contracts#27: registration group and egress enumerations published, no address field on inference requests, lint rejects a planted one",
+            "scripts/tests/test_ai_egress_decision.py: AddressPolicySourceTests and test_request_addresses_credential_leaks_and_probe_tunnels_are_rejected (source vectors only)"
+          ],
+          "findings": [
+            "E17-F19",
+            "E17-F20",
+            "E17-F26"
+          ]
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "finding",
+          "analysis": "Untrusted strings reaching a model: merchant names and transaction memos (attacker-controlled by anyone who can name a payee, the epic's R11 risk), the user's own question, deterministic tool results that embed those strings, and provider responses. Required runtime rules: ingested text only as encoded data in tool results, never in instructions; an immutable tool allowlist with no dynamic registration; screening with an abuse counter; read-only tools so no injected call can write (ai-service#4, api#36, E17-F21). The adversarial cases (at least fifty) gate merges in ai-service#7. The output side was unowned when this refresh began: an injected instruction can make the model emit a link or remote reference that carries the user's figures, and a client that renders or fetches it leaks them; ai-service#6 checks figures and citations, web#15 presents answers and PenniLogic/android#26 builds the Android assistant surfaces, but none of those scopes said model output is rendered as inert text with remote references stripped, so PenniLogic/ai-service#22 was opened on 2026-10-14 at the owner's direction to own the server-side strip and the adversarial test and to publish the inert-rendering requirement, which web#15 and android#26 must consume before a surface ships (E17-F22, handed off). AI delivery sessions reading public issue text is E01-F03, closed for the published instruction-provenance rule; its per-ticket credential-scoping residual was left with PenniLogic/infra#43, which closed not planned, so that residual is now unowned (E17-F25).",
+          "evidence": [
+            "ai/01-ai-harness-research.md section 7.1: transaction text is untrusted third-party data; tool_result encoding and the immutable allowlist"
+          ],
+          "findings": [
+            "E17-F21",
+            "E17-F22"
+          ]
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "No share computation, settlement, dispute or split write happens in this epic. The deterministic tool set of api#36 covers transaction queries, balances, debt schedules, goal simulation and budget status, and the tool surface is read-only by contract (PenniLogic/contracts#10) and acceptance criterion (no tool performs a write), so a model cannot shift a balance. Split and settlement shapes are PenniLogic/contracts#8 and the split surface is first introduced by E15 (split groups); a future split-reading tool would be a scope_changed refresh.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "Operator powers over this epic: turning the global or custom AI scope ON or OFF, configuring providers, models, routing and spend caps, suspending or revoking a custom destination for abuse, and resolving address evidence. ADR-022 section 2.9 requires two independently eligible operators with fresh step-up for ON and lets one on-call operator turn OFF, and ADR-022 section 2.2 forbids a console host addition; PenniLogic/admin#5 must build that without single-operator ON or hidden enablement (E17-F23). Human access to the key-encryption keys and stores that hold bring-your-own-key material bypasses every console control and is governed by PenniLogic/infra#32 (E17-F24). The console never displays or accepts key material (admin#5). For this organisation the sole GitHub owner account controls the repositories that define the allowlist, the egress rules and the enablement code. Its hardening finding E01-F04 is unremediated: PenniLogic/infra#43 closed not planned on 2026-10-03 under an owner-accepted residual dated 2026-10-04 (drill NOT_REHEARSED, broadly scoped administrative OAuth credential, organisation two-factor enforcement off). The reviewed-code control of E17-F04 and any change to the ADR-022 ON gate inherit that single-account exposure (E17-F25, recorded as the owner's accepted residual, not as a control).",
+          "evidence": [
+            "ADR-022 section 2.9: ON needs two independently eligible operator principals; no direct database edit, developer flag or deploy bypasses it"
+          ],
+          "findings": [
+            "E17-F23",
+            "E17-F24",
+            "E17-F25"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E17-F01",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "The gateway does not yet verify workload identity and the delegated user subject before routing",
+          "attack_path": "A process on the private network, or a caller replaying a captured delegation, presents a customer access token alone, a wrong-audience workload token or a forged, expired or widened delegated subject; the gateway routes the request with another user's virtual key and quota, and the tools read that user's ledger.",
+          "recommended_control": "Accept only an ADR-019 workload token plus the API-minted delegation, checking subject, audience, type, request binding, replay, expiry and live session before any key decryption or provider routing; never hold the delegation-minting key; tests for unauthenticated, wrong-audience and forged delegated-subject calls, as ai-service#2 already lists (minting is PenniLogic/api#87).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#2",
+          "resolution": null
+        },
+        {
+          "id": "E17-F02",
+          "category": "tampering",
+          "severity": "high",
+          "title": "A figure the model restates wrongly or invents can reach the user unblocked",
+          "attack_path": "The tool returns exact values, but the model rounds, transposes or invents a number while narrating it (or is induced to by injected text), and the assistant shows a debt payoff date or balance that no deterministic calculation produced; the evaluation gate samples a corpus and cannot catch every runtime answer.",
+          "recommended_control": "At runtime, block and alert any response containing a figure not present in that request's tool output, never round away from tool values and refuse narratives with incomplete provenance, proven by an injected test case; this is the acceptance set of ai-service#6 (E18), with the zero-tolerance numeric fidelity evaluation of ai-service#7 as the merge-time complement.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#6",
+          "resolution": null
+        },
+        {
+          "id": "E17-F03",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "Provider model versions and the evaluation corpus can change without a forced re-evaluation",
+          "attack_path": "A provider silently repoints an unpinned model alias, or a contributor edits, removes or weakens evaluation cases and the baseline, and categorisation accuracy or refusal behaviour degrades while the merge gate still passes against the altered reference.",
+          "recommended_control": "Pin every provider model to an explicit version and fail the build on an unpinned reference; force a full evaluation rerun before a changed version serves traffic; govern the corpus with a named owner, per-case provenance and reviewed changes, and treat a baseline change as a reviewed change (ai-service#7 acceptance criteria).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#7",
+          "resolution": null
+        },
+        {
+          "id": "E17-F04",
+          "category": "tampering",
+          "severity": "high",
+          "title": "The code-managed provider allowlist and the egress rules can be widened or drift outside review",
+          "attack_path": "An operator adds a provider host from a console, a runtime-registered custom destination is promoted into the provider class, or a host rule is edited in place; the AI workload can then send prompts and keys to a destination that never passed retention, processor or security review, and nothing detects the drift.",
+          "recommended_control": "Hold code-managed destinations only as reviewed code, refuse console or runtime additions and any promotion from the custom class, audit and alert on rule modification, and run scheduled drift verification (infra#30 acceptance criteria, gates T16 and T19 of ADR-022), with source and generated digest drift rejected by the deployment consumers (gate T20). The reviewed-code control inherits the unremediated single owner account exposure recorded in E17-F25.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#30",
+          "resolution": null
+        },
+        {
+          "id": "E17-F05",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "AI security actions have no durable append-only audit store, and address evidence could leak into it",
+          "attack_path": "Key decryptions, destination registrations and revocations, kill-switch changes, routing decisions and tool calls are logged ad hoc by each service; an operator or compromised gateway can deny or erase an action, or a literal address or its hash lands in an immutable stream where erasure cannot reach it.",
+          "recommended_control": "Write these events to the foundational append-only audit service with typed actor, subject, action, outcome and opaque references only; keep address evidence in the separately classified, erasable store linked by an opaque reference, and refuse new egress when required pre-egress recording fails (ADR-022 section 2.8.1, gate T14 owner T-SEC-03).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#39",
+          "resolution": null
+        },
+        {
+          "id": "E17-F06",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Prompts can carry identifying details and raw counterparty strings to a model provider",
+          "attack_path": "A tool result or the user's question includes an account or card number, a counterparty or household member's name, a payment address or an unredacted memo; the gateway forwards it, and the provider stores or trains on it outside PenniLogic's erasure reach.",
+          "recommended_control": "Minimise at the final transport boundary before egress (tokenized references, redacted merchant strings, only the amounts and dates an answer needs) without altering any cited figure; prove it with an outbound payload inspection test using planted identifiers and a zero-tolerance fidelity test; keep traces free of keys and raw counterparty strings (ai-service#4, ADR-022 gate T14).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#4",
+          "resolution": null
+        },
+        {
+          "id": "E17-F07",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Shared household data can be sent to a user-controlled endpoint without the other member's consent",
+          "attack_path": "A household member with a read grant asks the assistant about shared spending in Mode B or C; tool results carrying the other principal's data are sent to the asking user's own key or custom endpoint, an external party the data owner never approved, and a grant revoked moments earlier is not rechecked.",
+          "recommended_control": "Model a per-grant AI-egress permission that is default off and separate from the read grant, exclude other principals' data from Mode B and C payloads unless that permission is live, and recheck the grant immediately before emission (ADR-022 section 2.1 and section 11, gate T14 owner T-FAM-01).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#34",
+          "resolution": null
+        },
+        {
+          "id": "E17-F08",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Provider keys can surface in logs, traces, errors or old caches",
+          "attack_path": "A bring-your-own-key or platform key is echoed in an exception, an HTTP trace, a debug log or a telemetry attribute, or a replaced key stays usable from a cache; anyone with log access, or a log processor, can then spend against it or impersonate the user at the provider.",
+          "recommended_control": "Redact keys structurally from every log, trace and error; scan logs in tests with a planted key; audit every decryption; clear key material from memory after use; invalidate cached material within the published time on replacement or revocation and never return a key from any endpoint (ai-service#2 acceptance criteria).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#2",
+          "resolution": null
+        },
+        {
+          "id": "E17-F09",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "One user's context or cached completion can reach another user through shared gateway caches",
+          "attack_path": "Prompt caching, a response cache or a session key that is not namespaced by user returns user A's cached figures or conversation context to user B whose prompt hashes the same, disclosing financial data across accounts.",
+          "recommended_control": "Namespace every cache and session key by the verified user subject, never share prompt-cache entries across users, and prove isolation with cross-user bleed attempts in continuous integration (ai-service#2 acceptance criteria).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#2",
+          "resolution": null
+        },
+        {
+          "id": "E17-F10",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Traffic can reach a provider, region or model without accepted zero-retention evidence",
+          "attack_path": "Routing or failover sends a prompt to a provider endpoint or region that retains or trains on requests, or to a cross-border region the processor agreement does not cover; 'no training' is mistaken for zero retention, and the transfer cannot be recalled.",
+          "recommended_control": "Route only across an allowlist of provider, region and model combinations each carrying unexpired retention evidence and a processor agreement reference (PenniLogic/docs#44), review any allowlist change as a security change, and prove refusal with an attempted disallowed route (ai-service#8 acceptance criteria, ADR-022 section 2.2). Prompt caching and batch use, which the epic scope lists to control cost, keep request content at the provider for the cache or batch lifetime: each stays off for a provider entry unless that entry's accepted retention evidence covers that exact feature (ADR-022 section 2.2 maps each entry to its models and features); no child ticket names them yet.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#8",
+          "resolution": null
+        },
+        {
+          "id": "E17-F11",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "AI-derived personal data has no retention value and no erasure job yet",
+          "attack_path": "Custom destination registrations, address evidence, assistant records, harmful-answer reports and the per-user abuse counter persist indefinitely because ADR-022 deliberately sets no period, and an erasure request leaves them, their caches or a restored backup behind.",
+          "recommended_control": "Add each AI data class to the purpose registry and the retention schedule, run retention jobs per class, and propagate erasure, including a household member's or counterparty's erasure under the multi-subject rules of ADR-021 section 3 and the screening excerpts of ai-service#4, to derived tables, caches and assistant conversation records with a test, including restore-safe deletion (api#24 scope, ADR-022 section 2.8 item 10).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#24",
+          "resolution": null
+        },
+        {
+          "id": "E17-F12",
+          "category": "denial_of_service",
+          "severity": "high",
+          "title": "Provider spend has no hard stop: a loop or abuse can burn the platform budget",
+          "attack_path": "A retry loop, a scripted user or an injected instruction drives many expensive calls on the platform key; an alert fires but traffic continues, and a month of margin is consumed before anyone acts.",
+          "recommended_control": "Detect cost anomalies, throttle the offending user before the global cap, and trip a global kill switch that stops traffic rather than alerting, reachable by the on-call responder without a deployment and proven by exceeding the cap in a test environment (ai-service#7; operator caps in PenniLogic/admin#5).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#7",
+          "resolution": null
+        },
+        {
+          "id": "E17-F13",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "Retries and failover can loop or charge more than one reservation",
+          "attack_path": "A provider is slow or down; the gateway retries and fails over across providers without a circuit breaker, multiplying load on a failing provider, holding the user's request open and reserving quota once per attempt.",
+          "recommended_control": "Per-provider circuit breakers with cooldown, failover that consumes exactly one reservation however many providers are tried, attempts inside the original request's deadline, and an explicit all-providers-unavailable state instead of a retry loop (ai-service#8 acceptance criteria).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#8",
+          "resolution": null
+        },
+        {
+          "id": "E17-F14",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "Slow or hostile custom destinations can exhaust gateway workers and connections",
+          "attack_path": "A user registers an endpoint that drips bytes, never finishes, or returns a compressed bomb; many accounts point at one host; gateway workers and connections stay occupied and provider traffic for everyone stalls.",
+          "recommended_control": "Enforce the ADR-022 section 2.7 limits (connect, TLS, first-byte and whole-request timeouts, decoded size and decompression caps, at most three attempts, per-account and per-host concurrency) with a separate bounded Mode C worker budget and a busy refusal, proven by gate T18, whose owner is T-AI-03.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#3",
+          "resolution": null
+        },
+        {
+          "id": "E17-F15",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "Model-supplied tool arguments could widen user scope or reach a write",
+          "attack_path": "An injected instruction makes the model call a tool with another user's identifier, a household scope or a date range it was not asked for; if the tool trusts its arguments it reads another account's ledger, and a tool with a write path could change financial state.",
+          "recommended_control": "Derive scope inside every tool from the verified delegated subject and ignore any scope in arguments, keep the tool layer read-only, reject forged, expired, replayed or widened subjects before a query, and audit each call with tool name and scope only, proven by cross-user attempts per tool (api#36 acceptance criteria, PenniLogic/contracts#10).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#36",
+          "resolution": null
+        },
+        {
+          "id": "E17-F16",
+          "category": "entitlement_tampering",
+          "severity": "medium",
+          "title": "A virtual key can outlive a plan change and streamed usage can be reconciled inexactly",
+          "attack_path": "After a downgrade or revocation the user's virtual key still carries the old budget, model allowlist or rate limit; or a stream is cut mid-response and reconciliation keeps the full reservation or charges nothing, letting usage exceed the entitlement or charging the user wrongly.",
+          "recommended_control": "Update virtual keys on plan change within the published time and revoke on downgrade; reconcile streamed consumption exactly against the reservation with a failed reconciliation never charging the user; plan-change propagation and streaming exactness tests (ai-service#2 acceptance criteria, PenniLogic/api#30 primitive).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#2",
+          "resolution": null
+        },
+        {
+          "id": "E17-F17",
+          "category": "entitlement_tampering",
+          "severity": "medium",
+          "title": "A failing bring-your-own-key request could fall back to the platform credential",
+          "attack_path": "A Mode B user deletes or invalidates their key, or the key is suspended or for another provider, and the gateway or a failover path quietly re-executes the user's inference on PenniLogic's Mode A credential; the user gets managed-tier inference without the allowance, and the answer is produced on an account and model the user did not choose (distinct from the designed control calls of E17-F27).",
+          "recommended_control": "Refuse a missing, invalid, suspended or wrong-provider key with the T-AI-01 code for that state and never re-execute the user's inference on the platform credential or another unapproved model; keep the guard metric for mode fallback at zero with a test (ADR-023 section 6 names the T-AI-01 refusal). The Mode C half is E17-F30.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#2",
+          "resolution": null
+        },
+        {
+          "id": "E17-F18",
+          "category": "ai_service_compromise",
+          "severity": "high",
+          "title": "A leaked Mode A platform provider credential stays valid without rotation, revocation or a compromise drill",
+          "attack_path": "The server-held platform key leaks from the gateway host, the secret store, a deploy artefact or a provider dashboard session; with no rotation schedule, revocation procedure or drill, it stays valid and the attacker spends against PenniLogic's account or uses it to read provider-side data.",
+          "recommended_control": "Assign an owner for the platform credential lifecycle: a scoped key per environment resolved at runtime from the secret store, scheduled and on-suspicion rotation, a rehearsed revocation that takes effect without a deploy, and provider-side spend limits as a backstop. PenniLogic/infra#92, opened on 2026-10-14 at the owner's direction, owns this lifecycle. Candidates ruled out first: PenniLogic/infra#25's scope is to provision the secret store and PenniLogic/infra#32's is to govern human key access (both open, neither delivered), but neither scope covers this credential's rotation or revocation; ai-service#2's 'Gateway credentials are short lived, audience bound and rotated independently of user provider keys' was read as the gateway's own workload credentials rather than a provider API key; PenniLogic/api#53 rotates the encryption keys and PenniLogic/infra#23 rotates only secrets found in repositories.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#92",
+          "resolution": null
+        },
+        {
+          "id": "E17-F19",
+          "category": "request_forgery",
+          "severity": "critical",
+          "title": "The application layer does not yet validate, pin and re-check user-supplied custom destinations",
+          "attack_path": "A user registers a host that resolves to a public address at validation and later to the metadata service, a private range or loopback; or uses an alternate textual encoding, a mapped address, an internationalised name or a redirect hop; the gateway follows it and reaches internal services with a server credential.",
+          "recommended_control": "Register once through the authenticated API with fresh step-up, parse canonically in both address families, deny the ADR-022 ranges after normalisation, pin the resolved address set and recheck it before every attempt, recheck every redirect hop, reject self-zone, public-ingress and inventoried IPv6 targets, refuse startup on an empty or stale inventory, probe with TLS only, and keep the mode behind a kill switch until an adversarial suite that actually attempts each bypass passes (ai-service#3, gates T1 to T5, T9, T11, T12 and T13; T12 is co-owned by PenniLogic/infra#25 as T-PLT-01, which publishes the inventory).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#3",
+          "resolution": null
+        },
+        {
+          "id": "E17-F20",
+          "category": "request_forgery",
+          "severity": "critical",
+          "title": "No network-layer egress denial exists for the AI workload",
+          "attack_path": "One parser or rebinding bug in the application validator, a library that dials directly, or a raw socket from a compromised dependency reaches the runtime metadata or container credential endpoint, a private range or a same-host service, because nothing below the application denies it.",
+          "recommended_control": "Isolate the AI workload in its own network namespace with host-owned default-deny rules, send every connection through the authenticated destination-aware proxy, deny metadata and container credential endpoints explicitly in both address families, and verify from inside the workload after each change and on a schedule, alerting on drift (infra#30, ADR-022 gates T1, T8, T10, T19).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#30",
+          "resolution": null
+        },
+        {
+          "id": "E17-F21",
+          "category": "prompt_injection",
+          "severity": "high",
+          "title": "Hostile merchant names and memos can steer the model into tool misuse",
+          "attack_path": "A payee is named with instruction-shaped text; it reaches the model inside a tool result or the prompt and induces a tool call the user did not ask for, a different scope, or a disclosure of other data in the answer.",
+          "recommended_control": "Pass ingested text only as encoded data in tool results, never in instructions; dispatch only allowlisted tool names with no dynamic registration and record rejections; screen for suspected injection with a defined response and abuse counter; prove it with an adversarial corpus and an outbound payload inspection test in continuous integration (ai-service#4 acceptance criteria).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#4",
+          "resolution": null
+        },
+        {
+          "id": "E17-F22",
+          "category": "prompt_injection",
+          "severity": "high",
+          "title": "Injected model output can exfiltrate the user's figures through a rendered or fetched remote reference",
+          "attack_path": "Injected text makes the model emit a markdown image or link whose address embeds the user's balances or debts; an assistant surface renders it, the client or a link preview fetches it, and the figures reach an attacker's server without any tool misuse.",
+          "recommended_control": "Before a response leaves the AI service, strip or neutralise links, images and other remote references the tools did not produce, and require every assistant surface to render model output as inert text with no automatic fetch or preview, proven by an adversarial case. PenniLogic/ai-service#22, opened on 2026-10-14 at the owner's direction, owns the server-side strip and the adversarial test, and publishes the inert-rendering requirement for surface consumers; surface-side inert rendering must be consumed by the E18 surface tickets PenniLogic/web#15 and PenniLogic/android#26 (and by any admin surface that displays model output, for which no ticket exists today) before any assistant surface ships. Candidates ruled out first: ai-service#6 checks figures and citations, PenniLogic/web#15 presents answers on the web and PenniLogic/android#26 builds the Android assistant surfaces with disclosure, override, refusal and advice-boundary guardrails, but none of those scopes covered it.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#22",
+          "resolution": null
+        },
+        {
+          "id": "E17-F23",
+          "category": "administrative_identity_compromise",
+          "severity": "high",
+          "title": "A single operator could enable AI egress or widen providers from the admin console",
+          "attack_path": "One compromised or coerced operator account turns the global or custom scope ON, registers a provider host or region outside the approved policy, or lifts a cap; production traffic flows to an unreviewed destination with no second approver.",
+          "recommended_control": "Build the console so OFF is one step but ON needs two independently eligible operators with fresh step-up and durable audit; allow configuration only of already approved providers and regions; audit abuse suspension and revocation; never accept or display key material (ADR-022 section 2.9 and the section 11 row for T-ADM-08, consumed by PenniLogic/admin#5; gates T7 and T16).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/admin#5",
+          "resolution": null
+        },
+        {
+          "id": "E17-F24",
+          "category": "administrative_identity_compromise",
+          "severity": "high",
+          "title": "Direct human access to key stores bypasses every console control over provider keys",
+          "attack_path": "An engineer or operator with standing database or key-management access decrypts stored bring-your-own-key material or the platform credential outside the gateway, leaving no ticketed basis, approval or subject-visible record.",
+          "recommended_control": "Keep standing access to the key-management service and the stores holding key material empty; broker time-boxed, second-approved elevation; audit key use with actor and approval reference; project it into the audit streams (PenniLogic/infra#32 scope).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#32",
+          "resolution": null
+        },
+        {
+          "id": "E17-F25",
+          "category": "administrative_identity_compromise",
+          "severity": "critical",
+          "title": "The sole owner account behind the allowlist, egress rules and enablement code stays unremediated by explicit owner risk acceptance",
+          "attack_path": "Phishing, the broadly scoped administrative OAuth credential or malware on a machine that holds it gives an attacker the sole GitHub owner account; they merge a change that adds a provider host to the code-managed allowlist, widens the egress rules or weakens the ADR-022 enablement code, and the review that E17-F04 relies on is bypassed because the same account administers the rulesets.",
+          "recommended_control": "The E01-F04 baseline: a phishing-resistant second factor, per-machine minimal and expiring credentials, organisation two-factor enforcement, rotation and sign-in alerts, and a rehearsed revocation drill. Until it exists, every E17 control that rests on reviewed code or the protected merge path (E17-F04, and the enablement code behind E17-F23) inherits this single-account exposure.",
+          "status": "closed",
+          "owner_ticket": null,
+          "resolution": "Closed as an owner-accepted residual, not as remediation. PenniLogic/infra#43, the E01-F04 owner, was closed not planned on 2026-10-03 under the owner disposition of 2026-10-04 (owner-accepted residual risk; further hardening deferred): the revocation drill is NOT_REHEARSED, the administrative OAuth credential is broadly scoped and organisation two-factor enforcement was off. E01-F04 therefore remains unremediated and this refresh records that E17 inherits it; it neither widens nor renews that acceptance. The per-ticket credential scoping that the E01-F03 resolution left with infra#43 is unowned for the same reason. Reopen this finding if the owner withdraws the disposition or a ticket takes the hardening."
+        },
+        {
+          "id": "E17-F26",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Outbound requests could carry copied caller headers, internal tokens or a mis-bound key to a destination",
+          "attack_path": "In Mode C the user, who may be the attacker, operates the destination. A gateway that copies caller headers, or follows a cross-origin redirect with the key attached, hands that destination a workload or delegation token, an egress capability, a cookie, trace baggage or a forwarded header; a key reference resolved for another owner, provider or audience sends that owner's key or the platform key; key bytes containing carriage-return or line-feed characters inject extra headers. The destination harvests credentials that work against PenniLogic or other users.",
+          "recommended_control": "Construct outbound headers from the ADR-022 section 2.1 base set plus the provider entry's reviewed header set and never copy caller headers; send a custom key in exactly one registered CredentialHeader; reject control bytes in keys; send no cookies, workload, delegation or capability tokens, trace baggage, forwarded headers or internal identifiers to any destination; bind each key reference to its owner, destination and credential audience (ADR-022 section 2.8) and refuse a mismatch; never forward a key across origins on redirect; prove it with the gate T15 tests. Owner ai-service#2 (T-AI-01); ai-service#3 (T-AI-03, custom destinations and redirects) and ai-service#8 (T-AI-07, provider routing) are the T15 co-owners.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#2",
+          "resolution": null
+        },
+        {
+          "id": "E17-F27",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Gateway control calls can send unminimised content to the platform provider in every mode",
+          "attack_path": "The injection-screening sidecar or a remote redaction helper is called on PenniLogic's credential before minimisation; the question, merchant and memo strings and tool results, including another principal's shared data, reach the platform provider for Mode B and C requests too, a processor the user did not choose for their inference and the other principal never approved, and a remote redaction helper necessarily sees the content it is meant to remove.",
+          "recommended_control": "Minimise identifying details before any control call, as before any external call (ai-service#4 scope), or redact locally so no unredacted content leaves the service; apply the Mode A grant rules (E17-F07, ADR-022 section 2.1) to shared data in control calls; send control calls only to an approved code-managed provider with accepted zero-retention evidence; disclose control-call processing in the Mode B and C consent text (consent is not in ai-service#4's scope: ADR-022 section 11 places it with PenniLogic/api#24, T-CMP-01, for the consent ledger and copy, and PenniLogic/contracts#14, T-CON-09, for the contract shape); extend the outbound payload inspection test with planted identifiers to control calls (ai-service#4, ADR-023 section 3).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#4",
+          "resolution": null
+        },
+        {
+          "id": "E17-F28",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Grant revocation or erasure can leave another principal's shared data in AI traces, caches and assistant records",
+          "attack_path": "A household member revokes a grant, leaves the group or is erased, or a counterparty's data is erased; copies of their shared data already written into the asking user's AI traces, gateway caches or assistant conversation records stay readable to that user and to operators, so revocation cuts only future access and erasure misses the derived copies.",
+          "recommended_control": "Keep no server-side copy of another principal's shared data in AI traces, gateway caches or assistant records (ADR-021 section 1.6), storing references resolved under a live grant at read time; extend the PenniLogic/api#35 historical-access cut and its 'retains no cached copies' assertion to those AI stores with a test that revokes a grant and finds no AI-derived copy readable; a household member's or counterparty's erasure propagates through PenniLogic/api#24 (E17-F11). The copies are produced by ai-service#4 (traces) and ai-service#2 (gateway caches, E17-F09).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#35",
+          "resolution": null
+        },
+        {
+          "id": "E17-F29",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "A harmful-answer case derived from a real report could publish subject data in the public ai-service repository",
+          "attack_path": "A reported harmful answer that contains a user's figures, a household member's or counterparty's name or a memo is edited to remove obvious identifiers and committed as an adversarial case to PenniLogic/ai-service, a public repository; a residual identifier or a rare combination of amounts and dates re-identifies the subject, and the case cannot be erased from public git history.",
+          "recommended_control": "Re-author each reported answer as a synthetic case containing no string, amount or date derived from the report; require a privacy review of each new case before commit and a planted-identifier scan of corpus changes in continuous integration (ai-service#7 owns the corpus and the harmful-answer path, whose scope says 'no real user content enters it').",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#7",
+          "resolution": null
+        },
+        {
+          "id": "E17-F30",
+          "category": "entitlement_tampering",
+          "severity": "medium",
+          "title": "A request to an inactive custom destination could fall back to the platform credential",
+          "attack_path": "A Mode C destination is pending, suspended, revoked or fails validation, and the gateway or a routing default quietly re-executes the request on PenniLogic's Mode A credential or a default provider; the user gets managed-tier inference without the allowance, and their data reaches a provider they did not register.",
+          "recommended_control": "Refuse a request to a destination that is not active with the ADR-022 section 5 code for that state, deny rather than fall back to a default provider on any validation failure (ai-service#3 acceptance criteria), keep the mode-fallback guard metric at zero with a test (ADR-023 section 6), and keep the class allowlist free of managed fallback (gate T16, owners T-AI-02, T-AI-03 and T-ADM-08).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/ai-service#3",
+          "resolution": null
+        },
+        {
+          "id": "E17-F31",
+          "category": "tampering",
+          "severity": "high",
+          "title": "AI enablement could accept a forged, stale or test-signed suite-pass manifest",
+          "attack_path": "An attacker or a misconfigured pipeline presents a suite-pass manifest that is forged, expired, replayed from another environment or build, or signed by a test trust root, or a production artefact loads a test trust root or test enablement; the runtime accepts it and turns AI ON although the egress suite never passed on this build, so every isolation control in this record is unproven in production.",
+          "recommended_control": "Before ON, verify a short-lived signed suite-pass manifest (at most seven days) bound to environment, build and image digest, source-consequences, policy and inventory digests, kernel, Docker and nftables configuration, suite run and expiry, signed by an offline-verifiable identity restricted to the actual verification stage with pinned verification material; missing signer or evidence means OFF; production rejects any test trust root or test enablement; prove it with the gate T7 (forged, expired or wrong-environment evidence) and T20 (test trust roots and replayed suite evidence rejected) tests (ADR-022 section 2.9). Owner PenniLogic/infra#25 (T-PLT-01 owns the signing identity and both gates); co-owners ai-service#3 and admin#5 (T7) and infra#30, ai-service#7 and T-QA-02 (T20).",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        }
+      ]
+    }
+  ]
 }
