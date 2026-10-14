@@ -870,15 +870,18 @@ def check_record_history(before, after):
 # What consumers read from a term or key: changing any of these, or adding an item, needs at least a minor bump.
 VERSIONED_FIELDS = {
     "glossary": ("preferred_label", "definition", "surfaces", "forbidden_aliases", "contract_field_names"),
-    "message-keys": ("category", "copy", "range", "platforms", "term_refs", "neutral_safe_exit"),
+    "message-keys": ("category", "copy", "range", "platforms", "term_refs", "neutral_safe_exit", "regulated_ref"),
 }
+# What a record version identifies: its text, the key that renders it, the key shown when it cannot render and its
+# category. None of these changes while the version stays the same.
+RECORD_VERSIONED_FIELDS = ("copy", "key", "fail_closed_key", "category")
 CHANGE_RULES = {"glossary": "glossary.changed_without_minor", "message-keys": "catalogue.changed_without_minor"}
 
 
 def check_base(documents, base):
     """Additive versioning against the base: versions never regress; adding or changing a term or key needs at least
     a minor bump and removing one a major bump; regulated records are never removed (withdraw instead) and their
-    copy never changes without a new version."""
+    copy, key binding, fail-closed key and category never change without a new version."""
     fields = {
         "glossary": ("glossary_version", "terms", "id", "glossary.term_removed_without_major"),
         "message-keys": ("catalogue_version", "keys", "key", "catalogue.key_removed_without_major"),
@@ -909,8 +912,8 @@ def check_base(documents, base):
             for item in before[items]:
                 after = current[item["id"]]
                 require(version(after["version"]) >= version(item["version"]), "version.regressed", item["id"])
-                require(after["copy"] == item["copy"] or after["version"] != item["version"],
-                        "regulated.changed_without_version", item["id"])
+                require(all(after[field] == item[field] for field in RECORD_VERSIONED_FIELDS)
+                        or after["version"] != item["version"], "regulated.changed_without_version", item["id"])
                 check_record_history(item, after)
 
 

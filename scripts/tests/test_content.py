@@ -1379,6 +1379,61 @@ class BaseVersioningTests(Harness):
                            history=[prior("0.1.0", "draft", None, text="Synthetic draft text for review.")])
         self.run_check(docs, sources=FakeSources(base))
 
+    # Review round 2 SS-03: a record's binding is part of what its version identifies.
+    @staticmethod
+    def swap_bindings(docs, approved=False):
+        """RC-001 and RC-002 trade keys (records and catalogue) under one catalogue minor bump."""
+        one, two = docs["regulated-copy"]["records"][:2]
+        one["key"], two["key"] = two["key"], one["key"]
+        keys = keys_of(docs)
+        keys["reg.consent.text"]["regulated_ref"], keys["reg.permission.text"]["regulated_ref"] = "RC-002", "RC-001"
+        docs["message-keys"]["catalogue_version"] = "0.2.0"
+        if approved:
+            approve(one)
+
+    def test_record_rebound_to_another_key_needs_a_new_version(self):
+        self.assertEqual(self.check_against(documents(), self.swap_bindings),
+                         ("regulated.changed_without_version", "RC-001"))
+
+    def test_approved_record_rebound_to_another_key_needs_a_new_version(self):
+        base = documents()
+        approve(first(base))
+        self.run_check(copy.deepcopy(base), sources=FakeSources(base), owner=OWNER)
+        docs = documents()
+        self.swap_bindings(docs, approved=True)
+        first(docs)["approval"] = first(base)["approval"]
+        with self.assertRaises(content.Refused) as caught:
+            self.run_check(docs, sources=FakeSources(base), owner=OWNER)
+        self.assertEqual((caught.exception.rule, caught.exception.subject),
+                         ("regulated.changed_without_version", "RC-001"))
+
+    def test_fail_closed_key_never_changes_without_a_version(self):
+        self.assertEqual(
+            self.check_against(documents(), lambda d: first(d).update(fail_closed_key="common.safe_exit.notification")),
+            ("regulated.changed_without_version", "RC-001"))
+
+    def test_category_never_changes_without_a_version(self):
+        self.assertEqual(
+            self.check_against(documents(), lambda d: (first(d).update(category="permission"),
+                                                       records_of(d)["RC-002"].update(category="consent"))),
+            ("regulated.changed_without_version", "RC-001"))
+
+    def test_regulated_ref_of_a_key_is_versioned_in_the_catalogue(self):
+        def rebind(docs):
+            self.swap_bindings(docs)
+            docs["message-keys"]["catalogue_version"] = "0.1.0"
+        self.assertEqual(self.check_against(documents(), rebind),
+                         ("catalogue.changed_without_minor", "reg.consent.text"))
+
+    def test_binding_is_permanent_even_with_a_new_record_version(self):
+        # Each version keeps its own key and every version shares the record's key, so a record is never rebound:
+        # a new binding is a new record.
+        def rebind(docs):
+            self.swap_bindings(docs)
+            for item, bound in zip(docs["regulated-copy"]["records"][:2], ("reg.consent.text", "reg.permission.text")):
+                item.update(version="0.2.0", history=[prior("0.1.0", "draft", None, text=item["copy"], bound=bound)])
+        self.assertEqual(self.check_against(documents(), rebind), ("regulated.history_key_mismatch", "RC-001"))
+
     def test_new_version_keeps_the_superseded_text_in_history(self):
         # Review round 1 F-03: the base's current text moves into history; dropping it is refused.
         base = documents()

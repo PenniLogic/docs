@@ -35,9 +35,9 @@ may restate a record's text, even inside longer copy.
 
 Versions are compared with the merge base of `HEAD` and `origin/main`. Adding a term or key, or changing what
 consumers read (a term's label, definition, surfaces, forbidden aliases or contract field names; a key's category,
-copy, range, platforms, term references or safe-exit flag), needs at least a minor bump; removing or renaming one needs
-a major bump. Each base document is validated against the schema of its own base commit, and a base the comparison
-cannot read fails closed.
+copy, range, platforms, term references, safe-exit flag or regulated record binding), needs at least a minor bump;
+removing or renaming one needs a major bump. Each base document is validated against the schema of its own base
+commit, and a base the comparison cannot read fails closed.
 
 ## Regulated-copy workflow
 
@@ -52,9 +52,11 @@ cannot read fails closed.
 4. Approved copy is usable only while `effective_at <= now < expires_at`; at `expires_at` it is expired. The checker
    reads the system clock (UTC) by default, and CI evaluates the published records at that real clock; `--now` pins
    an instant for tests and audits only.
-5. Changing copy means a new version; the superseded version moves into `history` with its own text, key binding,
-   status and approval. History is append-only against the base: earlier entries stay byte-identical, an approval
-   is never re-dated or invented, and expired or withdrawn copy never returns without a new version.
+5. Changing a record's copy, fail-closed key or category means a new version; the superseded version moves into
+   `history` with its own text, key binding, status and approval. A record is never rebound to another `reg.` key,
+   with or without a new version: every version keeps the record's key, so a new binding is a new record. History
+   is append-only against the base: earlier entries stay byte-identical, an approval is never re-dated or invented,
+   and expired or withdrawn copy never returns without a new version.
 6. Withdrawal sets `withdrawn`; records are never deleted.
 
 **Fail closed.** A consumer that finds a record missing, draft, in review, not yet effective, expired or withdrawn
