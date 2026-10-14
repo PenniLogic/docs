@@ -16,7 +16,7 @@
         "session": "github:basiltt",
         "role": "pennilogic-developer"
       },
-      "scope": "Compliance readiness under PenniLogic/docs#21 after the launch-blocking compliance floor moved to E27: the release checklist, the structured release-evidence record, the waiver-record format and the missing-evidence, waiver-expiry and cross-reference checks (docs#23); and post-beta readiness - counsel review of the advice boundary across application copy, store listing and model output, a named privacy owner and review cadence, a cross-border transfer position and signed agreement per processor including model providers, the payment self-assessment for a hosted payment page arrangement, a machine-readable record of processing and data-flow map reconciled against captured traffic, and the verification sweep of unverified claims (docs#45). Trust boundaries: the public docs repository where records, evidence references and approvals are written by one owner account and several AI sessions; external counsel who receives review material and issues the review; the release pipeline that attaches gate evidence produced by other tickets; the payment provider's hosted page that card data must never cross back from; and model and other processors whose transfer positions the record states. Out of scope and reviewed in their own epics: the consent ledger, rights, retention jobs, age gate, component inventory, Data Safety declaration, privacy policy, terms, disclaimer text, processor agreements and CERT-In drill (E27: docs#44, api#24, android#17, android#18), checkout and billing (E14: api#31, api#32), AI gateway and evaluation (E17), and the gate implementations docs#23 only aggregates.",
+      "scope": "Compliance readiness under PenniLogic/docs#21 after the launch-blocking compliance floor moved to E27: the release checklist, the structured release-evidence record, the waiver-record format and the missing-evidence, waiver-expiry and cross-reference checks (docs#23); and post-beta readiness - counsel review of the advice boundary across application copy, store listing and model output, a named privacy owner and review cadence, a cross-border transfer position and signed agreement per processor including model providers, the payment self-assessment for a hosted payment page arrangement, a machine-readable record of processing and data-flow map reconciled against captured traffic, and the verification sweep of unverified claims (docs#45). Trust boundaries: the public docs repository where records, evidence references and approvals are written by one owner account and several AI sessions; external counsel who receives review material and issues the review; the release pipeline that attaches gate evidence produced by other tickets; the payment provider's hosted page that card data must never cross back from; and model and other processors whose transfer positions the record states. Out of scope and reviewed in their own epics: the consent ledger, rights, retention jobs, age gate, component inventory, Data Safety declaration, privacy policy, terms, disclaimer text, processor agreements and CERT-In drill (E27: docs#44, api#24, android#17, android#18), checkout and billing (E14: api#31, api#32), AI gateway and evaluation (E17), and the gate implementations docs#23 only aggregates. The epic body's global-readiness jurisdictional analysis has no child ticket at this date and is not reviewed here; the first non-India flow, the international card path of api#31, belongs to E14's record.",
       "tickets_in_scope": [
         "PenniLogic/docs#23",
         "PenniLogic/docs#45"
@@ -49,7 +49,7 @@
             "Model providers admitted only under ADR-022 with a processor agreement and retention evidence; none approved at this date",
             "Payment provider for hosted checkout (PenniLogic/api#31); not selected at this date",
             "Hosting inside the counsel-approved India residency profile (ADR-022); no vendor chosen",
-            "Every cross-border destination named per processor by the transfer position docs#45 records"
+            "Cross-border destinations: none recorded at this date; docs#45 records one transfer position per processor (E20-F04)"
           ]
         },
         {
@@ -121,9 +121,9 @@
         {
           "id": "tampering",
           "disposition": "finding",
-          "analysis": "The assets are the release-evidence record, its waivers and the machine-readable record of processing. docs#23 itself names the gaps: a data-safety re-check that reuses a prior candidate's capture and an expired waiver carried forward; a gate entry edited after its evidence was attached has the same effect (E20-F01). An edited processing record that drops a processor is caught only by docs#45's reconciliation against captured traffic (E20-F04). Changes to records land through protected pull requests (governance/DELIVERY.md), which detects edits to committed files but not a false entry written in the first place. Ingestion boundary and parser-config signing chain: not touched; this epic consumes their evidence through android#16.",
+          "analysis": "The assets are the release-evidence record, its waivers and the machine-readable record of processing. docs#23 itself names the gaps: a data-safety re-check that reuses a prior candidate's capture and an expired waiver carried forward; a gate entry edited after its evidence was attached has the same effect (E20-F01). An edited processing record that drops a processor is caught only by docs#45's reconciliation against captured traffic (E20-F04). Changes to records land through PR-only integration with an empty bypass list (governance/DELIVERY.md), which exposes edits to committed files but not a false entry written in the first place. Ingestion boundary and parser-config signing chain: not touched; this epic consumes their evidence through android#16.",
           "evidence": [
-            "governance/DELIVERY.md: changes reach main only through protected pull requests with independent review"
+            "governance/DELIVERY.md: PR-only, current-base integration with the native CI job and an empty bypass list; independent review recorded procedurally"
           ],
           "findings": [
             "E20-F01",
@@ -201,7 +201,7 @@
         {
           "id": "prompt_injection",
           "disposition": "finding",
-          "analysis": "The advice-boundary review (risk R9) covers model output, and the boundary that matters is the one an adversarial user or injected merchant, note or statement text can push the assistant across, not the one benign samples show. Counsel review of sample answers alone certifies a boundary the evaluation suite never tests (E20-F06). Dispatcher-level injection defences are ai-service#4 and out of scope. Delivery sessions treating public comments as untrusted is organisation-wide and already published by the closure of E01-F03 (PenniLogic/.github#4).",
+          "analysis": "The advice-boundary review (risk R9) covers model output, and the boundary that matters is the one an adversarial user or injected merchant, note or statement text can push the assistant across, not the one benign samples show. Counsel review of sample answers alone certifies a boundary the evaluation suite never tests (E20-F06); the control is an output evaluation, which ai-service#4 itself assigns to ai-service#7 (adversarial cases, harmful-answer path), while the dispatcher-level injection defences stay with ai-service#4 in E17. Delivery sessions treating public comments as untrusted is organisation-wide and already published by the closure of E01-F03 (PenniLogic/.github#4).",
           "evidence": [],
           "findings": [
             "E20-F06"
@@ -217,7 +217,7 @@
         {
           "id": "administrative_identity_compromise",
           "disposition": "finding",
-          "analysis": "Every authority this epic creates - recording counsel review, approving a release, granting a waiver, publishing the processing record - is exercised through the one owner account, so its compromise forges all of them at once. The E20-specific mitigations are that counsel review is evidenced by a document counsel issues rather than by the account (E20-F03) and that approvals and waivers name a review session separate from the release author (E20-F02). Hardening of the account itself is E01-F04, whose ticket infra#43 was closed as not planned on 2026-10-03 with ACCOUNT_SECURITY.md published in the infra repository but owner verification and the revocation drill not done; that residual is E01's record to restate, not re-raised here.",
+          "analysis": "Every authority this epic creates - recording counsel review, approving a release, granting a waiver, publishing the processing record - is exercised through the one owner account, so its compromise forges all of them at once. The E20-specific mitigations are that counsel review is evidenced by a document counsel issues rather than by the account (E20-F03) and that approvals and waivers name a review session separate from the release author (E20-F02). Hardening of the account itself is E01-F04, whose ticket infra#43 was closed as not planned on 2026-10-03 with ACCOUNT_SECURITY.md published in the infra repository and its owner-verification and revocation-drill acceptance items unchecked at closure; that residual is E01's record to restate, not re-raised here.",
           "evidence": [],
           "findings": [
             "E20-F02",
