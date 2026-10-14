@@ -249,7 +249,7 @@
     {
       "id": "term.reversed",
       "preferred_label": "reversed",
-      "definition": "A transaction that was cancelled or refunded after it was recorded; it is linked to the original and is not income.",
+      "definition": "A transaction undone to correct the record, for example a duplicate entry; it stays visible, is linked to its correction and is never a refund.",
       "status": "provisional",
       "surfaces": [
         "android",
@@ -333,7 +333,7 @@
     {
       "id": "term.refund",
       "preferred_label": "refund",
-      "definition": "Money returned for an earlier payment, in full or in part; it reverses that payment and is not income.",
+      "definition": "Money returned for an earlier payment, in full or in part; it is a new transaction linked to that payment, never a reversal, and is not income.",
       "status": "provisional",
       "surfaces": [
         "android",

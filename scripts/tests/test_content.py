@@ -1771,6 +1771,16 @@ class PublishedContentTests(unittest.TestCase):
             "pattern.recovery.status", "pattern.success.status", "pattern.destructive.consequence")],
             ["{item} are back", "{item} are saved", "This can't be undone and their history goes with them"])
 
+    def test_published_refund_is_never_a_reversal(self):
+        # Review round 2 SS-04: ADR-017 section 2.6 and ADR-016 section 8.3 - a refund is a new transaction and a
+        # reversal only corrects the record.
+        terms = terms_of(self.docs)
+        reversed_, refund = terms["term.reversed"]["definition"], terms["term.refund"]["definition"]
+        self.assertIn("never a refund", reversed_)
+        self.assertNotIn("refunded", reversed_)
+        self.assertIn("never a reversal", refund)
+        self.assertNotIn("reverses", refund)
+
     def test_every_published_judgment_is_proposed_and_nothing_is_approved(self):
         self.assertEqual(self.docs["glossary"]["status"], "provisional")
         self.assertEqual({term["status"] for term in self.docs["glossary"]["terms"]}, {"provisional"})
