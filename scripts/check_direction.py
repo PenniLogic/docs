@@ -6,10 +6,11 @@ one SemVer-versioned direction record as product/direction/direction-record.json
 product/direction/direction.schema.json (a self-contained draft-07 subset; definitions candidate_set, probe_set and
 direction_record).
 
-Candidates span distinct material and graphic traditions and cite product truth by {commit, path, sha256}: a path
-under a product-truth root (product/, adr/, research/, governance/, architecture/; never product/direction/) at a
-commit reachable from the accepted base ACCEPTED_BASE, whose blob digest is checked in the local Git object store. The
-check proves the cited bytes exist on accepted main; it does not prove that the cited text supports the candidate.
+Candidates span distinct material and graphic traditions and cite product truth by {commit, path, sha256}: a
+Markdown or JSON document (never a schema, script or spike) under a product-truth root (product/, adr/, research/,
+governance/, architecture/; never product/direction/) at a commit reachable from the accepted base ACCEPTED_BASE,
+whose blob digest is checked in the local Git object store. The check proves the cited bytes exist on accepted main;
+it does not prove that the cited text supports the candidate.
 Each candidate may carry non-binding, candidate-scoped illustrative sRGB values; they exist only to compute WCAG 2.x
 contrast feasibility (relative luminance) per text and UI pair, and every claimed pass/fail must equal the computed
 result. The no-raw-token rule applies to the direction record only: it exposes semantic roles and platform
@@ -141,6 +142,9 @@ ACCEPTED_BASE = "1722fc79ab2abee15d3adc2ed2f3baaad4bd6ed4"
 # Product truth is published under these roots; this source's own directory is never its own grounding.
 PRODUCT_TRUTH_ROOTS = ("product/", "adr/", "research/", "governance/", "architecture/")
 SELF_ROOT = "product/direction/"
+# Product truth is a document: Markdown or a JSON data file. Checkers, generators, spike code and schemas under the
+# roots (for example research/operations/*.py, research/spikes/** or *.schema.json) describe tooling, not the product.
+PRODUCT_TRUTH_DOCUMENT = re.compile(r"[^/]+\.(?:md|json)")
 CATEGORY_DEFAULT = re.compile(r"(?:^|_)(?:fintech|neobank|dashboard|banking_app|glassmorphism)(?:_|$)")
 
 STRUCTURE_RULES = (
@@ -164,7 +168,7 @@ STRUCTURE_RULES = (
     "record.participant_count_pending", "record.pending_with_decision", "record.decision_missing",
     "evidence.ai", "evidence.internal_vote", "evidence.synthetic", "evidence.mood_board", "evidence.missing",
     "held.study_evidence", "record.duplicate_entry", "record.incomplete", "record.dangling_reference",
-    "record.consumer_missing", "record.held_gate_missing", "held.risk_disposition",
+    "record.consumer_missing", "record.held_gate_missing", "record.supersedes_unresolvable", "held.risk_disposition",
     "review.missing_role", "review.duplicate_role", "review.self_review", "held.review_record",
     "decision.invalid", "decision.unknown_candidate", "decision.rejected_mismatch", "decision.self_approval",
     "decision.platform_self_approval", "decision.wrong_approver", "held.d2_decision",
@@ -460,7 +464,10 @@ def check_grounding(candidate, sources, verified):
         # A pin names one canonical tree path: no `.` or `..` segment that git might resolve differently.
         require(not {".", ".."} & set(pin["path"].split("/")), "grounding.path_not_canonical", identifier)
         require(not pin["path"].startswith(SELF_ROOT), "grounding.self_reference", identifier)
-        require(pin["path"].startswith(PRODUCT_TRUTH_ROOTS), "grounding.not_product_truth", identifier)
+        name = pin["path"].rsplit("/", 1)[-1]
+        require(pin["path"].startswith(PRODUCT_TRUTH_ROOTS) and PRODUCT_TRUTH_DOCUMENT.fullmatch(name) is not None
+                and not name.endswith(".schema.json") and not pin["path"].startswith("research/spikes/"),
+                "grounding.not_product_truth", identifier)
         key = (pin["commit"], pin["path"])
         if key not in verified:
             try:
@@ -624,6 +631,8 @@ def check_links(record, issues):
     if record["status"] == "pending":
         for reference in REQUIRED_HELD_GATES:
             require(reference in record["held_gates"], "record.held_gate_missing", reference)
+    # No prior D2 direction record exists or is resolvable offline, so this record can supersede nothing.
+    require(record["supersession"]["supersedes"] is None, "record.supersedes_unresolvable")
     # Mitigating or accepting a risk needs evidence or the D2 decision, neither of which exists here.
     require(all(item["state"] == "open" for item in record["unresolved_risks"]), "held.risk_disposition")
 
@@ -779,7 +788,8 @@ def render_record(record):
     for label, key in (("Implementation consequences", "implementation_consequences"),
                        ("Consumers", "consumers"), ("Held gates", "held_gates")):
         lines += ["", f"{label}:", ""] + [f"- {item}" for item in record[key]]
-    lines += ["", f"Supersession: {record['supersession']['requires']}", ""]
+    lines += ["", "Supersedes: none (no prior D2 direction record exists).", "",
+              f"Supersession: {record['supersession']['requires']}", ""]
     return lines
 
 

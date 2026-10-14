@@ -560,4 +560,6 @@ Held gates:
 - pending:PenniLogic/docs#75
 - pending:PenniLogic/infra#22
 
+Supersedes: none (no prior D2 direction record exists).
+
 Supersession: A superseding D2 record signed by the decision coordinator and a design-system migration plan.

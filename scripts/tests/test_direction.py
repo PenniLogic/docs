@@ -359,6 +359,14 @@ class GroundingTests(Case):
                 self.refuses(lambda f: at(f, 2)["grounding"][0].update(path=path),
                              "grounding.not_product_truth", "DIR-02")
 
+    def test_tooling_under_product_truth_roots_is_not_product_truth(self):
+        for path in ("research/operations/run_synthetic.py", "research/operations/check.py",
+                     "research/spikes/sms_parser_spike.py", "research/spikes/notes.md",
+                     "governance/design-gates.schema.json", "product/README"):
+            with self.subTest(path=path):
+                self.refuses(lambda f: at(f, 2)["grounding"][0].update(path=path),
+                             "grounding.not_product_truth", "DIR-02")
+
     def test_every_product_truth_root_is_accepted(self):
         for root in module.PRODUCT_TRUTH_ROOTS:
             fixture = Fixture()
@@ -562,6 +570,10 @@ class RecordTests(Case):
             with self.subTest(gate=gate):
                 self.refuses(lambda f: f.record["held_gates"].remove(gate), "record.held_gate_missing", gate)
         self.refuses(lambda f: f.record.update(held_gates=[]), "record.held_gate_missing", HELD_GATES[0])
+
+    def test_superseding_a_prior_record_cannot_be_claimed(self):
+        self.refuses(lambda f: f.record["supersession"].update(supersedes="A prior approved direction 0.0.9."),
+                     "record.supersedes_unresolvable")
 
     def test_mitigated_or_accepted_risk_cannot_be_recorded_here(self):
         for state in ("mitigated", "accepted"):
@@ -919,10 +931,11 @@ class GitTests(FilesCase):
         name = "git.exe" if os.name == "nt" else "git"
         (planted / name).write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         (planted / name).chmod(0o755)
-        real = Path(shutil.which("git")).parent
+        # Compare resolved directories: on merged-usr systems /bin and /usr/bin name the same binding.
+        real = Path(shutil.which("git")).parent.resolve()
         for path in ([str(planted), str(real)], ["", ".", "tools", str(real)], [str(root), str(real)]):
             with self.subTest(path=path), mock.patch.dict(os.environ, {"PATH": os.pathsep.join(path)}):
-                self.assertEqual(Path(module.trusted_git(root)).parent, real)
+                self.assertEqual(Path(module.trusted_git(root)).parent.resolve(), real)
         with mock.patch.dict(os.environ, {"PATH": os.pathsep.join([str(planted), "."])}):
             with self.assertRaises(LookupError):
                 module.trusted_git(root)
@@ -967,6 +980,10 @@ class RenderTests(FilesCase):
                       "\n".join(module.render_record(record)))
         record["participant_count"], record["decision"] = 12, {"selected": "DIR-03"}
         self.assertIn("Participant count: 12. Decision: `DIR-03`.", "\n".join(module.render_record(record)))
+
+    def test_record_paragraph_states_that_nothing_is_superseded(self):
+        self.assertIn("Supersedes: none (no prior D2 direction record exists).",
+                      "\n".join(module.render_record(Fixture().check().record)))
 
     def test_table_cells_escape_pipes(self):
         self.assertEqual(module.table(("A",), [("x | y",)]), ["| A |", "|---|", "| x \\| y |"])
