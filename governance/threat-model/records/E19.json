@@ -509,7 +509,7 @@
           "severity": "high",
           "title": "KEK custodian outage or unwrap-quota exhaustion stops every decrypting request, erasure and emergency rotation",
           "attack_path": "The custodian is unreachable, partitioned or throttled, or its unwrap quota is spent by load (the attacker-driven variant is E19-F23); every read of descriptive data, every erasure and the emergency rotation path then fail together, and the outage cannot be routed around because no other path may unwrap.",
-          "recommended_control": "Select the production custodian with an availability objective at least as strict as the API's (ADR-018 section 6.1.1) and a published unwrap capacity, alert on unwrap error rate and latency, and rehearse custodian loss; the attacker-driven spend of that capacity is E19-F23.",
+          "recommended_control": "Select the production custodian with an availability objective at least as strict as the API's (ADR-018 section 6.1.1) and a published unwrap capacity, and alert on unwrap error rate and latency; the attacker-driven spend of that capacity is E19-F23. A rehearsal of custodian loss is in neither PenniLogic/infra#27's scope (observability, alerting and, through its ADR-018 comment, custodian selection) nor PenniLogic/infra#26's (a database backup and restore drill that leaves chaos and failover exercises to E25), so it is raised to the coordinator and this hand-off covers selection, capacity and alerting only.",
           "status": "handed_off",
           "owner_ticket": "PenniLogic/infra#27",
           "resolution": null
