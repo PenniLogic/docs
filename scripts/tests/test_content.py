@@ -2191,12 +2191,6 @@ class PublishedContentTests(unittest.TestCase):
         # Fable check N2: RC-009 "AI insight." (also the glossary's preferred label) and RC-011 "It can change." are
         # the only published sentences under four words. Ordinary copy that uses their words inside longer copy
         # stays accepted; a key whose whole copy is one of them is refused.
-        sentences = {sentence for item in self.docs["regulated-copy"]["records"]
-                     for text in [item["copy"]] + [entry["copy"] for entry in item["history"]]
-                     for sentence in content.regulated_sentences(text)}
-        self.assertEqual({sentence for sentence in sentences if len(sentence.split()) < 4},
-                         {"ai insight", "it can change"})
-
         def outcome(text, term_refs=()):
             docs = copy.deepcopy(self.docs)
             add_key(docs, key("insight.card.help", text, term_refs=list(term_refs)))
@@ -2213,6 +2207,11 @@ class PublishedContentTests(unittest.TestCase):
         for text in ("AI insight", "AI insight.", "It can change", "it can change."):
             with self.subTest(text=text):
                 self.assertEqual(outcome(text), ("key.regulated_copy_restated", "insight.card.help"))
+        sentences = {sentence for item in self.docs["regulated-copy"]["records"]
+                     for text in [item["copy"]] + [entry["copy"] for entry in item["history"]]
+                     for sentence in content.regulated_sentences(text)}
+        self.assertEqual({sentence for sentence in sentences if len(sentence.split()) < content.RESTATED_MIN_WORDS},
+                         {"ai insight", "it can change"})
 
     def test_published_device_wording_reaches_only_android(self):
         # Independent review F4: copy that speaks of "this phone" or the device permission is Android message
@@ -2306,7 +2305,6 @@ class PublishedContentTests(unittest.TestCase):
         # Independent review F1 and criterion 4, Fable check N2: the sentence-level rule, the multi-sentence rule
         # and the short-sentence bound are stated where consumers read them, with the bound the validator applies.
         page = " ".join((ROOT / "product" / "content" / "content-governance.md").read_text(encoding="utf-8").split())
-        self.assertEqual(content.RESTATED_MIN_WORDS, 4)
         for statement in (
                 "any complete sentence of any regulated record, current or prior (`history`) version",
                 "a fragment shorter than a complete sentence is not a restatement",
@@ -2315,6 +2313,7 @@ class PublishedContentTests(unittest.TestCase):
                 "Consecutive sentences of a record also count as one run"):
             with self.subTest(statement=statement):
                 self.assertIn(statement, page)
+        self.assertEqual(content.RESTATED_MIN_WORDS, 4)
 
     def test_every_published_judgment_is_proposed_and_nothing_is_approved(self):
         self.assertEqual(self.docs["glossary"]["status"], "provisional")
