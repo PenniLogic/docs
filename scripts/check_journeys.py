@@ -441,9 +441,11 @@ def read_current(root):
     raise Refused("registry.current_invalid")
 
 
-# What a changed registry record means for a blueprint: its persona, flow, screen, critical or owner joins.
-RECORD_JOINS = {"journeys": ("persona_ids", "flow_ids"), "flows": ("journey_ids", "screen_ids", "critical"),
+# What a changed registry record means for a blueprint: its name (copied as journey_name), persona, flow, screen,
+# critical or owner joins, and for an owned diagram its artifact_path (the derived figma state reads it).
+RECORD_JOINS = {"journeys": ("name", "persona_ids", "flow_ids"), "flows": ("journey_ids", "screen_ids", "critical"),
                 "diagrams": ("owner_ticket",)}
+OWNED_DIAGRAM_JOINS = ("artifact_path",)
 
 
 def registry_drift(pinned, current):
@@ -454,7 +456,10 @@ def registry_drift(pinned, current):
         added.update(set(after) - set(before))
         retired.update(set(before) - set(after))
         for identifier in set(before) & set(after):
-            for key in RECORD_JOINS.get(collection, ()):
+            keys = RECORD_JOINS.get(collection, ())
+            if collection == "diagrams" and identifier in OWNED_DIAGRAMS:
+                keys += OWNED_DIAGRAM_JOINS
+            for key in keys:
                 old, new = before[identifier].get(key), after[identifier].get(key)
                 if (set(old) != set(new)) if isinstance(old, list) and isinstance(new, list) else old != new:
                     changed.add(identifier)

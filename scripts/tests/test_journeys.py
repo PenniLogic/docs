@@ -746,7 +746,7 @@ def drifted_registry():
 
 
 def docs75_shaped(registry):
-    """The registry in docs#75's canonical shape: {plan_id, issue} owners and extra flow fields (review round 2 SR-03)."""
+    """The registry in docs#75's shape: {plan_id, issue} owners and extra flow fields (review round 2 SR-03)."""
     registry = copy.deepcopy(registry)
     for diagram in registry["diagrams"]:
         diagram["owner_ticket"] = {"plan_id": diagram["owner_ticket"], "issue": "PenniLogic/docs#67"}
@@ -796,6 +796,24 @@ class ReadinessTests(JourneyCase):
 
     def test_docs75_shaped_registry_has_no_drift(self):
         self.assertEqual(self.drift(docs75_shaped(REGISTRY)), [[], [], []])
+
+    def test_diagram_artifact_path_change_is_drift(self):
+        # Review round 2 SR-04: the figma state is derived from artifact_path.
+        registry = copy.deepcopy(REGISTRY)
+        registry["diagrams"][2]["artifact_path"] = "product/synthetic-blueprints.md"
+        self.assertEqual(self.drift(registry), [[], [], ["D04"]])
+
+    def test_unowned_diagram_artifact_path_change_is_not_drift(self):
+        # D02 is another ticket's diagram; H02 reads nothing from its artifact_path (docs#75 repoints D20 this way).
+        registry = copy.deepcopy(REGISTRY)
+        registry["diagrams"][5]["artifact_path"] = "product/synthetic-other.md"
+        self.assertEqual(self.drift(registry), [[], [], []])
+
+    def test_journey_name_change_is_drift(self):
+        # Review round 2 SR-04: blueprints copy journey_name from the registry.
+        registry = copy.deepcopy(REGISTRY)
+        registry["journeys"][1]["name"] = "Synthetic renamed rights request"
+        self.assertEqual(self.drift(registry), [[], [], ["J10"]])
 
     def test_critical_flag_change_is_drift(self):
         registry = copy.deepcopy(REGISTRY)
