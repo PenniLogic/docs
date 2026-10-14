@@ -87,6 +87,15 @@ amounts or identity.
 - Qualified legal/compliance approval of every regulated record; the approver role is unassigned.
 - Content, Compliance, Accessibility and CDO approvals; independent Core, QA, Compliance and Accessibility review.
 - `nav.` labels from PenniLogic/docs#74; infra#22 conformance; current-head CI on the pull request.
+- Definition of Done item 4 (declared dependencies mirrored as native GitHub blockedBy edges) is unmet: the
+  coordinator reclassified the PenniLogic/docs#66 edges as acceptance gates, and mirroring them is a coordinator
+  action.
+- Criterion 3: a human financial-comprehension, no-blame and uncertainty review of debt, correction and projection
+  copy (copy never blames, shames or disguises uncertainty). The lints refuse listed words only.
+- Criterion 1, contracts surface: 28 of 30 terms list `contracts`, but their contract field names stay empty until
+  PenniLogic/contracts publishes the fields; the mapping is held there.
+- Money and Content review of the `reversed` and `refund` definitions (ADR-017 section 2.6, ADR-016 section 8.3),
+  including whether the plan refund in RC-005 needs its own term.
 - Criterion 2 (every pattern states source, status, consequence, safe remainder and next action): slots the
   taxonomy copy does not state are counted as `readiness.pattern_slot_unstated` and routed to the taxonomy owner
   (PenniLogic/docs#1), never filled in here; whether the mapped copy meets the criterion needs human Content review.
