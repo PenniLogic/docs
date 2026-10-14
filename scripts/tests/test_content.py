@@ -709,6 +709,14 @@ class PlaceholderTests(Harness):
                 self.assertRefused(lambda d: self.placeholders(d)[0].update(id=identifier), "placeholder.prohibited")
 
 
+    # Review round 2 SS-06: raw SMS or transaction text and lender identity are prohibited too.
+    def test_raw_text_and_institution_placeholder_names_are_prohibited(self):
+        for identifier in ("sms_text", "smsbody", "narration", "memo", "remark", "snippet", "description", "subject",
+                           "who", "lender", "bank_label", "institution", "text"):
+            with self.subTest(identifier=identifier):
+                self.assertRefused(lambda d: self.placeholders(d)[0].update(id=identifier, source="client_cache"),
+                                   "placeholder.prohibited")
+
     # Review round 1 F-06: parts match anywhere in the name, and identity-bearing names are on the list.
     def test_joined_up_and_identity_bearing_placeholder_names_are_prohibited(self):
         for identifier in ("username", "accountnumber", "cardnumber", "otpcode", "merchant", "payee", "sender",

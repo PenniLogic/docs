@@ -100,6 +100,9 @@ PROHIBITED_PLACEHOLDER_PARTS = (
     "email", "phone", "mobile", "address", "contact", "name", "operator", "agent", "raw", "message", "body",
     "content", "note", "resource", "user", "member", "person", "people", "amount", "balance", "merchant", "payee",
     "payer", "sender", "recipient", "counterparty", "upi", "vpa", "pan", "aadhaar", "aadhar", "ifsc", "iban",
+    # Raw SMS or transaction text, and the identity of a lender or institution (review round 2 SS-06).
+    "sms", "text", "narration", "memo", "remark", "snippet", "description", "subject", "who", "lender", "bank",
+    "institution",
 )
 # Placeholder sources that carry user data; notifications never echo them (voice.discreet_by_default).
 DATA_PLACEHOLDER_SOURCES = ("client_cache", "service_response")
