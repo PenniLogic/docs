@@ -1097,14 +1097,16 @@ def structure_line(model):
     documents = model.documents
     glossary, catalogue = documents["glossary"], documents["message-keys"]
     regulated, voice = documents["regulated-copy"], documents["voice"]
-    roots = {root: sum(key.split(".", 1)[0] == root for key in model.keys) for root in RESERVED_ROOTS}
+    roots = {f"{root}.": sum(key.split(".", 1)[0] == root for key in model.keys) for root in RESERVED_ROOTS}
+    # Every key is counted once: keys outside the reserved roots (such as pattern. slot keys) are "other".
+    roots["other"] = len(model.keys) - sum(roots.values())
     return (
         f"Content glossary {glossary['glossary_version']} structure valid: {len(glossary['terms'])} terms "
         f"({sum(term['comprehension']['required'] for term in glossary['terms'])} need comprehension evidence); "
         f"voice {voice['voice_version']}: {len(voice['banned_patterns'])} banned patterns, "
         f"{len(voice['patterns'])} content patterns, taxonomy copy rules imported by reference; message keys "
         f"{catalogue['catalogue_version']}: {len(model.keys)} keys (" +
-        ", ".join(f"{count} {root}." for root, count in roots.items()) +
+        ", ".join(f"{count} {root}" for root, count in roots.items()) +
         f"); regulated copy {regulated['regulated_version']}: {len(regulated['records'])} records, "
         f"{sum(record['status'] == 'approved' for record in regulated['records'])} approved"
     )

@@ -1739,7 +1739,7 @@ class CommandLineTests(unittest.TestCase):
         code, out, err = self.main("--structure")
         self.assertEqual((code, err), (0, ""))
         self.assertTrue(out.rstrip().endswith("0 approved; readiness not evaluated."))
-        self.assertIn("27 keys (1 state., 0 nav., 9 reg., 2 common.)", out)
+        self.assertIn("27 keys (1 state., 0 nav., 9 reg., 2 common., 15 other)", out)
 
     def test_invalid_now_is_refused(self):
         self.assertEqual(self.main("--structure", "--now", "tomorrow"),
@@ -1979,7 +1979,7 @@ class PublishedContentTests(unittest.TestCase):
         self.assertEqual(content.structure_line(self.model), (
             "Content glossary 0.1.0 structure valid: 30 terms (7 need comprehension evidence); voice 0.1.0: 18 "
             "banned patterns, 8 content patterns, taxonomy copy rules imported by reference; message keys 0.1.0: "
-            "81 keys (43 state., 0 nav., 11 reg., 12 common.); regulated copy 0.1.0: 11 records, 0 approved"
+            "81 keys (43 state., 0 nav., 11 reg., 12 common., 15 other); regulated copy 0.1.0: 11 records, 0 approved"
         ))
 
     def test_published_regulated_wording_is_refused_in_an_ordinary_key(self):
@@ -1997,6 +1997,14 @@ class PublishedContentTests(unittest.TestCase):
                                   content.support.load_json(ROOT / content.GATES), NOW, FakeSources())
                 self.assertEqual((caught.exception.rule, caught.exception.subject),
                                  ("key.regulated_copy_restated", "pattern.destructive.consequence"))
+
+    def test_published_key_breakdown_sums_to_the_total(self):
+        # Independent review F6: every key is counted under exactly one root group.
+        line = content.structure_line(self.model)
+        total, breakdown = re.search(r"([0-9]+) keys \(([^)]*)\)", line).groups()
+        counts = [int(part.split()[0]) for part in breakdown.split(", ")]
+        self.assertEqual(sum(counts), int(total))
+        self.assertEqual(int(total), len(self.docs["message-keys"]["keys"]))
 
     def test_published_readiness_gaps_are_exact(self):
         gaps = content.readiness(self.model)
