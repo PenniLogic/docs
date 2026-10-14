@@ -955,6 +955,11 @@ class ContentAndSchemaTests(NavigationCase):
     def test_schema_keyword_outside_the_shared_subset_fails_closed(self):
         self.refused(lambda fixture: fixture.routes_schema.update(oneOf=[]), "schema.invalid")
 
+    def test_schema_version_is_the_integer_one(self):
+        # JSON true and 1.0 compare equal to 1 in Python; the format discriminator must still be the integer.
+        self.refused(lambda fixture: fixture.routes.update(schema_version=True), "schema.invalid")
+        self.refused(lambda fixture: fixture.allocation.update(schema_version=1.0), "schema.invalid")
+
     def test_secret_shaped_label_is_refused(self):
         self.refused(lambda fixture: fixture.route("R-AND-002")["label"].update(text=planted_token()),
                      "content.secret_shape", "R-AND-002")
@@ -1366,6 +1371,35 @@ class TrustedGitTests(unittest.TestCase):
             self.assertEqual(sources.blob(checkout.base, module.IMPORT_PATH), REGISTRY_BYTES)
             self.assertTrue(sources.is_published(checkout.base))
             self.assertIsNone(sources.base_routes())
+
+    def test_replace_refs_never_substitute_the_pinned_registry(self):
+        checkout = Checkout(self)
+        pinned = f"{checkout.base}:{module.IMPORT_PATH}"
+        forged = encode({**REGISTRY, "screens": SCREENS[:-1]})
+        checkout.write("forged.json", forged)
+        replacement = git(checkout.root, "hash-object", "-w", "forged.json")
+        (checkout.root / "forged.json").unlink()
+        git(checkout.root, "replace", git(checkout.root, "rev-parse", pinned), replacement)
+        # Plain Git now serves the forged bytes at the pinned path; the check still reads the stored object.
+        self.assertEqual(git(checkout.root, "cat-file", "blob", pinned), forged.decode("utf-8").strip())
+        structure = (0, STRUCTURE_LINE.format(base="no published base") + "; readiness not evaluated.\n", "")
+        self.assertEqual(checkout.run("--structure"), structure)
+        files = ((checkout.fixture.routes, module.ROUTES), (checkout.fixture.allocation, module.ALLOCATION))
+        for target, name in files:
+            target["registry_ref"]["sha256"] = module.gates.digest(forged)
+            checkout.write(name, encode(target))
+        self.assertEqual(checkout.run("--structure"), (1, "", refusal("registry.digest_mismatch")))
+
+    def test_grafts_never_move_the_published_history(self):
+        checkout = Checkout(self)
+        (checkout.root / ".git" / "info").mkdir(exist_ok=True)
+        (checkout.root / ".git" / "info" / "grafts").write_text(git(checkout.root, "rev-parse", "HEAD") + "\n",
+                                                                encoding="utf-8")
+        # Plain Git now sees a parentless HEAD with no merge base; the check ignores grafts.
+        with self.assertRaises(AssertionError):
+            git(checkout.root, "merge-base", "HEAD", module.BASE_REF)
+        self.assertEqual(checkout.run("--structure"),
+                         (0, STRUCTURE_LINE.format(base="no published base") + "; readiness not evaluated.\n", ""))
 
     def test_unpinned_commit_is_never_resolved(self):
         sources = module.GitSources(self.root)
