@@ -1252,7 +1252,7 @@ class LiveRegistryTests(unittest.TestCase):
 
 
 PUBLISHED_STRUCTURE = (
-    "Navigation map 0.1.0 structure valid: 122 routes (46 Android, 45 web, 31 admin; 5 Android primary "
+    "Navigation map 0.1.0 structure valid: 123 routes (47 Android, 45 web, 31 admin; 5 Android primary "
     "destinations), 0 orphan routes, 141 registry screens placed exactly once (134 hosted, 7 external), 134 deep-link "
     "patterns, 0 redirects, 0 retired route IDs checked against {base}; 16 capabilities (16 with a divergence) "
     "allocating 38 registry flows; registry pinned at planning/source/evidence/experience-coverage.json"
@@ -1260,7 +1260,7 @@ PUBLISHED_STRUCTURE = (
 # The recorded readiness gaps of the published route map and allocation against their pinned registry.
 PUBLISHED_GAP_COUNTS = {
     "readiness.tree_test_not_run": 3, "readiness.card_sort_not_run": 3, "readiness.decision_pending": 3,
-    "readiness.cdo_approval_pending": 16, "readiness.assumption_provisional": 16, "readiness.label_provisional": 122,
+    "readiness.cdo_approval_pending": 16, "readiness.assumption_provisional": 16, "readiness.label_provisional": 123,
     "readiness.role_provisional": 3, "readiness.registry_not_canonical": 1, "readiness.registry_id_added": 0,
     "readiness.registry_id_retired": 0,
 }
@@ -1283,6 +1283,18 @@ class PublishedDataTests(unittest.TestCase):
         unbound = {identifier: model.hosted[identifier] for identifier, route in model.routes.items()
                    if route["platform"] == "admin" and route["access"] is None}
         self.assertEqual(unbound, {"R-ADM-001": ["S-ADM-001"], "R-ADM-002": ["S-ADM-030"]})
+
+    def test_published_eligibility_precedes_registration(self):
+        # Accepted ADR-019 section 2 orders enrolment consent and age eligibility -> email channel -> passkey
+        # registration, and product/01 section 3.9 fails unknown eligibility closed before profile creation: purpose
+        # consent and age eligibility stay on signed-out routes, entered before any account exists.
+        model = module.load_and_check(ROOT)
+        hosts = {screen: model.placements[screen]["host_route_id"]
+                 for screen in ("S-AND-009", "S-AND-010", "S-WEB-042")}
+        self.assertEqual(hosts, {"S-AND-009": "R-AND-047", "S-AND-010": "R-AND-047", "S-WEB-042": "R-WEB-003"})
+        self.assertEqual({model.routes[host]["audience"] for host in hosts.values()}, {"signed_out"})
+        # On Android the eligibility route is entered from the launch gate, beside sign-in and registration.
+        self.assertEqual(model.routes["R-AND-047"]["parent_route_id"], model.placements["S-AND-001"]["host_route_id"])
 
     def test_published_readiness_reports_exact_gaps(self):
         model = module.load_and_check(ROOT)

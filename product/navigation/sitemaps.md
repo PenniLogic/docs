@@ -12,7 +12,7 @@ Compact width uses the navigation bar for the primary destinations; expanded wid
 
 Primary destinations (5; product/08 allows three to five): `R-AND-006` Home, `R-AND-007` Debts, `R-AND-008` Transactions, `R-AND-009` Plan, `R-AND-010` More.
 
-- Signed out: `R-AND-001`, `R-AND-002`, `R-AND-003`
+- Signed out: `R-AND-001`, `R-AND-002`, `R-AND-003`, `R-AND-047`
 - Signed in: `R-AND-004`, `R-AND-005`, `R-AND-006`, `R-AND-007`, `R-AND-008`, `R-AND-009`, `R-AND-010`, `R-AND-011`, `R-AND-012`, `R-AND-013`, `R-AND-014`, `R-AND-015`, `R-AND-016`, `R-AND-017`, `R-AND-018`, `R-AND-019`, `R-AND-020`, `R-AND-021`, `R-AND-022`, `R-AND-023`, `R-AND-024`, `R-AND-025`, `R-AND-026`, `R-AND-027`, `R-AND-028`, `R-AND-029`, `R-AND-030`, `R-AND-031`, `R-AND-032`, `R-AND-033`, `R-AND-034`, `R-AND-035`, `R-AND-036`, `R-AND-037`, `R-AND-038`, `R-AND-039`, `R-AND-040`, `R-AND-041`, `R-AND-042`, `R-AND-043`, `R-AND-044`, `R-AND-045`, `R-AND-046`
 
 ### Route tree
@@ -20,7 +20,7 @@ Primary destinations (5; product/08 allows three to five): `R-AND-006` Home, `R-
 - `R-AND-001` Launch and app gates: signed out; compact stack, expanded stack; patterns `android://launch`, `android://lock`, `android://system/degraded`; screens S-AND-001, S-AND-002, S-AND-059
   - `R-AND-002` Sign in: signed out; compact stack, expanded stack; entered by navigation_link; patterns `android://auth`, `android://auth/verify`; screens S-AND-004, S-AND-005
     - `R-AND-003` Account recovery: signed out; compact stack, expanded stack; entered by navigation_link; patterns `android://recovery`, `android://recovery/pending`, `android://recovery/reenroll`; screens S-AND-006, S-AND-007, S-AND-008
-    - `R-AND-004` Onboarding and permissions: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://onboarding/consent`, `android://onboarding/age`, `android://onboarding/sms`, `android://onboarding/notifications`; screens S-AND-009, S-AND-010, S-AND-012, S-AND-013
+    - `R-AND-004` Onboarding and permissions: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://onboarding/sms`, `android://onboarding/notifications`; screens S-AND-012, S-AND-013
       - `R-AND-005` App shell: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://home`; screens S-AND-003
         - `R-AND-006` Home: primary destination; signed in; compact navigation_bar, expanded navigation_rail; entered by primary_navigation; patterns `android://home/debt`; screens S-AND-014
           - `R-AND-011` Progress and digests: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://progress`; screens S-AND-055
@@ -63,6 +63,7 @@ Primary destinations (5; product/08 allows three to five): `R-AND-006` Home, `R-
             - `R-AND-044` Notification preferences: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://settings/notifications`; screens S-AND-054
             - `R-AND-045` Language, appearance and accessibility: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://settings/accessibility`; screens S-AND-063
             - `R-AND-046` Account security and sessions: signed in; compact stack, expanded stack; entered by navigation_link; patterns `android://settings/account`; screens S-AND-064
+  - `R-AND-047` Eligibility and consent: signed out; compact stack, expanded stack; entered by navigation_link; patterns `android://onboarding/consent`, `android://onboarding/age`; screens S-AND-009, S-AND-010
 
 ### External and system entries
 
@@ -77,14 +78,14 @@ Primary destinations (5; product/08 allows three to five): `R-AND-006` Home, `R-
 
 No route is hidden by a breakpoint: narrow web stays a complete management fallback (product/08 section 8.2).
 
-- Signed out: `R-WEB-001`, `R-WEB-002`, `R-WEB-004`
-- Signed in: `R-WEB-003`, `R-WEB-005`, `R-WEB-006`, `R-WEB-007`, `R-WEB-008`, `R-WEB-009`, `R-WEB-010`, `R-WEB-011`, `R-WEB-012`, `R-WEB-013`, `R-WEB-014`, `R-WEB-015`, `R-WEB-016`, `R-WEB-017`, `R-WEB-018`, `R-WEB-019`, `R-WEB-020`, `R-WEB-021`, `R-WEB-022`, `R-WEB-023`, `R-WEB-024`, `R-WEB-025`, `R-WEB-026`, `R-WEB-027`, `R-WEB-028`, `R-WEB-029`, `R-WEB-030`, `R-WEB-031`, `R-WEB-032`, `R-WEB-033`, `R-WEB-034`, `R-WEB-035`, `R-WEB-036`, `R-WEB-037`, `R-WEB-038`, `R-WEB-039`, `R-WEB-040`, `R-WEB-041`, `R-WEB-042`, `R-WEB-043`, `R-WEB-044`, `R-WEB-045`
+- Signed out: `R-WEB-001`, `R-WEB-002`, `R-WEB-003`, `R-WEB-004`
+- Signed in: `R-WEB-005`, `R-WEB-006`, `R-WEB-007`, `R-WEB-008`, `R-WEB-009`, `R-WEB-010`, `R-WEB-011`, `R-WEB-012`, `R-WEB-013`, `R-WEB-014`, `R-WEB-015`, `R-WEB-016`, `R-WEB-017`, `R-WEB-018`, `R-WEB-019`, `R-WEB-020`, `R-WEB-021`, `R-WEB-022`, `R-WEB-023`, `R-WEB-024`, `R-WEB-025`, `R-WEB-026`, `R-WEB-027`, `R-WEB-028`, `R-WEB-029`, `R-WEB-030`, `R-WEB-031`, `R-WEB-032`, `R-WEB-033`, `R-WEB-034`, `R-WEB-035`, `R-WEB-036`, `R-WEB-037`, `R-WEB-038`, `R-WEB-039`, `R-WEB-040`, `R-WEB-041`, `R-WEB-042`, `R-WEB-043`, `R-WEB-044`, `R-WEB-045`
 
 ### Route tree
 
 - `R-WEB-001` Sign in: signed out; narrow stack, wide stack; patterns `/login`; screens S-WEB-001
   - `R-WEB-002` Verification and recovery: signed out; narrow stack, wide stack; entered by navigation_link; patterns `/recover`; screens S-WEB-002
-  - `R-WEB-003` Eligibility and consent: signed in; narrow stack, wide stack; entered by navigation_link; patterns `/signup/eligibility`; screens S-WEB-042
+  - `R-WEB-003` Eligibility and consent: signed out; narrow stack, wide stack; entered by navigation_link; patterns `/signup/eligibility`; screens S-WEB-042
   - `R-WEB-004` Help and support: signed out; narrow stack, wide stack; entered by navigation_link; patterns `/help/support`; screens S-WEB-037
   - `R-WEB-005` App shell: signed in; narrow stack, wide stack; entered by navigation_link; patterns `/app`; screens S-WEB-003
     - `R-WEB-006` Overview: primary destination; signed in; narrow collapsed_menu, wide side_navigation; entered by navigation_link; patterns `/overview`; screens S-WEB-004
@@ -192,7 +193,7 @@ Parity, divergence or absence per capability and platform, with the registry flo
 | Capability | Name | Journeys | Android | Web | Admin | Rationale | CDO approval |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CAP-001 | Sign-in, recovery and app shell | J01, J02, J11 | parity: F-AND-01, F-AND-02 | parity: F-WEB-01 | divergent: F-ADM-01 | Customers sign in, recover access and reach the app shell on Android and web; operators use a separate administrative identity domain with hardware-factor sessions and their own recovery, so the admin entry diverges by design (ADR-020 section 7). | pending |
-| CAP-002 | Consent, eligibility and device permissions | J01, J02, J03 | parity: F-AND-03 | divergent: F-WEB-01 | absent | Purpose consent and age eligibility apply on both customer platforms; SMS and notification-access permissions exist only on Android, whose capture depends on them (product/01 section 3.8). Consent is the customer's own decision, so the operator console has no consent destination. | pending |
+| CAP-002 | Consent, eligibility and device permissions | J01, J02, J03 | parity: F-AND-03 | divergent: F-WEB-01 | absent | Purpose consent and age eligibility apply on both customer platforms, signed out before registration (ADR-019 section 2; adult-only, failing closed before profile creation, product/01 section 3.9); SMS and notification-access permissions exist only on Android, whose capture depends on them (product/01 section 3.8). Consent is the customer's own decision: operators have no consent destination. | pending |
 | CAP-003 | Debt status, strategies and scenarios | J01, J04 | parity: F-AND-04, F-AND-05 | parity: F-WEB-03, F-WEB-04 | absent | Debt tracking and strategy decisions are the customer's own job on Android and web, where desktop web adds dense comparison and side-by-side derivation (product/08 section 8.2); the admin console is powerful over the system, not over user financial data (product/01 section 2.2). | pending |
 | CAP-004 | Transactions, accounts, import and export | J03 | parity: F-AND-06 | parity: F-WEB-02 | absent | Account, category and manual transaction management are explicit web work alongside Android (product/01 section 3.8); operators cannot read transaction descriptions or balances by default (product/01 section 2.2). | pending |
 | CAP-005 | Capture health, clarification and rules | J03 | parity: F-AND-07 | divergent: F-WEB-05 | absent | Automatic capture depends on Android-only permissions and stays on Android (product/01 section 3.8), so web resolves clarifications and manages rules without a capture-health view; operators never read raw message content (product/01 section 2.2). | pending |

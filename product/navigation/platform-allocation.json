@@ -72,7 +72,7 @@
           "flow_ids": []
         }
       },
-      "rationale": "Purpose consent and age eligibility apply on both customer platforms; SMS and notification-access permissions exist only on Android, whose capture depends on them (product/01 section 3.8). Consent is the customer's own decision, so the operator console has no consent destination.",
+      "rationale": "Purpose consent and age eligibility apply on both customer platforms, signed out before registration (ADR-019 section 2; adult-only, failing closed before profile creation, product/01 section 3.9); SMS and notification-access permissions exist only on Android, whose capture depends on them (product/01 section 3.8). Consent is the customer's own decision: operators have no consent destination.",
       "cdo_approval": {
         "status": "pending",
         "ref": null

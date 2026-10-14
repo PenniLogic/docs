@@ -123,8 +123,6 @@
         "wide": null
       },
       "patterns": [
-        "android://onboarding/consent",
-        "android://onboarding/age",
         "android://onboarding/sms",
         "android://onboarding/notifications"
       ],
@@ -1102,6 +1100,30 @@
       "access": null
     },
     {
+      "id": "R-AND-047",
+      "platform": "android",
+      "parent_route_id": "R-AND-001",
+      "entry_from_parent": "navigation_link",
+      "label": {
+        "text": "Eligibility and consent",
+        "status": "provisional",
+        "message_key": null
+      },
+      "audience": "signed_out",
+      "primary": false,
+      "presentation": {
+        "compact": "stack",
+        "expanded": "stack",
+        "narrow": null,
+        "wide": null
+      },
+      "patterns": [
+        "android://onboarding/consent",
+        "android://onboarding/age"
+      ],
+      "access": null
+    },
+    {
       "id": "R-WEB-001",
       "platform": "web",
       "parent_route_id": null,
@@ -1157,7 +1179,7 @@
         "status": "provisional",
         "message_key": null
       },
-      "audience": "signed_in",
+      "audience": "signed_out",
       "primary": false,
       "presentation": {
         "compact": null,
@@ -3036,12 +3058,12 @@
     },
     {
       "screen_id": "S-AND-009",
-      "host_route_id": "R-AND-004",
+      "host_route_id": "R-AND-047",
       "external": null
     },
     {
       "screen_id": "S-AND-010",
-      "host_route_id": "R-AND-004",
+      "host_route_id": "R-AND-047",
       "external": null
     },
     {
