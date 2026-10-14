@@ -6,5 +6,470 @@
   "owner": {
     "accountable": "basiltt"
   },
-  "refreshes": []
+  "refreshes": [
+    {
+      "date": "2026-10-14",
+      "trigger": "definition_of_ready",
+      "model_version": 1,
+      "performed_by": {
+        "accountable": "basiltt",
+        "session": "github:basiltt",
+        "role": "pennilogic-developer"
+      },
+      "scope": "Platform, deployment and reliability under PenniLogic/docs#27: infrastructure as code, environments, deploy pipelines, the feature-flag and kill-switch mechanism, residency policy and the database extension gate (infra#25); backups, point-in-time recovery and the restore drill (infra#26); traces, metrics, logs, SLOs, alert routing, on-call, clock synchronisation and in-region tamper-evident log retention (infra#27); governed human access to production data stores, backups and keys (infra#32); backend log scrubbing and the no-financial-data-in-logs gate (api#21); the notification and transactional email outbox with providers, delivery callbacks and sessionless unsubscribe (api#56); the Android and web notification preference editors (android#56, web#21); Play App Signing, the AAB pipeline, tracks and staged rollout (android#37). Trust boundaries: the delivery pipeline towards the runtime hosts, the key custodian and the Play Console; the ADR-022 R4 self-managed Linux, Docker Compose and nftables runtime (which replaces the epic text's managed-container assumption) and the humans who can reach its hosts; services towards the telemetry collector, log store and paging service; the outbox towards push and e-mail providers and their callbacks back into the API; anonymous holders of an unsubscribe reference; backup storage and the secondary region; clients editing preferences through an authenticated session.",
+      "tickets_in_scope": [
+        "PenniLogic/android#37",
+        "PenniLogic/android#56",
+        "PenniLogic/api#21",
+        "PenniLogic/api#56",
+        "PenniLogic/infra#25",
+        "PenniLogic/infra#26",
+        "PenniLogic/infra#27",
+        "PenniLogic/infra#32",
+        "PenniLogic/web#21"
+      ],
+      "sources": [
+        "architecture/02-security-architecture.md#1-threat-model-stride",
+        "architecture/03-stack-and-monetization.md sections 15 and 16 (research candidates for runtime, observability, crash, uptime and push services; not decisions)",
+        "compliance/01-regulatory-landscape.md (obligations O-4, O-7, O-9, O-26, O-29)",
+        "ADR-004, ADR-006, ADR-018 section 6.1.1, ADR-019, ADR-020 sections 8 and 15, ADR-021 (backup bound), ADR-022 sections 3 and 7, ADR-023, ADR-025",
+        "adr/ai-egress-consequences.json (runtime, kill_switch, observability, runtime_gates T7, T12, T17, T19, T20)",
+        "governance/DELIVERY.md",
+        "PenniLogic/docs#27 (epic body: goal, scope, out of scope, exit criteria) and the bodies of its nine child tickets, including the coordinator readiness appendices",
+        "PenniLogic/infra#33, PenniLogic/infra#43, PenniLogic/api#23, PenniLogic/api#32, PenniLogic/contracts#15, PenniLogic/android#18, PenniLogic/docs#44 (read to test hand-off scope)"
+      ],
+      "data_flows": [
+        {
+          "data_class": "Backups, point-in-time recovery logs and restored copies of every stateful store: encrypted user financial records, identity and contact channels, wrapped per-user keys, shared and split rows naming household members and counterparties, and the audit streams",
+          "subjects": [
+            "users",
+            "household_members",
+            "counterparties",
+            "operators"
+          ],
+          "purpose_ref": "Recovery of the primary stores under PenniLogic/infra#26; restore-safe erasure is owned by PenniLogic/infra#33 and the retention basis by the PenniLogic/docs#44 India jurisdiction profile (not yet published)",
+          "retention": "The infra#26 backup retention, which ADR-021 and ADR-018 section 6.7 make the published erasure-completeness bound; no value is set yet and docs#44 must supply it before real data exists",
+          "erasure_path": "Crypto-shredding (ADR-006, ADR-021) leaves pre-erasure ciphertext unreadable once keys are destroyed; a restore must replay the infra#33 tombstone journal before readiness, and backups expire at the infra#26 retention bound",
+          "children": "Adult-only launch scope under the docs#44 age-eligibility policy; backups copy whatever the primary stores hold, so the age gate upstream (android#17) is the only condition and no separate rule exists here",
+          "processors": [
+            "Hosting provider of the runtime hosts and backup storage (not chosen; ADR-022 requires the counsel-approved India residency profile before provisioning)",
+            "Secondary-region storage for disaster recovery (region not chosen; infra#25 residency policy must allow it)"
+          ]
+        },
+        {
+          "data_class": "Operational telemetry: structured logs, traces, metrics, crash and error events, security logs retained for CERT-In, correlation identifiers, client network addresses and service metadata; financial values and message content are excluded by design (api#21, ADR-004)",
+          "subjects": [
+            "users",
+            "operators"
+          ],
+          "purpose_ref": "Observability and security-log retention under PenniLogic/infra#27 and log scrubbing under PenniLogic/api#21; the retention period and legal basis come from the PenniLogic/docs#44 jurisdiction profile (compliance O-9)",
+          "retention": "Security logs: the CERT-In period from the docs#44 India profile, append-only with deletion refused before expiry (infra#27); operational logs, traces and metrics: not yet published",
+          "erasure_path": "Telemetry carries no account identity by construction (api#21 correlation identifiers are not derived from user identity); retained security logs expire at the profile period and are not erased early; the ADR-020 audit streams follow ADR-020 section 8.7",
+          "children": "Adult-only launch scope (docs#44 age policy); telemetry is not conditioned per user because it must hold no personal content",
+          "processors": [
+            "Telemetry, crash-reporting and uptime or paging services (research candidates in architecture/03-stack-and-monetization.md section 15 are hosted services; none chosen, residency unproven)"
+          ]
+        },
+        {
+          "data_class": "Messaging data: e-mail addresses, push device tokens, per-class preferences, quiet hours and time zone, unsubscribe references, suppression reasons and provider delivery status",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "PenniLogic/contracts#15 messaging contract and PenniLogic/api#56 outbox; per-class consent recording through the PenniLogic/api#24 consent ledger and purpose registry",
+          "retention": "Not yet published: api#56 keeps recipients until account erasure; provider-side logs and suppression lists follow processor terms that docs#44 must record",
+          "erasure_path": "Recipient addresses and device tokens are deleted on account erasure through the T-SEC-02 path (PenniLogic/api#38) as api#56 states; copies held by push and e-mail providers are not yet covered (finding E24-F08)",
+          "children": "Adult-only launch scope (docs#44 age policy, android#17 age gate); no messaging class targets a minor",
+          "processors": [
+            "Push notification provider (research candidate in architecture/03-stack-and-monetization.md section 16; not chosen)",
+            "Transactional e-mail provider (not chosen; api#56 requires a second provider path)"
+          ]
+        },
+        {
+          "data_class": "Notification preference edits from the Android and web editors and their outcome analytics (class, channel and outcome only, no recipient identity or content)",
+          "subjects": [
+            "users"
+          ],
+          "purpose_ref": "PenniLogic/android#56 and PenniLogic/web#21 against the PenniLogic/contracts#15 preference shapes; analytics purpose from the PenniLogic/api#24 purpose registry",
+          "retention": "Preferences live with the account; outcome analytics follow the analytics pipeline retention owned by PenniLogic/api#82 (not yet published)",
+          "erasure_path": "Preferences are erased with the account through PenniLogic/api#38; outcome analytics carry no recipient identity",
+          "children": "Adult-only launch scope (docs#44 age policy)",
+          "processors": []
+        },
+        {
+          "data_class": "Operator and engineer identity in production access: broker session records, approver and access-basis references, statement fingerprints, row counts, on-call roster and paging contacts, deployment and rollout actors",
+          "subjects": [
+            "operators",
+            "contributors",
+            "users"
+          ],
+          "purpose_ref": "PenniLogic/infra#32 broker audit using ADR-020 correlation identifiers and the subject-visible event for unredacted reads; on-call roster under PenniLogic/infra#27",
+          "retention": "ADR-020 section 8.7 for the audit streams; the roster and paging records are not yet published",
+          "erasure_path": "Audit records are not erased (ADR-020 section 8.7); subject-visible events follow the transparency stream rules; roster entries are removed on leaver",
+          "children": "Not subjects: operators and contributors are adults; user subjects appear only as opaque references",
+          "processors": [
+            "Paging or uptime service for on-call contacts (not chosen)"
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "spoofing",
+          "disposition": "finding",
+          "analysis": "Parties that must prove identity: the deploy pipeline towards the runtime hosts, secret store and key custodian (infra#25), the Android release pipeline and its Play publishing service account (android#37), push and e-mail providers calling back into the API (api#56), anonymous holders of an unsubscribe reference, and operators opening brokered sessions (infra#32). None of these controls exists today: every child ticket is open and the R4 runtime of ADR-022 is a future target. The trust root that matters most is the pipeline's federated credential: infra#25 requires short-lived federated credentials and no long-lived cloud keys but does not state which workflow, branch and environment claims the trust policy binds, so a pull-request or fork workflow that can mint the same token could deploy (E24-F01). Forged provider callbacks and guessed unsubscribe references are reviewed under request_forgery (E24-F15, E24-F16); the Play upload key under administrative identity (E24-F17). The parser-config signing chain is outside this epic: android#37 signs the application bundle only, and no E24 ticket distributes remotely updatable parser rules (docs#51 owns the template runbook).",
+          "evidence": [
+            "PenniLogic/infra#25: short-lived federated pipeline credentials, no deploy from a developer machine",
+            "PenniLogic/android#37: Play App Signing custody and short-lived federated pipeline credentials",
+            "ADR-022: R4 runtime is a future target; no production credential is authorised"
+          ],
+          "findings": [
+            "E24-F01"
+          ]
+        },
+        {
+          "id": "tampering",
+          "disposition": "finding",
+          "analysis": "Modifiable assets: infrastructure definitions and their applied state, deployable images and the Android bundle, the feature-flag and kill-switch store that infra#25 makes changeable without a deploy (ADR-022 puts the AI kill switch in a primary-database flag store whose ON transition needs two operators), the template payload allowlist (api#56), backups and point-in-time logs (infra#26) and the retained security logs (infra#27). Planned detection: drift detection and pipeline-only deploys (infra#25), the reproducible-build check and track gate (android#37), the ledger zero-sum check on restored data (infra#26), append-only retention with deletion refused (infra#27) and artifact provenance verification (infra#31, E25). Gaps: no ticket says who may change a flag or kill switch outside the two-operator AI path, how such a change is authorised and recorded, or that a flag can never grant an entitlement or bypass a quota or egress check (E24-F02); and a restore is verified only against the ledger, not against backup checksums or the ADR-020 audit chain and its write-once copy, so a tampered or partial backup could be served (E24-F03). Ingestion boundary: the server stores only structured fields (ADR-004), so backups and logs hold no raw message text by construction.",
+          "evidence": [
+            "ADR-022: kill switch store, seeded OFF, ON requires two independent eligible operators (adr/ai-egress-consequences.json kill_switch)",
+            "ADR-020: section 8.5 chain verification against the write-once copy",
+            "PenniLogic/infra#26: ledger zero-sum check and sample reconciliation on restored data",
+            "PenniLogic/infra#31: artifact and IaC supply-chain verification (E25)"
+          ],
+          "findings": [
+            "E24-F02",
+            "E24-F03"
+          ]
+        },
+        {
+          "id": "repudiation",
+          "disposition": "finding",
+          "analysis": "Actions that must be attributable later: deployments, canary aborts, rollbacks, flag and kill-switch changes, IaC applies (infra#25), restore drills and restores (infra#26), Play track promotions and rollout halts (android#37), brokered production reads and their approvals (infra#32), alert acknowledgements (infra#27) and preference or unsubscribe changes (api#56). infra#32 already requires statement, object and key-use audit with actor and approval reference, projected into the ADR-020 streams, and infra#27 owns clock synchronisation and in-region append-only retention for CERT-In (O-9), with the period read from the docs#44 profile. infra#25 publishes deploy start, finish, canary verdict and rollback events with duration and version but not the approving principal, nor flag changes, so a production change made under the single owner account cannot later be tied to the session and approval that authorised it (E24-F04). The single-account procedural separation itself is accepted in governance/DELIVERY.md and not re-opened here.",
+          "evidence": [
+            "PenniLogic/infra#32: broker audit with actor, approval reference and row or object count",
+            "PenniLogic/infra#27: clock drift alerting and in-region append-only security-log retention",
+            "governance/DELIVERY.md: one account, procedural not cryptographic separation"
+          ],
+          "findings": [
+            "E24-F04"
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "disposition": "finding",
+          "analysis": "Data classes are the five data_flows entries: backups, telemetry, messaging data, preference edits and operator access records. Leak paths: log, trace and metric sinks; alert and page payloads; hosted telemetry, crash, push, e-mail and paging processors possibly outside India; restored or lower-environment copies; notification previews. Planned controls: api#21 scrubs the api backend's logs fail-closed with a static rule and a planted-value runtime scan; api#56 restricts templates to a payload allowlist excluding amounts, merchants and other users; infra#26 refuses unscrubbed restores into lower environments; infra#25 enforces a residency policy for stateful resources; android#18 (E27) owns crash-report scrubbing on the device. Gaps: api#21 covers one service's logs, while traces, span attributes and metric labels from every service (ai-service, admin API) reach the collector with no filter of their own (E24-F05); infra#25's residency policy covers stateful resources, not hosted telemetry, paging or crash processors, and alert payloads can copy log excerpts to them (E24-F06); a pre-erasure backup can resurrect an erased user (E24-F07); provider-side copies of addresses and tokens survive account erasure (E24-F08). Raw content never leaves the device: no E24 server path can receive it (ADR-004); the client paths are crash reports and Android logs, which android#18 and the traffic capture of android#16 must prove clean, and android#37 only configures the crash reporter and mapping upload.",
+          "evidence": [
+            "PenniLogic/api#21: structured logging, fail-closed scrubber and planted-value gate",
+            "PenniLogic/api#56: template payload allowlist checked at build time",
+            "PenniLogic/android#18: error-report scrubbing with a planted monetary value (E27)",
+            "ADR-004: the server API has no field for raw message content"
+          ],
+          "findings": [
+            "E24-F05",
+            "E24-F06",
+            "E24-F07",
+            "E24-F08"
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "disposition": "finding",
+          "analysis": "Exhaustible resources: provider sending quotas and spend for push and e-mail, the outbox queue and its dead-letter replays (api#56), telemetry ingestion and the append-only retained log store that cannot be purged before expiry (infra#27), on-call attention, backup storage, and the anonymous unsubscribe path. Planned bounds: api#56 has backoff, retry limits and a dead-letter queue; infra#27 rolls back a noisy alert rule; android#37 halts a staged rollout automatically on a Vitals breach; load and chaos suites, including webhook storms, belong to infra#29 (E25). Gaps: no per-recipient or per-class send cap, no priority that keeps security messages flowing during a flood, and no handling of a provider throttling or suspending the account (E24-F09); no ingestion, cardinality or volume bound protects write-once retained storage, which a log flood fills irreversibly, and no alert de-duplication protects on-call attention (E24-F10).",
+          "evidence": [
+            "PenniLogic/api#56: published backoff, retry limit and dead-letter queue",
+            "PenniLogic/infra#29: load, stress, soak and chaos suites with webhook storms (E25)"
+          ],
+          "findings": [
+            "E24-F09",
+            "E24-F10"
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "disposition": "finding",
+          "analysis": "Capabilities at stake: the deploy identity that applies infrastructure code can rewrite IAM, key policy, retention locks and backup policy, and so grant itself or a human standing access (E24-F11); on the ADR-022 R4 self-managed hosts, shell, container-engine or hypervisor access reads process memory and disks, which infra#32's database, object, backup and key inventory does not name (E24-F12); the production KEK custodian, which ADR-018 section 6.1.1 and ADR-022 section 3.3 assign to T-PLT-03 (infra#27) although infra#27's body does not list it, decides whether a host or account compromise yields every key (baseline T-11, E24-F13). Planned controls: infra#26 forbids the application role from reading or deleting backups; infra#32 empties standing human grants, enforces FORCE ROW LEVEL SECURITY inventory and denies CI and workstation access; android#37 limits the Play service account to upload and track management. Preference and device endpoints must reject another user's identifier; api#23 (E25) owns object-authorization tests across the endpoint inventory.",
+          "evidence": [
+            "PenniLogic/infra#32: empty standing-access inventory, CI and workstation denial, FORCE ROW LEVEL SECURITY check",
+            "ADR-018: section 6.1.1 KEK custody requirements, selection by T-PLT-03",
+            "PenniLogic/api#23: object-level authorization coverage across the endpoint inventory (E25)"
+          ],
+          "findings": [
+            "E24-F11",
+            "E24-F12",
+            "E24-F13"
+          ]
+        },
+        {
+          "id": "billing_forgery",
+          "disposition": "not_applicable",
+          "analysis": "No E24 ticket verifies a purchase, processes a store or payment webhook, or changes a plan or price: api#56's delivery callbacks report message status only, and android#37 excludes pricing configuration and limits the Play service account to upload and track management. Billing verification first appears in E14 (PenniLogic/docs#15) through api#32, whose Definition of Ready refresh reviews this category.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "entitlement_tampering",
+          "disposition": "finding",
+          "analysis": "E24 stores no entitlement state, but infra#25 builds a flag and kill-switch mechanism changeable without a deploy. ADR-023 resolves entitlement server-side from plan versions and the usage ledger, so a flag must never become a second entitlement source or switch off a quota reservation; nothing in infra#25 says so, which is part of E24-F02. A point-in-time restore also rewinds the usage ledger to the recovery point; infra#26's sample reconciliation of restored data is where a lost quota or purchase event must be detected.",
+          "evidence": [
+            "ADR-023: entitlement resolved server-side from plan versions and the append-only usage ledger"
+          ],
+          "findings": [
+            "E24-F02"
+          ]
+        },
+        {
+          "id": "ai_service_compromise",
+          "disposition": "finding",
+          "analysis": "E24 provides the runtime the AI gateway runs on. ADR-022 names T-PLT-01 (infra#25) as an owner of runtime gates T7 (kill-switch evidence), T12 (self and private address denial at startup), T19 (closed startup and nftables order) and T20 (pipeline digest and deployment-gate enforcement), and T-PLT-02 (infra#26) of T17 (revocation and restore evidence). infra#25 records which primitive satisfies each egress requirement but not that the AI workload stays undeployed until those gates pass, nor that provider keys in the secret store are unreadable to the deploy identity (E24-F14). ADR-022 section 7 forbids hosts, addresses, model names and key-derived values as metric labels; that rule binds infra#27's conventions (E24-F05).",
+          "evidence": [
+            "ADR-022: R4 runtime, gateway-only egress and the 60-second kill-switch bound",
+            "PenniLogic/infra#30: network-layer egress denial for the AI workload"
+          ],
+          "findings": [
+            "E24-F14"
+          ]
+        },
+        {
+          "id": "request_forgery",
+          "disposition": "finding",
+          "analysis": "Two E24 entry points accept requests without a user session: the sessionless unsubscribe reference (contracts#15, api#56, reconciled by android#56 and web#21) and provider delivery callbacks (api#56). Neither ticket requires the unsubscribe reference to be unguessable and non-enumerable or the withdrawal to need an explicit confirming request, so a link prefetcher or a guessed reference silences a user's messages (E24-F15); api#56 maps callback statuses but does not authenticate the caller or reject replays, and api#32's verification covers billing providers only (E24-F16). Browser-session forgery against web#21 is bounded by ADR-019: the web access token is DPoP-bound in script memory and the refresh cookie is SameSite=Strict. No E24 ticket fetches a user-supplied URL; alert routes are code.",
+          "evidence": [
+            "PenniLogic/contracts#15: unsubscribe reference scoped to one class and one recipient, single-purpose",
+            "ADR-019: web access token held in script memory and DPoP-bound, refresh token in a SameSite=Strict cookie (web#8)"
+          ],
+          "findings": [
+            "E24-F15",
+            "E24-F16"
+          ]
+        },
+        {
+          "id": "prompt_injection",
+          "disposition": "not_applicable",
+          "analysis": "No E24 ticket passes content to a model or an AI agent: outbox templates take allowlisted fields, logs and traces are scrubbed and are not fed to any model, and preference editors render server state. The AI gateway, tool dispatcher and injection defences belong to E17 (PenniLogic/docs#18) and ai-service#4; delivery sessions reading public comments are governed by PenniLogic/.github#4 (E01-F03).",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "split_manipulation",
+          "disposition": "not_applicable",
+          "analysis": "E24 computes no shares and records no settlement. Split rows are copied by backups like every ledger row, and infra#26's zero-sum check on restored data covers their integrity; share rules, settlements and counterparty erasure belong to E15 (PenniLogic/docs#16) through api#49.",
+          "evidence": [],
+          "findings": []
+        },
+        {
+          "id": "administrative_identity_compromise",
+          "disposition": "finding",
+          "analysis": "Administrative identities this epic creates or relies on: the hosting account that owns the R4 hosts, networks and key custodian; the Play Console developer account that can add users, promote tracks and request an upload-key reset; the push, e-mail, telemetry, crash and paging service consoles; the on-call roster; and the single basiltt owner account. infra#43 hardened the GitHub identity only. infra#32 governs human access to data stores, backups and keys with a two-approver roster that fails closed, which in a one-owner organisation means human production-data sessions stay disabled until two eligible approvers exist. Gaps: android#37 documents upload-key custody and who may promote but not Play Console account hardening, the user roster or the upload-key reset path as a compromise route (E24-F17); and no ticket owns the console accounts of the push, e-mail and paging or uptime services, whose holders can read recipient lists and delivery history or silence pages during an incident; api#59 covers only the ADR-020 administrative identity domain, so E24-F18 stays open.",
+          "evidence": [
+            "PenniLogic/infra#43: owner-account baseline for the GitHub identity (closed; GitHub scope only)",
+            "PenniLogic/infra#32: second-approved, time-boxed, brokered human sessions with a fail-closed approver roster",
+            "ADR-020: separate administrative identity domain and break-glass rules"
+          ],
+          "findings": [
+            "E24-F17",
+            "E24-F18"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "E24-F01",
+          "category": "spoofing",
+          "severity": "high",
+          "title": "The deploy pipeline's federated trust policy is not bound to repository, protected branch and environment",
+          "attack_path": "A pull-request, fork or feature-branch workflow in an infra or service repository requests the same federated token the production deploy job uses; a trust policy that checks only the organisation or repository issues it, and the job deploys an unreviewed image or applies unreviewed infrastructure code to production hosts.",
+          "recommended_control": "Bind the deploy credential's trust policy to the exact repository, protected main branch and named production environment with required approval; refuse pull-request and fork contexts; keep tokens short-lived; add a negative test proving a non-main workflow cannot obtain the production deploy credential.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        },
+        {
+          "id": "E24-F02",
+          "category": "tampering",
+          "severity": "high",
+          "title": "Flag and kill-switch changes have no stated authorisation, audit or limit on what a flag may enable",
+          "attack_path": "A compromised operator session, a support role or a mistaken change flips a feature flag without a deploy: it re-enables a feature the kill switch stopped, switches off a quota reservation or entitlement check, or turns on an AI egress scope, and nothing records who changed it or refuses the change.",
+          "recommended_control": "Store flags as authorised, audited configuration: every change carries actor, approval and reason and lands in the ADR-020 trail; absent or malformed flags default OFF (ADR-022 kill_switch); flags may only narrow or disable behaviour and never grant an entitlement or bypass a quota, egress or authorisation check; test each refusal.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        },
+        {
+          "id": "E24-F03",
+          "category": "tampering",
+          "severity": "medium",
+          "title": "A restore is verified against the ledger only, not against backup integrity or the audit chain",
+          "attack_path": "An attacker with backup-storage write access, or a silent storage fault, alters or truncates a backup or point-in-time log; the restore drill or a real recovery serves it after the ledger zero-sum check passes, because audit-chain rows and non-ledger tables are never compared with an independent record.",
+          "recommended_control": "Make backups immutable for their retention (write-once lock), record per-backup checksums outside the backup store, and refuse restore readiness until checksums match and the ADR-020 section 8.5 chain verification against the write-once copy passes; add a planted-corruption restore test.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#26",
+          "resolution": null
+        },
+        {
+          "id": "E24-F04",
+          "category": "repudiation",
+          "severity": "medium",
+          "title": "Deploys, rollbacks, IaC applies and flag changes are not attributed to an approving principal",
+          "attack_path": "A production change, an emergency rollback or a kill-switch flip is made under the single owner account; the published deploy events carry version and duration but no approver or session, so an incident review cannot establish who authorised the change or whether the required approval happened.",
+          "recommended_control": "Emit every deploy, canary verdict, rollback, IaC apply and flag change as an attributable event carrying the session or workflow identity, the approval reference and the change digest, retained in the in-region security-log stream with synchronised time; test that an unattributed production change fails the pipeline.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        },
+        {
+          "id": "E24-F05",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Traces, span attributes and metric labels from every service reach the collector unfiltered",
+          "attack_path": "A service records a merchant, amount, e-mail address or provider host as a span attribute or metric label, which api#21's log scrubbing does not cover, or the Python ai-service (ADR-009) logs it without api#21's Kotlin module; the collector forwards it to the trace and metric stores and dashboards, where operators and processors read it outside every access gate.",
+          "recommended_control": "Enforce a collector-side allowlist of attribute and label keys for traces, metrics and logs from every service, dropping unknown keys and values that match money, contact or host shapes; adopt ADR-022 section 7's label rule; prove it with planted values in each signal type from each service.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#27",
+          "resolution": null
+        },
+        {
+          "id": "E24-F06",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "Hosted telemetry, crash and paging processors and alert payloads are outside the residency policy",
+          "attack_path": "Security logs, traces or crash events are exported to a hosted observability or crash service outside India, or an alert template copies log lines and identifiers into a page sent through a third-party paging service, while the residency check covers only stateful resources the pipeline provisions.",
+          "recommended_control": "Extend the region assertion to every telemetry, crash and paging destination, permit only processors recorded with a signed agreement under docs#44, keep alert payloads to rule, service and severity with no log excerpt, and fail closed when a destination's region or agreement is unrecorded.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#27",
+          "resolution": null
+        },
+        {
+          "id": "E24-F07",
+          "category": "information_disclosure",
+          "severity": "high",
+          "title": "A restore from a pre-erasure backup can resurrect an erased user's keys and readable data",
+          "attack_path": "A user is erased by destroying their key; a later disaster recovery or restore drill restores a backup taken before the erasure, bringing back the wrapped key and blind-index entries, and the environment serves the user's data again before anyone replays the erasure.",
+          "recommended_control": "Gate restore readiness on replaying the independent erasure tombstone journal to zero outstanding entries, fail closed when the journal is unavailable, and run the erasure harness on the restored dataset; infra#26's restore runbook must call this step rather than document it.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#33",
+          "resolution": null
+        },
+        {
+          "id": "E24-F08",
+          "category": "information_disclosure",
+          "severity": "medium",
+          "title": "Push and e-mail provider copies of recipient addresses and device tokens survive account erasure",
+          "attack_path": "A user erases their account; api#56 deletes addresses and tokens locally through the erasure path, but the e-mail provider keeps the address in delivery logs and suppression lists and the push provider keeps the token, so the processor retains personal data past erasure with no recorded basis.",
+          "recommended_control": "Make erasure call each provider's deletion or suppression-removal interface through the provider abstraction, record provider-side retention that cannot be deleted under the docs#44 processor agreements, and test that an erased synthetic recipient is removed or listed with its basis at both providers.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#56",
+          "resolution": null
+        },
+        {
+          "id": "E24-F09",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "No per-recipient or per-class send cap, priority for security messages or provider-throttling handling",
+          "attack_path": "An event loop, a replayed dead-letter batch or abuse of a user-triggered message class floods the outbox; the provider throttles or suspends the account, spend rises, and security messages such as sign-in alerts queue behind the flood or are dropped while the provider refuses sends.",
+          "recommended_control": "Cap sends per recipient and per class over a window, throttle dead-letter replay, give security-class messages a reserved lane, treat provider throttling or suspension as an alerting state with failover to the second provider, and prove the caps and the reserved lane with a flood test.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#56",
+          "resolution": null
+        },
+        {
+          "id": "E24-F10",
+          "category": "denial_of_service",
+          "severity": "medium",
+          "title": "A telemetry flood can fill write-once retained log storage and exhaust on-call attention",
+          "attack_path": "A noisy or hostile client, a failing dependency or a logging bug emits a burst of high-cardinality records; the security-log store, which refuses deletion before expiry, fills irreversibly and costs grow, while repeated alerts page the on-call owner until real pages are ignored.",
+          "recommended_control": "Bound ingestion per service with rate and cardinality limits and a separate budget for retained security logs, alert on volume and remaining capacity before it is exhausted, and de-duplicate and group alerts; test a synthetic flood against the limits.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#27",
+          "resolution": null
+        },
+        {
+          "id": "E24-F11",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "The identity that applies infrastructure code can rewrite IAM, key policy and retention locks",
+          "attack_path": "A merged or injected infrastructure change, or a compromised deploy job, edits access policy to grant a human or workload standing data or key access, shortens a retention lock or disables backup immutability; the apply succeeds because the deploy identity holds those permissions and review treats it as routine.",
+          "recommended_control": "Split the deploy identity from the identity that may change access, key, retention and backup policy; require independent review and a policy-as-code rule that rejects plans weakening those controls; have infra#32's standing-access inventory run after every apply; test a planted grant and a planted lock removal.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        },
+        {
+          "id": "E24-F12",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "Host-level access to the self-managed R4 runtime is not in the standing-access inventory",
+          "attack_path": "An engineer or a compromised automation account holds shell, container-engine or console access to the self-managed hosts ADR-022 selects; it reads application memory, decrypted data in transit or local disks and bypasses the database, object and key broker entirely.",
+          "recommended_control": "Include host shell, container-engine socket, hypervisor console and host-image access in the standing-access inventory that must be empty, route any host session through the same time-boxed, second-approved, audited broker, and add denial tests for direct host access.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#32",
+          "resolution": null
+        },
+        {
+          "id": "E24-F13",
+          "category": "elevation_of_privilege",
+          "severity": "high",
+          "title": "The production KEK custodian assigned to T-PLT-03 is not listed in infra#27's scope",
+          "attack_path": "No ticket body lists selecting the custodian, so real data could be admitted under a file-held software root or an exportable key on the database hosts; a host or account compromise then yields the KEK and every wrapped user key (baseline T-11).",
+          "recommended_control": "Record on infra#27 the obligation ADR-018 section 6.1.1 and ADR-022 section 3.3 place on T-PLT-03: select and prove an India-resident, non-exportable custodian administratively separate from the database hosts and backups, with every unwrap logged to alerting, and keep real data refused until it passes.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#27",
+          "resolution": null
+        },
+        {
+          "id": "E24-F14",
+          "category": "ai_service_compromise",
+          "severity": "high",
+          "title": "The AI workload could be deployed before the ADR-022 runtime gates pass, with keys readable by the deploy identity",
+          "attack_path": "The runtime is provisioned and the AI gateway deployed because the pipeline is green, while startup denial, nftables ordering or kill-switch evidence is unproven, or the deploy identity can read provider keys from the secret store; a compromised gateway or pipeline then reaches providers or private addresses directly.",
+          "recommended_control": "Make the deployment gate refuse the AI workload until the T7, T12, T19 and T20 evidence of adr/ai-egress-consequences.json is present for the exact digest, keep provider keys readable only by the gateway runtime identity, and test that a missing gate result blocks the deploy.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/infra#25",
+          "resolution": null
+        },
+        {
+          "id": "E24-F15",
+          "category": "request_forgery",
+          "severity": "medium",
+          "title": "The sessionless unsubscribe reference is not required to be unguessable or to need a confirming request",
+          "attack_path": "An e-mail security scanner prefetches every link and withdraws consent on GET, or an attacker enumerates or replays references and unsubscribes a victim from security-class or chosen messages, silencing alerts without a session.",
+          "recommended_control": "Issue unsubscribe references as high-entropy, recipient- and class-bound, revocable values; make the withdrawal a confirming POST rather than a GET side effect; rate-limit and alert on failed lookups; keep security classes unsubscribable only through the authenticated editors; test prefetch, guess and replay.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#56",
+          "resolution": null
+        },
+        {
+          "id": "E24-F16",
+          "category": "request_forgery",
+          "severity": "medium",
+          "title": "Provider delivery callbacks are mapped but not authenticated or replay-checked",
+          "attack_path": "Anyone who learns the callback route posts forged bounce, complaint or delivered statuses; a forged bounce suppresses a user's channel, a forged delivered status hides a failing provider, and replays skew the dashboard.",
+          "recommended_control": "Verify each callback's provider signature or authenticated channel and freshness before mapping, process idempotently on the provider event identifier, record and rate-limit rejected attempts without secrets, and test forged, stale and replayed callbacks.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/api#56",
+          "resolution": null
+        },
+        {
+          "id": "E24-F17",
+          "category": "administrative_identity_compromise",
+          "severity": "high",
+          "title": "Play Console account hardening, user roster and the upload-key reset path are not covered",
+          "attack_path": "An attacker phishes the Play Console developer account or a user it added, requests an upload-key reset or uploads with a new key, and promotes a malicious build past the tracks; the bundle is signed by Play App Signing and installs as a trusted update on every device.",
+          "recommended_control": "Record the Play Console user roster with least-privilege roles, phishing-resistant sign-in on every member, alerting on user and key changes, the upload-key reset as an owner-only recovery step, and promotion permission separated from upload; verify it with read-only evidence per release.",
+          "status": "handed_off",
+          "owner_ticket": "PenniLogic/android#37",
+          "resolution": null
+        },
+        {
+          "id": "E24-F18",
+          "category": "administrative_identity_compromise",
+          "severity": "medium",
+          "title": "No ticket owns human access to the push, e-mail and paging or uptime service consoles",
+          "attack_path": "A holder of the e-mail or push provider console, or a stale former member, reads recipient addresses and delivery history or changes sender settings; a holder of the paging console silences or reroutes pages during an incident. infra#43 covers only the GitHub identity, api#59 the ADR-020 administrative identity domain, and api#56 and infra#27 API credentials and the log store; none covers these vendor console accounts.",
+          "recommended_control": "Create an owning ticket for third-party operational console accounts: roster, least-privilege roles, phishing-resistant sign-in, joiner and leaver revocation, audit export and a revocation drill per service, recorded before any real recipient or page flows through them.",
+          "status": "open",
+          "owner_ticket": null,
+          "resolution": null
+        }
+      ]
+    }
+  ]
 }
