@@ -99,13 +99,13 @@ STRUCTURE_RULES = (
     "registry.digest_mismatch", "registry.invalid", "registry.current_invalid",
     "id.duplicate", "id.platform_infix_mismatch", "id.out_of_range", "reference.dangling",
     "role.synthetic_reserved", "role.source_unaccepted", "held.role_accepted",
-    "route.root_count", "route.parent_dangling", "route.parent_platform_mismatch", "route.cycle",
-    "route.entry_mismatch", "route.search_only", "route.empty_leaf", "route.retired_reused",
+    "route.root_count", "route.parent_dangling", "route.parent_platform_mismatch", "route.audience_widened",
+    "route.cycle", "route.entry_mismatch", "route.search_only", "route.empty_leaf", "route.retired_reused",
     "held.label_status", "held.message_key", "label.dynamic_content",
     "presentation.platform_mismatch", "presentation.narrow_hidden", "android.primary_count",
     "android.primary_adaptation", "android.unlisted_primary",
     "access.customer_route_roles", "admin.access_mismatch", "admin.role_unknown", "admin.unauthorized_not_absent",
-    "admin.role_wider_than_parent",
+    "admin.role_wider_than_parent", "admin.external_entry",
     "placement.unknown_screen", "placement.duplicate", "placement.orphan_screen", "placement.route_dangling",
     "placement.platform_mismatch", "placement.host_and_external", "placement.rationale_missing",
     "deep_link.grammar", "deep_link.duplicate_pattern", "deep_link.ambiguous_pattern", "deep_link.hint_unmapped",
@@ -460,7 +460,8 @@ def check_identifiers(model, synthetic_ok):
 
 
 def check_topology(model):
-    """One root per platform; every other route has one same-platform parent and a navigation entry, never search."""
+    """One root per platform; every other route has one same-platform parent and a navigation entry, never search,
+    and never a wider audience than its parent."""
     for platform, roots in model.roots.items():
         require(len(roots) == 1, "route.root_count", platform)
     for identifier, route in model.routes.items():
@@ -469,6 +470,10 @@ def check_topology(model):
             require(parent in model.routes, "route.parent_dangling", identifier)
             require(model.routes[parent]["platform"] == route["platform"], "route.parent_platform_mismatch",
                     identifier)
+            # A signed-out child of a signed-in route would be reachable without the sign-in, and in the admin
+            # console without the roles, that its parent requires.
+            require(route["audience"] == "signed_in" or model.routes[parent]["audience"] == "signed_out",
+                    "route.audience_widened", identifier)
         require((parent is None) == (route["entry_from_parent"] is None), "route.entry_mismatch", identifier)
         # Global search is not a navigation edge: a route entered only through it is unreachable in the tree.
         require(route["entry_from_parent"] != "global_search", "route.search_only", identifier)
@@ -539,7 +544,8 @@ def check_access(model):
 
 def check_placements(model):
     """Each registry screen is placed exactly once: hosted by one same-platform route, or a documented external entry
-    (deep link, notification, system handoff or widget) with a rationale. Every route hosts a screen or has children."""
+    (deep link, notification, system handoff or widget) with a rationale; admin screens are always hosted. Every route
+    hosts a screen or has children."""
     screens = model.registry.screens
     for item in sorted(model.document["screen_placements"], key=lambda item: natural_key(item["screen_id"])):
         identifier, host, external = item["screen_id"], item["host_route_id"], item["external"]
@@ -554,6 +560,9 @@ def check_placements(model):
             model.hosted[host].append(identifier)
         else:
             require(external["rationale"] is not None, "placement.rationale_missing", identifier)
+            # Outside every route an operator screen would carry no role: admin screens are always hosted, and an
+            # operator deep link resolves to a role-bound route.
+            require(screens[identifier][0] != "admin", "admin.external_entry", identifier)
     for identifier in screens:
         require(identifier in model.placements, "placement.orphan_screen", identifier)
     for identifier in model.routes:
@@ -791,8 +800,9 @@ def structure_line(model):
 
 
 def _text(value):
-    """Data text inside Markdown: escape the characters that would format it or break a table cell."""
-    return re.sub(r"([\\`*_|])", r"\\\1", value)
+    """Data text inside Markdown: escape the characters that would format it, link it, open raw HTML (an HTML
+    comment would hide the rest of the page) or break a table cell."""
+    return re.sub(r"([\\`*_|<>\[\]~])", r"\\\1", value)
 
 
 def _route_line(model, route):

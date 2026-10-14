@@ -344,6 +344,14 @@ class TopologyTests(NavigationCase):
             with self.subTest(entry=entry):
                 self.passes(lambda fixture: fixture.route("R-WEB-004").update(entry_from_parent=entry))
 
+    def test_signed_out_route_under_a_signed_in_parent_is_refused(self):
+        self.refused(lambda fixture: fixture.route("R-WEB-004").update(audience="signed_out"),
+                     "route.audience_widened", "R-WEB-004")
+
+    def test_signed_out_route_under_a_signed_out_parent_passes(self):
+        model = self.passes(lambda fixture: fixture.route("R-WEB-002").update(audience="signed_out"))
+        self.assertEqual(model.routes["R-WEB-002"]["audience"], "signed_out")
+
 
 def make_primary(fixture, identifier):
     fixture.route(identifier).update(primary=True, presentation=dict(ANDROID_PRIMARY),
@@ -457,6 +465,17 @@ class RoleDenialTests(NavigationCase):
     def test_child_may_narrow_its_parent_roles(self):
         model = self.passes(lambda fixture: fixture.route("R-ADM-003")["access"].update(roles=["ROLE-SYN-01"]))
         self.assertEqual(model.routes["R-ADM-003"]["access"]["roles"], ["ROLE-SYN-01"])
+
+    def test_admin_route_cannot_drop_its_sign_in_and_roles(self):
+        # A signed-out admin route carries no roles, so under the role-bound console it would be open to every role.
+        self.refused(lambda fixture: fixture.route("R-ADM-003").update(audience="signed_out", access=None),
+                     "route.audience_widened", "R-ADM-003")
+
+    def test_admin_screen_is_never_an_external_entry(self):
+        # Outside every route an operator screen would carry no role at all.
+        self.refused(lambda fixture: fixture.placement("S-ADM-004").update(host_route_id=None, external={
+            "entry": "deep_link", "rationale": "Synthetic fixture: an operator screen opened from a link."}),
+                     "admin.external_entry", "S-ADM-004")
 
 
 class PlacementTests(NavigationCase):
@@ -967,6 +986,13 @@ class SitemapTests(NavigationCase):
         rendered = module.render_sitemaps(fixture.check())
         self.assertIn("| CAP-001 | Debt \\| plan \\*now\\* |", rendered)
 
+    def test_data_text_cannot_inject_markup(self):
+        # An HTML comment would hide the rest of the rendered sitemaps; links, images and strike-through restyle it.
+        fixture = Fixture()
+        fixture.capability("CAP-001")["rationale"] = "See <!-- hidden --> and ![image](elsewhere) ~~struck~~."
+        rendered = module.render_sitemaps(fixture.check())
+        self.assertIn("| See \\<!-- hidden --\\> and !\\[image\\](elsewhere) \\~\\~struck\\~\\~. |", rendered)
+
 
 def git(root, *args):
     env = {key: value for key, value in os.environ.items() if key not in module.SCRUBBED_GIT_VARIABLES}
@@ -1252,6 +1278,11 @@ class PublishedDataTests(unittest.TestCase):
         base = "the published base" if model.base is not None else "no published base"
         self.assertEqual(module.structure_line(model), PUBLISHED_STRUCTURE.format(base=base))
         self.assertEqual(set(model.placements), set(model.registry.screens))
+        # The only admin routes without roles are the operator sign-in and its recovery: any other operator screen
+        # on a role-free route needs a Security review that changes this pin.
+        unbound = {identifier: model.hosted[identifier] for identifier, route in model.routes.items()
+                   if route["platform"] == "admin" and route["access"] is None}
+        self.assertEqual(unbound, {"R-ADM-001": ["S-ADM-001"], "R-ADM-002": ["S-ADM-030"]})
 
     def test_published_readiness_reports_exact_gaps(self):
         model = module.load_and_check(ROOT)
