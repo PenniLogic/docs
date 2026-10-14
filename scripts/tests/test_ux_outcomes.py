@@ -138,9 +138,11 @@ def redigest(record):
 
 
 def debt(identifier="DEBT-001", severity="high", status="open", exception=None):
+    # Critical and high debt blocks release; anything else degrades the experience (review round 1, F11).
+    impact = "blocks_release" if severity in ("critical", "high") else "degrades_experience"
     return {
         "id": identifier, "title": "Synthetic debt item", "journey_ids": ["J01"], "severity": severity,
-        "owner_role": "design_ops", "due_date": "2026-12-01", "release_impact": "blocks_release",
+        "owner_role": "design_ops", "due_date": "2026-12-01", "release_impact": impact,
         "status": status, "exception": exception,
     }
 
@@ -975,6 +977,22 @@ class DesignDebtTests(CatalogueCase):
     def test_debt_due_date(self):
         self.assertRefused("debt.due_date", "DEBT-001", self.with_debt(dict(debt(), due_date="2026-13-01")))
 
+    def test_release_impact_must_match_severity(self):
+        # Review round 1 (spec-and-safety.-r1-F11): the register could say blocks_release while D8 said nothing.
+        self.run_check(self.with_debt(debt(severity="low")))  # control: consistent low-severity item
+        for item in (dict(debt(severity="low"), release_impact="blocks_release"), dict(debt(), release_impact="none")):
+            with self.subTest(severity=item["severity"]):
+                self.assertRefused("debt.release_impact_severity", "DEBT-001", self.with_debt(item))
+
+    def test_overdue_open_debt_is_a_readiness_gap(self):
+        today = date(2026, 10, 13)
+        for item, expected in ((dict(debt(severity="low"), due_date="2026-01-01"), ["DEBT-001"]),
+                               (dict(debt(severity="low"), due_date="2026-10-13"), []),
+                               (dict(debt(severity="low", status="closed"), due_date="2026-01-01"), [])):
+            with self.subTest(due=item["due_date"], status=item["status"]):
+                gaps = module.readiness(self.run_check(self.with_debt(item)), today)
+                self.assertEqual(gaps["readiness.debt_overdue"], expected)
+
     def test_debt_journey_missing(self):
         self.assertRefused("debt.journey_missing", "DEBT-001", self.with_debt(dict(debt(), journey_ids=[])))
 
@@ -1025,6 +1043,11 @@ class D8FunctionTests(unittest.TestCase):
         items = [debt(exception=exception(recorded="undated"))]
         self.assertEqual(module.d8_blocking_debt(items, date(2026, 10, 13)), ["DEBT-001"])
 
+    def test_debt_marked_blocks_release_blocks_even_when_mislabelled(self):
+        # A record the structure check refuses still fails closed if handed to the D8 function directly.
+        item = dict(debt(severity="low"), release_impact="blocks_release")
+        self.assertEqual(module.d8_blocking_debt([item], date(2026, 10, 13)), ["DEBT-001"])
+
     def test_clock_must_be_a_date(self):
         from datetime import datetime, timezone
         with self.assertRaises(TypeError):
@@ -1049,6 +1072,7 @@ class ReadinessTests(CatalogueCase):
         self.assertEqual(gaps["readiness.longitudinal_unrun"], ["longitudinal_plan"])
         self.assertEqual(gaps["readiness.journey_outside_pin"], [])
         self.assertEqual(gaps["readiness.registry_import_pin"], ["registry_ref"])
+        self.assertEqual(gaps["readiness.debt_overdue"], [])
         self.assertEqual(gaps["readiness.d8_blocking_debt"], [])
 
     def test_open_high_debt_is_a_d8_readiness_gap(self):
@@ -1411,6 +1435,7 @@ class PublishedCatalogueTests(unittest.TestCase):
             "readiness.longitudinal_unrun": ["longitudinal_plan"],
             "readiness.journey_outside_pin": [],
             "readiness.registry_import_pin": ["registry_ref"],
+            "readiness.debt_overdue": [],
             "readiness.d8_blocking_debt": [],
         }
         self.assertEqual(self.gaps, expected)
@@ -1420,7 +1445,7 @@ class PublishedCatalogueTests(unittest.TestCase):
             "readiness.baseline_unmeasured": 112, "readiness.threshold_unset": 100,
             "readiness.measure_unvalidated": 100, "readiness.benchmark_unrun": 12,
             "readiness.longitudinal_unrun": 1, "readiness.journey_outside_pin": 0,
-            "readiness.registry_import_pin": 1, "readiness.d8_blocking_debt": 0})
+            "readiness.registry_import_pin": 1, "readiness.debt_overdue": 0, "readiness.d8_blocking_debt": 0})
 
     def test_summary_matches_the_catalogue_byte_for_byte(self):
         expected = module.render_summary(self.model, self.gaps).encode("utf-8")

@@ -429,7 +429,7 @@ Each benchmark starts only after moderated-usability defects close on every plat
 
 ## Design-debt register
 
-Open critical or high debt blocks D8 unless the CDO-equivalent (`decision_coordinator`) records a dated, unexpired exception; `check_ux_outcomes.d8_blocking_debt` evaluates this on the date it runs.
+Open critical or high debt (the only debt whose release impact is `blocks_release`) blocks D8 unless the CDO-equivalent (`decision_coordinator`) records a dated, unexpired exception; `check_ux_outcomes.d8_blocking_debt` evaluates this, and open debt past its due date is reported as `readiness.debt_overdue`, on the date the check runs.
 
 No design debt is recorded.
 
