@@ -193,7 +193,7 @@ HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
 # Only these strings skip the scan, and only when they match their exact grammar at exactly this path.
 EXEMPT_PATHS = {
     ("registry_ref", "commit"): COMMIT, ("registry_ref", "sha256"): DIGEST,
-    ("benchmarks", "*", "task_script_sha256"): DIGEST,
+    ("benchmarks", "*", "definition_sha256"): DIGEST, ("benchmarks", "*", "history", "*", "definition_sha256"): DIGEST,
 }
 # The two privacy-budget caps are the only numbers; baselines, targets, thresholds and cohorts carry none.
 NUMBER_PATHS = frozenset({("privacy", "privacy_budget", "max_fields_per_event"),
@@ -394,9 +394,10 @@ def read_registry(document, sources, pin):
 
 
 def read_base(sources):
-    """{(benchmark ID, version): script digest} of the committed catalogue at the base (merge base with
-    origin/main), or None when the base predates the catalogue. Only the benchmark keys are read, so a later schema
-    change elsewhere in the catalogue cannot make an older base unreadable."""
+    """{benchmark ID: {version: definition digest}} of the committed catalogue at the base (merge base with
+    origin/main): each benchmark's ledger of earlier versions plus its current one, or None when the base predates
+    the catalogue. Only the benchmark keys are read, so a later schema change elsewhere in the catalogue cannot make
+    an older base unreadable."""
     try:
         blob = sources.base_file(DATA)
     except LookupError:
@@ -411,11 +412,18 @@ def read_base(sources):
     require(isinstance(benchmarks, list), "base.invalid")
     versions = {}
     for item in benchmarks:
-        key = (item.get("id"), item.get("version")) if isinstance(item, dict) else (None, None)
-        value = item.get("task_script_sha256") if isinstance(item, dict) else None
-        require(classify(key[0]) == "benchmark" and isinstance(key[1], str) and SEMVER.fullmatch(key[1])
-                and isinstance(value, str) and DIGEST.fullmatch(value) and key not in versions, "base.invalid")
-        versions[key] = value
+        identifier = item.get("id") if isinstance(item, dict) else None
+        history = item.get("history") if isinstance(item, dict) else None
+        require(classify(identifier) == "benchmark" and identifier not in versions and isinstance(history, list),
+                "base.invalid")
+        ledger = {}
+        for entry in [*history, item]:
+            version = entry.get("version") if isinstance(entry, dict) else None
+            value = entry.get("definition_sha256") if isinstance(entry, dict) else None
+            require(isinstance(version, str) and SEMVER.fullmatch(version) is not None and isinstance(value, str)
+                    and DIGEST.fullmatch(value) is not None and version not in ledger, "base.invalid")
+            ledger[version] = value
+        versions[identifier] = ledger
     return versions
 
 
@@ -816,9 +824,25 @@ def check_calendar(calendar):
             require(classify(journey) == "journey", "id.grammar")
 
 
+# Review round 1 (spec-and-safety.-r1-F6): everything a participant is asked to do and how success is judged.
+DEFINITION_KEYS = ("scenario", "task_steps", "success_definition", "entry_criteria", "moderated_defects_refs")
+
+
+def definition_digest(benchmark):
+    """sha256 over the canonical JSON of a benchmark's whole definition (DEFINITION_KEYS)."""
+    return digest({key: benchmark[key] for key in DEFINITION_KEYS})
+
+
+def version_key(version):
+    return tuple(int(part) for part in SEMVER.fullmatch(version).groups())
+
+
 def check_benchmarks(indexed, base, platforms):
-    """Versioned, reproducible unmoderated benchmarks (ticket criterion 5): the task script digest is recorded,
-    and a changed script at an already-published version is refused (the version must be bumped)."""
+    """Versioned, reproducible unmoderated benchmarks (ticket criterion 5). The digest covers the whole definition;
+    `history` is the append-only ledger of earlier versions, each strictly older than the current one. Against the
+    base ledger {BM: {version: digest}}: the version never goes down, a published version never changes its
+    definition (it must be bumped), and no published entry leaves or changes in the ledger, so a retired version
+    cannot be reused."""
     for identifier, benchmark in indexed["benchmarks"].items():
         require(classify(benchmark["journey_id"]) == "journey", "id.grammar", identifier)
         require(journey_of(identifier) == benchmark["journey_id"], "id.journey_mismatch", identifier)
@@ -828,10 +852,25 @@ def check_benchmarks(indexed, base, platforms):
         require(owners and None not in owners and benchmark["moderated_defects_refs"] == sorted(owners),
                 "benchmark.moderated_owner", identifier)
         require(benchmark["task_steps"] != [], "benchmark.script_missing", identifier)
-        recorded = digest(benchmark["task_steps"])
-        require(benchmark["task_script_sha256"] == recorded, "benchmark.script_digest_mismatch", identifier)
-        published = None if base is None else base.get((identifier, benchmark["version"]))
-        require(published is None or published == recorded, "benchmark.version_not_bumped", identifier)
+        recorded = definition_digest(benchmark)
+        require(benchmark["definition_sha256"] == recorded, "benchmark.definition_digest_mismatch", identifier)
+        history = benchmark["history"]
+        require(all(SEMVER.fullmatch(item["version"]) and DIGEST.fullmatch(item["definition_sha256"])
+                    for item in history), "benchmark.history_grammar", identifier)
+        current, earlier = version_key(benchmark["version"]), [version_key(item["version"]) for item in history]
+        require(earlier == sorted(set(earlier)) and all(version < current for version in earlier),
+                "benchmark.history_order", identifier)
+        published = {} if base is None else base.get(identifier, {})
+        if not published:
+            continue
+        ledger = {item["version"]: item["definition_sha256"] for item in history}
+        require(current >= max(version_key(version) for version in published), "benchmark.version_downgrade",
+                identifier)
+        for version in sorted(published, key=version_key):
+            if version == benchmark["version"]:
+                require(published[version] == recorded, "benchmark.version_not_bumped", identifier)
+            else:
+                require(ledger.get(version) == published[version], "benchmark.history_rewritten", identifier)
 
 
 def check_longitudinal(plan, indexed):
@@ -885,7 +924,7 @@ def d8_blocking_debt(design_debt, today):
 
 
 def check(document, schema, sources, pin=None, base=None, fixture=False, inventory=None):
-    """Every structure rule, fail closed. `base` is {(BM ID, version): digest} of the base catalogue or None;
+    """Every structure rule, fail closed. `base` is {BM ID: {version: digest}} of the base catalogue or None;
     `fixture` (tests only, never the CLI) admits a recorded debt exception so the D8 rules can be exercised;
     `inventory` holds the known issue references (default: this repository's committed snapshot)."""
     pin = REGISTRY_PIN if pin is None else pin
@@ -1100,9 +1139,11 @@ def render_tail(model):
         "(platforms from the pinned registry flows; E38 owners: Android "
         f"`{MODERATED_OWNERS['android']}`, web `{MODERATED_OWNERS['web']}`, admin `{MODERATED_OWNERS['admin']}`). "
         "These owner choices await coordinator confirmation.", "",
-        *table(("Benchmark", "Journey", "Version", "Scenario", "Steps", "Script digest", "Success", "Entry"), [
-            (f"`{identifier}`", f"`{benchmark['journey_id']}`", benchmark["version"], cell(benchmark["scenario"]),
-             str(len(benchmark["task_steps"])), f"`{benchmark['task_script_sha256']}`",
+        *table(("Benchmark", "Journey", "Version", "Earlier versions", "Scenario", "Steps", "Definition digest",
+                "Success", "Entry"), [
+            (f"`{identifier}`", f"`{benchmark['journey_id']}`", benchmark["version"],
+             codes([item["version"] for item in benchmark["history"]]), cell(benchmark["scenario"]),
+             str(len(benchmark["task_steps"])), f"`{benchmark['definition_sha256']}`",
              cell(benchmark["success_definition"]),
              f"{benchmark['entry_criteria']} ({codes(benchmark['moderated_defects_refs'])})")
             for identifier, benchmark in sorted(indexed["benchmarks"].items())]), "",

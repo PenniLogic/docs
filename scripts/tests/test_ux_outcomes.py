@@ -121,14 +121,20 @@ def threshold(identifier, journey="J01"):
 
 
 def benchmark(journey):
-    steps = ["Open the synthetic scenario", "Complete the task without help"]
-    return {
+    record = {
         "id": f"BM-{journey}", "journey_id": journey, "version": "1.0.0", "scenario": "Synthetic scenario",
-        "task_steps": steps, "task_script_sha256": module.digest(steps),
-        "success_definition": "Task completed without assistance", "entry_criteria": "moderated_defects_closed",
-        "moderated_defects_refs": list(OWNERS[journey]), "baseline": {"value": None, "source": "unmeasured"},
-        "results": None,
+        "task_steps": ["Open the synthetic scenario", "Complete the task without help"], "definition_sha256": None,
+        "history": [], "success_definition": "Task completed without assistance",
+        "entry_criteria": "moderated_defects_closed", "moderated_defects_refs": list(OWNERS[journey]),
+        "baseline": {"value": None, "source": "unmeasured"}, "results": None,
     }
+    return redigest(record)
+
+
+def redigest(record):
+    """Record the digest of a benchmark's whole definition, as an author does after editing it."""
+    record["definition_sha256"] = module.definition_digest(record)
+    return record
 
 
 def debt(identifier="DEBT-001", severity="high", status="open", exception=None):
@@ -838,9 +844,17 @@ class ResearchTests(CatalogueCase):
         self.assertRefused("benchmark.script_missing", "BM-J02", mutate(
             self.document, lambda d: d["benchmarks"][1].update(task_steps=[])))
 
-    def test_benchmark_script_digest_mismatch(self):
-        self.assertRefused("benchmark.script_digest_mismatch", "BM-J01", mutate(
-            self.document, lambda d: d["benchmarks"][0]["task_steps"].append("Return to the start")))
+    def test_benchmark_definition_digest_mismatch(self):
+        # Review round 1 (spec-and-safety.-r1-F6): the digest covered task_steps only.
+        for key, value in (("task_steps", ["Return to the start"]), ("scenario", "Another scenario"),
+                           ("success_definition", "Any step finished with or without assistance")):
+            with self.subTest(key=key):
+                self.assertRefused("benchmark.definition_digest_mismatch", "BM-J01", mutate(
+                    self.document, lambda d: d["benchmarks"][0].update({key: value})))
+        # The pinned moderated-defect owners are refused earlier by their own rule; the digest still covers them.
+        record = self.document["benchmarks"][0]
+        moved = dict(record, moderated_defects_refs=["pending:PenniLogic/docs#129"])
+        self.assertNotEqual(module.definition_digest(moved), record["definition_sha256"])
 
     def test_benchmark_results_cannot_be_fabricated(self):
         self.assertRefused("schema.invalid", document=mutate(
@@ -850,10 +864,40 @@ class ResearchTests(CatalogueCase):
         self.assertRefused("id.journey_mismatch", "BM-J02", mutate(
             self.document, lambda d: d["benchmarks"][1].update(journey_id="J01")))
 
-    def test_changed_script_at_published_version_is_refused(self):
-        published = {("BM-J01", "1.0.0"): module.digest(["An earlier script"])}
-        self.run_check(base={("BM-J01", "0.9.0"): published[("BM-J01", "1.0.0")]})  # control: older version only
-        self.assertRefused("benchmark.version_not_bumped", "BM-J01", base=published)
+    def published(self):
+        """The base ledger in which BM-J01 1.0.0 is the synthetic definition as published."""
+        return {"BM-J01": {"1.0.0": self.document["benchmarks"][0]["definition_sha256"]}}
+
+    def edited(self, version, history=(), **change):
+        """BM-J01 with an edited definition at `version`, its digest re-recorded and the given ledger."""
+        def apply(d):
+            redigest(d["benchmarks"][0].update(change) or d["benchmarks"][0])
+            d["benchmarks"][0].update(version=version, history=[dict(item) for item in history])
+        return mutate(self.document, apply)
+
+    def test_changed_definition_at_published_version_is_refused(self):
+        bumped = [{"version": "1.0.0", "definition_sha256": self.published()["BM-J01"]["1.0.0"]}]
+        new = {"success_definition": "Any step finished with or without assistance"}
+        self.run_check(self.edited("1.1.0", bumped, **new), base=self.published())  # control: bumped, ledger kept
+        self.assertRefused("benchmark.version_not_bumped", "BM-J01", self.edited("1.0.0", **new),
+                           base=self.published())
+        self.assertRefused("benchmark.version_not_bumped", "BM-J01",
+                           self.edited("1.0.0", scenario="Another scenario"), base=self.published())
+
+    def test_version_cannot_go_down_or_drop_a_published_entry(self):
+        new = {"task_steps": ["Rewritten step"]}
+        self.assertRefused("benchmark.version_downgrade", "BM-J01", self.edited("0.0.1", **new),
+                           base=self.published())
+        self.assertRefused("benchmark.history_rewritten", "BM-J01", self.edited("1.1.0", **new),
+                           base=self.published())
+
+    def test_retired_version_cannot_be_reused(self):
+        base = {"BM-J01": {"1.0.0": module.digest(["An earlier definition"]),
+                           "1.0.1": self.document["benchmarks"][0]["definition_sha256"]}}
+        self.assertRefused("benchmark.version_downgrade", "BM-J01", self.edited("1.0.0", task_steps=["Reused"]),
+                           base=base)
+        self.assertRefused("benchmark.history_order", "BM-J01", self.edited(
+            "1.0.0", [{"version": "1.0.0", "definition_sha256": base["BM-J01"]["1.0.0"]}]))
 
     def test_moderated_defect_owners_follow_journey_platforms(self):
         # Review round 1 (spec-and-safety.-r1-F1): docs#66 (personas) cannot close moderated-usability defects.
@@ -876,8 +920,8 @@ class ResearchTests(CatalogueCase):
         self.document = catalogue(self.pin)
         self.assertRefused("registry.invalid")
 
-    def test_unchanged_script_at_published_version_passes(self):
-        self.run_check(base={("BM-J01", "1.0.0"): self.document["benchmarks"][0]["task_script_sha256"]})
+    def test_unchanged_definition_at_published_version_passes(self):
+        self.run_check(base=self.published())
 
     def test_longitudinal_retention_reference(self):
         self.assertRefused("longitudinal.retention_ref", document=mutate(
@@ -1183,7 +1227,8 @@ class GitSourceTests(CatalogueCase):
         git(self.root, "commit", "-q", "-m", "catalogue")
         git(self.root, "update-ref", "refs/remotes/origin/main", git(self.root, "rev-parse", "HEAD"))
         base = module.read_base(module.GitSources(self.root))
-        self.assertEqual(sorted(base), [("BM-J01", "1.0.0"), ("BM-J02", "1.0.0")])
+        self.assertEqual(base, {identifier: {"1.0.0": self.document["benchmarks"][number]["definition_sha256"]}
+                                for number, identifier in enumerate(("BM-J01", "BM-J02"))})
 
     def test_missing_base_ref_fails_closed(self):
         with self.assertRaises(module.Refused) as caught:

@@ -9849,7 +9849,8 @@
         "Set a first plan from synthetic data",
         "Explain what the plan shows next"
       ],
-      "task_script_sha256": "sha256:ae7ef9c469a5bf6258de203d6218930b607b027265c4ac0db14e21f511340c1f",
+      "definition_sha256": "sha256:2528b79ac9af320cbe776f71fafc1b130ae6acf6de960d8ecc994c4cb9348073",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -9872,7 +9873,8 @@
         "Recover access through the offered route",
         "Confirm the trusted return state"
       ],
-      "task_script_sha256": "sha256:4035d2fe1aeb43cc6aec2d49e26179c067da4175c25de32035d69d54eeb52626",
+      "definition_sha256": "sha256:33fb74ecb73846f01c3ad9203ee94df34033967c6a76f7850f5be30504d4056c",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -9895,7 +9897,8 @@
         "Correct the category",
         "Confirm the corrected entry is trusted"
       ],
-      "task_script_sha256": "sha256:c4201d3033183df2dff0f5c6ab36d2e259642720a9ba5bdf01a3cc26ad725b8a",
+      "definition_sha256": "sha256:c11cac88ec9624fddc42d51a1e7a681c2a93832dc43e85db5099ce488650e826",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -9918,7 +9921,8 @@
         "Explain the consequence of each",
         "Choose one and confirm the decision"
       ],
-      "task_script_sha256": "sha256:38757a2f74672a93e22a88258e65f58f5998afe5316cbf78c9c90e18b71bd693",
+      "definition_sha256": "sha256:7e3c464618f0c550a3dcf967f4da9abe295572d2de3af89013e7f3546d7d1984",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -9941,7 +9945,8 @@
         "Set a budget and a goal",
         "Review the resulting net-worth view"
       ],
-      "task_script_sha256": "sha256:10393f3eb9471155527fd73a6099523dc06212fe795b921d814e56cd0c00c311",
+      "definition_sha256": "sha256:30c3086db24a481540d6afc2570279323f0979282b14e5462d839936dda328a5",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -9964,7 +9969,8 @@
         "Split the bill",
         "Settle and confirm"
       ],
-      "task_script_sha256": "sha256:41828739edfa0d090fd4edd6dbd2b2788b0d373ebb1dc9da1b421479a78e4b85",
+      "definition_sha256": "sha256:762561088d3eb2e64f28b64fe209dd0888643a821c9dc766d68948e475fa7122",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -9987,7 +9993,8 @@
         "Revoke the grant",
         "Confirm the safe exit state"
       ],
-      "task_script_sha256": "sha256:50805e1e627492f724d5ddcac082dd7342b9d8854d87c870b6f4e42093778319",
+      "definition_sha256": "sha256:b845f3c7d173b79016c5936a606ce808f0c3f17e201ac9862e1b704547ab1a08",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -10010,7 +10017,8 @@
         "State its source and uncertainty",
         "Accept or decline the proposed action"
       ],
-      "task_script_sha256": "sha256:3a07282059101e89473dfa2eb00c964a83850c95cfdc6e9e83f4d50c6e7cd848",
+      "definition_sha256": "sha256:4528c9273efb6bfdf3c8c58e48ee98fc84a0a167ac8d41b3e677595d660bf867",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -10033,7 +10041,8 @@
         "Cancel the synthetic subscription",
         "Confirm the final state"
       ],
-      "task_script_sha256": "sha256:1821a411fdb41128f27ef104b78db3820056d8406130e8bbea23e9620c97750e",
+      "definition_sha256": "sha256:1316f83334198940743bca665622ad96527a55f43f49a8319bfc7e5c3429c635",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -10056,7 +10065,8 @@
         "Submit it",
         "Read what happens next"
       ],
-      "task_script_sha256": "sha256:68da431d08147754d64fd3c644d3483d850c919fae1a7b2b4cad1f969a3bb6a1",
+      "definition_sha256": "sha256:fef26d6a454ad39d4408725fc710815164fabd4c08bb8a40b1a602d17b3e3c1c",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -10080,7 +10090,8 @@
         "Verify the access scope",
         "Fulfil and record the outcome"
       ],
-      "task_script_sha256": "sha256:94411a9276e407fdd519a21d3637761643fced18ca354f837a7ae2750f47e4cc",
+      "definition_sha256": "sha256:666cbf072cb04f600680f386d48bb9c94cb67ac459d66a3742f3f44fbd0b7113",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [
@@ -10102,7 +10113,8 @@
         "Review the audit trail",
         "Approve the release step"
       ],
-      "task_script_sha256": "sha256:1db2b6b6c9fa73a10dbf508250d585c10b42fe69ea8b4d038ab55841992fa77d",
+      "definition_sha256": "sha256:5a56f1c6ccbcac09cfdea844c54cbb86a7f2ee79eb2cbb7a7cf6cb71cbdb3005",
+      "history": [],
       "success_definition": "Every step finished unassisted and the final state explained correctly",
       "entry_criteria": "moderated_defects_closed",
       "moderated_defects_refs": [

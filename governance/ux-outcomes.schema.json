@@ -523,8 +523,28 @@
           },
           "uniqueItems": true
         },
-        "task_script_sha256": {
+        "definition_sha256": {
           "$ref": "#/definitions/id"
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "$ref": "#/definitions/id"
+              },
+              "definition_sha256": {
+                "$ref": "#/definitions/id"
+              }
+            },
+            "required": [
+              "definition_sha256",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
         },
         "success_definition": {
           "$ref": "#/definitions/text"
@@ -549,14 +569,15 @@
       },
       "required": [
         "baseline",
+        "definition_sha256",
         "entry_criteria",
+        "history",
         "id",
         "journey_id",
         "moderated_defects_refs",
         "results",
         "scenario",
         "success_definition",
-        "task_script_sha256",
         "task_steps",
         "version"
       ],
