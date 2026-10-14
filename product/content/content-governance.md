@@ -31,7 +31,11 @@ state identifiers and carry no copy, and a forbidden term restated here is refus
 
 AI disclosure, advice boundaries and projection disclosures are regulated copy (product/08 section 12): every
 `disclosure`-category key lives under `reg.` and binds a record (`ai_disclosure` or `disclaimer`), and no ordinary key
-may restate a record's text, even inside longer copy.
+may restate a record's text, even inside longer copy. The restatement rule is sentence-level: an ordinary key is
+refused when its copy contains, as a run of whole words, any complete sentence of any regulated record, current or
+prior (`history`) version. Both sides are compared as words only, so case, spacing, terminal and internal
+punctuation, hyphen and dash variants, typographic apostrophes and contractions ("can't", "cannot", "can not") do not
+change the result; a fragment shorter than a complete sentence is not a restatement.
 
 Versions are compared with the merge base of `HEAD` and `origin/main`. Adding a term or key, or changing what
 consumers read (a term's label, definition, surfaces, forbidden aliases or contract field names; a key's category,

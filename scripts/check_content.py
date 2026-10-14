@@ -737,11 +737,31 @@ def check_regulated(regulated, keys, terms, context, roles, now, owner):
     for name in keys:
         require(not name.startswith("reg.") or name in bound, "key.regulated_unbound", name)
     # Regulated text is usable only through its record: no ordinary key may restate it, even inside longer copy.
-    texts = [" ".join(record["copy"].casefold().split()) for record in regulated["records"]]
+    # Every complete sentence of every current and prior (history) version is compared as a word sequence, so
+    # terminal punctuation, commas, dash and apostrophe variants, contractions, case and spacing do not bypass it.
+    sentences = {sentence for record in regulated["records"]
+                 for text in [record["copy"]] + [prior["copy"] for prior in record["history"]]
+                 for sentence in regulated_sentences(text)}
     for name, entry in keys.items():
         if entry["copy"] is not None:
-            folded = " ".join(entry["copy"].casefold().split())
-            require(not any(text in folded for text in texts), "key.regulated_copy_restated", name)
+            spoken = f" {word_sequence(entry['copy'])} "
+            require(not any(f" {sentence} " in spoken for sentence in sentences), "key.regulated_copy_restated",
+                    name)
+
+
+SENTENCE_END = re.compile(r"[.!?\u2026]+(?:\s+|$)")
+WORD = re.compile(r"[^\W_]+")
+
+
+def word_sequence(text):
+    """normalised() reduced to its words: punctuation, dashes and spacing drop out and "cannot" reads as
+    "can not", so "This can\u2019t be undone," and "this can not be undone" are one sequence."""
+    return " ".join("can not" if word == "cannot" else word for word in WORD.findall(normalised(text)))
+
+
+def regulated_sentences(text):
+    """The word sequence of each complete sentence of regulated text (split at terminal punctuation)."""
+    return [words for part in SENTENCE_END.split(text) if (words := word_sequence(part))]
 
 
 def regulated_ids(regulated):

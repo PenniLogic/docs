@@ -24,7 +24,7 @@ None.
 | `common.label.revoked` | label | Access revoked | 7/14/28 | `term.revoked` | no | android, web, admin | provisional | content |
 | `common.safe_exit.denial` | denial | This isn't available here | 12/25/50 | none | yes | android, web, admin | provisional | content |
 | `common.safe_exit.notification` | notification | You have an update | 9/18/36 | none | yes | android, web, admin | provisional | content |
-| `pattern.destructive.consequence` | destructive | This can't be undone and their history goes with them | 24/49/98 | none | no | android, web, admin | provisional | content |
+| `pattern.destructive.consequence` | destructive | Their history is deleted with them and can't be restored | 24/49/98 | none | no | android, web, admin | provisional | content |
 | `pattern.destructive.next_action` | destructive | Delete {item} | 6/13/26 | none | no | android, web, admin | provisional | content |
 | `pattern.destructive.safe_remainder` | destructive | Your other records stay as they are | 17/35/70 | none | no | android, web, admin | provisional | content |
 | `pattern.destructive.source` | destructive | Selected: {item} | 8/16/32 | none | no | android, web, admin | provisional | content |

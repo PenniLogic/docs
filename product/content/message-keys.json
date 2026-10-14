@@ -261,7 +261,7 @@
     {
       "key": "pattern.destructive.consequence",
       "category": "destructive",
-      "copy": "This can't be undone and their history goes with them",
+      "copy": "Their history is deleted with them and can't be restored",
       "status": "provisional",
       "term_refs": [],
       "regulated_ref": null,

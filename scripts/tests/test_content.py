@@ -1105,6 +1105,59 @@ class NormalisedWordingTests(Harness):
         self.run_check(docs)
 
 
+class RegulatedRestatementTests(Harness):
+    """Independent review F1: an ordinary key may not restate regulated text in any normalised wording, any
+    complete sentence of a multi-sentence record, or any prior (history) version's text."""
+
+    def restated(self, text, record_copy=None, history=None):
+        def mutate(docs):
+            record = records_of(docs)["RC-003"]
+            keys_of(docs)[record["key"]]["range"] = {"min": 1, "typical": 60, "max": 200}
+            if record_copy is not None:
+                record["copy"] = record_copy
+            if history is not None:
+                record["version"] = "0.2.0"
+                record["history"] = [prior("0.1.0", "draft", None, history, record["key"])]
+            add_key(docs, key("debt.delete.help", text))
+        return mutate
+
+    def test_record_text_without_its_final_period_is_refused(self):
+        for text in ("Synthetic draft text for review", "Note: synthetic draft text for review, then go on"):
+            with self.subTest(text=text):
+                self.assertRefused(self.restated(text), "key.regulated_copy_restated", "debt.delete.help")
+
+    def test_one_complete_sentence_of_a_multi_sentence_record_is_refused(self):
+        record_copy = "This is a synthetic boundary. Please read the full draft notes."
+        for text in ("This is a synthetic boundary.", "this is a synthetic boundary",
+                     "Please read the full draft notes"):
+            with self.subTest(text=text):
+                self.assertRefused(self.restated(text, record_copy), "key.regulated_copy_restated",
+                                   "debt.delete.help")
+
+    def test_dash_apostrophe_and_comma_variants_are_refused(self):
+        record_copy = "Synthetic text for a well-known review. This can't be undone, it stays."
+        for text in ("Synthetic text for a well\u2013known review", "Synthetic text for a well\u2014known review",
+                     "Synthetic text for a well known review",
+                     "This can\u2019t be undone, it stays", "This cannot be undone it stays",
+                     "This can not be undone - it stays"):
+            with self.subTest(text=text):
+                self.assertRefused(self.restated(text, record_copy), "key.regulated_copy_restated",
+                                   "debt.delete.help")
+
+    def test_prior_version_text_is_refused(self):
+        self.assertRefused(self.restated("Synthetic earlier text for review",
+                                         history="Synthetic earlier text for review."),
+                           "key.regulated_copy_restated", "debt.delete.help")
+
+    def test_fragment_of_a_sentence_is_not_a_restatement(self):
+        docs = documents()
+        records_of(docs)["RC-003"]["copy"] = "This is a synthetic boundary. Please read the full draft notes."
+        keys_of(docs)["reg.disclaimer.text"]["range"] = {"min": 1, "typical": 60, "max": 200}
+        add_key(docs, key("debt.delete.help", "Read the full draft"))
+        add_key(docs, key("debt.delete.more", "This is a synthetic list"))
+        self.run_check(docs)
+
+
 class TaxonomyRestatementTests(Harness):
     """Review round 1 F-15: a taxonomy string restated under a look-alike root forks same_wording."""
 
@@ -1929,6 +1982,22 @@ class PublishedContentTests(unittest.TestCase):
             "81 keys (43 state., 0 nav., 11 reg., 12 common.); regulated copy 0.1.0: 11 records, 0 approved"
         ))
 
+    def test_published_regulated_wording_is_refused_in_an_ordinary_key(self):
+        # Independent review F1: the reviewer's bypasses, replayed against the published records.
+        for text in ("Projected from your own data. It can change",
+                     "AI insight. Figures come from your data, not the model",
+                     "This scenario is information, not advice", "This is not investment advice",
+                     "Please consult a SEBI\u2013registered investment adviser", "This can\u2019t be undone, ever"):
+            with self.subTest(text=text):
+                docs = copy.deepcopy(self.docs)
+                keys_of(docs)["pattern.destructive.consequence"]["copy"] = text
+                with self.assertRaises(content.Refused) as caught:
+                    content.check(docs, content.load_documents(ROOT)[1],
+                                  content.support.load_json(ROOT / content.TAXONOMY),
+                                  content.support.load_json(ROOT / content.GATES), NOW, FakeSources())
+                self.assertEqual((caught.exception.rule, caught.exception.subject),
+                                 ("key.regulated_copy_restated", "pattern.destructive.consequence"))
+
     def test_published_readiness_gaps_are_exact(self):
         gaps = content.readiness(self.model)
         self.assertEqual(gaps["readiness.comprehension_evidence"], sorted(f"term.{slug}" for slug in COMPREHENSION))
@@ -1951,7 +2020,7 @@ class PublishedContentTests(unittest.TestCase):
         keys = keys_of(self.docs)
         self.assertEqual([keys[key]["copy"] for key in (
             "pattern.recovery.status", "pattern.success.status", "pattern.destructive.consequence")],
-            ["{item} are back", "{item} are saved", "This can't be undone and their history goes with them"])
+            ["{item} are back", "{item} are saved", "Their history is deleted with them and can't be restored"])
 
     def test_published_refund_is_never_a_reversal(self):
         # Review round 2 SS-04: ADR-017 section 2.6 and ADR-016 section 8.3 - a refund is a new transaction and a
